@@ -10,11 +10,19 @@ class Sign2DigitalInfoBanner extends StatelessWidget {
     required this.message,
     this.iconAsset = 'assets/icons/info-circle-filled.svg',
     this.verticalPadding = 20,
+    this.textColor = AppColors.primary,
+    this.iconSize = 20,
+    this.iconGap = 12,
+    this.fontSize = 13,
   });
 
   final String message;
   final String iconAsset;
   final double verticalPadding;
+  final Color textColor;
+  final double iconSize;
+  final double iconGap;
+  final double fontSize;
 
   @override
   Widget build(BuildContext context) {
@@ -29,23 +37,23 @@ class Sign2DigitalInfoBanner extends StatelessWidget {
           children: [
             SvgPicture.asset(
               iconAsset,
-              width: 20,
-              height: 20,
+              width: iconSize,
+              height: iconSize,
               colorFilter: const ColorFilter.mode(
                 AppColors.primary,
                 BlendMode.srcIn,
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: iconGap),
             Expanded(
               child: Text(
                 message,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Inter',
-                  fontSize: 13,
+                  fontSize: fontSize,
                   fontWeight: FontWeight.w400,
                   letterSpacing: -0.3,
-                  color: AppColors.primary,
+                  color: textColor,
                 ),
               ),
             ),

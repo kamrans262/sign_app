@@ -11,6 +11,7 @@ import 'add_signature_screen.dart';
 import 'create_quote_screen.dart';
 import 'customer_document_view_screen.dart';
 import 'document_signed_success_screen.dart';
+import 'in_person_signature_screen.dart';
 import 'quote_ai_processing_screen.dart';
 import 'quote_preview_screen.dart';
 import 'review_quote_screen.dart';
@@ -64,6 +65,23 @@ class QuoteUiDemoScreen extends StatelessWidget {
     ));
   }
 
+  Widget _inPersonDemo(QuoteReviewDraft quote) => InPersonSignatureScreen(
+    quote: quote,
+    projectName: QuoteUiDemoData.projectName,
+    documentId: 'demo-document-not-real',
+    customerSignerId: 'demo-customer-not-verified',
+    businessSignerId: 'demo-business-not-verified',
+    // Only the explicit UI tour supplies a fictional completion fixture.
+    onSubmit: (submission) async => QuoteSignedDisplayData(
+      documentId: submission.documentId,
+      quoteNumber: quote.quoteNumber,
+      projectName: QuoteUiDemoData.projectName,
+      signerName: quote.clientName,
+      signedAt: DateTime(2026, 8, 23, 22),
+      demoOnly: true,
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     final quote = QuoteUiDemoData.quote();
@@ -79,7 +97,10 @@ class QuoteUiDemoScreen extends StatelessWidget {
       ('Review Quote', 'Edit sample items, prices and terms',
           () => _push(context, ReviewQuoteScreen(initialDraft: quote.copy()))),
       ('Quote Preview', 'Read the sample PDF-ready quote',
-          () => _push(context, QuotePreviewScreen(quote: quote.copy()))),
+          () => _push(context, QuotePreviewScreen(
+            quote: quote.copy(),
+            onInPersonSign: () => _push(context, _inPersonDemo(quote.copy())),
+          ))),
       ('Send Quote', 'Inspect email and share UI; delivery is not confirmed',
           () => _push(context, SendQuoteScreen(quote: quote.copy()))),
       ('Signature Tracking', 'View a sample activity timeline',
@@ -96,6 +117,8 @@ class QuoteUiDemoScreen extends StatelessWidget {
           ))),
       ('Add Signature', 'Try Draw, Type, Upload and Confirm',
           () => _openSignature(context, quote.copy())),
+      ('In-Person Signature', 'Capture customer and business signatures separately',
+          () => _push(context, _inPersonDemo(quote.copy()))),
       ('Document Signed!', 'Preview the final confirmation screen directly',
           () => _push(context, DocumentSignedSuccessScreen(
             data: QuoteSignedDisplayData(

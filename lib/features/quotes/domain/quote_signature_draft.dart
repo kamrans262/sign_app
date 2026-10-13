@@ -70,3 +70,28 @@ class QuoteSignatureDraftSession {
     _drafts.clear();
   }
 }
+
+
+/// Two separate local capture records associated with one document.
+/// These are NOT verified or server-signed until a trusted service confirms.
+class QuoteInPersonSignatureSubmission {
+  const QuoteInPersonSignatureSubmission({
+    required this.quoteId,
+    required this.documentId,
+    required this.customerSignerId,
+    required this.businessSignerId,
+    required this.customerStrokes,
+    required this.businessStrokes,
+    required this.capturedAt,
+    required this.consentAccepted,
+  });
+
+  final String quoteId;
+  final String documentId;
+  final String customerSignerId;
+  final String businessSignerId;
+  final List<List<Offset>> customerStrokes;
+  final List<List<Offset>> businessStrokes;
+  final DateTime capturedAt;
+  final bool consentAccepted;
+}

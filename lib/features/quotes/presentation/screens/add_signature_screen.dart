@@ -1,10 +1,8 @@
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../../core/services/local_file_selection.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -13,6 +11,9 @@ import '../../../../core/widgets/sign2digital_header.dart';
 import '../../../../core/widgets/sign2digital_info_banner.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../domain/quote_signature_draft.dart';
+import '../widgets/sign2digital_signature_draw_canvas.dart';
+import '../widgets/sign2digital_signature_tabs.dart';
+import '../widgets/sign2digital_signature_consent.dart';
 
 /// Local signature capture for an already-authorized document. The business
 /// shell may show its navigation bar; an external customer link must not.
@@ -147,35 +148,14 @@ class _AddSignatureScreenState extends State<AddSignatureScreen> {
     });
   }
 
-  Widget _drawCanvas() => LayoutBuilder(builder: (context, constraints) {
-    final size = Size(constraints.maxWidth, constraints.maxHeight);
-    return RawGestureDetector(
-      key: const Key('signature-draw-canvas'),
-      behavior: HitTestBehavior.opaque,
-      // Claim drawing pointers immediately so a vertical stroke cannot
-      // accidentally scroll the parent SingleChildScrollView.
-      gestures: <Type, GestureRecognizerFactory>{
-        EagerGestureRecognizer: GestureRecognizerFactoryWithHandlers<EagerGestureRecognizer>(
-          () => EagerGestureRecognizer(),
-          (instance) {},
-        ),
-      },
-      child: Listener(
-        behavior: HitTestBehavior.opaque,
-        onPointerDown: (event) => _startStroke(event.localPosition, size),
-        onPointerMove: (event) => _updateStroke(event.localPosition, size),
-        onPointerUp: (_) => QuoteSignatureDraftSession.save(_cacheKey, _draft),
-        onPointerCancel: (_) => QuoteSignatureDraftSession.save(_cacheKey, _draft),
-        child: RepaintBoundary(
-          key: _drawCaptureKey,
-          child: CustomPaint(
-            painter: _StrokePainter(_draft.strokes),
-            child: const SizedBox.expand(),
-          ),
-        ),
-      ),
-    );
-  });
+  Widget _drawCanvas() => Sign2DigitalSignatureDrawCanvas(
+    key: const Key('signature-draw-canvas'),
+    captureKey: _drawCaptureKey,
+    strokes: _draft.strokes,
+    onStart: _startStroke,
+    onUpdate: _updateStroke,
+    onEnd: () => QuoteSignatureDraftSession.save(_cacheKey, _draft),
+  );
 
   Widget _typeCanvas() => Padding(
     padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
@@ -280,28 +260,19 @@ class _AddSignatureScreenState extends State<AddSignatureScreen> {
           TextButton(onPressed: _chooseUpload, child: const Text('Replace image')),
         ]));
 
-  Widget _clearButton() => Align(
-    alignment: Alignment.bottomRight,
-    child: Padding(padding: const EdgeInsets.all(15),
-      child: TextButton.icon(
-        key: const Key('signature-clear'),
-        onPressed: _clearActive,
-        icon: SvgPicture.asset('assets/icons_2/arrow-reset.svg',
-          width: 20, height: 20,
-          colorFilter: const ColorFilter.mode(AppColors.primary, BlendMode.srcIn)),
-        label: const Text('Clear', style: TextStyle(
-          fontFamily: 'Inter', fontWeight: FontWeight.w500, fontSize: 16,
-          letterSpacing: -0.3, color: AppColors.primary)),
-      ),
-    ),
+  Widget _clearButton() => Sign2DigitalSignatureClearButton(
+    key: const Key('signature-clear'),
+    onPressed: _clearActive,
   );
 
   Widget _inputPanel() => Container(
     key: const Key('signature-input-panel'),
     height: 336,
-    decoration: BoxDecoration(color: _canvas,
+    decoration: BoxDecoration(
+      color: _canvas,
       border: Border.all(color: _border),
-      borderRadius: BorderRadius.circular(10)),
+      borderRadius: BorderRadius.circular(10),
+    ),
     clipBehavior: Clip.antiAlias,
     child: Stack(children: [
       Positioned.fill(bottom: 55, child: switch (_draft.method) {
@@ -313,33 +284,13 @@ class _AddSignatureScreenState extends State<AddSignatureScreen> {
     ]),
   );
 
-  Widget _tabs() => SizedBox(width: double.infinity, child: Stack(children: [
-    Positioned(left: 0, right: 0, bottom: 0,
-      child: Container(height: 1, color: _border)),
-    Row(mainAxisSize: MainAxisSize.min, children: [
-      for (final method in QuoteSignatureMethod.values) ...[
-        if (method != QuoteSignatureMethod.draw) const SizedBox(width: 30),
-        InkWell(
-          key: Key('signature-tab-${method.name}'),
-          onTap: () => _select(method),
-          child: Container(
-            padding: const EdgeInsets.only(bottom: 12),
-            decoration: BoxDecoration(border: Border(bottom: BorderSide(
-              color: _draft.method == method ? AppColors.primary : Colors.transparent,
-              width: 2))),
-            child: Text(switch (method) {
-              QuoteSignatureMethod.draw => 'Draw',
-              QuoteSignatureMethod.type => 'Type',
-              QuoteSignatureMethod.upload => 'Upload',
-            }, style: TextStyle(
-              fontFamily: 'Inter', fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: _draft.method == method ? AppColors.primary : _grey)),
-          ),
-        ),
-      ],
-    ]),
-  ]));
+  Widget _tabs() => Sign2DigitalSignatureTabs(
+    keyPrefix: 'signature-tab',
+    labels: const ['Draw', 'Type', 'Upload'],
+    ids: const ['draw', 'type', 'upload'],
+    selectedIndex: _draft.method.index,
+    onSelected: (index) => _select(QuoteSignatureMethod.values[index]),
+  );
 
   bool get _validSignature => switch (_draft.method) {
     QuoteSignatureMethod.draw => _draft.strokes.any((stroke) =>
@@ -352,38 +303,8 @@ class _AddSignatureScreenState extends State<AddSignatureScreen> {
 
   double _distance(Offset a, Offset b) => (a - b).distance;
 
-  Future<bool> _confirmConsent() async {
-    bool accepted = false;
-    final result = await showDialog<bool>(context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (dialogContext, setDialogState) => AlertDialog(
-          scrollable: true,
-          title: const Text('Confirm agreement'),
-          content: Column(mainAxisSize: MainAxisSize.min, children: [
-            ConstrainedBox(constraints: const BoxConstraints(maxHeight: 180),
-              child: SingleChildScrollView(child: Text(widget.termsText.isEmpty
-                ? 'The document has no terms to accept.' : widget.termsText))),
-            CheckboxListTile(
-              key: const Key('signature-consent-checkbox'),
-              contentPadding: EdgeInsets.zero,
-              value: accepted,
-              title: const Text('I have read and agree to these terms.'),
-              onChanged: (value) => setDialogState(() => accepted = value ?? false),
-            ),
-          ]),
-          actions: [
-            TextButton(onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Cancel')),
-            TextButton(
-              key: const Key('signature-consent-continue'),
-              onPressed: accepted ? () => Navigator.of(dialogContext).pop(true) : null,
-              child: const Text('Continue')),
-          ],
-        ),
-      ),
-    );
-    return result == true;
-  }
+  Future<bool> _confirmConsent() =>
+      showSign2DigitalSignatureConsent(context, widget.termsText);
 
   Future<void> _confirm() async {
     if (_submitting) return;
@@ -519,38 +440,3 @@ bool isSupportedSignatureImage(Uint8List bytes) {
   return png || jpeg;
 }
 
-class _StrokePainter extends CustomPainter {
-  const _StrokePainter(this.strokes);
-  final List<List<Offset>> strokes;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = AppColors.dark
-      ..strokeWidth = 2.5
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round
-      ..style = PaintingStyle.stroke
-      ..isAntiAlias = true;
-    for (final stroke in strokes) {
-      if (stroke.length < 2) continue;
-      final first = _scaled(stroke.first, size);
-      final path = Path()..moveTo(first.dx, first.dy);
-      for (var i = 1; i < stroke.length - 1; i++) {
-        final current = _scaled(stroke[i], size);
-        final next = _scaled(stroke[i + 1], size);
-        path.quadraticBezierTo(current.dx, current.dy,
-          (current.dx + next.dx) / 2, (current.dy + next.dy) / 2);
-      }
-      final last = _scaled(stroke.last, size);
-      path.lineTo(last.dx, last.dy);
-      canvas.drawPath(path, paint);
-    }
-  }
-
-  Offset _scaled(Offset point, Size size) =>
-      Offset(point.dx * size.width, point.dy * size.height);
-
-  @override
-  bool shouldRepaint(covariant _StrokePainter oldDelegate) => true;
-}

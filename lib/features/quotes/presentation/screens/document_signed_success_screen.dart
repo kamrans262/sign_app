@@ -4,6 +4,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_outlined_container.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../widgets/sign2digital_animated_success.dart';
+import '../widgets/sign2digital_quote_summary_card.dart';
 
 /// Display data: production callers must supply trusted signing/audit details.
 class QuoteSignedDisplayData {
@@ -85,38 +86,9 @@ class DocumentSignedSuccessScreen extends StatelessWidget {
     ),
   );
 
-  Widget _quoteCard() => Sign2DigitalOutlinedContainer(
-    padding: const EdgeInsets.all(20),
-    child: Row(
-      children: [
-        Container(
-          width: 40, height: 40,
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle, color: Color(0xFFE3ECF0),
-          ),
-          child: const Icon(
-            Icons.description_outlined, color: AppColors.dark, size: 23,
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Quote # ${data.quoteNumber}', style: const TextStyle(
-                fontFamily: 'Inter', fontSize: 16, fontWeight: FontWeight.w600,
-                letterSpacing: -0.3, color: AppColors.dark,
-              )),
-              const SizedBox(height: 5),
-              Text(data.projectName, style: const TextStyle(
-                fontFamily: 'Inter', fontSize: 14, fontWeight: FontWeight.w500,
-                color: AppColors.placeholder,
-              )),
-            ],
-          ),
-        ),
-      ],
-    ),
+  Widget _quoteCard() => Sign2DigitalQuoteSummaryCard(
+    quoteNumber: data.quoteNumber,
+    projectName: data.projectName,
   );
 
   void _viewDocument(BuildContext context) {

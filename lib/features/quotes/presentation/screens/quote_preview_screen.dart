@@ -22,6 +22,7 @@ class QuotePreviewScreen extends StatefulWidget {
     this.tracking,
     this.onReviewAndSign,
     this.demoReviewEnabled = false,
+    this.onInPersonSign,
   });
 
   final QuoteReviewDraft quote;
@@ -35,6 +36,8 @@ class QuotePreviewScreen extends StatefulWidget {
   final Future<void> Function(QuoteReviewDraft quote)? onReviewAndSign;
   /// Enable a local signing UI demonstration only for explicitly demo quotes.
   final bool demoReviewEnabled;
+  /// Optional owner-initiated flow; supplied only by a connected signing route.
+  final VoidCallback? onInPersonSign;
 
   @override
   State<QuotePreviewScreen> createState() => _QuotePreviewScreenState();
@@ -459,6 +462,18 @@ class _QuotePreviewScreenState extends State<QuotePreviewScreen> {
               _terms(),
               const SizedBox(height: 60),
               if (widget.customerView) _customerAction() else _actions(),
+              if (!widget.customerView && widget.onInPersonSign != null) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 48,
+                  child: OutlinedButton.icon(
+                    key: const Key('quote-preview-in-person-sign'),
+                    onPressed: widget.onInPersonSign,
+                    icon: const Icon(Icons.draw_outlined),
+                    label: const Text('In-Person Signature'),
+                  ),
+                ),
+              ],
             ]),
         )),
       )),
