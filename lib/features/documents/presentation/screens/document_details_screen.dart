@@ -5,7 +5,7 @@ import 'package:printing/printing.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
-import '../../../../core/widgets/sign2digital_outlined_container.dart';
+import '../../../../core/widgets/sign2digital_information_table.dart';
 import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import '../../../clients/presentation/widgets/sign2digital_status_badge.dart';
 import '../../../quotes/presentation/widgets/sign2digital_quote_summary_card.dart';
@@ -207,29 +207,6 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
     return '${months[date.month - 1]} ${date.day}, ${date.year}';
   }
 
-  Widget _detailsRow(String name, String value, {bool status = false}) =>
-      Padding(
-        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
-        child: LayoutBuilder(builder: (context, constraints) {
-          final labelWidth = (constraints.maxWidth * .43)
-              .clamp(100.0, 180.0).toDouble();
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              SizedBox(width: labelWidth,
-                child: Text(name, style: _label, softWrap: true)),
-              const SizedBox(width: 10),
-              Expanded(child: Align(
-                alignment: Alignment.centerLeft,
-                child: status
-                    ? Sign2DigitalStatusBadge(status: value)
-                    : Text(value, style: _value, softWrap: true),
-              )),
-            ],
-          );
-        }),
-      );
-
   Widget _details(DocumentRecord record) {
     final data = <(String, String)>[
       ('Document Type:', switch (record.category) {
@@ -251,28 +228,13 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
       ('Valid Until:', _date(record.validUntil ?? record.quote?.validUntil)),
       ('Status:', record.status),
     ];
-    return Sign2DigitalOutlinedContainer(
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Padding(
-              padding: EdgeInsets.fromLTRB(20, 20, 20, 0),
-              child: Text('Document Information',
-                style: TextStyle(fontFamily: 'Inter', fontSize: 20,
-                  fontWeight: FontWeight.w600, color: AppColors.dark)),
-            ),
-            const SizedBox(height: 20),
-            for (var i = 0; i < data.length; i++) ...[
-              _detailsRow(data[i].$1, data[i].$2, status: i == data.length - 1),
-              if (i < data.length - 1)
-                const Divider(height: 1, thickness: 1,
-                  color: AppColors.lightBorder),
-            ],
-          ],
-        ),
-      ),
+    return Sign2DigitalInformationTable(
+      heading: 'Document Information',
+      rows: [
+        for (var i = 0; i < data.length; i++)
+          Sign2DigitalInformationRow(data[i].$1, data[i].$2,
+            isStatus: i == data.length - 1),
+      ],
     );
   }
 

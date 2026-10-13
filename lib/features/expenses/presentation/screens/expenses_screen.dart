@@ -11,6 +11,7 @@ import '../../data/demo_expense_repository.dart';
 import '../../domain/expense_record.dart';
 import 'add_expense_screen.dart';
 import 'expense_details_screen.dart';
+import '../widgets/sign2digital_expense_category_icon.dart';
 
 enum ExpenseSort {
   newest('Date (newest)'),
@@ -122,7 +123,10 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       return;
     }
     await Navigator.of(context).push<void>(MaterialPageRoute<void>(
-      builder: (_) => ExpenseDetailsScreen(expense: expense)));
+      builder: (_) => ExpenseDetailsScreen(
+        expense: expense, repository: _repository,
+      )));
+    if (mounted) await _load();
   }
 
   Future<void> _create() async {
@@ -200,21 +204,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         child: LayoutBuilder(builder: (context, box) {
           final compact = box.maxWidth < 290;
           return Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-            Container(
-              width: 40, height: 40,
-              decoration: const BoxDecoration(
-                color: Color(0xFFE3ECF0), shape: BoxShape.circle),
-              alignment: Alignment.center,
-              child: Icon(switch (record.category) {
-                ExpenseCategory.fuel => Icons.local_gas_station_outlined,
-                ExpenseCategory.tools => Icons.build_outlined,
-                ExpenseCategory.parking => Icons.local_parking_outlined,
-                ExpenseCategory.meals => Icons.restaurant_outlined,
-                ExpenseCategory.other => Icons.receipt_long_outlined,
-                ExpenseCategory.material => Icons.inventory_2_outlined,
-                ExpenseCategory.labour => Icons.engineering_outlined,
-              }, color: AppColors.primary, size: 25),
-            ),
+            Sign2DigitalExpenseCategoryIcon(category: record.category),
             SizedBox(width: compact ? 9 : 15),
             Expanded(child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

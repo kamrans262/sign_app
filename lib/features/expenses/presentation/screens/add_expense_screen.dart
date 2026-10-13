@@ -27,8 +27,9 @@ class AddExpenseScreen extends StatefulWidget {
   const AddExpenseScreen({super.key, this.initialJob, this.photoSource,
     this.voiceRecorderFactory, this.voiceExtractionService,
     this.requestTemporaryApiKey, this.selectedNavigationIndex = 4,
-    this.onNavigationSelected});
+    this.onNavigationSelected, this.initialExpense});
   final JobModel? initialJob;
+  final ExpenseRecord? initialExpense;
   final JobPhotoSource? photoSource;
   final VoiceRecorderService Function()? voiceRecorderFactory;
   final ExpenseVoiceExtractionService? voiceExtractionService;
@@ -57,7 +58,19 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   @override
   void initState() {
     super.initState();
+    final existing = widget.initialExpense;
     _job = widget.initialJob;
+    if (existing != null) {
+      for (final job in MockJobsData.jobs) {
+        if (job.id == existing.jobId) { _job = job; break; }
+      }
+      _category = existing.category;
+      _date = existing.date;
+      _amount.text = existing.amount.toStringAsFixed(2);
+      _description.text = existing.description;
+      _photos.addAll(existing.photos);
+      _tags.addAll(existing.tags);
+    }
     _amount.addListener(_refresh);
     _description.addListener(_refresh);
     _tagInput.addListener(_refresh);
@@ -69,10 +82,23 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     super.dispose();
   }
 
-  bool get _dirty => _job != widget.initialJob ||
-      _category != null || _date != null || _amount.text.isNotEmpty ||
-      _description.text.isNotEmpty || _photos.isNotEmpty || _tags.isNotEmpty ||
-      _tagInput.text.isNotEmpty;
+  bool get _dirty {
+    final original = widget.initialExpense;
+    if (original != null) {
+      return _job?.id != original.jobId ||
+          _category != original.category ||
+          _date != original.date ||
+          _amount.text.trim() != original.amount.toStringAsFixed(2) ||
+          _description.text != original.description ||
+          _photos.length != original.photos.length ||
+          _tags.join('|') != original.tags.join('|') ||
+          _tagInput.text.trim().isNotEmpty;
+    }
+    return _job != widget.initialJob ||
+        _category != null || _date != null || _amount.text.isNotEmpty ||
+        _description.text.isNotEmpty || _photos.isNotEmpty || _tags.isNotEmpty ||
+        _tagInput.text.isNotEmpty;
+  }
 
   void _notice(String message) {
     if (!mounted) return;
@@ -368,7 +394,11 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     if (_tagInput.text.trim().isNotEmpty) _addTag(_tagInput.text);
     final value = double.tryParse(_amount.text.trim()
         .replaceAll('CHF','').replaceAll(',','.').trim());
-    if (_job == null) { setState(() => _error = 'Choose an existing job.'); return; }
+    final previous = widget.initialExpense;
+    if (_job == null && (previous == null || previous.job.trim().isEmpty)) {
+      setState(() => _error = 'Choose an existing job to confirm its ID.');
+      return;
+    }
     if (_category == null) { setState(() => _error = 'Choose an expense type.'); return; }
     if (_date == null) { setState(() => _error = 'Choose the expense date.'); return; }
     if (value == null || !value.isFinite || value <= 0 ||
@@ -382,15 +412,34 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       setState(() => _allowPop = true);
       await WidgetsBinding.instance.endOfFrame;
       if (!mounted) return;
-      Navigator.of(context).pop(ExpenseRecord(
-        id: 'local-expense-${now.microsecondsSinceEpoch}',
-        jobId: _job!.id, job: _job!.title,
-        category: _category!, title: _category!.label,
-        report: '', amount: value, date: _date!,
-        status: ExpenseStatus.toReview,
-        description: _description.text.trim(),
-        photos: List.unmodifiable(_photos), tags: List.unmodifiable(_tags),
-      ));
+      final event = ExpenseHistoryEvent(
+        id: 'expense-event-${now.microsecondsSinceEpoch}',
+        title: previous == null ? 'Expense Created' : 'Expense Updated',
+        occurredAt: now,
+        description: 'Saved locally on this device.',
+      );
+      final saved = previous == null
+          ? ExpenseRecord(
+              id: 'local-expense-${now.microsecondsSinceEpoch}',
+              jobId: _job?.id ?? previous?.jobId,
+              job: _job?.title ?? previous?.job ?? '',
+              category: _category!, title: _category!.label,
+              report: '', amount: value, date: _date!,
+              status: ExpenseStatus.toReview,
+              description: _description.text.trim(),
+              photos: List.unmodifiable(_photos), tags: List.unmodifiable(_tags),
+              updatedAt: now, history: [event],
+            )
+          : previous.copyWith(
+              jobId: _job?.id ?? previous?.jobId,
+              job: _job?.title ?? previous!.job,
+              category: _category!, title: _category!.label,
+              amount: value, date: _date!,
+              description: _description.text.trim(),
+              photos: List.unmodifiable(_photos), tags: List.unmodifiable(_tags),
+              updatedAt: now, history: [...previous.history, event],
+            );
+      Navigator.of(context).pop(saved);
     } finally { if (mounted) setState(() => _busy = false); }
   }
 
@@ -427,7 +476,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 key: const Key('expense-add-job'), label: 'Job',
                 iconAsset: 'assets/icons/description.svg',
                 hintText: _voiceJobSuggestion ?? 'e.g, Site renovation',
-                value: _job == null ? null : '${_job!.title} (${_job!.referenceNumber})',
+                value: _job == null
+                    ? widget.initialExpense?.job
+                    : '${_job!.title} (${_job!.referenceNumber})',
                 trailing: const Icon(Icons.keyboard_arrow_down_rounded,
                   color: AppColors.secondaryText),
                 onTap: _chooseJob),

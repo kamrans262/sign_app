@@ -16,16 +16,21 @@ class DemoExpenseRepository implements ExpenseRepository {
       (3, ExpenseCategory.parking, ExpenseStatus.approved),
       (4, ExpenseCategory.meals, ExpenseStatus.approved),
     ])
-      ExpenseRecord(
+      if (!_localDrafts.containsKey('demo-expense-$index')) ExpenseRecord(
         id: 'demo-expense-$index',
         category: category,
         title: category.label,
         job: 'Kitchen renovation',
         report: 'Site report',
         amount: 78.80,
-        date: DateTime(2026, 8, 23),
+        date: DateTime(2026, 8, 23, 22),
         status: status,
         description: 'UI demo expense',
+        clientName: 'Jean Dupont',
+        approvedBy: status == ExpenseStatus.approved ? 'Jean Dupont' : null,
+        approvedAt: status == ExpenseStatus.approved
+            ? DateTime(2026, 8, 23) : null,
+        updatedAt: DateTime(2026, 8, 23),
       ),
     ..._localDrafts.values,
   ];
@@ -37,6 +42,19 @@ class DemoExpenseRepository implements ExpenseRepository {
         expense.amount <= 0 || expense.job.trim().isEmpty) {
       throw ArgumentError('Invalid local expense draft.');
     }
+    _localDrafts[expense.id] = expense;
+  }
+
+  @override
+  Future<void> updateExpense(ExpenseRecord expense) async {
+    if (!expense.demoOnly || expense.id.trim().isEmpty ||
+        expense.job.trim().isEmpty || !expense.amount.isFinite ||
+        expense.amount <= 0) {
+      throw ArgumentError('Invalid expense edit.');
+    }
+    final exists = _localDrafts.containsKey(expense.id) ||
+        (await listExpenses()).any((item) => item.id == expense.id);
+    if (!exists) throw StateError('Expense is no longer available.');
     _localDrafts[expense.id] = expense;
   }
 }

@@ -14,12 +14,16 @@ class Sign2DigitalTrackingRow extends StatelessWidget {
     this.dateText,
     this.actorText,
     this.completed = false,
+    this.historyStyle = false,
+    this.historyIcon,
   });
 
   final String title;
   final String? dateText;
   final String? actorText;
   final bool completed;
+  final bool historyStyle;
+  final IconData? historyIcon;
 
   @override
   Widget build(BuildContext context) => Row(
@@ -27,16 +31,18 @@ class Sign2DigitalTrackingRow extends StatelessWidget {
     children: [
       Container(
         key: const Key('work-acceptance-stage-icon'),
-        width: 30, height: 30,
+        width: historyStyle ? 40 : 30, height: historyStyle ? 40 : 30,
         decoration: BoxDecoration(
-          color: completed ? AppColors.primary : const Color(0xFFE3ECF0),
+          color: historyStyle ? const Color(0xFFE3ECF0)
+              : completed ? AppColors.primary : const Color(0xFFE3ECF0),
           shape: BoxShape.circle,
         ),
         alignment: Alignment.center,
         child: Icon(
-          completed ? Icons.check_rounded : Icons.schedule_rounded,
-          size: 20,
-          color: completed ? Colors.white : AppColors.secondaryText,
+          historyIcon ?? (completed ? Icons.check_rounded : Icons.schedule_rounded),
+          size: historyStyle ? 23 : 20,
+          color: historyStyle ? AppColors.primary :
+              completed ? Colors.white : AppColors.secondaryText,
         ),
       ),
       const SizedBox(width: 12),
