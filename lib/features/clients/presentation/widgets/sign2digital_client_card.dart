@@ -92,12 +92,17 @@ class Sign2DigitalClientCard extends StatelessWidget {
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              companyName,
-                              const SizedBox(height: 6),
                               Align(
                                 alignment: Alignment.centerRight,
-                                child: jobsBadge,
+                                child: Transform.translate(
+                                  key: const Key('client-jobs-badge'),
+                                  // The chevron's 25px width + 7px gap.
+                                  offset: const Offset(32, 0),
+                                  child: jobsBadge,
+                                ),
                               ),
+                              const SizedBox(height: 6),
+                              companyName,
                             ],
                           );
                         }
@@ -106,7 +111,12 @@ class Sign2DigitalClientCard extends StatelessWidget {
                           children: [
                             Expanded(child: companyName),
                             const SizedBox(width: 8),
-                            jobsBadge,
+                            Transform.translate(
+                              key: const Key('client-jobs-badge'),
+                              // Match Jobs: badge and chevron share a right edge.
+                              offset: const Offset(32, 0),
+                              child: jobsBadge,
+                            ),
                           ],
                         );
                       },

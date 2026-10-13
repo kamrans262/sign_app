@@ -81,19 +81,28 @@ class Sign2DigitalQuoteSummaryCard extends StatelessWidget {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                name,
-                const SizedBox(height: 5),
                 Align(
                   alignment: Alignment.centerRight,
-                  child: Sign2DigitalStatusBadge(status: status!),
+                  child: Transform.translate(
+                    key: const Key('document-list-badge'),
+                    // 24px chevron and the preceding 10px gap.
+                    offset: const Offset(34, 0),
+                    child: Sign2DigitalStatusBadge(status: status!),
+                  ),
                 ),
+                const SizedBox(height: 5),
+                name,
               ],
             );
           }
           return Row(children: [
             Expanded(child: name),
             const SizedBox(width: 8),
-            Sign2DigitalStatusBadge(status: status!),
+            Transform.translate(
+              key: const Key('document-list-badge'),
+              offset: const Offset(34, 0),
+              child: Sign2DigitalStatusBadge(status: status!),
+            ),
           ]);
         })
       else

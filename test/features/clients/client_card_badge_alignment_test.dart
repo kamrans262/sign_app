@@ -50,7 +50,14 @@ void main() {
       await pumpCard(tester, width);
       final card = find.byType(Sign2DigitalClientCard);
       final chevron = find.byIcon(Icons.chevron_right);
+      final badge = find.byKey(const Key('client-jobs-badge'));
       expect(chevron, findsOneWidget);
+      expect(badge, findsOneWidget);
+      // Match the Jobs cards: the badge and chevron share a right edge.
+      expect(
+        (tester.getTopRight(badge).dx - tester.getTopRight(chevron).dx).abs(),
+        lessThan(1),
+      );
       expect(
         (tester.getCenter(chevron).dy - tester.getCenter(card).dy).abs(),
         lessThan(3),
