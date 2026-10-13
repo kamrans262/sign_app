@@ -76,9 +76,11 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
     } on DocumentPermissionDeniedException {
       if (mounted) { setState(() { _loading = false; _denied = true; }); }
     } catch (_) {
-      if (mounted) setState(() {
-        _loading = false; _loadError = 'Could not load document details.';
-      });
+      if (mounted) {
+        setState(() {
+          _loading = false; _loadError = 'Could not load document details.';
+        });
+      }
     }
   }
 

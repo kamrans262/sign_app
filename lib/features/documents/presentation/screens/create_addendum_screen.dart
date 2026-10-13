@@ -2,7 +2,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/sign2digital_ai_voice_button.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
 import '../../../../core/widgets/sign2digital_image_upload.dart';
@@ -344,10 +343,12 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
         key: const Key('addendum-create'),
         label: 'Create Addendum', loading: _creating, onPressed: _create,
       );
-      if (narrow) return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [draft, const SizedBox(height: 12), create],
-      );
+      if (narrow) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [draft, const SizedBox(height: 12), create],
+        );
+      }
       return Row(children: [
         Expanded(child: draft), const SizedBox(width: 12),
         Expanded(child: create),

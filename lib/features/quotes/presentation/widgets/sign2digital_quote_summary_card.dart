@@ -168,9 +168,11 @@ class Sign2DigitalQuoteSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (linkedStyle) return Sign2DigitalOutlinedContainer(
-      padding: const EdgeInsets.all(20), child: _detailsSummary());
-    if (detailsStyle) return _detailsSummary();
+    if (linkedStyle) {
+      return Sign2DigitalOutlinedContainer(
+        padding: const EdgeInsets.all(20), child: _detailsSummary());
+    }
+    if (detailsStyle) { return _detailsSummary(); }
     final content = Sign2DigitalOutlinedContainer(
       padding: EdgeInsets.symmetric(
         horizontal: 20, vertical: listStyle ? 15 : 20,

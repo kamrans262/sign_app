@@ -49,7 +49,7 @@ abstract class AddendumVoiceExtractionService {
 /// API keys in a production app; migrate behind authenticated Laravel later.
 class OpenAiAddendumVoiceExtractionService
     implements AddendumVoiceExtractionService {
-  OpenAiAddendumVoiceExtractionService({http.Client? client}) : _client = client;
+  OpenAiAddendumVoiceExtractionService([this._client]);
 
   final http.Client? _client;
 
