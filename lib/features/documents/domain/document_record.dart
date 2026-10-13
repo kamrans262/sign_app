@@ -60,6 +60,7 @@ class DocumentRecord {
     this.validUntil,
     this.history = const [],
     this.related = const [],
+    this.addendumDraftId,
   });
 
   final String id;
@@ -79,6 +80,8 @@ class DocumentRecord {
   final DateTime? validUntil;
   final List<DocumentHistoryEvent> history;
   final List<DocumentRecord> related;
+  /// Session-local editable addendum entry, not a server document.
+  final String? addendumDraftId;
 
   bool matches(String query) {
     final needle = query.trim().toLowerCase();

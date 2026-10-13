@@ -19,6 +19,8 @@ class Sign2DigitalQuoteSummaryCard extends StatelessWidget {
     this.onTap,
     this.listStyle = false,
     this.detailsStyle = false,
+    this.linkedStyle = false,
+    this.onRemoveLink,
   });
 
   final String quoteNumber;
@@ -32,6 +34,8 @@ class Sign2DigitalQuoteSummaryCard extends StatelessWidget {
   final VoidCallback? onTap;
   final bool listStyle;
   final bool detailsStyle;
+  final bool linkedStyle;
+  final VoidCallback? onRemoveLink;
 
   String _shortDate(DateTime date) {
     const months = [
@@ -134,8 +138,8 @@ class Sign2DigitalQuoteSummaryCard extends StatelessWidget {
         children: [
           Text(titleOverride ?? 'Quote $quoteNumber',
             key: const Key('document-details-title'),
-            style: const TextStyle(
-              fontFamily: 'Inter', fontSize: 18, fontWeight: FontWeight.w600,
+            style: TextStyle(
+              fontFamily: 'Inter', fontSize: linkedStyle ? 16 : 18, fontWeight: FontWeight.w600,
               letterSpacing: -0.3, color: AppColors.dark,
             )),
           const SizedBox(height: 5),
@@ -150,11 +154,22 @@ class Sign2DigitalQuoteSummaryCard extends StatelessWidget {
         const SizedBox(width: 10),
         Sign2DigitalStatusBadge(status: status!),
       ],
+      if (onRemoveLink != null) ...[
+        const SizedBox(width: 8),
+        IconButton(
+          key: const Key('addendum-remove-linked-document'),
+          onPressed: onRemoveLink,
+          tooltip: 'Remove linked document',
+          icon: const Icon(Icons.close, color: AppColors.dark),
+        ),
+      ],
     ],
   );
 
   @override
   Widget build(BuildContext context) {
+    if (linkedStyle) return Sign2DigitalOutlinedContainer(
+      padding: const EdgeInsets.all(20), child: _detailsSummary());
     if (detailsStyle) return _detailsSummary();
     final content = Sign2DigitalOutlinedContainer(
       padding: EdgeInsets.symmetric(

@@ -31,12 +31,16 @@ class AiVoiceFlowDialog extends StatefulWidget {
     required this.extraction,
     this.recordingTitle = 'Record Deposit Details',
     this.onQuoteAudioSaved,
+    this.onAudioProcessed,
   });
 
   final VoiceRecorderService recorder;
   final VoiceJobExtractionService extraction;
   final String recordingTitle;
   final ValueChanged<String>? onQuoteAudioSaved;
+  /// Optional domain-specific processing using the existing recorder/dialog.
+  /// The processing screen remains visible until this Future completes.
+  final Future<void> Function(String savedAudioPath)? onAudioProcessed;
 
   static Future<ExtractedJobDetails?> show(
     BuildContext context, {
@@ -213,6 +217,21 @@ class _AiVoiceFlowDialogState extends State<AiVoiceFlowDialog>
   }
 
   Future<void> _extract() async {
+    if (widget.onAudioProcessed != null) {
+      final path = _savedPath;
+      if (path == null || !mounted || _busy) { return; }
+      _busy = true;
+      setState(() { _step = _VoiceStep.processing; _error = null; });
+      try {
+        await widget.onAudioProcessed!(path).timeout(const Duration(seconds: 110));
+        if (mounted) { Navigator.of(context).pop(); }
+      } catch (error) {
+        _setError(error);
+      } finally {
+        _busy = false;
+      }
+      return;
+    }
     // Quote mode shares the recorder, then lets Create Quote run its own AI
     // service and collect a temporary API key. Never use job-field extraction.
     if (widget.onQuoteAudioSaved != null) {

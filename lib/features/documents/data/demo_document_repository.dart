@@ -1,6 +1,7 @@
 import '../../quotes/data/quote_ui_demo_data.dart';
 import '../../quotes/domain/quote_review_models.dart';
 import '../domain/document_record.dart';
+import '../domain/addendum_draft.dart';
 
 /// Five independent fictional records for the Documents layout preview.
 /// "Signed" is a visual fixture only: no verified PDF or audit record exists.
@@ -8,8 +9,8 @@ class DemoDocumentRepository implements DocumentRepository {
   const DemoDocumentRepository();
 
   @override
-  Future<List<DocumentRecord>> listDocuments() async =>
-      List<DocumentRecord>.generate(5, (index) {
+  Future<List<DocumentRecord>> listDocuments() async => [
+      ...List<DocumentRecord>.generate(5, (index) {
         final source = QuoteUiDemoData.quote();
         final id = 'documents-figma-quote-${index + 1}';
         final quote = QuoteReviewDraft(
@@ -84,5 +85,30 @@ class DemoDocumentRepository implements DocumentRepository {
             ),
           ],
         );
-      });
+      }),
+      ...AddendumDraftSession.savedDrafts.map((draft) => DocumentRecord(
+        id: draft.id,
+        category: DocumentCategory.addends,
+        number: draft.number.isEmpty ? 'Unnumbered draft' : draft.number,
+        title: draft.title.isEmpty ? 'Addendum draft' : 'Addendum ${draft.number}',
+        project: draft.title.isEmpty ? 'Incomplete addendum' : draft.title,
+        customer: '',
+        timestamp: DateTime.now(),
+        status: 'Draft',
+        demoOnly: true,
+        addendumDraftId: draft.id,
+      )),
+      ...AddendumDraftSession.created.map((draft) => DocumentRecord(
+        id: draft.id,
+        category: DocumentCategory.addends,
+        number: draft.number,
+        title: 'Addendum ${draft.number}',
+        project: draft.title,
+        customer: '',
+        timestamp: DateTime.now(),
+        status: 'Draft',
+        demoOnly: true,
+        validUntil: draft.effectiveDate,
+      )),
+    ];
 }

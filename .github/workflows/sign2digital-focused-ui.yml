@@ -13,6 +13,13 @@ on:
       - 'lib/features/quotes/presentation/widgets/sign2digital_signature_*.dart'
       - 'lib/features/quotes/presentation/widgets/sign2digital_quote_summary_card.dart'
       - 'lib/core/widgets/sign2digital_info_banner.dart'
+      - 'lib/core/widgets/sign2digital_ai_voice_button.dart'
+      - 'lib/core/widgets/sign2digital_image_upload.dart'
+      - 'lib/core/widgets/sign2digital_outlined_button.dart'
+      - 'lib/features/jobs/presentation/widgets/ai_voice_flow_dialog.dart'
+      - 'lib/features/jobs/presentation/screens/create_job_screen.dart'
+      - 'test/features/jobs/ai_voice_job_flow_test.dart'
+      - 'test/features/jobs/create_job_screen_test.dart'
       - 'lib/features/clients/presentation/screens/clients_screen.dart'
       - 'test/features/documents/**'
       - 'test/features/quotes/add_signature_screen_test.dart'
@@ -48,6 +55,11 @@ jobs:
             lib/features/quotes/presentation/screens/in_person_signature_screen.dart \
             lib/features/quotes/presentation/screens/add_signature_screen.dart \
             lib/features/quotes/presentation/widgets/sign2digital_quote_summary_card.dart \
+            lib/core/widgets/sign2digital_ai_voice_button.dart \
+            lib/features/jobs/presentation/widgets/ai_voice_flow_dialog.dart \
+            lib/features/jobs/presentation/screens/create_job_screen.dart \
+            lib/core/widgets/sign2digital_image_upload.dart \
+            lib/core/widgets/sign2digital_outlined_button.dart \
             test/features/documents
 
       - name: Analyze only directly affected Dart files
@@ -59,15 +71,24 @@ jobs:
             lib/features/quotes/presentation/widgets/sign2digital_quote_summary_card.dart \
             lib/features/quotes/presentation/widgets/sign2digital_signature_action_card.dart \
             lib/core/widgets/sign2digital_info_banner.dart \
-            lib/core/widgets/sign2digital_primary_button.dart
+            lib/core/widgets/sign2digital_primary_button.dart \
+            lib/core/widgets/sign2digital_ai_voice_button.dart \
+            lib/core/widgets/sign2digital_image_upload.dart \
+            lib/core/widgets/sign2digital_outlined_button.dart \
+            lib/features/jobs/presentation/widgets/ai_voice_flow_dialog.dart \
+            lib/features/jobs/presentation/screens/create_job_screen.dart
 
       - name: Documents and signature focused widget tests
         run: |
           flutter test --no-pub --concurrency=1 --reporter expanded \
+            test/features/documents/create_addendum_screen_test.dart \
             test/features/documents/document_details_screen_test.dart \
             test/features/documents/documents_screen_test.dart \
             test/features/documents/documents_responsive_test.dart \
             test/features/quotes/in_person_signature_screen_test.dart \
             test/features/quotes/add_signature_screen_test.dart \
             test/features/quotes/document_signed_success_screen_test.dart \
-            test/features/quotes/quote_preview_screen_test.dart
+            test/features/quotes/quote_preview_screen_test.dart \
+            test/features/jobs/ai_voice_job_flow_test.dart \
+            test/features/jobs/create_job_screen_test.dart \
+            test/features/quotes/create_quote_screen_test.dart

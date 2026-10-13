@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
+import '../../../../core/widgets/sign2digital_ai_voice_button.dart';
 import '../../../../core/widgets/sign2digital_info_banner.dart';
 import '../../../../core/widgets/sign2digital_input_field.dart';
 import '../../../../core/widgets/sign2digital_outlined_container.dart';
@@ -445,58 +446,7 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
     );
   }
 
-  Widget _aiVoiceButton() {
-    return SizedBox(
-      height: 48,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Sign2DigitalPrimaryButton(
-            key: const Key('create-with-ai-voice-button'),
-            label: '',
-            onPressed: _voiceInfo,
-          ),
-          const IgnorePointer(
-            child: Center(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 75),
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    'Create with AI Voice',
-                    style: AppTextStyles.primaryButton,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const Positioned(
-            right: 15,
-            child: IgnorePointer(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: AppColors.white,
-                  borderRadius: BorderRadius.all(Radius.circular(5)),
-                ),
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                  child: Text(
-                    'New',
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontFamily: 'Inter',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget _aiVoiceButton() => Sign2DigitalAiVoiceButton(onPressed: _voiceInfo);
 
   Widget _submitButton() {
     return Stack(

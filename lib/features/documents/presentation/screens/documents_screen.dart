@@ -4,6 +4,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_search_field.dart';
 import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import 'document_details_screen.dart';
+import 'create_addendum_screen.dart';
 import '../../../quotes/presentation/widgets/sign2digital_quote_summary_card.dart';
 import '../../data/demo_document_repository.dart';
 import '../../domain/document_record.dart';
@@ -68,20 +69,30 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     });
   }
 
-  void _openDocument(DocumentRecord record) {
+  Future<void> _openDocument(DocumentRecord record) async {
     FocusManager.instance.primaryFocus?.unfocus();
     final handler = widget.onDocumentTap;
     if (handler != null) {
       handler(record);
       return;
     }
-    // Keep this route above the dashboard. Back restores its search and tab.
-    Navigator.of(context).push<void>(MaterialPageRoute<void>(
-      builder: (_) => DocumentDetailsScreen(
-        documentId: record.id,
-        document: record,
-      ),
-    ));
+    // Keep this route above the dashboard. Back restores search and category.
+    if (record.addendumDraftId != null) {
+      await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+        builder: (_) => CreateAddendumScreen(
+          draftId: record.addendumDraftId,
+          repository: _repository,
+        ),
+      ));
+    } else {
+      await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+        builder: (_) => DocumentDetailsScreen(
+          documentId: record.id,
+          document: record,
+        ),
+      ));
+    }
+    if (mounted) { await _load(); }
   }
 
   @override

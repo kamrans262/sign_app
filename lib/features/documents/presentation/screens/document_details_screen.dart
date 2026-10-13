@@ -12,6 +12,7 @@ import '../../../quotes/presentation/widgets/sign2digital_quote_summary_card.dar
 import '../../../quotes/presentation/widgets/sign2digital_signature_action_card.dart';
 import '../../../quotes/services/quote_pdf_service.dart';
 import '../../domain/document_record.dart';
+import 'create_addendum_screen.dart';
 import '../widgets/sign2digital_document_history.dart';
 
 typedef DocumentDetailsLoader = Future<DocumentRecord?> Function(String id);
@@ -73,7 +74,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
         _pdfFuture = null;
       });
     } on DocumentPermissionDeniedException {
-      if (mounted) setState(() { _loading = false; _denied = true; });
+      if (mounted) { setState(() { _loading = false; _denied = true; }); }
     } catch (_) {
       if (mounted) setState(() {
         _loading = false; _loadError = 'Could not load document details.';
@@ -147,7 +148,21 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
     showModalBottomSheet<void>(
       context: context,
       builder: (sheet) => SafeArea(
-        child: ListTile(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          if (record.category == DocumentCategory.quotes)
+            ListTile(
+              key: const Key('document-create-addendum'),
+              leading: const Icon(Icons.note_add_outlined),
+              title: const Text('Create Addendum'),
+              onTap: () {
+                Navigator.of(sheet).pop();
+                Navigator.of(context).push<void>(MaterialPageRoute<void>(
+                  builder: (_) => CreateAddendumScreen(
+                    linkedDocument: record),
+                ));
+              },
+            ),
+          ListTile(
           key: const Key('document-copy-reference'),
           leading: const Icon(Icons.copy_outlined),
           title: const Text('Copy document reference'),
@@ -157,6 +172,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
             _message('Document reference copied.');
           },
         ),
+        ]),
       ),
     );
   }
@@ -216,7 +232,8 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
         DocumentCategory.reports => 'Report',
         DocumentCategory.addends => 'Addend',
       }),
-      ('Quote Number:', record.number),
+      (record.category == DocumentCategory.addends
+          ? 'Addendum Number:' : 'Quote Number:', record.number),
       ('Job', record.project),
       ('Client:', record.customer),
       ('Created By:', record.createdBy ?? 'Not available'),

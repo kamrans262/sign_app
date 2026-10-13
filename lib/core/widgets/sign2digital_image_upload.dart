@@ -8,9 +8,10 @@ import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 
 class Sign2DigitalImageUpload extends StatefulWidget {
-  const Sign2DigitalImageUpload({super.key, this.onChanged});
+  const Sign2DigitalImageUpload({super.key, this.onChanged, this.initialFile});
 
   final ValueChanged<PlatformFile?>? onChanged;
+  final PlatformFile? initialFile;
 
   @override
   State<Sign2DigitalImageUpload> createState() =>
@@ -21,6 +22,20 @@ class _Sign2DigitalImageUploadState extends State<Sign2DigitalImageUpload> {
   PlatformFile? _file;
   String? _error;
   bool _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _file = widget.initialFile;
+  }
+
+  @override
+  void didUpdateWidget(covariant Sign2DigitalImageUpload oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialFile != oldWidget.initialFile) {
+      _file = widget.initialFile;
+    }
+  }
 
   Future<void> _pick() async {
     if (_loading) return;
