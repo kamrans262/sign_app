@@ -32,7 +32,7 @@ class CustomerDocumentViewScreen extends StatelessWidget {
     required this.quote,
     this.tracking,
     this.description,
-    this.documentTitle = 'Quote',
+    this.documentTitle = 'Invoice',
     this.onReviewAndSign,
     this.signingContext,
     this.onSubmitSignature,
@@ -42,7 +42,7 @@ class CustomerDocumentViewScreen extends StatelessWidget {
   final QuoteReviewDraft quote;
   final QuoteDocumentTracking? tracking;
   final String? description;
-  /// Set to 'Invoice' only for an actual invoice or isolated Figma fixture.
+  /// Customer-facing document card label; independently customizable.
   final String documentTitle;
   final Future<void> Function(QuoteReviewDraft quote)? onReviewAndSign;
   final QuoteSigningContext? signingContext;

@@ -459,17 +459,17 @@ class _AddSignatureScreenState extends State<AddSignatureScreen> {
   @override
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: Colors.white,
-    body: SafeArea(bottom: false, child: Column(children: [
+    body: SafeArea(child: Column(children: [
       Sign2DigitalHeader(title: 'Add Signature',
         onBack: () => Navigator.of(context).maybePop()),
       Expanded(child: LayoutBuilder(builder: (context, viewport) =>
         SingleChildScrollView(
           key: const Key('signature-scroll'),
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 30),
           child: Center(child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 720),
             child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: viewport.maxHeight - 16),
+              constraints: BoxConstraints(minHeight: viewport.maxHeight - 30),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -481,6 +481,7 @@ class _AddSignatureScreenState extends State<AddSignatureScreen> {
                   const SizedBox(height: 20),
                   Sign2DigitalInfoBanner(
                     iconAsset: 'assets/icons_2/fingerprint.svg',
+                    verticalPadding: 10,
                     message: 'By signing, you confirm that you agree to our Terms & Conditions and Services.',
                   ),
                   if (_error != null) Padding(

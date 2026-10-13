@@ -102,14 +102,17 @@ class _QuotePreviewScreenState extends State<QuotePreviewScreen> {
           style: _text(24, weight: FontWeight.bold),
           softWrap: true,
         )),
-        const SizedBox(width: 10),
+        const SizedBox(width: 20),
         Flexible(child: Sign2DigitalStatusBadge(status: _customerStatus)),
       ]),
       if (widget.description != null && widget.description!.trim().isNotEmpty) ...[
         const SizedBox(height: 10),
-        Text(widget.description!.trim(),
-          key: const Key('customer-document-description'),
-          style: _text(14, color: AppColors.secondaryText)),
+        Padding(
+          padding: const EdgeInsets.only(left: 20),
+          child: Text(widget.description!.trim(),
+            key: const Key('customer-document-description'),
+            style: _text(14, color: AppColors.secondaryText)),
+        ),
       ],
       const SizedBox(height: 20),
     ],
@@ -201,28 +204,38 @@ class _QuotePreviewScreenState extends State<QuotePreviewScreen> {
       const SizedBox(height: 9),
       _dateLine('Valid Until:', _date(_quote.validUntil)),
     ]);
-    if (constraints.maxWidth < 285) {
+    if (constraints.maxWidth < 340) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [billTo, const SizedBox(height: 15), dates],
       );
     }
     return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Expanded(child: billTo), const SizedBox(width: 10),
-      Flexible(child: dates),
+      Expanded(child: billTo), const SizedBox(width: 16),
+      Expanded(child: dates),
     ]);
   });
 
-  Widget _dateLine(String label, String value) => Wrap(spacing: 7, runSpacing: 3,
-    children: [Text(label, style: _text(12, weight: FontWeight.w600)),
-      Text(value, style: _text(12, color: AppColors.placeholder))]);
+  Widget _dateLine(String label, String value) => Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      SizedBox(width: 76, child: Text(label,
+        softWrap: false, maxLines: 1,
+        style: _text(12, weight: FontWeight.w600))),
+      const SizedBox(width: 7),
+      Expanded(child: Text(value,
+        style: _text(12, color: AppColors.placeholder))),
+    ],
+  );
 
   Widget _tableCell(String value, {bool heading = false,
-      TextAlign alignment = TextAlign.left, double size = 12}) =>
-      Padding(padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 13),
+      TextAlign alignment = TextAlign.left, double size = 12,
+      bool description = false, bool total = false}) =>
+      Padding(padding: EdgeInsets.fromLTRB(
+          description ? 20 : 5, 13, total ? 20 : 5, 13),
         child: Text(value, textAlign: alignment, softWrap: true,
           style: _text(size,
-            color: heading ? Colors.white : AppColors.placeholder,
+            color: heading ? Colors.white : AppColors.dark,
             weight: FontWeight.w500)));
 
   Widget _itemsTable() => LayoutBuilder(builder: (context, constraints) {
@@ -230,21 +243,21 @@ class _QuotePreviewScreenState extends State<QuotePreviewScreen> {
     // can grow vertically and remains scrollable if fonts are scaled up.
     final rows = <TableRow>[
       TableRow(decoration: const BoxDecoration(color: AppColors.primary), children: [
-        _tableCell('Description', heading: true),
+        _tableCell('Description', heading: true, description: true),
         _tableCell('Qty', heading: true, alignment: TextAlign.center),
-        _tableCell('Unit Price', heading: true, alignment: TextAlign.right),
-        _tableCell('Total', heading: true, alignment: TextAlign.right),
+        _tableCell('Unit Price', heading: true, alignment: TextAlign.center),
+        _tableCell('Total', heading: true, alignment: TextAlign.right, total: true),
       ]),
       for (final item in _quote.items)
         TableRow(children: [
           _tableCell(item.title.isEmpty ? 'Unspecified item' : item.title,
-            size: 10),
+            size: 10, description: true),
           _tableCell(item.quantity.isEmpty ? '—' : item.quantity,
               alignment: TextAlign.center),
           _tableCell(quoteMoney(item.priceMinor, _quote.currency),
-              alignment: TextAlign.right),
+              alignment: TextAlign.center),
           _tableCell(quoteMoney(item.totalMinor, _quote.currency),
-              alignment: TextAlign.right),
+              alignment: TextAlign.right, total: true),
         ]),
     ];
     return Table(
@@ -265,11 +278,11 @@ class _QuotePreviewScreenState extends State<QuotePreviewScreen> {
   Widget _amountRow(String label, String value, {bool total = false}) =>
       Container(padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
         color: total ? AppColors.primary : Colors.white,
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          SizedBox(width: 85, child: Text(label,
+        child: Row(children: [
+          Expanded(child: Text(label,
             style: _text(12, color: total ? Colors.white : AppColors.placeholder))),
-          const SizedBox(width: 10),
-          Flexible(child: Text(value, textAlign: TextAlign.right,
+          const SizedBox(width: 12),
+          Expanded(child: Text(value, textAlign: TextAlign.right,
             style: _text(12, color: total ? Colors.white : AppColors.dark))),
         ]));
 
@@ -302,15 +315,25 @@ class _QuotePreviewScreenState extends State<QuotePreviewScreen> {
           child: Text('Pricing incomplete — missing values are not zero.',
             style: _text(11, color: const Color(0xFFE6A23C)))),
       const SizedBox(height: 10),
-      Align(alignment: Alignment.centerRight, child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          _amountRow('Subtotal', quoteMoney(_quote.subtotalMinor, _quote.currency)),
-          _amountRow('Tax (${(_quote.vatBasisPoints / 100).toStringAsFixed(0)}%)',
-              quoteMoney(_quote.vatMinor, _quote.currency)),
-          _amountRow('Total', quoteMoney(_quote.totalMinor, _quote.currency), total: true),
-        ])),
+      Padding(
+        padding: const EdgeInsets.only(right: 20),
+        child: Align(
+          alignment: Alignment.centerRight,
+          child: FractionallySizedBox(
+            widthFactor: 0.75,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _amountRow('Subtotal', quoteMoney(_quote.subtotalMinor, _quote.currency)),
+                _amountRow('Tax (${(_quote.vatBasisPoints / 100).toStringAsFixed(0)}%)',
+                    quoteMoney(_quote.vatMinor, _quote.currency)),
+                _amountRow('Total', quoteMoney(_quote.totalMinor, _quote.currency),
+                    total: true),
+              ],
+            ),
+          ),
+        ),
+      ),
       if (widget.customerView)
         const SizedBox(height: 25)
       else ...[

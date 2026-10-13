@@ -9,10 +9,12 @@ class Sign2DigitalInfoBanner extends StatelessWidget {
     super.key,
     required this.message,
     this.iconAsset = 'assets/icons/info-circle-filled.svg',
+    this.verticalPadding = 20,
   });
 
   final String message;
   final String iconAsset;
+  final double verticalPadding;
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +24,7 @@ class Sign2DigitalInfoBanner extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.symmetric(horizontal: 20, vertical: verticalPadding),
         child: Row(
           children: [
             SvgPicture.asset(

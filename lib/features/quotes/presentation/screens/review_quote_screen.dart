@@ -292,12 +292,12 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
   ]);
 
   Widget _pricingRow(String label, String amount) => Padding(
-    padding: const EdgeInsets.only(bottom: 20),
+    padding: const EdgeInsets.fromLTRB(10, 0, 10, 20),
     child: Row(children: [
       Expanded(child: Text(label, style: const TextStyle(fontFamily: 'Inter',
           fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.placeholder))),
-      const SizedBox(width: 10),
-      Flexible(child: Text(amount, textAlign: TextAlign.right,
+      const SizedBox(width: 16),
+      Expanded(child: Text(amount, textAlign: TextAlign.right,
         style: const TextStyle(fontFamily: 'Inter', fontSize: 14,
         fontWeight: FontWeight.w500, color: AppColors.dark))),
     ]),
@@ -368,7 +368,8 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
               const Expanded(child: Text('Total', style: TextStyle(
                 fontFamily: 'Inter', fontSize: 18, fontWeight: FontWeight.w600,
                 color: AppColors.dark))),
-              Flexible(child: Text(quoteMoney(_draft.totalMinor, _draft.currency),
+              const SizedBox(width: 16),
+              Expanded(child: Text(quoteMoney(_draft.totalMinor, _draft.currency),
                 textAlign: TextAlign.right,
                 style: const TextStyle(fontFamily: 'Inter', fontSize: 18,
                   fontWeight: FontWeight.w600, color: AppColors.dark))),

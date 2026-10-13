@@ -168,7 +168,7 @@ class _SignatureRequestScreenState extends State<SignatureRequestScreen> {
                 : 'Document delivery has not been confirmed yet.';
     return Container(
       key: const Key('signature-status-banner'),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(color: _info,
         borderRadius: BorderRadius.circular(10)),
       child: Row(children: [
@@ -264,15 +264,29 @@ class _SignatureRequestScreenState extends State<SignatureRequestScreen> {
                   weight: FontWeight.w400)),
             ],
           )),
-          Switch(
-            key: const Key('signature-reminders-toggle'),
-            value: _remindersEnabled,
-            activeTrackColor: AppColors.primary,
-            onChanged: (value) {
-              setState(() => _remindersEnabled = value);
-              QuoteReminderPreferences.setEnabled(_quote.id, value);
-              _notify('Preference saved locally. Automatic reminder delivery requires a connected service.');
-            },
+          // Shrink the standard accessible switch to a ~20 x 13 track
+          // without changing the existing preference or callback behavior.
+          SizedBox(
+            width: 40,
+            height: 40,
+            child: Center(
+              child: UnconstrainedBox(
+                child: Transform.scale(
+                  scale: 0.4,
+                  child: Switch(
+                    key: const Key('signature-reminders-toggle'),
+                    value: _remindersEnabled,
+                    activeTrackColor: AppColors.primary,
+                    activeThumbColor: Colors.white,
+                    onChanged: (value) {
+                      setState(() => _remindersEnabled = value);
+                      QuoteReminderPreferences.setEnabled(_quote.id, value);
+                      _notify('Preference saved locally. Automatic reminder delivery requires a connected service.');
+                    },
+                  ),
+                ),
+              ),
+            ),
           ),
         ]),
       ),
