@@ -12,6 +12,20 @@ class DemoCompanyRepository implements CompanyRepository {
 
   static final List<CompanyProfile> demoCompanies = [
     CompanyProfile(
+      id: 'demo-northstar-renovations',
+      companyName: 'Northstar Renovations GmbH',
+      address: 'Sample Street 8, 8000 Zürich, Switzerland',
+      countryIsoCode: 'CH',
+      dialingCode: '+41',
+      phoneNumber: '790000000',
+      email: 'hello@northstar.example',
+      swissCompanyId: '',
+      vatNumber: '',
+      iban: '',
+      qrIban: '',
+      documentNumbering: 'Q-2900',
+    ),
+    CompanyProfile(
       id: 'demo-alpine-studio',
       companyName: 'Alpine Studio',
       address: 'Zürich, Switzerland',

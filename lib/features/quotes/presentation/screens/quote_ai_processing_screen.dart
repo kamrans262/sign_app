@@ -21,6 +21,7 @@ class QuoteAiProcessingScreen extends StatefulWidget {
     this.input,
     this.service,
     this.initialSnapshot,
+    this.demoReviewDraft,
     this.onReview,
   });
 
@@ -30,6 +31,8 @@ class QuoteAiProcessingScreen extends StatefulWidget {
 
   /// Explicitly supplied state; use figmaPreview for design/testing only.
   final QuotePreparationSnapshot? initialSnapshot;
+  /// Keeps the manual UI tour on the same quote; not an AI result.
+  final QuoteReviewDraft? demoReviewDraft;
   final ValueChanged<QuotePreparationSnapshot>? onReview;
 
   @override
@@ -161,7 +164,7 @@ class _QuoteAiProcessingScreenState extends State<QuoteAiProcessingScreen> {
       return;
     }
     _reviewDraft ??= _showingDemo
-        ? QuoteReviewDraft.figmaDemo()
+        ? (widget.demoReviewDraft?.copy() ?? QuoteReviewDraft.figmaDemo())
         : QuoteReviewDraft.fromExtraction(_snapshot, widget.input);
     if (!mounted) {
       return;

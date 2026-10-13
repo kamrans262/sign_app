@@ -21,6 +21,7 @@ class QuotePreviewScreen extends StatefulWidget {
     this.description,
     this.tracking,
     this.onReviewAndSign,
+    this.demoReviewEnabled = false,
   });
 
   final QuoteReviewDraft quote;
@@ -32,6 +33,8 @@ class QuotePreviewScreen extends StatefulWidget {
   final String? description;
   final QuoteDocumentTracking? tracking;
   final Future<void> Function(QuoteReviewDraft quote)? onReviewAndSign;
+  /// Enable a local signing UI demonstration only for explicitly demo quotes.
+  final bool demoReviewEnabled;
 
   @override
   State<QuotePreviewScreen> createState() => _QuotePreviewScreenState();
@@ -63,13 +66,14 @@ class _QuotePreviewScreenState extends State<QuotePreviewScreen> {
 
   Future<void> _reviewAndSign() async {
     final tracking = _matchingTracking;
-    if (_quote.isDemo) {
+    if (_quote.isDemo && !widget.demoReviewEnabled) {
       _message('Figma demo: electronic signing is not available.');
       return;
     }
-    if (tracking == null || tracking.requestId == null ||
+    if (!(widget.demoReviewEnabled && _quote.isDemo) &&
+        (tracking == null || tracking.requestId == null ||
         tracking.usableUrl(DateTime.now()) == null || !tracking.sent ||
-        tracking.signed || tracking.completed) {
+        tracking.signed || tracking.completed)) {
       _message('A valid, active signature request is required to sign.');
       return;
     }

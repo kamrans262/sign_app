@@ -36,6 +36,7 @@ class CustomerDocumentViewScreen extends StatelessWidget {
     this.onReviewAndSign,
     this.signingContext,
     this.onSubmitSignature,
+    this.demoReviewEnabled = false,
   });
 
   final QuoteReviewDraft quote;
@@ -46,6 +47,7 @@ class CustomerDocumentViewScreen extends StatelessWidget {
   final Future<void> Function(QuoteReviewDraft quote)? onReviewAndSign;
   final QuoteSigningContext? signingContext;
   final Future<bool> Function(QuoteSignatureDraft draft)? onSubmitSignature;
+  final bool demoReviewEnabled;
 
   Future<void> _openAddSignature(BuildContext context, QuoteReviewDraft draft) async {
     final requestId = tracking?.requestId;
@@ -77,5 +79,6 @@ class CustomerDocumentViewScreen extends StatelessWidget {
     documentTitle: documentTitle,
     description: description,
     onReviewAndSign: onReviewAndSign ?? (draft) => _openAddSignature(context, draft),
+    demoReviewEnabled: demoReviewEnabled,
   );
 }
