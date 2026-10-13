@@ -20,7 +20,7 @@ class Sign2DigitalStatusBadge extends StatelessWidget {
       _ => (DashboardColors.paleBlue, AppColors.primary),
     };
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: colors.$1,
         borderRadius: BorderRadius.circular(24),
@@ -31,7 +31,7 @@ class Sign2DigitalStatusBadge extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
           fontFamily: 'Inter',
-          fontSize: 12,
+          fontSize: 10,
           fontWeight: FontWeight.w500,
           color: colors.$2,
         ),

@@ -35,7 +35,7 @@ class Sign2DigitalJobStatusBadge extends StatelessWidget {
       ),
     };
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: background,
         borderRadius: BorderRadius.circular(24),
@@ -46,7 +46,7 @@ class Sign2DigitalJobStatusBadge extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
           fontFamily: 'Inter',
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: FontWeight.w500,
           color: foreground,
         ),

@@ -49,64 +49,43 @@ class Sign2DigitalClientCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        // Keep the jobs badge on the title row, while allowing
-                        // a vertical fallback for very narrow / enlarged text.
-                        final companyName = Text(
-                          client.companyName,
-                          maxLines: 2,
+                    Text(
+                      client.companyName,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 16,
+                        letterSpacing: -0.3,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.dark,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: DashboardColors.paleBlue,
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: Text(
+                          '${client.jobCount} ${client.jobCount == 1 ? 'job' : 'jobs'}',
+                          maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             fontFamily: 'Inter',
-                            fontSize: 16,
+                            fontSize: 10,
                             letterSpacing: -0.3,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.dark,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.primary,
                           ),
-                        );
-                        final jobsBadge = Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 11,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: DashboardColors.paleBlue,
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                          child: Text(
-                            '${client.jobCount} ${client.jobCount == 1 ? 'job' : 'jobs'}',
-                            style: const TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 12,
-                              letterSpacing: -0.3,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        );
-                        final compact =
-                            constraints.maxWidth < 150 ||
-                            MediaQuery.textScalerOf(context).scale(12) > 18;
-                        if (compact) {
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              companyName,
-                              const SizedBox(height: 6),
-                              jobsBadge,
-                            ],
-                          );
-                        }
-                        return Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Expanded(child: companyName),
-                            const SizedBox(width: 8),
-                            jobsBadge,
-                          ],
-                        );
-                      },
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 5),
                     Text(
