@@ -76,12 +76,12 @@ void main() {
     final button = find.text('Confirm Signature');
     await tester.ensureVisible(button);
     await tester.tap(button);
-    await tester.pump();
+    await tester.pumpAndSettle();
     expect(find.textContaining('Please draw a signature'), findsOneWidget);
     await draw(tester);
     await tester.ensureVisible(button);
     await tester.tap(button);
-    await tester.pump();
+    await tester.pumpAndSettle();
     expect(find.text('Please add the other required signature.'), findsOneWidget);
     expect(find.text('Document Signed!'), findsNothing);
     await draw(tester);
@@ -91,7 +91,7 @@ void main() {
     await tester.pump();
     await tester.ensureVisible(button);
     await tester.tap(button);
-    await tester.pump();
+    await tester.pumpAndSettle();
     expect(find.textContaining('Please draw a signature'), findsOneWidget);
     await draw(tester);
     await tester.ensureVisible(button);
@@ -127,6 +127,8 @@ void main() {
       );
     }));
     await draw(tester);
+    await tester.ensureVisible(find.byKey(const Key('in-person-tab-business')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('in-person-tab-business')));
     await tester.pump();
     await draw(tester);
@@ -148,6 +150,8 @@ void main() {
     await tester.pumpWidget(
       const MaterialApp(home: QuoteUiDemoScreen()),
     );
+    await tester.ensureVisible(find.byKey(const Key('quote-demo-step-3')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('quote-demo-step-3')));
     await tester.pumpAndSettle();
     final link = find.byKey(const Key('quote-preview-in-person-sign'));

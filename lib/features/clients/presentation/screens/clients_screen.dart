@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../jobs/presentation/screens/jobs_screen.dart';
 import '../../../jobs/presentation/screens/job_details_screen.dart';
 import '../../../jobs/domain/job_model.dart';
+import '../../../documents/presentation/screens/documents_screen.dart';
 import '../../../quotes/domain/quote_tracking_home_session.dart';
 import '../../../quotes/presentation/screens/signature_request_screen.dart';
 import '../../../quotes/presentation/screens/quote_ui_demo_screen.dart';
@@ -114,7 +115,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                     onTabSelected: (index) =>
                         setState(() => _selectedIndex = index),
                   ),
-                  _UpcomingTab(name: 'Documents'),
+                  const DocumentsScreen(),
                   _UpcomingTab(name: 'More'),
                 ],
               ),

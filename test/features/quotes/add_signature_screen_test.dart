@@ -125,9 +125,11 @@ void main() {
       (tester) async {
     final quote = QuoteReviewDraft(
       id: 'quote-integration', quoteNumber: 'Q-24',
+      date: DateTime(2026, 10, 12),
       clientName: 'Muller AG', currency: 'CHF',
       terms: 'Terms applicable to this document.',
       items: [QuoteReviewWorkItem(id: '1', title: 'Window',
+        description: 'Sample window fitting',
         quantity: '1', unitPrice: '100.00')],
       approvedLocally: true,
     );
