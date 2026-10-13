@@ -3,6 +3,15 @@ import '../../quotes/domain/quote_review_models.dart';
 /// Local UI record; status is not evidence that a remote signing service ran.
 enum DocumentCategory { quotes, contacts, reports, addends }
 
+/// Report-specific filtering, stored on the existing document record.
+enum ReportKind {
+  siteReport('Site Report'),
+  workAcceptance('Work acceptance');
+
+  const ReportKind(this.label);
+  final String label;
+}
+
 /// A documented event linked to a particular document. Production callers
 /// must supply only verified source events; UI-only fixtures stay in demo mode.
 enum DocumentHistoryType { created, sent, emailOpened, viewed, signed }
@@ -61,6 +70,7 @@ class DocumentRecord {
     this.history = const [],
     this.related = const [],
     this.addendumDraftId,
+    this.reportKind,
   });
 
   final String id;
@@ -82,13 +92,14 @@ class DocumentRecord {
   final List<DocumentRecord> related;
   /// Session-local editable addendum entry, not a server document.
   final String? addendumDraftId;
+  final ReportKind? reportKind;
 
   bool matches(String query) {
     final needle = query.trim().toLowerCase();
     if (needle.isEmpty) return true;
     return [
       id, number, title, project, customer,
-      category.name, status, quote?.jobId ?? '',
+      category.name, status, quote?.jobId ?? '', reportKind?.label ?? '',
     ].any((field) => field.toLowerCase().contains(needle));
   }
 }

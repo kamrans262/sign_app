@@ -4,6 +4,7 @@ import '../../../jobs/presentation/screens/jobs_screen.dart';
 import '../../../jobs/presentation/screens/job_details_screen.dart';
 import '../../../jobs/domain/job_model.dart';
 import '../../../documents/presentation/screens/documents_screen.dart';
+import '../../../documents/presentation/screens/reports_screen.dart';
 import '../../../quotes/domain/quote_tracking_home_session.dart';
 import '../../../quotes/presentation/screens/signature_request_screen.dart';
 import '../../../quotes/presentation/screens/quote_ui_demo_screen.dart';
@@ -334,6 +335,23 @@ class _ClientsContentState extends State<_ClientsContent> {
                           builder: (_) => const QuoteUiDemoScreen(),
                         ),
                       ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextButton.icon(
+                      key: const Key('open-reports'),
+                      onPressed: () => Navigator.of(context).push<void>(
+                        MaterialPageRoute<void>(
+                          builder: (_) => ReportsScreen(
+                            onNavigationSelected: widget.onTabSelected,
+                            onNotificationTap: () =>
+                                widget.showNotReady('Notifications'),
+                            onProfileTap: () =>
+                                widget.showNotReady('Profile'),
+                          ),
+                        ),
+                      ),
+                      icon: const Icon(Icons.assessment_outlined),
+                      label: const Text('Reports'),
                     ),
                     const SizedBox(height: 12),
                     LayoutBuilder(

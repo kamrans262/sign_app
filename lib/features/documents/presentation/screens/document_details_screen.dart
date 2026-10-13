@@ -234,8 +234,11 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
         DocumentCategory.reports => 'Report',
         DocumentCategory.addends => 'Addend',
       }),
-      (record.category == DocumentCategory.addends
-          ? 'Addendum Number:' : 'Quote Number:', record.number),
+      (switch (record.category) {
+        DocumentCategory.addends => 'Addendum Number:',
+        DocumentCategory.reports => 'Report Number:',
+        _ => 'Quote Number:',
+      }, record.number),
       ('Job', record.project),
       ('Client:', record.customer),
       ('Created By:', record.createdBy ?? 'Not available'),
