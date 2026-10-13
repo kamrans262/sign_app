@@ -362,7 +362,8 @@ void main() {
     expect(find.byKey(const Key('site-report-content-materials')),
       findsOneWidget);
     expect(find.byKey(const Key('site-report-content-issues')), findsNothing);
-    expect(find.byKey(const Key('site-report-add-photos')), findsNothing);
+    // Upload stays available even if Photos was not selected in Details.
+    expect(find.byKey(const Key('site-report-add-photos')), findsOneWidget);
 
     await tester.ensureVisible(find.byKey(const Key('site-report-next')));
     await tester.tap(find.byKey(const Key('site-report-next')));
@@ -402,6 +403,94 @@ void main() {
     expect(find.byKey(const Key('site-report-photo-0')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('Empty Step 2 photos shows only full-width upload tile and saves selection',
+      (tester) async {
+    tester.view.physicalSize = const Size(430, 932);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(MaterialApp(home: SiteReportWizardScreen(
+      initial: _completeReviewFixture(photo: false),
+      photoSource: _PhotoSource(),
+    )));
+    await tester.ensureVisible(find.byKey(const Key('site-report-next')));
+    await tester.tap(find.byKey(const Key('site-report-next')));
+    await tester.pump();
+
+    final upload = find.byKey(const Key('site-report-add-photos'));
+    final grid = find.byKey(const Key('site-report-photo-grid'));
+    expect(upload, findsOneWidget);
+    expect(grid, findsOneWidget);
+    expect(find.byKey(const Key('site-report-photo-0')), findsNothing);
+    expect(tester.getSize(upload).width,
+      closeTo(tester.getSize(grid).width, 1));
+    await tester.ensureVisible(upload);
+    await tester.tap(upload);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('site-report-gallery')));
+    await tester.pump();
+    expect(find.byKey(const Key('site-report-photo-0')), findsOneWidget);
+    expect(find.byKey(const Key('site-report-add-photos')), findsOneWidget);
+
+    await tester.ensureVisible(find.byKey(const Key('site-report-content-back')));
+    await tester.tap(find.byKey(const Key('site-report-content-back')));
+    await tester.pump();
+    final photos = tester.widget<Sign2DigitalCheckbox>(
+      find.byKey(const Key('site-report-section-1')));
+    expect(photos.value, isTrue,
+        reason: 'Uploading should select the Photos section automatically');
+
+    await tester.ensureVisible(find.byKey(const Key('site-report-next')));
+    await tester.tap(find.byKey(const Key('site-report-next')));
+    await tester.pump();
+    final preview = find.byKey(const Key('site-report-photo-0'));
+    await tester.ensureVisible(preview);
+    await tester.tap(find.descendant(
+      of: preview, matching: find.byType(IconButton)));
+    await tester.pump();
+    expect(find.byKey(const Key('site-report-photo-0')), findsNothing);
+    expect(find.byKey(const Key('site-report-add-photos')), findsOneWidget);
+    expect(tester.getSize(find.byKey(const Key('site-report-add-photos'))).width,
+      closeTo(tester.getSize(find.byKey(const Key('site-report-photo-grid'))).width, 1));
+    expect(tester.takeException(), isNull);
+  });
+
+  for (final size in [
+    const Size(320, 650),
+    const Size(430, 932),
+    const Size(768, 1024),
+  ]) {
+    testWidgets('Step 3 displays all 3 selected photos without clipping at $size',
+        (tester) async {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(MaterialApp(home: SiteReportWizardScreen(
+        initial: _figmaContentFixture(),
+      )));
+      await _openReview(tester);
+      expect(find.text('Review Reports'), findsOneWidget);
+      expect(find.byKey(const Key('review-report-photo-grid')), findsOneWidget);
+      for (var i = 0; i < 3; i++) {
+        expect(find.byKey(Key('review-report-photo-$i')), findsOneWidget);
+      }
+      expect(find.byKey(const Key('review-report-cover-image')), findsOneWidget);
+      expect(find.byKey(const Key('review-report-photo-image-1')),
+        findsOneWidget);
+      expect(find.byKey(const Key('review-report-photo-image-2')),
+        findsOneWidget);
+      await tester.ensureVisible(
+        find.byKey(const Key('review-report-photo-2')));
+      await tester.pump();
+      final gallery = find.byKey(const Key('review-report-photo-grid'));
+      final image = find.byKey(const Key('review-report-photo-2'));
+      expect(tester.getBottomRight(image).dy,
+        lessThanOrEqualTo(tester.getBottomRight(gallery).dy + 1));
+      expect(tester.takeException(), isNull, reason: '$size');
+    });
+  }
 
   testWidgets('Content matches Figma structure and photo grid at 430dp',
       (tester) async {

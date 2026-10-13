@@ -120,6 +120,9 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
           _contents[item.key]?.text = item.value;
         }
         _photos = List.of(details.photos);
+        if (_photos.isNotEmpty) {
+          _selectedSections.add(SiteReportSection.photos);
+        }
       }
     }
   }
@@ -278,6 +281,9 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
         for (final photo in files) {
           if (keys.add(photo.sourceKey)) _photos.add(photo);
         }
+        if (_photos.isNotEmpty) {
+          _selectedSections.add(SiteReportSection.photos);
+        }
         _error = null;
       });
     } on FormatException catch (error) {
@@ -408,9 +414,8 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
           if (section != SiteReportSection.photos)
             section: _contents[section]!.text.trim(),
       }),
-      photos: List.unmodifiable(
-          _selectedSections.contains(SiteReportSection.photos)
-              ? _photos : <LocalJobPhotoSelection>[]),
+      // Keep all selected photos, even if an older draft had Photos unchecked.
+      photos: List.unmodifiable(_photos),
     );
     final id = widget.initial?.id ??
         'local-site-report-${now.microsecondsSinceEpoch}';
@@ -624,18 +629,21 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
         ),
         const SizedBox(height: 20),
       ],
-      if (_selectedSections.contains(SiteReportSection.photos)) ...[
+      // The upload control is always available, even when Photos wasn't
+      // selected in Details. Uploading automatically selects that section.
+      ...[
         const Text('Photos', style: AppTextStyles.fieldLabel),
         const SizedBox(height: 10),
         GridView.builder(
           key: const Key('site-report-photo-grid'),
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            // No photos: one full-width upload tile, not a half-empty grid.
+            crossAxisCount: _photos.isEmpty ? 1 : 2,
             mainAxisSpacing: 10,
             crossAxisSpacing: 15,
-            childAspectRatio: 188 / 118,
+            childAspectRatio: _photos.isEmpty ? 390 / 160 : 188 / 118,
           ),
           itemCount: _photos.length + 1,
           itemBuilder: (context, index) {
@@ -669,7 +677,14 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
               bytes: _photos[index].bytes,
               showDemo: false,
               compactTile: true,
-              onRemove: () => setState(() => _photos.removeAt(index)),
+              onRemove: () => setState(() {
+                _photos.removeAt(index);
+                if (_photos.isEmpty) {
+                  // Last photo removed: return to optional upload-only state.
+                  _selectedSections.remove(SiteReportSection.photos);
+                }
+                _error = null;
+              }),
             );
           },
         ),
@@ -760,8 +775,10 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
   }
 
   Widget _reviewCover() {
-    final visiblePhotos = _selectedSections.contains(SiteReportSection.photos)
-        ? _photos : <LocalJobPhotoSelection>[];
+    // Display every uploaded image, including photos carried by older drafts
+    // whose Photos section flag was not set. A single image retains the Figma
+    // full-width cover; multiple images use the existing 2-column proportions.
+    final photos = _photos;
     return Container(
       key: const Key('review-report-cover'),
       width: double.infinity,
@@ -777,32 +794,60 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(10),
-        child: AspectRatio(
-          aspectRatio: 390 / 182,
-          child: visiblePhotos.isEmpty
-              ? const ColoredBox(
-                  color: Color(0xFFF3F5F7),
-                  child: Center(child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.image_outlined,
-                        color: AppColors.placeholder, size: 26),
-                      SizedBox(height: 5),
-                      Text('No report photo selected',
-                        style: TextStyle(
-                          fontFamily: 'Inter', fontSize: 13,
-                          color: AppColors.placeholder)),
-                    ],
-                  )),
-                )
-              : Image.memory(
-                  visiblePhotos.first.bytes,
-                  key: const Key('review-report-cover-image'),
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => const Center(
-                    child: Icon(Icons.broken_image_outlined)),
+        child: photos.length > 1
+            ? GridView.builder(
+                key: const Key('review-report-photo-grid'),
+                padding: const EdgeInsets.all(10),
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 10,
+                  crossAxisSpacing: 10,
+                  childAspectRatio: 188 / 118,
                 ),
-        ),
+                itemCount: photos.length,
+                itemBuilder: (context, index) => ClipRRect(
+                  key: Key('review-report-photo-$index'),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.memory(
+                    photos[index].bytes,
+                    key: index == 0
+                        ? const Key('review-report-cover-image')
+                        : Key('review-report-photo-image-$index'),
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) => const Center(
+                      child: Icon(Icons.broken_image_outlined),
+                    ),
+                  ),
+                ),
+              )
+            : AspectRatio(
+                aspectRatio: 390 / 182,
+                child: photos.isEmpty
+                    ? const ColoredBox(
+                        color: Color(0xFFF3F5F7),
+                        child: Center(child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.image_outlined,
+                              color: AppColors.placeholder, size: 26),
+                            SizedBox(height: 5),
+                            Text('No report photo selected',
+                              style: TextStyle(
+                                fontFamily: 'Inter', fontSize: 13,
+                                color: AppColors.placeholder)),
+                          ],
+                        )),
+                      )
+                    : Image.memory(
+                        photos.first.bytes,
+                        key: const Key('review-report-cover-image'),
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => const Center(
+                          child: Icon(Icons.broken_image_outlined)),
+                      ),
+              ),
       ),
     );
   }
