@@ -85,7 +85,7 @@ class Sign2DigitalPhotoPreview extends StatelessWidget {
                           shape: BoxShape.circle,
                           color: AppColors.primary,
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.close,
                           size: compactTile ? 14 : 16,
                           color: Colors.white,
