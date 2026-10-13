@@ -30,6 +30,8 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     for (final size in viewports) {
       setViewport(tester, size);
+      // Each viewport starts at the top with fresh dashboard scroll state.
+      await tester.pumpWidget(const SizedBox.shrink());
       await tester.pumpWidget(const MaterialApp(home: ClientsScreen()));
       await tester.tap(find.byKey(const Key('dashboard-tab-3')));
       await tester.pumpAndSettle();
