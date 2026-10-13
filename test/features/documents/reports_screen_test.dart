@@ -10,6 +10,7 @@ import 'package:sign2digital/features/documents/data/demo_report_repository.dart
 import 'package:sign2digital/features/documents/domain/document_record.dart';
 import 'package:sign2digital/features/documents/presentation/screens/document_details_screen.dart';
 import 'package:sign2digital/features/documents/presentation/screens/reports_screen.dart';
+import 'package:sign2digital/features/documents/presentation/screens/site_report_wizard_screen.dart';
 import 'package:sign2digital/features/quotes/presentation/widgets/sign2digital_quote_summary_card.dart';
 
 class _FakeReportRepository implements DocumentRepository {
@@ -133,7 +134,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('floating plus creates genuine session draft and allows editing',
+  testWidgets('floating plus launches wizard, persists and reopens real draft',
       (tester) async {
     await tester.pumpWidget(const MaterialApp(home: ReportsScreen()));
     await tester.pumpAndSettle();
@@ -141,37 +142,74 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('create-site-report')));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('report-save-draft')));
-    await tester.pump();
-    expect(find.text('Title, job and customer are required.'), findsOneWidget);
-    final fields = find.byType(TextFormField);
-    await tester.enterText(fields.at(0), 'Site Inspection');
-    await tester.enterText(fields.at(1), 'Kitchen extension');
-    await tester.enterText(fields.at(2), 'Customer One');
-    await tester.ensureVisible(find.byKey(const Key('report-save-draft')));
-    await tester.tap(find.byKey(const Key('report-save-draft')));
-    await tester.pumpAndSettle();
-    expect(DemoReportDraftSession.drafts, hasLength(1));
-    final draft = DemoReportDraftSession.drafts.single;
-    expect(draft.status, 'Draft');
-    expect(draft.reportKind, ReportKind.siteReport);
-    expect(draft.title, 'Site Inspection');
+    expect(find.byType(SiteReportWizardScreen), findsOneWidget);
 
-    // Search the newly saved record, open for editing rather than a fake PDF.
-    await tester.enterText(find.byKey(const Key('clients-search-input')),
-      'Site Inspection');
+    await tester.ensureVisible(find.byKey(const Key('site-report-next')));
+    await tester.tap(find.byKey(const Key('site-report-next')));
     await tester.pump();
-    final draftCard = find.byKey(Key('report-card-${draft.id}'));
-    expect(draftCard, findsOneWidget);
-    await tester.tap(draftCard);
+    expect(find.text('Choose a report title.'), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const Key('site-report-title')));
+    await tester.tap(find.byKey(const Key('site-report-title')));
     await tester.pumpAndSettle();
-    expect(find.text('Edit Site Report Draft'), findsOneWidget);
-    await tester.enterText(find.byType(TextFormField).at(0), 'Updated inspection');
-    await tester.ensureVisible(find.byKey(const Key('report-save-draft')));
-    await tester.tap(find.byKey(const Key('report-save-draft')));
+    await tester.tap(find.byKey(const Key('site-report-title-option-0')));
     await tester.pumpAndSettle();
-    expect(DemoReportDraftSession.find(draft.id)?.title, 'Updated inspection');
+
+    await tester.tap(find.byKey(const Key('site-report-date')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('OK'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.descendant(of: find.byKey(const Key('site-report-preparer')),
+        matching: find.byType(TextFormField)),
+      'Jean Dupont',
+    );
+    await tester.ensureVisible(find.byKey(const Key('site-report-weather')));
+    await tester.tap(find.byKey(const Key('site-report-weather')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('site-report-weather-option-0')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('site-report-next')));
+    await tester.tap(find.byKey(const Key('site-report-next')));
+    await tester.pumpAndSettle();
+    expect(find.text('Report Content'), findsOneWidget);
+
+    for (final section in ['siteProgress', 'notes', 'materials']) {
+      final field = find.byKey(Key('site-report-content-$section'));
+      await tester.ensureVisible(field);
+      await tester.enterText(find.descendant(
+        of: field, matching: find.byType(TextFormField)),
+        'Verified local section: $section',
+      );
+    }
+    await tester.ensureVisible(find.byKey(const Key('site-report-next')));
+    await tester.tap(find.byKey(const Key('site-report-next')));
+    await tester.pumpAndSettle();
+    expect(find.text('Review Site Report'), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const Key('site-report-next')));
+    await tester.tap(find.byKey(const Key('site-report-next')));
+    await tester.pumpAndSettle();
+
     expect(DemoReportDraftSession.drafts, hasLength(1));
+    final saved = DemoReportDraftSession.drafts.single;
+    expect(saved.status, 'Draft');
+    expect(saved.reportKind, ReportKind.siteReport);
+    expect(saved.title, 'Site Report');
+    expect(saved.siteReportDetails?.preparedBy, 'Jean Dupont');
+    expect(saved.siteReportDetails?.selectedSections.length, 3);
+
+    await tester.enterText(find.byKey(const Key('clients-search-input')),
+      'Site Report');
+    await tester.pump();
+    final savedCard = find.byKey(Key('report-card-${saved.id}'));
+    await tester.scrollUntilVisible(savedCard, 150,
+      scrollable: find.descendant(
+        of: find.byKey(const Key('reports-scroll')),
+        matching: find.byType(Scrollable),
+      ).first);
+    await tester.tap(savedCard);
+    await tester.pumpAndSettle();
+    expect(find.byType(SiteReportWizardScreen), findsOneWidget);
+    expect(find.text('Jean Dupont'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

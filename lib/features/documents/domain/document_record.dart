@@ -1,4 +1,5 @@
 import '../../quotes/domain/quote_review_models.dart';
+import '../../jobs/data/local_job_photo_source.dart';
 
 /// Local UI record; status is not evidence that a remote signing service ran.
 enum DocumentCategory { quotes, contacts, reports, addends }
@@ -10,6 +11,38 @@ enum ReportKind {
 
   const ReportKind(this.label);
   final String label;
+}
+
+/// One selectable section in a site report; tied to the existing Report record.
+enum SiteReportSection {
+  siteProgress('Site Progress'),
+  photos('Photos'),
+  notes('Notes & observations'),
+  issues('Issues/Risks'),
+  materials('Materials Delivery'),
+  labour('Labour & time');
+
+  const SiteReportSection(this.label);
+  final String label;
+}
+
+/// Actual user-entered report fields; no server-side completion implied.
+class SiteReportDetails {
+  const SiteReportDetails({
+    required this.reportDate,
+    required this.preparedBy,
+    required this.weatherCondition,
+    required this.selectedSections,
+    required this.sectionContent,
+    this.photos = const [],
+  });
+
+  final DateTime reportDate;
+  final String preparedBy;
+  final String weatherCondition;
+  final List<SiteReportSection> selectedSections;
+  final Map<SiteReportSection, String> sectionContent;
+  final List<LocalJobPhotoSelection> photos;
 }
 
 /// A documented event linked to a particular document. Production callers
@@ -71,6 +104,7 @@ class DocumentRecord {
     this.related = const [],
     this.addendumDraftId,
     this.reportKind,
+    this.siteReportDetails,
   });
 
   final String id;
@@ -93,6 +127,7 @@ class DocumentRecord {
   /// Session-local editable addendum entry, not a server document.
   final String? addendumDraftId;
   final ReportKind? reportKind;
+  final SiteReportDetails? siteReportDetails;
 
   bool matches(String query) {
     final needle = query.trim().toLowerCase();

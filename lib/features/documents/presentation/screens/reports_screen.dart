@@ -11,6 +11,7 @@ import '../../../quotes/presentation/widgets/sign2digital_quote_summary_card.dar
 import '../../data/demo_report_repository.dart';
 import '../../domain/document_record.dart';
 import 'document_details_screen.dart';
+import 'site_report_wizard_screen.dart';
 
 /// Report library using the same list layout and document models as Documents.
 /// A caller may inject real records and its own navigation/creation callbacks.
@@ -111,6 +112,34 @@ class _ReportsScreenState extends State<ReportsScreen> {
     }
   }
 
+  Future<void> _openSiteWizard(DocumentRecord? existing) async {
+    final report = await Navigator.of(context).push<DocumentRecord>(
+      MaterialPageRoute<DocumentRecord>(
+        builder: (_) => SiteReportWizardScreen(
+          initial: existing,
+          selectedNavigationIndex: widget.selectedNavigationIndex,
+          onNavigationSelected: _navigation,
+        ),
+      ),
+    );
+    if (!mounted || report == null) { return; }
+    try {
+      DemoReportDraftSession.save(report);
+      await _load();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Site report saved as a local draft.'),
+        ));
+      }
+    } on ArgumentError {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Unable to save the site report draft.'),
+        ));
+      }
+    }
+  }
+
   Future<void> _create() async {
     if (widget.onCreateReport != null) {
       widget.onCreateReport!();
@@ -142,7 +171,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
         ]),
       ),
     );
-    if (kind != null && mounted) await _editLocalDraft(null, kind);
+    if (kind == ReportKind.siteReport && mounted) {
+      await _openSiteWizard(null);
+    } else if (kind != null && mounted) {
+      await _editLocalDraft(null, kind);
+    }
   }
 
   Future<void> _openReport(DocumentRecord report) async {
@@ -154,7 +187,12 @@ class _ReportsScreenState extends State<ReportsScreen> {
         ? DemoReportDraftSession.find(report.id)
         : null;
     if (editable != null) {
-      await _editLocalDraft(editable, editable.reportKind!);
+      if (editable.reportKind == ReportKind.siteReport &&
+          editable.siteReportDetails != null) {
+        await _openSiteWizard(editable);
+      } else {
+        await _editLocalDraft(editable, editable.reportKind!);
+      }
       return;
     }
     await Navigator.of(context).push<void>(MaterialPageRoute<void>(

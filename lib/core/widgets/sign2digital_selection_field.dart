@@ -15,6 +15,8 @@ class Sign2DigitalSelectionField extends StatelessWidget {
     required this.onTap,
     this.value,
     this.errorText,
+    this.leadingIcon,
+    this.trailing,
   });
 
   final String label;
@@ -23,6 +25,8 @@ class Sign2DigitalSelectionField extends StatelessWidget {
   final VoidCallback onTap;
   final String? value;
   final String? errorText;
+  final IconData? leadingIcon;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -48,12 +52,15 @@ class Sign2DigitalSelectionField extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SvgPicture.asset(
-                      iconAsset,
-                      width: 20,
-                      height: 20,
-                      semanticsLabel: '$label icon',
-                    ),
+                    if (leadingIcon != null)
+                      Icon(leadingIcon, size: 20)
+                    else
+                      SvgPicture.asset(
+                        iconAsset,
+                        width: 20,
+                        height: 20,
+                        semanticsLabel: '$label icon',
+                      ),
                     const SizedBox(width: 15),
                     Expanded(
                       child: Column(
@@ -73,6 +80,10 @@ class Sign2DigitalSelectionField extends StatelessWidget {
                         ],
                       ),
                     ),
+                    if (trailing != null) ...[
+                      const SizedBox(width: 8),
+                      trailing!,
+                    ],
                   ],
                 ),
               ),

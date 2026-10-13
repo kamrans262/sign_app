@@ -10,13 +10,18 @@ abstract final class DemoReportDraftSession {
   static DocumentRecord? find(String id) => _drafts[id];
 
   static void save(DocumentRecord report) {
+    final site = report.siteReportDetails;
     if (report.category != DocumentCategory.reports ||
         report.reportKind == null ||
         !report.demoOnly ||
         report.status.toLowerCase() != 'draft' ||
         report.title.trim().isEmpty ||
-        report.project.trim().isEmpty ||
-        report.customer.trim().isEmpty) {
+        (site == null
+            ? report.project.trim().isEmpty || report.customer.trim().isEmpty
+            : report.reportKind != ReportKind.siteReport ||
+                site.preparedBy.trim().isEmpty ||
+                site.weatherCondition.trim().isEmpty ||
+                site.selectedSections.isEmpty)) {
       throw ArgumentError('A valid local draft report is required.');
     }
     _drafts[report.id] = report;
