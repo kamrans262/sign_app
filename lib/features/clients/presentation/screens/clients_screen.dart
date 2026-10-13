@@ -5,6 +5,7 @@ import '../../../jobs/presentation/screens/job_details_screen.dart';
 import '../../../jobs/domain/job_model.dart';
 import '../../../documents/presentation/screens/documents_screen.dart';
 import '../../../documents/presentation/screens/reports_screen.dart';
+import '../../../expenses/presentation/screens/expenses_screen.dart';
 import '../../../quotes/domain/quote_tracking_home_session.dart';
 import '../../../quotes/presentation/screens/signature_request_screen.dart';
 import '../../../quotes/presentation/screens/quote_ui_demo_screen.dart';
@@ -117,7 +118,23 @@ class _ClientsScreenState extends State<ClientsScreen> {
                         setState(() => _selectedIndex = index),
                   ),
                   const DocumentsScreen(),
-                  _UpcomingTab(name: 'More'),
+                  _UpcomingTab(
+                    name: 'More',
+                    onExpensesTap: () => Navigator.of(context).push<void>(
+                      MaterialPageRoute<void>(
+                        builder: (_) => ExpensesScreen(
+                          onNavigationSelected: (index) {
+                            if (mounted) {
+                              setState(() => _selectedIndex = index);
+                            }
+                          },
+                          onNotificationTap: () =>
+                              _showNotReady('Notifications'),
+                          onProfileTap: () => _showNotReady('Profile'),
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -169,8 +186,9 @@ class _SignatureHomeEmptyState extends StatelessWidget {
 }
 
 class _UpcomingTab extends StatelessWidget {
-  const _UpcomingTab({required this.name});
+  const _UpcomingTab({required this.name, this.onExpensesTap});
   final String name;
+  final VoidCallback? onExpensesTap;
 
   @override
   Widget build(BuildContext context) {
@@ -187,6 +205,15 @@ class _UpcomingTab extends StatelessWidget {
               textAlign: TextAlign.center,
               style: AppTextStyles.subtitle,
             ),
+            if (onExpensesTap != null) ...[
+              const SizedBox(height: 20),
+              OutlinedButton.icon(
+                key: const Key('open-expenses'),
+                onPressed: onExpensesTap,
+                icon: const Icon(Icons.receipt_long_outlined),
+                label: const Text('Expenses'),
+              ),
+            ],
           ],
         ),
       ),

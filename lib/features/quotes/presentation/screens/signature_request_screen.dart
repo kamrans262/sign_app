@@ -264,25 +264,31 @@ class _SignatureRequestScreenState extends State<SignatureRequestScreen> {
                   weight: FontWeight.w400)),
             ],
           )),
-          // Shrink the standard accessible switch to a ~20 x 13 track
-          // without changing the existing preference or callback behavior.
+          // Keep the preference switch paint-scaled without exceeding its
+          // layout constraints (including after hot reload/reassembly).
           SizedBox(
             width: 40,
             height: 40,
-            child: Center(
-              child: UnconstrainedBox(
-                child: Transform.scale(
-                  scale: 0.4,
-                  child: Switch(
-                    key: const Key('signature-reminders-toggle'),
-                    value: _remindersEnabled,
-                    activeTrackColor: AppColors.primary,
-                    activeThumbColor: Colors.white,
-                    onChanged: (value) {
-                      setState(() => _remindersEnabled = value);
-                      QuoteReminderPreferences.setEnabled(_quote.id, value);
-                      _notify('Preference saved locally. Automatic reminder delivery requires a connected service.');
-                    },
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: SizedBox(
+                width: 48,
+                height: 48,
+                child: Center(
+                  child: Transform.scale(
+                    scale: 0.4,
+                    child: Switch(
+                      key: const Key('signature-reminders-toggle'),
+                      value: _remindersEnabled,
+                      activeTrackColor: AppColors.primary,
+                      activeThumbColor: Colors.white,
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      onChanged: (value) {
+                        setState(() => _remindersEnabled = value);
+                        QuoteReminderPreferences.setEnabled(_quote.id, value);
+                        _notify('Preference saved locally. Automatic reminder delivery requires a connected service.');
+                      },
+                    ),
                   ),
                 ),
               ),

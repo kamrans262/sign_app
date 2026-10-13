@@ -205,4 +205,29 @@ void main() {
       expect(tester.takeException(), isNull, reason: '$size');
     }
   });
+  testWidgets('reminder switch fits bounded 40px slot after rebuild',
+      (tester) async {
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    for (final size in [
+      const Size(320, 650), const Size(430, 932),
+      const Size(720, 390),
+    ]) {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+      await tester.pumpWidget(
+        MaterialApp(home: SignatureRequestScreen(
+          quote: sampleQuote(id: 'resize-$size'))),
+      );
+      await tester.ensureVisible(
+        find.byKey(const Key('signature-reminders-toggle')));
+      await tester.pump();
+      expect(tester.takeException(), isNull, reason: '$size');
+      expect(find.byType(UnconstrainedBox), findsNothing);
+      final switchWidget = find.byKey(
+        const Key('signature-reminders-toggle'));
+      expect(switchWidget, findsOneWidget);
+    }
+  });
+
 }
