@@ -47,6 +47,9 @@ void main() {
     await tester.ensureVisible(find.text('Clear'));
     await tester.tap(find.text('Clear'));
     await tester.pump();
+    // Clear lives below the tabs; scroll the tab back into the viewport.
+    await tester.ensureVisible(find.byKey(const Key('signature-tab-type')));
+    await tester.pump();
     await tester.tap(find.byKey(const Key('signature-tab-type')));
     await tester.pumpAndSettle();
     expect(find.text('Jean Dupont'), findsWidgets);
@@ -83,7 +86,12 @@ void main() {
     await tester.pump();
     await tester.tap(find.byKey(const Key('signature-consent-continue')));
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 500));
+    // Exporting a RenderRepaintBoundary PNG awaits the engine's async
+    // image encoder; allow the real event loop to finish that operation.
+    await tester.runAsync(() async {
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+    });
+    await tester.pump();
     expect(captured, isNotNull);
     expect(captured!.quoteId, 'q1');
     expect(captured!.documentId, 'doc1');

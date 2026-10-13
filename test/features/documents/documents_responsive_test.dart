@@ -54,6 +54,10 @@ void main() {
           matching: find.byType(Scrollable),
         ).first,
       );
+      await tester.ensureVisible(
+        find.byKey(const Key('document-card-documents-figma-quote-5')),
+      );
+      await tester.pumpAndSettle();
       expect(
         tester.getBottomRight(
           find.byKey(const Key('document-card-documents-figma-quote-5')),
