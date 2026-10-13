@@ -68,21 +68,35 @@ class Sign2DigitalQuoteSummaryCard extends StatelessWidget {
   Widget _info() => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      if (listStyle) ...[
-        Text(titleOverride ?? 'Quote $quoteNumber',
-          style: const TextStyle(
-            fontFamily: 'Inter', fontSize: 16, fontWeight: FontWeight.w600,
-            letterSpacing: -0.3, color: AppColors.dark,
-          ),
-        ),
-        if (status != null) ...[
-          const SizedBox(height: 5),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Sign2DigitalStatusBadge(status: status!),
-          ),
-        ],
-      ] else
+      if (listStyle)
+        LayoutBuilder(builder: (context, constraints) {
+          final name = Text(titleOverride ?? 'Quote $quoteNumber',
+            style: const TextStyle(
+              fontFamily: 'Inter', fontSize: 16, fontWeight: FontWeight.w600,
+              letterSpacing: -0.3, color: AppColors.dark,
+            ),
+          );
+          if (status == null) return name;
+          if (constraints.maxWidth < 205) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                name,
+                const SizedBox(height: 5),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Sign2DigitalStatusBadge(status: status!),
+                ),
+              ],
+            );
+          }
+          return Row(children: [
+            Expanded(child: name),
+            const SizedBox(width: 8),
+            Sign2DigitalStatusBadge(status: status!),
+          ]);
+        })
+      else
         Text('Quote # $quoteNumber', style: const TextStyle(
           fontFamily: 'Inter', fontSize: 16,
           fontWeight: FontWeight.w600, letterSpacing: -0.3,
