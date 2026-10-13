@@ -66,7 +66,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
     setState(() { _loading = true; _loadError = null; _denied = false; });
     try {
       final data = await widget.loadDocument!(widget.documentId);
-      if (!mounted) return;
+      if (!mounted) { return; }
       setState(() {
         _record = data?.id == widget.documentId ? data : null;
         _loading = false;
