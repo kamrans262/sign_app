@@ -94,6 +94,10 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
   bool get _signed => _record?.status.toLowerCase() == 'signed';
 
   Future<Uint8List?> _makePdf(DocumentRecord record) async {
+    if (record.reportKind == ReportKind.workAcceptance) {
+      if (record.demoOnly) return null;
+      return record.workAcceptance?.verifiedReportPdf;
+    }
     if (record.status.toLowerCase() == 'signed' && !record.demoOnly) {
       if (!record.verifiedSignedPdfAvailable || widget.loadSignedPdf == null) {
         throw const FormatException('Verified signed PDF is not available.');
@@ -304,7 +308,13 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
         style: _label,
       );
     }
-    if (record.quote == null && !record.verifiedSignedPdfAvailable) {
+    final hasWorkAcceptancePdf =
+        record.reportKind == ReportKind.workAcceptance &&
+        !record.demoOnly &&
+        (record.workAcceptance?.verifiedReportPdf?.isNotEmpty ?? false);
+    if (record.quote == null &&
+        !record.verifiedSignedPdfAvailable &&
+        !hasWorkAcceptancePdf) {
       return const Text('No document preview is available.', style: _label);
     }
     return FutureBuilder<Uint8List?>(

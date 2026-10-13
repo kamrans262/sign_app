@@ -1,5 +1,6 @@
 import '../../quotes/domain/quote_review_models.dart';
 import '../../jobs/data/local_job_photo_source.dart';
+import 'work_acceptance_data.dart';
 
 /// Local UI record; status is not evidence that a remote signing service ran.
 enum DocumentCategory { quotes, contacts, reports, addends }
@@ -105,6 +106,7 @@ class DocumentRecord {
     this.addendumDraftId,
     this.reportKind,
     this.siteReportDetails,
+    this.workAcceptance,
   });
 
   final String id;
@@ -128,6 +130,7 @@ class DocumentRecord {
   final String? addendumDraftId;
   final ReportKind? reportKind;
   final SiteReportDetails? siteReportDetails;
+  final WorkAcceptanceEvidence? workAcceptance;
 
   bool matches(String query) {
     final needle = query.trim().toLowerCase();

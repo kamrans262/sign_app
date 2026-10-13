@@ -5,6 +5,66 @@ import '../../../../core/widgets/sign2digital_info_banner.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../domain/document_record.dart';
 
+/// Shared borderless tracking row. The Document History and Work Acceptance
+/// flows use the same 30px icon / 12px gap / 16px heading rhythm.
+class Sign2DigitalTrackingRow extends StatelessWidget {
+  const Sign2DigitalTrackingRow({
+    super.key,
+    required this.title,
+    this.dateText,
+    this.actorText,
+    this.completed = false,
+  });
+
+  final String title;
+  final String? dateText;
+  final String? actorText;
+  final bool completed;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Container(
+        key: const Key('work-acceptance-stage-icon'),
+        width: 30, height: 30,
+        decoration: BoxDecoration(
+          color: completed ? AppColors.primary : const Color(0xFFE3ECF0),
+          shape: BoxShape.circle,
+        ),
+        alignment: Alignment.center,
+        child: Icon(
+          completed ? Icons.check_rounded : Icons.schedule_rounded,
+          size: 20,
+          color: completed ? Colors.white : AppColors.secondaryText,
+        ),
+      ),
+      const SizedBox(width: 12),
+      Expanded(child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(
+            fontFamily: 'Inter', fontSize: 16, fontWeight: FontWeight.w600,
+            letterSpacing: -0.3, color: AppColors.dark,
+          )),
+          const SizedBox(height: 5),
+          Text(dateText ?? 'Pending', style: const TextStyle(
+            fontFamily: 'Inter', fontSize: 14, fontWeight: FontWeight.w500,
+            color: AppColors.placeholder,
+          )),
+          if (actorText != null && actorText!.trim().isNotEmpty) ...[
+            const SizedBox(height: 5),
+            Text(actorText!, softWrap: true, style: const TextStyle(
+              fontFamily: 'Inter', fontSize: 14, fontWeight: FontWeight.w400,
+              color: AppColors.placeholder,
+            )),
+          ],
+        ],
+      )),
+    ],
+  );
+}
+
 /// Borderless events under the existing Document Details History tab.
 class Sign2DigitalDocumentHistory extends StatefulWidget {
   const Sign2DigitalDocumentHistory({

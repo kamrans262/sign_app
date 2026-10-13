@@ -1,4 +1,5 @@
 import '../domain/document_record.dart';
+import '../domain/work_acceptance_data.dart';
 
 /// Session-only report drafts. No remote creation, delivery or completion.
 abstract final class DemoReportDraftSession {
@@ -60,8 +61,20 @@ class DemoReportRepository implements DocumentRepository {
       project: 'Kitchen renovation',
       customer: 'Jean dupont',
       timestamp: DateTime(2026, 8, 23, 22),
-      status: 'Draft',
+      status: 'Completed',
       demoOnly: true,
+      workAcceptance: WorkAcceptanceEvidence(
+        events: [
+          for (final stage in WorkAcceptanceStage.values)
+            WorkAcceptanceEvent(
+              id: 'demo-work-acceptance-${stage.name}',
+              documentId: 'report-demo-work-acceptance-1',
+              stage: stage,
+              occurredAt: DateTime(2026, 8, 12, 10, 15),
+              actorName: 'Jean Dupont',
+            ),
+        ],
+      ),
     ),
     ...DemoReportDraftSession.drafts,
   ];

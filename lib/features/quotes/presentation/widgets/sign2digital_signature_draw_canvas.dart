@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -51,6 +52,55 @@ class Sign2DigitalSignatureDrawCanvas extends StatelessWidget {
             ),
           ),
         ),
+      );
+    },
+  );
+}
+
+
+/// Read-only counterpart of the shared signature canvas styling.
+/// Accepts only a trusted saved image, never creates a signature.
+class Sign2DigitalSignatureDisplay extends StatelessWidget {
+  const Sign2DigitalSignatureDisplay({
+    super.key,
+    this.signaturePng,
+  });
+
+  final Uint8List? signaturePng;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final height = (constraints.maxWidth * 216 / 390)
+          .clamp(145.0, 216.0).toDouble();
+      return Container(
+        key: const Key('work-acceptance-signature-panel'),
+        height: height,
+        width: double.infinity,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: const Color(0x1A8A9AA8),
+          border: Border.all(color: const Color(0x4DD9E2EA)),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: signaturePng == null || signaturePng!.isEmpty
+            ? const SizedBox.shrink()
+            : Padding(
+                padding: const EdgeInsets.all(15),
+                child: Image.memory(
+                  signaturePng!,
+                  key: const Key('work-acceptance-saved-signature'),
+                  fit: BoxFit.contain,
+                  gaplessPlayback: true,
+                  errorBuilder: (_, _, _) => const Text(
+                    'Saved signature cannot be displayed',
+                    style: TextStyle(
+                      fontFamily: 'Inter', fontSize: 12,
+                      color: AppColors.secondaryText,
+                    ),
+                  ),
+                ),
+              ),
       );
     },
   );

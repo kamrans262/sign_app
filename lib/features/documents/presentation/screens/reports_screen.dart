@@ -12,6 +12,7 @@ import '../../data/demo_report_repository.dart';
 import '../../domain/document_record.dart';
 import 'document_details_screen.dart';
 import 'site_report_wizard_screen.dart';
+import 'work_acceptance_screen.dart';
 
 /// Report library using the same list layout and document models as Documents.
 /// A caller may inject real records and its own navigation/creation callbacks.
@@ -212,9 +213,15 @@ class _ReportsScreenState extends State<ReportsScreen> {
       return;
     }
     await Navigator.of(context).push<void>(MaterialPageRoute<void>(
-      builder: (_) => DocumentDetailsScreen(
-        documentId: report.id, document: report,
-      ),
+      builder: (_) => report.reportKind == ReportKind.workAcceptance
+          ? WorkAcceptanceScreen(
+              report: report,
+              selectedNavigationIndex: widget.selectedNavigationIndex,
+              onNavigationSelected: _navigation,
+            )
+          : DocumentDetailsScreen(
+              documentId: report.id, document: report,
+            ),
     ));
     if (mounted) await _load();
   }
