@@ -44,7 +44,8 @@ void main() {
     await tester.enterText(find.byKey(const Key('signature-type-input')), 'Jean Dupont');
     await tester.tap(find.byKey(const Key('signature-tab-draw')));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('signature-clear')));
+    await tester.ensureVisible(find.text('Clear'));
+    await tester.tap(find.text('Clear'));
     await tester.pump();
     await tester.tap(find.byKey(const Key('signature-tab-type')));
     await tester.pumpAndSettle();
@@ -73,14 +74,16 @@ void main() {
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Confirm Signature'));
     await tester.tap(find.text('Confirm Signature'));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('Confirm agreement'), findsOneWidget);
     expect(tester.widget<TextButton>(find.byKey(
       const Key('signature-consent-continue'))).onPressed, isNull);
     await tester.tap(find.byKey(const Key('signature-consent-checkbox')));
     await tester.pump();
     await tester.tap(find.byKey(const Key('signature-consent-continue')));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
     expect(captured, isNotNull);
     expect(captured!.quoteId, 'q1');
     expect(captured!.documentId, 'doc1');

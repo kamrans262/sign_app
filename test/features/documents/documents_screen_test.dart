@@ -64,7 +64,23 @@ void main() {
       home: Scaffold(body: DocumentsScreen()),
     ));
     await tester.pumpAndSettle();
-    expect(find.byType(Sign2DigitalQuoteSummaryCard), findsNWidgets(5));
+    // SliverList.builder lazily mounts only visible cards at 800x600.
+    // Verify the actual fifth record by scrolling to it.
+    expect(find.byType(Sign2DigitalQuoteSummaryCard), findsWidgets);
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('document-card-documents-figma-quote-5')),
+      150,
+      scrollable: find.descendant(
+        of: find.byKey(const Key('documents-scroll')),
+        matching: find.byType(Scrollable),
+      ).first,
+    );
+    expect(
+      find.byKey(const Key('document-card-documents-figma-quote-5')),
+      findsOneWidget,
+    );
+    await tester.ensureVisible(find.byKey(const Key('clients-search-input')));
+    await tester.pump();
 
     await tester.tap(find.byKey(const Key('details-tab-2')));
     await tester.pumpAndSettle();
@@ -84,7 +100,7 @@ void main() {
       find.byKey(const Key('clients-search-input')), 'Jean',
     );
     await tester.pumpAndSettle();
-    expect(find.byType(Sign2DigitalQuoteSummaryCard), findsNWidgets(5));
+    expect(find.byType(Sign2DigitalQuoteSummaryCard), findsWidgets);
     expect(tester.takeException(), isNull);
   });
 
