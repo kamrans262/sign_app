@@ -30,7 +30,7 @@ void main() {
 
       await tester.pumpWidget(const MaterialApp(home: ClientsScreen()));
       await tester.pumpAndSettle();
-      expect(find.text('Clients'), findsWidgets);
+      expect(find.text('Clients'), findsOneWidget);
       expect(find.text('Dupont Construction SA'), findsWidgets);
       expect(find.text('12 jobs'), findsWidgets);
 
@@ -55,7 +55,14 @@ void main() {
       expect(find.text('Active (12)'), findsOneWidget);
       await tester.tap(find.byKey(const Key('dashboard-tab-2')));
       await tester.pumpAndSettle();
-      expect(find.text('Manage your clients and contacts'), findsOneWidget);
+      expect(find.text('Manage your clients and contacts'), findsNothing);
+      expect(find.byKey(const Key('open-quote-ui-demo')), findsNothing);
+      expect(find.byKey(const Key('open-reports')), findsNothing);
+      await tester.tap(find.byKey(const Key('dashboard-tab-4')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('open-quote-ui-demo')), findsOneWidget);
+      expect(find.byKey(const Key('open-reports')), findsOneWidget);
+      expect(find.byKey(const Key('open-expenses')), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );
@@ -74,7 +81,7 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
       await tester.pumpWidget(const MaterialApp(home: ClientsScreen()));
       await tester.pumpAndSettle();
-      expect(find.text('Clients'), findsWidgets);
+      expect(find.text('Clients'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
   }

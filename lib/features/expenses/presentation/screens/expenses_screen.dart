@@ -130,11 +130,13 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       widget.onCreateExpense!();
       return;
     }
-    final draft = await showModalBottomSheet<ExpenseRecord>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      builder: (_) => const AddExpenseScreen(),
+    final draft = await Navigator.of(context).push<ExpenseRecord>(
+      MaterialPageRoute<ExpenseRecord>(
+        builder: (_) => AddExpenseScreen(
+          selectedNavigationIndex: widget.selectedNavigationIndex,
+          onNavigationSelected: widget.onNavigationSelected,
+        ),
+      ),
     );
     if (draft == null || !mounted) return;
     try {
@@ -209,6 +211,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                 ExpenseCategory.parking => Icons.local_parking_outlined,
                 ExpenseCategory.meals => Icons.restaurant_outlined,
                 ExpenseCategory.other => Icons.receipt_long_outlined,
+                ExpenseCategory.material => Icons.inventory_2_outlined,
+                ExpenseCategory.labour => Icons.engineering_outlined,
               }, color: AppColors.primary, size: 25),
             ),
             SizedBox(width: compact ? 9 : 15),

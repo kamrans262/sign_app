@@ -1,6 +1,8 @@
+import '../../jobs/data/local_job_photo_source.dart';
+
 enum ExpenseCategory {
   fuel('Fuel'), tools('Tools'), parking('Parking'),
-  meals('Meals'), other('Other');
+  meals('Meals'), other('Other'), material('Material'), labour('Labour');
 
   const ExpenseCategory(this.label);
   final String label;
@@ -25,6 +27,9 @@ class ExpenseRecord {
     required this.status,
     this.description = '',
     this.demoOnly = true,
+    this.jobId,
+    this.photos = const [],
+    this.tags = const [],
   });
 
   final String id;
@@ -38,11 +43,14 @@ class ExpenseRecord {
   final ExpenseStatus status;
   final String description;
   final bool demoOnly;
+  final String? jobId;
+  final List<LocalJobPhotoSelection> photos;
+  final List<String> tags;
 
   bool matches(String input) {
     final query = input.trim().toLowerCase();
     if (query.isEmpty) return true;
-    return [id, title, category.label, job, report, status.label, description]
+    return [id, title, category.label, job, report, status.label, description, ...tags]
         .any((value) => value.toLowerCase().contains(query));
   }
 

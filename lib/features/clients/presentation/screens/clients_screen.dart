@@ -4,11 +4,8 @@ import '../../../jobs/presentation/screens/jobs_screen.dart';
 import '../../../jobs/presentation/screens/job_details_screen.dart';
 import '../../../jobs/domain/job_model.dart';
 import '../../../documents/presentation/screens/documents_screen.dart';
-import '../../../documents/presentation/screens/reports_screen.dart';
-import '../../../expenses/presentation/screens/expenses_screen.dart';
 import '../../../quotes/domain/quote_tracking_home_session.dart';
 import '../../../quotes/presentation/screens/signature_request_screen.dart';
-import '../../../quotes/presentation/screens/quote_ui_demo_screen.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -22,6 +19,7 @@ import '../../domain/client_draft.dart';
 import 'add_client_screen.dart';
 import 'client_details_screen.dart';
 import 'import_clients_screen.dart';
+import 'more_screen.dart';
 import '../widgets/sign2digital_client_card.dart';
 
 /// A temporary UI-only destination after demo Login.
@@ -118,22 +116,11 @@ class _ClientsScreenState extends State<ClientsScreen> {
                         setState(() => _selectedIndex = index),
                   ),
                   const DocumentsScreen(),
-                  _UpcomingTab(
-                    name: 'More',
-                    onExpensesTap: () => Navigator.of(context).push<void>(
-                      MaterialPageRoute<void>(
-                        builder: (_) => ExpensesScreen(
-                          onNavigationSelected: (index) {
-                            if (mounted) {
-                              setState(() => _selectedIndex = index);
-                            }
-                          },
-                          onNotificationTap: () =>
-                              _showNotReady('Notifications'),
-                          onProfileTap: () => _showNotReady('Profile'),
-                        ),
-                      ),
-                    ),
+                  MoreScreen(
+                    onTabSelected: (index) {
+                      if (mounted) setState(() => _selectedIndex = index);
+                    },
+                    onNotReady: _showNotReady,
                   ),
                 ],
               ),
@@ -183,42 +170,6 @@ class _SignatureHomeEmptyState extends StatelessWidget {
       ),
     ),
   );
-}
-
-class _UpcomingTab extends StatelessWidget {
-  const _UpcomingTab({required this.name, this.onExpensesTap});
-  final String name;
-  final VoidCallback? onExpensesTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(name, style: AppTextStyles.heading),
-            const SizedBox(height: 12),
-            const Text(
-              'This screen will be designed in a future UI milestone.',
-              textAlign: TextAlign.center,
-              style: AppTextStyles.subtitle,
-            ),
-            if (onExpensesTap != null) ...[
-              const SizedBox(height: 20),
-              OutlinedButton.icon(
-                key: const Key('open-expenses'),
-                onPressed: onExpensesTap,
-                icon: const Icon(Icons.receipt_long_outlined),
-                label: const Text('Expenses'),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 class _ClientsContent extends StatefulWidget {
@@ -333,18 +284,11 @@ class _ClientsContentState extends State<_ClientsContent> {
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           slivers: [
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
               sliver: SliverToBoxAdapter(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text('Clients', style: AppTextStyles.heading),
-                    const SizedBox(height: 10),
-                    const Text(
-                      'Manage your clients and contacts',
-                      style: AppTextStyles.subtitle,
-                    ),
-                    const SizedBox(height: 20),
                     Sign2DigitalSearchField(
                       controller: _search,
                       onChanged: (_) => setState(() {}),
@@ -353,34 +297,6 @@ class _ClientsContentState extends State<_ClientsContent> {
                       },
                     ),
                     const SizedBox(height: 20),
-                    OutlinedButton.icon(
-                      key: const Key('open-quote-ui-demo'),
-                      icon: const Icon(Icons.description_outlined),
-                      label: const Text('Open Quote UI Demo'),
-                      onPressed: () => Navigator.of(context).push<void>(
-                        MaterialPageRoute<void>(
-                          builder: (_) => const QuoteUiDemoScreen(),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextButton.icon(
-                      key: const Key('open-reports'),
-                      onPressed: () => Navigator.of(context).push<void>(
-                        MaterialPageRoute<void>(
-                          builder: (_) => ReportsScreen(
-                            onNavigationSelected: widget.onTabSelected,
-                            onNotificationTap: () =>
-                                widget.showNotReady('Notifications'),
-                            onProfileTap: () =>
-                                widget.showNotReady('Profile'),
-                          ),
-                        ),
-                      ),
-                      icon: const Icon(Icons.assessment_outlined),
-                      label: const Text('Reports'),
-                    ),
-                    const SizedBox(height: 12),
                     LayoutBuilder(
                       builder: (context, constraints) {
                         final narrow = constraints.maxWidth < 330;

@@ -153,10 +153,21 @@ void main() {
     await tester.tap(find.byKey(const Key('expense-save-draft')));
     await tester.pump();
     expect(find.byKey(const Key('expense-add-error')), findsOneWidget);
-    await tester.enterText(find.byKey(const Key('expense-add-job')),
-      'Kitchen renovation');
-    await tester.enterText(find.byKey(const Key('expense-add-amount')),
-      '12.50');
+    await tester.tap(find.byKey(const Key('expense-add-job')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('expense-job-demo-active-1')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('expense-add-category')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('expense-type-fuel')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('expense-add-date')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('OK'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.descendant(
+      of: find.byKey(const Key('expense-add-amount')),
+      matching: find.byType(TextFormField)), '12.50');
     await tester.ensureVisible(find.byKey(const Key('expense-save-draft')));
     await tester.tap(find.byKey(const Key('expense-save-draft')));
     await tester.pumpAndSettle();
@@ -164,6 +175,7 @@ void main() {
     expect(all, hasLength(5));
     final draft = all.last;
     expect(draft.amount, 12.5);
+    expect(draft.jobId, 'demo-active-1');
     expect(draft.status, ExpenseStatus.toReview);
     expect(draft.demoOnly, isTrue);
     expect(find.byKey(Key('expense-card-${draft.id}')), findsOneWidget);

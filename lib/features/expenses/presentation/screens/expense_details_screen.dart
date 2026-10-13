@@ -49,6 +49,26 @@ class ExpenseDetailsScreen extends StatelessWidget {
                 _field('Date', _date(expense.date)),
                 if (expense.description.isNotEmpty)
                   _field('Description', expense.description),
+                if (expense.tags.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Wrap(spacing: 6, runSpacing: 6, children: [
+                    for (final tag in expense.tags) Chip(label: Text(tag)),
+                  ]),
+                ],
+                if (expense.photos.isNotEmpty) ...[
+                  const SizedBox(height: 15),
+                  Wrap(spacing: 8, runSpacing: 8, children: [
+                    for (var i = 0; i < expense.photos.length; i++)
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.memory(expense.photos[i].bytes,
+                          key: Key('expense-detail-photo-$i'),
+                          width: 112, height: 84, fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) =>
+                            const Icon(Icons.broken_image_outlined)),
+                      ),
+                  ]),
+                ],
                 const SizedBox(height: 12),
                 Align(alignment: Alignment.centerRight,
                   child: Sign2DigitalStatusBadge(

@@ -1,0 +1,83 @@
+import 'package:flutter/material.dart';
+
+import '../../../../core/theme/app_colors.dart';
+import '../../../documents/presentation/screens/reports_screen.dart';
+import '../../../expenses/presentation/screens/expenses_screen.dart';
+import '../../../quotes/presentation/screens/quote_ui_demo_screen.dart';
+
+/// Entry points for UI-only tools belong to More, not the Clients list.
+class MoreScreen extends StatelessWidget {
+  const MoreScreen({super.key, this.onTabSelected, this.onNotReady});
+  final ValueChanged<int>? onTabSelected;
+  final ValueChanged<String>? onNotReady;
+
+  Future<void> _open(BuildContext context, Widget screen) =>
+      Navigator.of(context).push<void>(
+        MaterialPageRoute<void>(builder: (_) => screen));
+
+  @override
+  Widget build(BuildContext context) => Center(
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 560),
+      child: ListView(
+        key: const Key('more-menu-scroll'),
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 25),
+        children: [
+          _tile(context,
+            key: const Key('open-quote-ui-demo'),
+            title: 'Quote UI Demo',
+            icon: Icons.description_outlined,
+            onTap: () => _open(context, const QuoteUiDemoScreen())),
+          const SizedBox(height: 15),
+          _tile(context,
+            key: const Key('open-reports'),
+            title: 'Reports',
+            icon: Icons.assessment_outlined,
+            onTap: () => _open(context, ReportsScreen(
+              onNavigationSelected: onTabSelected,
+              onNotificationTap: () => onNotReady?.call('Notifications'),
+              onProfileTap: () => onNotReady?.call('Profile'),
+            ))),
+          const SizedBox(height: 15),
+          _tile(context,
+            key: const Key('open-expenses'),
+            title: 'Expenses',
+            icon: Icons.receipt_long_outlined,
+            onTap: () => _open(context, ExpensesScreen(
+              onNavigationSelected: onTabSelected,
+              onNotificationTap: () => onNotReady?.call('Notifications'),
+              onProfileTap: () => onNotReady?.call('Profile'),
+            ))),
+        ],
+      ),
+    ),
+  );
+
+  Widget _tile(BuildContext context, {required Key key,
+    required String title, required IconData icon, required VoidCallback onTap}) =>
+      Material(
+        color: AppColors.white,
+        child: InkWell(
+          key: key,
+          borderRadius: BorderRadius.circular(10),
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+            decoration: BoxDecoration(
+              border: Border.all(color: AppColors.lightBorder),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(children: [
+              Icon(icon, color: AppColors.primary, size: 24),
+              const SizedBox(width: 15),
+              Expanded(child: Text(title,
+                style: const TextStyle(fontFamily: 'Inter',
+                  fontSize: 16, fontWeight: FontWeight.w600,
+                  color: AppColors.dark))),
+              const Icon(Icons.chevron_right_rounded,
+                color: AppColors.secondaryText),
+            ]),
+          ),
+        ),
+      );
+}
