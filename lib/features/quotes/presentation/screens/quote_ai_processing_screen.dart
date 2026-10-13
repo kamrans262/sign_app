@@ -74,7 +74,8 @@ class _QuoteAiProcessingScreenState extends State<QuoteAiProcessingScreen> {
     }
     _subscription?.cancel();
     final generation = ++_generation;
-    widget.onStageChanged?.call(QuotePreparationStage.preparing);
+    // The caller marks preparation active before pushing this route.
+    // Do not notify the previous route during this widget's initState/build.
     setState(() {
       _showingDemo = false;
       _reviewDraft = null;

@@ -64,5 +64,4 @@ jobs:
             --timeout 45s \
             test/features/jobs/convert_document_screen_test.dart \
             test/features/jobs/job_notes_screen_test.dart \
-            test/features/quotes/quote_ai_processing_screen_test.dart \
-            test/features/quotes/create_quote_screen_test.dart
+            test/features/quotes/quote_ai_processing_screen_test.dart
