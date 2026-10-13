@@ -17,6 +17,7 @@ import '../../domain/quote_preparation_service.dart';
 import '../../services/openai_quote_preparation_service.dart';
 import 'quote_ai_processing_screen.dart';
 import '../widgets/sign2digital_quote_input_method_card.dart';
+import '../widgets/sign2digital_temporary_ai_key_dialog.dart';
 
 /// New, frontend-only Create Quote entry screen. No fabricated AI draft.
 /// The voice dialog is the SAME dialog that Create Job uses.
@@ -186,75 +187,8 @@ class _CreateQuoteScreenState extends State<CreateQuoteScreen> {
   }
 
   /// Runtime-only developer key. Never save it in preferences, assets or logs.
-  Future<String?> _requestTemporaryApiKey() async {
-    String draft = '';
-    bool visible = false;
-    String? error;
-    return showDialog<String>(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, update) => AlertDialog(
-          title: const Text('Connect Quote AI'),
-          content: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 400),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'For private development testing: enter your OpenAI API key '
-                    'to analyze this quote input. The key is kept in memory only. '
-                    'Do not use this method in a published app.',
-                  ),
-                  const SizedBox(height: 15),
-                  TextFormField(
-                    key: const Key('quote-openai-api-key'),
-                    obscureText: !visible,
-                    enableSuggestions: false,
-                    autocorrect: false,
-                    keyboardType: TextInputType.visiblePassword,
-                    onChanged: (value) => draft = value,
-                    decoration: InputDecoration(
-                      labelText: 'OpenAI API key',
-                      border: const OutlineInputBorder(),
-                      errorText: error,
-                      suffixIcon: IconButton(
-                        tooltip: visible ? 'Hide API key' : 'Show API key',
-                        icon: Icon(visible
-                            ? Icons.visibility_off_outlined
-                            : Icons.visibility_outlined),
-                        onPressed: () => update(() => visible = !visible),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              key: const Key('quote-connect-ai'),
-              onPressed: () {
-                final key = draft.trim();
-                if (key.isEmpty ||
-                    RegExp(r'[\x00-\x20\x7F]').hasMatch(key)) {
-                  update(() => error = 'Paste a valid API key.');
-                  return;
-                }
-                Navigator.of(dialogContext).pop(key);
-              },
-              child: const Text('Generate with AI'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  Future<String?> _requestTemporaryApiKey() =>
+      Sign2DigitalTemporaryAiKeyDialog.request(context);
 
   Future<void> _generate() async {
     FocusManager.instance.primaryFocus?.unfocus();

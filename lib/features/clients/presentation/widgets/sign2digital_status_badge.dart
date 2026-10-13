@@ -11,6 +11,7 @@ class Sign2DigitalStatusBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = switch (status.toLowerCase()) {
       'active' => (const Color(0xFFC4F0D0), const Color(0xFF18733D)),
+      'customer-facing' => (const Color(0xFFC4F0D0), const Color(0xFF18733D)),
       'quote' => (DashboardColors.paleBlue, AppColors.primary),
       'in progress' => (const Color(0xFFFFE9E9), const Color(0xFFB42318)),
       'paid' => (const Color(0xFFC4F0D0), const Color(0xFF18733D)),

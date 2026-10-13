@@ -8,6 +8,7 @@ class QuoteDraftInput {
     required this.createdAt,
     this.clientId,
     this.jobId,
+    this.sourceNoteId,
     this.description,
     this.audioPath,
     this.photoPath,
@@ -17,6 +18,7 @@ class QuoteDraftInput {
   final DateTime createdAt;
   final String? clientId;
   final String? jobId;
+  final String? sourceNoteId;
   final String? description;
   final String? audioPath;
   final String? photoPath;

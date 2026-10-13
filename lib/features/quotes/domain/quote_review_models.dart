@@ -156,6 +156,7 @@ class QuoteReviewDraft {
     required this.id,
     this.clientId,
     this.jobId,
+    this.sourceNoteId,
     this.clientName = '',
     this.quoteNumber = '',
     required this.date,
@@ -173,6 +174,7 @@ class QuoteReviewDraft {
   final String id;
   String? clientId;
   final String? jobId;
+  final String? sourceNoteId;
   String clientName;
   String quoteNumber;
   DateTime date;
@@ -223,6 +225,7 @@ class QuoteReviewDraft {
         id: 'quote-${DateTime.now().microsecondsSinceEpoch}',
         clientId: source?.clientId,
         jobId: source?.jobId,
+        sourceNoteId: source?.sourceNoteId,
         date: DateTime.now(),
         currency: snapshot.currency ?? 'CHF',
         items: [
@@ -267,6 +270,7 @@ class QuoteReviewDraft {
     return QuoteReviewDraft(
       id: 'quote-${DateTime.now().microsecondsSinceEpoch}',
       clientId: source?.clientId, jobId: source?.jobId,
+      sourceNoteId: source?.sourceNoteId,
       date: DateTime.now(),
       items: [QuoteReviewWorkItem(
         id: 'extracted-1', title: items, description: description,
@@ -324,7 +328,8 @@ class QuoteReviewDraft {
   }
 
   QuoteReviewDraft copy() => QuoteReviewDraft(
-    id: id, clientId: clientId, jobId: jobId, clientName: clientName,
+    id: id, clientId: clientId, jobId: jobId,
+    sourceNoteId: sourceNoteId, clientName: clientName,
     quoteNumber: quoteNumber, date: date, currency: currency,
     vatBasisPoints: vatBasisPoints, depositBasisPoints: depositBasisPoints,
     items: items.map((item) => item.copy()).toList(), terms: terms,

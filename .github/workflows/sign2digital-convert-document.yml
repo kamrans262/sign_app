@@ -1,0 +1,68 @@
+name: Sign2Digital Convert Document focused checks
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/sign2digital-convert-document.yml'
+      - 'lib/features/jobs/presentation/screens/convert_document_screen.dart'
+      - 'lib/features/jobs/presentation/screens/job_notes_screen.dart'
+      - 'lib/features/jobs/presentation/widgets/sign2digital_job_note_card.dart'
+      - 'lib/features/quotes/presentation/widgets/sign2digital_document_status_timeline.dart'
+      - 'lib/features/quotes/presentation/widgets/sign2digital_temporary_ai_key_dialog.dart'
+      - 'lib/features/quotes/presentation/screens/create_quote_screen.dart'
+      - 'lib/features/quotes/presentation/screens/quote_ai_processing_screen.dart'
+      - 'lib/features/quotes/domain/quote_draft_input.dart'
+      - 'lib/features/quotes/domain/quote_review_models.dart'
+      - 'test/features/jobs/convert_document_screen_test.dart'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  convert-document:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Format and syntax of modified Dart files
+        run: |
+          dart format --output=none \
+            lib/features/jobs/presentation/screens/convert_document_screen.dart \
+            lib/features/jobs/presentation/screens/job_notes_screen.dart \
+            lib/features/jobs/presentation/widgets/sign2digital_job_note_card.dart \
+            lib/features/quotes/presentation/widgets/sign2digital_document_status_timeline.dart \
+            lib/features/quotes/presentation/widgets/sign2digital_temporary_ai_key_dialog.dart \
+            lib/features/quotes/presentation/screens/create_quote_screen.dart \
+            lib/features/quotes/presentation/screens/quote_ai_processing_screen.dart \
+            lib/features/quotes/domain/quote_draft_input.dart \
+            lib/features/quotes/domain/quote_review_models.dart \
+            test/features/jobs/convert_document_screen_test.dart
+      - name: Focused Flutter analysis
+        run: |
+          flutter analyze --no-pub \
+            lib/features/jobs/presentation/screens/convert_document_screen.dart \
+            lib/features/jobs/presentation/screens/job_notes_screen.dart \
+            lib/features/jobs/presentation/widgets/sign2digital_job_note_card.dart \
+            lib/features/quotes/presentation/widgets/sign2digital_document_status_timeline.dart \
+            lib/features/quotes/presentation/widgets/sign2digital_temporary_ai_key_dialog.dart \
+            lib/features/quotes/presentation/screens/create_quote_screen.dart \
+            lib/features/quotes/presentation/screens/quote_ai_processing_screen.dart \
+            lib/features/quotes/domain/quote_draft_input.dart \
+            lib/features/quotes/domain/quote_review_models.dart \
+            lib/core/widgets/sign2digital_primary_button.dart \
+            lib/features/clients/presentation/widgets/sign2digital_status_badge.dart
+      - name: Convert Document and direct navigation/AI regressions
+        run: |
+          flutter test --no-pub --concurrency=1 --reporter expanded \
+            --timeout 45s \
+            test/features/jobs/convert_document_screen_test.dart \
+            test/features/jobs/job_notes_screen_test.dart \
+            test/features/quotes/quote_ai_processing_screen_test.dart \
+            test/features/quotes/create_quote_screen_test.dart

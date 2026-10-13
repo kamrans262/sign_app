@@ -23,6 +23,9 @@ class QuoteAiProcessingScreen extends StatefulWidget {
     this.initialSnapshot,
     this.demoReviewDraft,
     this.onReview,
+    this.onStageChanged,
+    this.onReviewStarted,
+    this.onQuoteApproved,
   });
 
   /// The real source gathered on Create Quote.
@@ -34,6 +37,10 @@ class QuoteAiProcessingScreen extends StatefulWidget {
   /// Keeps the manual UI tour on the same quote; not an AI result.
   final QuoteReviewDraft? demoReviewDraft;
   final ValueChanged<QuotePreparationSnapshot>? onReview;
+  /// Optional progress feedback to a source note without changing quote flow.
+  final ValueChanged<QuotePreparationStage>? onStageChanged;
+  final VoidCallback? onReviewStarted;
+  final ValueChanged<QuoteReviewDraft>? onQuoteApproved;
 
   @override
   State<QuoteAiProcessingScreen> createState() => _QuoteAiProcessingScreenState();
@@ -67,6 +74,7 @@ class _QuoteAiProcessingScreenState extends State<QuoteAiProcessingScreen> {
     }
     _subscription?.cancel();
     final generation = ++_generation;
+    widget.onStageChanged?.call(QuotePreparationStage.preparing);
     setState(() {
       _showingDemo = false;
       _reviewDraft = null;
@@ -90,11 +98,13 @@ class _QuoteAiProcessingScreenState extends State<QuoteAiProcessingScreen> {
             return;
           }
           setState(() => _snapshot = snapshot);
+          widget.onStageChanged?.call(snapshot.stage);
         },
         onError: (Object error, StackTrace trace) {
           if (!mounted || generation != _generation) {
             return;
           }
+          widget.onStageChanged?.call(QuotePreparationStage.failed);
           setState(() => _snapshot = QuotePreparationSnapshot(
             stage: QuotePreparationStage.failed,
             message: 'Quote extraction failed. Please try again. $error',
@@ -169,8 +179,10 @@ class _QuoteAiProcessingScreenState extends State<QuoteAiProcessingScreen> {
     if (!mounted) {
       return;
     }
+    widget.onReviewStarted?.call();
     Navigator.of(context).push<void>(MaterialPageRoute<void>(
-      builder: (_) => ReviewQuoteScreen(initialDraft: _reviewDraft!),
+      builder: (_) => ReviewQuoteScreen(
+        initialDraft: _reviewDraft!, onApproved: widget.onQuoteApproved),
     ));
   }
 

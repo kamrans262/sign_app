@@ -12,6 +12,7 @@ class Sign2DigitalPrimaryButton extends StatelessWidget {
     this.loading = false,
     this.enabled = true,
     this.height = 48,
+    this.leading,
     super.key,
   });
 
@@ -20,6 +21,7 @@ class Sign2DigitalPrimaryButton extends StatelessWidget {
   final bool loading;
   final bool enabled;
   final double height;
+  final Widget? leading;
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +49,15 @@ class Sign2DigitalPrimaryButton extends StatelessWidget {
                   color: AppColors.white,
                 ),
               )
-            : Text(label, style: AppTextStyles.primaryButton),
+            : leading == null
+                ? Text(label, style: AppTextStyles.primaryButton)
+                : Row(mainAxisSize: MainAxisSize.min, children: [
+                    leading!,
+                    const SizedBox(width: 10),
+                    Flexible(child: Text(label,
+                      maxLines: 2, textAlign: TextAlign.center,
+                      style: AppTextStyles.primaryButton)),
+                  ]),
       ),
     );
   }

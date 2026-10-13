@@ -11,6 +11,7 @@ import '../../domain/job_note_model.dart';
 import '../widgets/sign2digital_job_info_banner.dart';
 import '../widgets/sign2digital_job_note_card.dart';
 import '../widgets/sign2digital_note_visibility_card.dart';
+import 'convert_document_screen.dart';
 
 /// Handoff for a future Add Notes editor. Selection is user preference,
 /// not a replacement for server-side permissions.
@@ -90,6 +91,18 @@ class _JobNotesScreenState extends State<JobNotesScreen> {
           ),
         ),
         actions: [
+          TextButton(
+            key: const Key('job-note-convert'),
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              Navigator.of(context).push<void>(MaterialPageRoute<void>(
+                builder: (_) => ConvertDocumentScreen(
+                  note: note, onTabSelected: widget.onTabSelected,
+                ),
+              ));
+            },
+            child: const Text('Convert to Document'),
+          ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
             child: const Text('Close'),
