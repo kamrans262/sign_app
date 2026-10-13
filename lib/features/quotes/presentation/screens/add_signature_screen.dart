@@ -465,11 +465,11 @@ class _AddSignatureScreenState extends State<AddSignatureScreen> {
       Expanded(child: LayoutBuilder(builder: (context, viewport) =>
         SingleChildScrollView(
           key: const Key('signature-scroll'),
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 36),
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 30),
           child: Center(child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 720),
             child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: viewport.maxHeight - 36),
+              constraints: BoxConstraints(minHeight: viewport.maxHeight - 30),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -482,7 +482,6 @@ class _AddSignatureScreenState extends State<AddSignatureScreen> {
                   Sign2DigitalInfoBanner(
                     iconAsset: 'assets/icons_2/fingerprint.svg',
                     verticalPadding: 10,
-                    textColor: AppColors.placeholder,
                     message: 'By signing, you confirm that you agree to our Terms & Conditions and Services.',
                   ),
                   if (_error != null) Padding(
