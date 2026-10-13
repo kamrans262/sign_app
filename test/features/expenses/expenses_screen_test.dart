@@ -25,7 +25,12 @@ class _StubRepository implements ExpenseRepository {
 ExpenseRecord example(String id, ExpenseStatus status, double amount,
     DateTime date, {String title = 'Fuel'}) => ExpenseRecord(
   id: id,
-  category: ExpenseCategory.fuel,
+  category: switch (title) {
+    'Tools' => ExpenseCategory.tools,
+    'Meals' => ExpenseCategory.meals,
+    'Parking' => ExpenseCategory.parking,
+    _ => ExpenseCategory.fuel,
+  },
   title: title,
   job: 'Kitchen renovation',
   report: 'Site report',
@@ -110,7 +115,9 @@ void main() {
     await tester.pumpAndSettle();
     final fuel = find.byKey(const Key('expense-card-demo-expense-1'));
     expect(fuel, findsOneWidget);
-    expect(find.text('CHF 78.80'), findsNWidgets(4));
+    // Only viewport-visible rows are built by SliverList.builder.
+    expect(find.byKey(const Key('expense-amount-demo-expense-1')),
+      findsOneWidget);
     final badge = find.descendant(of: fuel,
       matching: find.byType(Sign2DigitalStatusBadge));
     expect(tester.widget<Sign2DigitalStatusBadge>(badge).status, 'Approved');
