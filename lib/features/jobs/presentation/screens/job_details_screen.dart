@@ -1,0 +1,370 @@
+import 'dart:math' as math;
+
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
+import '../../../../core/widgets/sign2digital_header.dart';
+import '../../domain/job_details_model.dart';
+import 'job_photos_screen.dart';
+import 'job_notes_screen.dart';
+import '../../domain/job_model.dart';
+import '../widgets/sign2digital_job_financial_card.dart';
+import '../widgets/sign2digital_job_progress_indicator.dart';
+import '../widgets/sign2digital_job_section_card.dart';
+import '../widgets/sign2digital_job_status_badge.dart';
+import '../widgets/sign2digital_remaining_balance_card.dart';
+
+/// Job-specific details on a separate route. The underlying dashboard shell
+/// keeps its selected filter/search state and bottom bar is never duplicated.
+class JobDetailsScreen extends StatelessWidget {
+  const JobDetailsScreen({
+    super.key,
+    required this.job,
+    this.details,
+    this.onSectionTap,
+    this.onTabSelected,
+  });
+
+  final JobModel job;
+  final JobDetailsModel? details;
+  final ValueChanged<JobSection>? onSectionTap;
+  final ValueChanged<int>? onTabSelected;
+
+  void _openSection(BuildContext context, JobSection section) {
+    if (onSectionTap != null) {
+      onSectionTap!(section);
+      return;
+    }
+    if (section == JobSection.photos) {
+      Navigator.of(context).push<void>(
+        MaterialPageRoute(
+          builder: (_) => JobPhotosScreen(
+            job: job,
+            onTabSelected: (index) => _selectTab(context, index),
+          ),
+        ),
+      );
+      return;
+    }
+    if (section == JobSection.notes) {
+      Navigator.of(context).push<void>(
+        MaterialPageRoute(
+          builder: (_) => JobNotesScreen(
+            job: job,
+            onTabSelected: (index) => _selectTab(context, index),
+          ),
+        ),
+      );
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${section.label} is not connected yet.')),
+    );
+  }
+
+  void _selectTab(BuildContext context, int index) {
+    if (index == 1) return;
+    if (onTabSelected != null) {
+      onTabSelected!(index);
+    } else {
+      Navigator.of(context).maybePop();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final data = details ?? JobDetailsModel.demoFor(job);
+    return Scaffold(
+      backgroundColor: AppColors.white,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            Sign2DigitalHeader(
+              title: job.title,
+              onBack: () => Navigator.of(context).maybePop(),
+            ),
+            Expanded(
+              child: SizedBox(
+                width: double.infinity,
+                child: SingleChildScrollView(
+                  key: const Key('job-details-scroll'),
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _JobSummary(job: job),
+                      const SizedBox(height: 15),
+                      const Text(
+                        'Job Progress',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.dark,
+                        ),
+                      ),
+                      const SizedBox(height: 9),
+                      Sign2DigitalJobProgressIndicator(
+                        percentage: job.progressPercentage,
+                        percentageColor: AppColors.primary,
+                      ),
+                      const SizedBox(height: 25),
+                      _ResponsiveCardGrid(
+                        count: 6,
+                        builder: (index) => switch (index) {
+                          0 => Sign2DigitalJobFinancialCard(
+                            label: 'Quote amount',
+                            amountChf: data.quoteAmountChf,
+                            icon: Icons.description_outlined,
+                            iconAsset: 'assets/icons/description.svg',
+                          ),
+                          1 => Sign2DigitalJobFinancialCard(
+                            label: 'Expenses',
+                            amountChf: data.expensesChf,
+                            icon: Icons.shopping_cart_outlined,
+                          ),
+                          2 => Sign2DigitalJobFinancialCard(
+                            label: 'Labour cost',
+                            amountChf: data.labourCostChf,
+                            icon: Icons.groups_outlined,
+                            iconAsset: 'assets/icons/team_members.svg',
+                          ),
+                          3 => Sign2DigitalJobFinancialCard(
+                            label: 'Deposits',
+                            amountChf: data.depositsChf,
+                            icon: Icons.savings_outlined,
+                          ),
+                          4 => Sign2DigitalJobFinancialCard(
+                            label: 'Invoiced',
+                            amountChf: data.invoicedChf,
+                            icon: Icons.description_outlined,
+                            iconAsset: 'assets/icons/doc_numbering.svg',
+                          ),
+                          _ => Sign2DigitalJobFinancialCard(
+                            label: 'Received',
+                            amountChf: data.receivedChf,
+                            icon: Icons.check_circle,
+                          ),
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                      Sign2DigitalRemainingBalanceCard(
+                        balanceChf: data.remainingBalanceChf,
+                      ),
+                      const SizedBox(height: 20),
+                      _ResponsiveCardGrid(
+                        count: data.sections.length,
+                        builder: (index) => Sign2DigitalJobSectionCard(
+                          details: data.sections[index],
+                          onTap: () => _openSection(
+                            context,
+                            data.sections[index].section,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      bottomNavigationBar: Sign2DigitalBottomNavigationBar(
+        selectedIndex: 1,
+        onSelected: (index) => _selectTab(context, index),
+      ),
+    );
+  }
+}
+
+/// Lays out entire rows at their natural content height instead of forcing
+/// every card into an 82px GridView cell. At the reference width, compact
+/// one-line cards retain the 82px minimum; a wrapped label can grow without
+/// clipping. IntrinsicHeight keeps both cards in a row the same height.
+class _ResponsiveCardGrid extends StatelessWidget {
+  const _ResponsiveCardGrid({required this.count, required this.builder});
+
+  final int count;
+  final Widget Function(int index) builder;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth < 335
+            ? 1
+            : constraints.maxWidth >= 1040
+            ? 4
+            : constraints.maxWidth >= 700
+            ? 3
+            : 2;
+        final rowCount = (count + columns - 1) ~/ columns;
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (var row = 0; row < rowCount; row++) ...[
+              if (row > 0) const SizedBox(height: 16),
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (var column = 0; column < columns; column++) ...[
+                      if (column > 0) const SizedBox(width: 12),
+                      Expanded(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(minHeight: 82),
+                          child: row * columns + column < count
+                              ? builder(row * columns + column)
+                              : const SizedBox.shrink(),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _JobSummary extends StatelessWidget {
+  const _JobSummary({required this.job});
+
+  final JobModel job;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final imageWidth = constraints.maxWidth < 310 ? 88.0 : 106.0;
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Image.asset(
+                job.imageAsset,
+                key: Key('job-detail-image-${job.id}'),
+                width: imageWidth,
+                height: 90,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  width: imageWidth,
+                  height: 90,
+                  color: const Color(0xFFE3ECF0),
+                  alignment: Alignment.center,
+                  child: const Icon(Icons.image_outlined),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, available) {
+                  final title = Text(
+                    job.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.fieldLabel,
+                  );
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (available.maxWidth >= 245)
+                        Row(
+                          children: [
+                            Expanded(child: title),
+                            const SizedBox(width: 6),
+                            Sign2DigitalJobStatusBadge(stage: job.stage),
+                          ],
+                        )
+                      else
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 5,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            title,
+                            Sign2DigitalJobStatusBadge(stage: job.stage),
+                          ],
+                        ),
+                      const SizedBox(height: 5),
+                      Text(
+                        job.clientName,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: -0.3,
+                          color: AppColors.placeholder,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 5,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          Text(
+                            job.referenceNumber,
+                            maxLines: 1,
+                            style: const TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.placeholder,
+                            ),
+                          ),
+                          SizedBox(
+                            width: math.min(available.maxWidth, 165.0),
+                            child: Row(
+                              children: [
+                                SvgPicture.asset(
+                                  'assets/icons/calendar-outlined.svg',
+                                  width: 14,
+                                  height: 14,
+                                  colorFilter: const ColorFilter.mode(
+                                    AppColors.placeholder,
+                                    BlendMode.srcIn,
+                                  ),
+                                ),
+                                const SizedBox(width: 5),
+                                Expanded(
+                                  child: Text(
+                                    job.formattedDueDate,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 13,
+                                      color: AppColors.placeholder,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}

@@ -1,0 +1,72 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:sign2digital/features/quotes/domain/quote_review_models.dart';
+import 'package:sign2digital/features/quotes/presentation/screens/quote_preview_screen.dart';
+
+void main() {
+  test('Swiss payment QR is hidden when bank data is missing or invalid', () {
+    final draft = QuoteReviewDraft.figmaDemo();
+    expect(draft.payment, isNull);
+    final partial = QuotePaymentDetails(iban: 'CH0000', accountHolder: 'Test');
+    expect(partial.swissQrBillPayload(currency: 'CHF', amountMinor: 9800), isNull);
+  });
+
+  test('valid Swiss QR bill fields generate encoded real payment data', () {
+    final details = QuotePaymentDetails(
+      iban: 'CH9300762011623852957', accountHolder: 'Sample Company',
+      street: 'Musterstrasse', buildingNumber: '1',
+      postalCode: '8000', city: 'Zurich', country: 'CH',
+    );
+    final result = details.swissQrBillPayload(currency: 'CHF', amountMinor: 9800);
+    expect(result, isNotNull);
+    expect(result, startsWith('SPC\n0200\n1\nCH9300762011623852957\n'));
+    expect(result, contains('\n98.00\nCHF\n'));
+    expect(result, contains('\nNON\n'));
+  });
+
+  test('quote snapshots preserve client, totals and terms unchanged', () {
+    final draft = QuoteReviewDraft.figmaDemo();
+    draft.billingAddress = 'Example Road 12';
+    draft.clientEmail = 'example@test.invalid';
+    draft.terms = 'Sample terms';
+    draft.items.last.unitPrice = '100.00';
+    final copy = draft.copy();
+    expect(copy.billingAddress, 'Example Road 12');
+    expect(copy.terms, 'Sample terms');
+    expect(copy.totalMinor, draft.totalMinor);
+    copy.items.first.unitPrice = '1.00';
+    expect(copy.totalMinor, isNot(draft.totalMinor));
+  });
+
+  testWidgets('preview renders draft data and actions at 430 logical px',
+      (tester) async {
+    tester.view.physicalSize = const Size(430, 960);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final draft = QuoteReviewDraft.figmaDemo();
+    draft.terms = 'Sample terms';
+    await tester.pumpWidget(MaterialApp(home: QuotePreviewScreen(quote: draft)));
+    expect(find.text('Quote Preview'), findsOneWidget);
+    expect(find.text('Q-2026-0043'), findsOneWidget);
+    expect(find.text('PVC Windows (Standard)'), findsOneWidget);
+    expect(find.text('Pricing incomplete — missing values are not zero.'),
+        findsOneWidget);
+    await tester.ensureVisible(find.byKey(const Key('quote-preview-download')));
+    expect(find.byKey(const Key('quote-preview-share')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('landscape quote preview scrolls without Flex overflow',
+      (tester) async {
+    tester.view.physicalSize = const Size(720, 390);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(MaterialApp(home: QuotePreviewScreen(
+      quote: QuoteReviewDraft.figmaDemo(),
+    )));
+    await tester.ensureVisible(find.byKey(const Key('quote-preview-share')));
+    expect(tester.takeException(), isNull);
+  });
+}

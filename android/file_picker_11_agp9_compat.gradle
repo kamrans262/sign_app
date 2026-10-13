@@ -1,0 +1,15 @@
+// Sign2Digital compatibility workaround for file_picker 11.0.1-11.0.3
+// when AGP 9 is used with android.builtInKotlin=false.
+// Origin: https://github.com/vicajilau/flutter_file_picker/issues/2200
+// Remove this file and its one-line apply() in android/build.gradle(.kts)
+// when migrating to file_picker >=12 (with the matching Dart API updates).
+subprojects {
+    if (name == 'file_picker') {
+        apply plugin: 'org.jetbrains.kotlin.android'
+        tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+            compilerOptions {
+                jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+            }
+        }
+    }
+}
