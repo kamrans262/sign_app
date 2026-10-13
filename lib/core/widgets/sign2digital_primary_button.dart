@@ -11,6 +11,7 @@ class Sign2DigitalPrimaryButton extends StatelessWidget {
     required this.onPressed,
     this.loading = false,
     this.enabled = true,
+    this.height = 48,
     super.key,
   });
 
@@ -18,12 +19,13 @@ class Sign2DigitalPrimaryButton extends StatelessWidget {
   final VoidCallback onPressed;
   final bool loading;
   final bool enabled;
+  final double height;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      height: 48,
+      height: height,
       child: FilledButton(
         onPressed: enabled && !loading ? onPressed : null,
         style: FilledButton.styleFrom(

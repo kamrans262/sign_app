@@ -14,6 +14,7 @@ class Sign2DigitalInfoBanner extends StatelessWidget {
     this.iconSize = 20,
     this.iconGap = 12,
     this.fontSize = 13,
+    this.title,
   });
 
   final String message;
@@ -23,6 +24,7 @@ class Sign2DigitalInfoBanner extends StatelessWidget {
   final double iconSize;
   final double iconGap;
   final double fontSize;
+  final String? title;
 
   @override
   Widget build(BuildContext context) {
@@ -46,15 +48,27 @@ class Sign2DigitalInfoBanner extends StatelessWidget {
             ),
             SizedBox(width: iconGap),
             Expanded(
-              child: Text(
-                message,
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: fontSize,
-                  fontWeight: FontWeight.w400,
-                  letterSpacing: -0.3,
-                  color: textColor,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (title != null) ...[
+                    Text(title!, style: const TextStyle(
+                      fontFamily: 'Inter', fontSize: 14,
+                      fontWeight: FontWeight.w600, color: AppColors.dark,
+                    )),
+                    const SizedBox(height: 5),
+                  ],
+                  Text(
+                    message,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: fontSize,
+                      fontWeight: FontWeight.w400,
+                      letterSpacing: -0.3,
+                      color: textColor,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],

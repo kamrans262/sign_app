@@ -41,6 +41,48 @@ class DemoDocumentRepository implements DocumentRepository {
           status: 'Signed',
           quote: quote,
           demoOnly: true,
+          createdBy: 'Jean Dupont',
+          createdAt: DateTime(2026, 8, 12, 9),
+          updatedAt: DateTime(2026, 8, 12, 11, 15),
+          validUntil: quote.validUntil,
+          // Figma-only sample activity: NEVER trusted delivery/audit evidence.
+          history: [
+            DocumentHistoryEvent(
+              id: '$id-signed', documentId: id,
+              type: DocumentHistoryType.signed,
+              occurredAt: DateTime(2026, 8, 12, 11, 15),
+              actorName: 'Jean Dupont', actorEmail: 'jean.dupont@example.com',
+              description: 'Sample signing activity (UI demo only)',
+            ),
+            DocumentHistoryEvent(
+              id: '$id-viewed', documentId: id,
+              type: DocumentHistoryType.viewed,
+              occurredAt: DateTime(2026, 8, 12, 11),
+              actorName: 'Jean Dupont', actorEmail: 'jean.dupont@example.com',
+              description: 'Sample recipient view (UI demo only)',
+            ),
+            DocumentHistoryEvent(
+              id: '$id-email', documentId: id,
+              type: DocumentHistoryType.emailOpened,
+              occurredAt: DateTime(2026, 8, 12, 10, 45),
+              actorEmail: 'jean.dupont@example.com',
+              description: 'Sample email open (UI demo only)',
+            ),
+            DocumentHistoryEvent(
+              id: '$id-sent', documentId: id,
+              type: DocumentHistoryType.sent,
+              occurredAt: DateTime(2026, 8, 12, 10, 15),
+              actorEmail: 'jean.dupont@example.com',
+              description: 'Sample delivery (UI demo only)',
+            ),
+            DocumentHistoryEvent(
+              id: '$id-created', documentId: id,
+              type: DocumentHistoryType.created,
+              occurredAt: DateTime(2026, 8, 12, 9),
+              actorName: 'Jean Dupont',
+              description: 'Fictional quote created for the UI preview',
+            ),
+          ],
         );
       });
 }

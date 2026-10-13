@@ -7,7 +7,7 @@ import 'package:sign2digital/features/clients/presentation/screens/clients_scree
 import 'package:sign2digital/features/documents/data/demo_document_repository.dart';
 import 'package:sign2digital/features/documents/domain/document_record.dart';
 import 'package:sign2digital/features/documents/presentation/screens/documents_screen.dart';
-import 'package:sign2digital/features/quotes/presentation/screens/quote_preview_screen.dart';
+import 'package:sign2digital/features/documents/presentation/screens/document_details_screen.dart';
 import 'package:sign2digital/features/quotes/presentation/widgets/sign2digital_quote_summary_card.dart';
 
 class _DocumentSource implements DocumentRepository {
@@ -112,14 +112,14 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('document-card-documents-figma-quote-1')));
     await tester.pumpAndSettle();
-    expect(find.byType(QuotePreviewScreen), findsOneWidget);
-    final preview = tester.widget<QuotePreviewScreen>(
-      find.byType(QuotePreviewScreen),
+    expect(find.byType(DocumentDetailsScreen), findsOneWidget);
+    final details = tester.widget<DocumentDetailsScreen>(
+      find.byType(DocumentDetailsScreen),
     );
-    expect(preview.quote.id, 'documents-figma-quote-1');
-    expect(preview.quote.quoteNumber, 'Q-12800');
-    expect(preview.quote.isDemo, isTrue);
-    expect(find.textContaining('FIGMA DEMO'), findsWidgets);
+    expect(details.documentId, 'documents-figma-quote-1');
+    expect(details.document!.number, 'Q-12800');
+    expect(details.document!.demoOnly, isTrue);
+    expect(find.text('Document Information'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

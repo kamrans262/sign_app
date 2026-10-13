@@ -56,11 +56,15 @@ jobs:
             lib/features/documents \
             lib/features/quotes/presentation/screens/in_person_signature_screen.dart \
             lib/features/quotes/presentation/screens/add_signature_screen.dart \
-            lib/features/quotes/presentation/widgets/sign2digital_quote_summary_card.dart
+            lib/features/quotes/presentation/widgets/sign2digital_quote_summary_card.dart \
+            lib/features/quotes/presentation/widgets/sign2digital_signature_action_card.dart \
+            lib/core/widgets/sign2digital_info_banner.dart \
+            lib/core/widgets/sign2digital_primary_button.dart
 
       - name: Documents and signature focused widget tests
         run: |
           flutter test --no-pub --concurrency=1 --reporter expanded \
+            test/features/documents/document_details_screen_test.dart \
             test/features/documents/documents_screen_test.dart \
             test/features/documents/documents_responsive_test.dart \
             test/features/quotes/in_person_signature_screen_test.dart \

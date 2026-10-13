@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_search_field.dart';
 import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
-import '../../../quotes/presentation/screens/quote_preview_screen.dart';
+import 'document_details_screen.dart';
 import '../../../quotes/presentation/widgets/sign2digital_quote_summary_card.dart';
 import '../../data/demo_document_repository.dart';
 import '../../domain/document_record.dart';
@@ -75,23 +75,13 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
       handler(record);
       return;
     }
-    // Never substitute an editable quote preview for a verified signed PDF.
-    if (!record.demoOnly && record.status.toLowerCase() == 'signed') {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('The verified signed-document viewer is not connected yet.'),
-      ));
-      return;
-    }
-    final quote = record.quote;
-    if (quote != null) {
-      Navigator.of(context).push<void>(MaterialPageRoute<void>(
-        builder: (_) => QuotePreviewScreen(quote: quote.copy()),
-      ));
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('A preview is not available for this document yet.'),
-      ));
-    }
+    // Keep this route above the dashboard. Back restores its search and tab.
+    Navigator.of(context).push<void>(MaterialPageRoute<void>(
+      builder: (_) => DocumentDetailsScreen(
+        documentId: record.id,
+        document: record,
+      ),
+    ));
   }
 
   @override

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_outlined_container.dart';
@@ -17,6 +18,7 @@ class Sign2DigitalQuoteSummaryCard extends StatelessWidget {
     this.status,
     this.onTap,
     this.listStyle = false,
+    this.detailsStyle = false,
   });
 
   final String quoteNumber;
@@ -29,6 +31,7 @@ class Sign2DigitalQuoteSummaryCard extends StatelessWidget {
   final String? status;
   final VoidCallback? onTap;
   final bool listStyle;
+  final bool detailsStyle;
 
   String _shortDate(DateTime date) {
     const months = [
@@ -107,8 +110,52 @@ class Sign2DigitalQuoteSummaryCard extends StatelessWidget {
     ],
   );
 
+  Widget _detailsSummary() => Row(
+    key: const Key('document-details-summary'),
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Material(
+        color: Colors.white,
+        shape: const CircleBorder(),
+        elevation: 2,
+        shadowColor: const Color(0x18000000),
+        child: SizedBox(
+          width: 40, height: 40,
+          child: Center(
+            child: SvgPicture.asset(
+              'assets/icons_2/pdf.svg', width: 27, height: 27,
+            ),
+          ),
+        ),
+      ),
+      const SizedBox(width: 10),
+      Expanded(child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(titleOverride ?? 'Quote $quoteNumber',
+            key: const Key('document-details-title'),
+            style: const TextStyle(
+              fontFamily: 'Inter', fontSize: 18, fontWeight: FontWeight.w600,
+              letterSpacing: -0.3, color: AppColors.dark,
+            )),
+          const SizedBox(height: 5),
+          Text(projectName, style: const TextStyle(
+            fontFamily: 'Inter', fontSize: 14,
+            fontWeight: FontWeight.w400, letterSpacing: -0.3,
+            color: AppColors.placeholder,
+          )),
+        ],
+      )),
+      if (status != null) ...[
+        const SizedBox(width: 10),
+        Sign2DigitalStatusBadge(status: status!),
+      ],
+    ],
+  );
+
   @override
   Widget build(BuildContext context) {
+    if (detailsStyle) return _detailsSummary();
     final content = Sign2DigitalOutlinedContainer(
       padding: EdgeInsets.symmetric(
         horizontal: 20, vertical: listStyle ? 15 : 20,
