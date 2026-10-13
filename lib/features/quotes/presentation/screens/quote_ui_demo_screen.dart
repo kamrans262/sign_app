@@ -11,6 +11,7 @@ import 'add_signature_screen.dart';
 import 'create_quote_screen.dart';
 import 'customer_document_view_screen.dart';
 import 'document_signed_success_screen.dart';
+import 'in_person_signature_screen.dart';
 import 'quote_ai_processing_screen.dart';
 import 'quote_preview_screen.dart';
 import 'review_quote_screen.dart';
@@ -96,6 +97,11 @@ class QuoteUiDemoScreen extends StatelessWidget {
           ))),
       ('Add Signature', 'Try Draw, Type, Upload and Confirm',
           () => _openSignature(context, quote.copy())),
+      ('In-Person Signature', 'Two drawing tabs for customer and your signature',
+          () => _push(context, InPersonSignatureScreen(
+            quote: quote.copy(),
+            projectName: QuoteUiDemoData.projectName,
+          ))),
       ('Document Signed!', 'Preview the final confirmation screen directly',
           () => _push(context, DocumentSignedSuccessScreen(
             data: QuoteSignedDisplayData(
