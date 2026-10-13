@@ -11,23 +11,28 @@ class Sign2DigitalPhotoPreview extends StatelessWidget {
     this.bytes,
     required this.showDemo,
     required this.onRemove,
+    this.compactTile = false,
   });
 
   final Uint8List? bytes;
   final bool showDemo;
   final VoidCallback onRemove;
+  /// Two-column grid mode; previous Add Photos presentation is unchanged.
+  final bool compactTile;
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final height = (constraints.maxWidth * 180 / 390)
-            .clamp(155.0, 260.0)
-            .toDouble();
+        final height = compactTile
+            ? constraints.maxWidth * 118 / 188
+            : (constraints.maxWidth * 180 / 390)
+                .clamp(155.0, 260.0)
+                .toDouble();
         return ClipRRect(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(compactTile ? 8 : 10),
           child: SizedBox(
-            key: const Key('add-photo-preview'),
+            key: compactTile ? null : const Key('add-photo-preview'),
             width: double.infinity,
             height: height,
             child: Stack(
@@ -59,26 +64,30 @@ class Sign2DigitalPhotoPreview extends StatelessWidget {
                   ),
                 if (bytes != null || showDemo)
                   Positioned(
-                    top: 8,
-                    right: 8,
+                    top: compactTile ? 0 : 8,
+                    right: compactTile ? 0 : 8,
                     child: IconButton(
-                      key: const Key('add-photo-remove'),
+                      key: compactTile ? null : const Key('add-photo-remove'),
                       tooltip: 'Remove photo preview',
                       onPressed: onRemove,
+                      padding: EdgeInsets.zero,
+                      constraints: BoxConstraints.tightFor(
+                        width: compactTile ? 40 : 44,
+                        height: compactTile ? 40 : 44,
+                      ),
                       style: IconButton.styleFrom(
-                        minimumSize: const Size(44, 44),
                         tapTargetSize: MaterialTapTargetSize.padded,
                       ),
                       icon: Container(
-                        width: 24,
-                        height: 24,
+                        width: compactTile ? 20 : 24,
+                        height: compactTile ? 20 : 24,
                         decoration: const BoxDecoration(
                           shape: BoxShape.circle,
                           color: AppColors.primary,
                         ),
                         child: const Icon(
                           Icons.close,
-                          size: 16,
+                          size: compactTile ? 14 : 16,
                           color: Colors.white,
                         ),
                       ),

@@ -20,12 +20,24 @@ class Sign2DigitalWizardStepper extends StatelessWidget {
       height: 65,
       child: Stack(
         children: [
-          const Positioned(
+          Positioned(
             top: 12,
             left: 24,
             right: 24,
-            child: Divider(height: 1, thickness: 1,
-              color: AppColors.lightBorder),
+            child: Row(children: [
+              Expanded(child: Container(
+                key: const Key('wizard-connector-0'),
+                height: 1,
+                color: currentStep >= 1
+                    ? AppColors.primary : AppColors.lightBorder,
+              )),
+              Expanded(child: Container(
+                key: const Key('wizard-connector-1'),
+                height: 1,
+                color: currentStep >= 2
+                    ? AppColors.primary : AppColors.lightBorder,
+              )),
+            ]),
           ),
           Row(children: [
             for (var index = 0; index < labels.length; index++)

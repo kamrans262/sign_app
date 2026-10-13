@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -7,10 +8,12 @@ import '../../../../core/widgets/sign2digital_checkbox.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
 import '../../../../core/widgets/sign2digital_input_field.dart';
 import '../../../../core/widgets/sign2digital_outlined_container.dart';
+import '../../../../core/widgets/sign2digital_outlined_button.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../../../core/widgets/sign2digital_selection_field.dart';
 import '../../../../core/widgets/sign2digital_wizard_stepper.dart';
 import '../../../jobs/data/local_job_photo_source.dart';
+import '../../../jobs/presentation/widgets/sign2digital_photo_preview.dart';
 import '../../domain/document_record.dart';
 
 /// UI-only three-step site report wizard, never claims remote submission.
@@ -39,10 +42,16 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
   static const _weatherOptions = [
     'Sunny', 'Cloudy', 'Rainy', 'Snowy', 'Windy', 'Other',
   ];
+  static const _riskOptions = <String>[
+    'No issues', 'Safety hazard', 'Material delay',
+    'Weather delay', 'Quality issue', 'Other',
+  ];
   static const _sectionHints = <SiteReportSection, String>{
-    SiteReportSection.siteProgress: 'Describe site progress',
-    SiteReportSection.notes: 'Enter notes and observations',
-    SiteReportSection.issues: 'Describe issues and risks',
+    SiteReportSection.siteProgress:
+        'Kitchen renovations, processes of renovating, color selection, and labour work',
+    SiteReportSection.notes:
+        'Complete renovation of the terrace, including new tiles, waterproofing and railings',
+    SiteReportSection.issues: 'e.g, Site report',
     SiteReportSection.materials: 'Record materials delivered',
     SiteReportSection.labour: 'Record work hours and labour',
   };
@@ -190,6 +199,7 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
   }
 
   String? _contentIssue() {
+    if (_picking) { return 'Wait for photo selection to finish.'; }
     for (final section in SiteReportSection.values) {
       if (!_selectedSections.contains(section)) { continue; }
       if (section == SiteReportSection.photos) {
@@ -201,25 +211,112 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
     return null;
   }
 
-  Future<void> _pickPhotos() async {
+  Future<void> _choosePhotoSource() async {
+    if (_picking) { return; }
+    final action = await showModalBottomSheet<bool>(
+      context: context,
+      builder: (sheet) => SafeArea(child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            key: const Key('site-report-gallery'),
+            leading: const Icon(Icons.photo_library_outlined),
+            title: const Text('Choose from gallery'),
+            onTap: () => Navigator.of(sheet).pop(false),
+          ),
+          ListTile(
+            key: const Key('site-report-camera'),
+            leading: const Icon(Icons.photo_camera_outlined),
+            title: const Text('Take a photo'),
+            onTap: () => Navigator.of(sheet).pop(true),
+          ),
+        ],
+      )),
+    );
+    if (action != null && mounted) {
+      await _pickPhotos(camera: action);
+    }
+  }
+
+  Future<void> _pickPhotos({required bool camera}) async {
     if (_picking) { return; }
     setState(() => _picking = true);
     try {
-      final files = await (widget.photoSource ?? DeviceJobPhotoSource()).upload();
+      final source = widget.photoSource ?? DeviceJobPhotoSource();
+      final files = <LocalJobPhotoSelection>[];
+      if (camera) {
+        final photo = await source.camera();
+        if (photo != null) { files.add(photo); }
+      } else {
+        files.addAll(await source.upload());
+      }
       if (!mounted || files.isEmpty) { return; }
+      for (final photo in files) {
+        DeviceJobPhotoSource.validate(photo.name, photo.bytes);
+      }
       setState(() {
-        _photos = [..._photos, ...files];
+        // Keep original order and prevent accidentally duplicating a file.
+        final keys = _photos.map((p) => p.sourceKey).toSet();
+        for (final photo in files) {
+          if (keys.add(photo.sourceKey)) _photos.add(photo);
+        }
         _error = null;
       });
     } on FormatException catch (error) {
       if (mounted) { setState(() => _error = error.message); }
     } catch (_) {
       if (mounted) {
-        setState(() => _error = 'Unable to select photos. Please try again.');
+        setState(() => _error =
+            'Unable to select photos. Check permissions and try again.');
       }
     } finally {
       if (mounted) { setState(() => _picking = false); }
     }
+  }
+
+  Future<void> _selectRisk() async {
+    final prior = _contents[SiteReportSection.issues]!.text;
+    await _pickOption(
+      options: _riskOptions,
+      title: 'Issues & Risks',
+      keyPrefix: 'site-report-risk-option',
+      onSelected: (selection) =>
+          _contents[SiteReportSection.issues]!.text = selection,
+    );
+    if (!mounted || _contents[SiteReportSection.issues]!.text != 'Other') {
+      return;
+    }
+    var description = '';
+    final custom = await showDialog<String>(
+      context: context,
+      builder: (dialog) => AlertDialog(
+        title: const Text('Describe the issue or risk'),
+        content: TextFormField(
+          key: const Key('site-report-custom-risk'),
+          initialValue: prior == 'Other' ? '' : prior,
+          autofocus: true,
+          minLines: 2,
+          maxLines: 5,
+          onChanged: (value) => description = value,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialog).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            key: const Key('site-report-save-risk'),
+            onPressed: () => Navigator.of(dialog).pop(description.trim()),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted) { return; }
+    setState(() {
+      _contents[SiteReportSection.issues]!.text =
+          custom == null || custom.isEmpty ? prior : custom;
+    });
   }
 
   void _next() {
@@ -388,51 +485,116 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
   Widget _content() => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      const Text('Report Content', style: AppTextStyles.fieldLabel),
-      const SizedBox(height: 15),
-      for (final section in SiteReportSection.values)
-        if (_selectedSections.contains(section)) ...[
-          if (section == SiteReportSection.photos)
-            Sign2DigitalOutlinedContainer(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Text('Photos', style: AppTextStyles.fieldLabel),
-                  const SizedBox(height: 12),
-                  OutlinedButton.icon(
-                    key: const Key('site-report-add-photos'),
-                    onPressed: _picking ? null : _pickPhotos,
-                    icon: const Icon(Icons.add_photo_alternate_outlined),
-                    label: Text(_picking ? 'Selecting...' : 'Upload photos'),
-                  ),
-                  for (var i = 0; i < _photos.length; i++)
-                    ListTile(
-                      key: Key('site-report-photo-$i'),
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(_photos[i].name, maxLines: 1,
-                        overflow: TextOverflow.ellipsis),
-                      trailing: IconButton(
-                        tooltip: 'Remove photo',
-                        icon: const Icon(Icons.close_rounded),
-                        onPressed: () => setState(() => _photos.removeAt(i)),
-                      ),
-                    ),
-                ],
-              ),
-            )
-          else
-            Sign2DigitalInputField(
-              key: Key('site-report-content-${section.name}'),
-              label: section.label,
-              hintText: _sectionHints[section] ?? '',
-              iconAsset: 'assets/icons/description.svg',
-              controller: _contents[section]!,
-              minLines: 3,
-              maxLines: 5,
+      if (_selectedSections.contains(SiteReportSection.siteProgress)) ...[
+        const Text('Site Programs', style: AppTextStyles.fieldLabel),
+        const SizedBox(height: 10),
+        Sign2DigitalOutlinedContainer(
+          constraints: const BoxConstraints(minHeight: 80),
+          padding: const EdgeInsets.all(15),
+          child: TextFormField(
+            key: const Key('site-report-content-siteProgress'),
+            controller: _contents[SiteReportSection.siteProgress]!,
+            minLines: 3,
+            maxLines: null,
+            style: AppTextStyles.fieldInput,
+            decoration: const InputDecoration(
+              hintText: 'Kitchen renovations, processes of renovating, '
+                  'color selection, and labour work',
+              hintStyle: AppTextStyles.fieldHint,
+              isCollapsed: true,
+              border: InputBorder.none,
             ),
-          const SizedBox(height: 15),
+          ),
+        ),
+        const SizedBox(height: 20),
+      ],
+      if (_selectedSections.contains(SiteReportSection.photos)) ...[
+        const Text('Photos', style: AppTextStyles.fieldLabel),
+        const SizedBox(height: 10),
+        GridView.builder(
+          key: const Key('site-report-photo-grid'),
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            mainAxisSpacing: 10,
+            crossAxisSpacing: 15,
+            childAspectRatio: 188 / 118,
+          ),
+          itemCount: _photos.length + 1,
+          itemBuilder: (context, index) {
+            if (index == _photos.length) {
+              return Material(
+                elevation: 0.5,
+                color: AppColors.white,
+                borderRadius: BorderRadius.circular(10),
+                child: InkWell(
+                  key: const Key('site-report-add-photos'),
+                  onTap: _picking ? null : _choosePhotoSource,
+                  borderRadius: BorderRadius.circular(10),
+                  child: Sign2DigitalOutlinedContainer(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SvgPicture.asset(
+                          'assets/icons/cloud-upload-outlined.svg',
+                          width: 24, height: 24,
+                        ),
+                        const SizedBox(height: 8),
+                        const Text('Add Photo', style: AppTextStyles.outlinedButton),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }
+            return Sign2DigitalPhotoPreview(
+              key: Key('site-report-photo-$index'),
+              bytes: _photos[index].bytes,
+              showDemo: false,
+              compactTile: true,
+              onRemove: () => setState(() => _photos.removeAt(index)),
+            );
+          },
+        ),
+        const SizedBox(height: 20),
+      ],
+      if (_selectedSections.contains(SiteReportSection.notes)) ...[
+        Sign2DigitalInputField(
+          key: const Key('site-report-content-notes'),
+          label: 'Notes & Observations',
+          hintText: _sectionHints[SiteReportSection.notes]!,
+          iconAsset: 'assets/icons/description.svg',
+          controller: _contents[SiteReportSection.notes]!,
+          minLines: 2, maxLines: null,
+        ),
+        const SizedBox(height: 20),
+      ],
+      if (_selectedSections.contains(SiteReportSection.issues)) ...[
+        Sign2DigitalSelectionField(
+          key: const Key('site-report-content-issues'),
+          label: 'Issues & Risks',
+          hintText: 'e.g, Site report',
+          iconAsset: 'assets/icons/description.svg',
+          value: _contents[SiteReportSection.issues]!.text.isEmpty
+              ? null : _contents[SiteReportSection.issues]!.text,
+          trailing: const Icon(Icons.keyboard_arrow_down_rounded,
+            color: AppColors.secondaryText),
+          onTap: _selectRisk,
+        ),
+        const SizedBox(height: 20),
+      ],
+      for (final section in [SiteReportSection.materials, SiteReportSection.labour])
+        if (_selectedSections.contains(section)) ...[
+          Sign2DigitalInputField(
+            key: Key('site-report-content-${section.name}'),
+            label: section.label,
+            hintText: _sectionHints[section]!,
+            iconAsset: 'assets/icons/description.svg',
+            controller: _contents[section]!,
+            minLines: 2, maxLines: null,
+          ),
+          const SizedBox(height: 20),
         ],
     ],
   );
@@ -507,12 +669,28 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
                       color: Color(0xFFB42318), fontSize: 12)),
                 ],
                 const SizedBox(height: 25),
-                Sign2DigitalPrimaryButton(
-                  key: const Key('site-report-next'),
-                  label: _step == 2 ? 'Save Draft' : 'Next',
-                  loading: _saving,
-                  onPressed: _step == 2 ? _save : _next,
-                ),
+                if (_step == 0)
+                  Sign2DigitalPrimaryButton(
+                    key: const Key('site-report-next'),
+                    label: 'Next',
+                    onPressed: _next,
+                  )
+                else
+                  Row(children: [
+                    Expanded(child: Sign2DigitalOutlinedButton(
+                      key: const Key('site-report-content-back'),
+                      label: 'Back',
+                      primaryOutline: true,
+                      onPressed: _back,
+                    )),
+                    const SizedBox(width: 12),
+                    Expanded(child: Sign2DigitalPrimaryButton(
+                      key: const Key('site-report-next'),
+                      label: _step == 2 ? 'Save Draft' : 'Next',
+                      loading: _saving,
+                      onPressed: _step == 2 ? _save : _next,
+                    )),
+                  ]),
               ],
             ),
           ),

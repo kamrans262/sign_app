@@ -171,13 +171,15 @@ void main() {
     await tester.ensureVisible(find.byKey(const Key('site-report-next')));
     await tester.tap(find.byKey(const Key('site-report-next')));
     await tester.pumpAndSettle();
-    expect(find.text('Report Content'), findsOneWidget);
+    expect(find.text('Site Programs'), findsOneWidget);
 
     for (final section in ['siteProgress', 'notes', 'materials']) {
       final field = find.byKey(Key('site-report-content-$section'));
       await tester.ensureVisible(field);
-      await tester.enterText(find.descendant(
-        of: field, matching: find.byType(TextFormField)),
+      await tester.enterText(section == 'siteProgress'
+          ? field
+          : find.descendant(
+              of: field, matching: find.byType(TextFormField)),
         'Verified local section: $section',
       );
     }
