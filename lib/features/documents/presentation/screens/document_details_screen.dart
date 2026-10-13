@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -84,7 +82,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
   }
 
   void _message(String value) {
-    if (!mounted) return;
+    if (!mounted) { return; }
     final messenger = ScaffoldMessenger.of(context);
     messenger.hideCurrentSnackBar();
     messenger.showSnackBar(SnackBar(content: Text(value)));
@@ -121,7 +119,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
     try {
       final bytes = await _pdf(record);
       if (bytes == null) { _message('No document PDF is available.'); return; }
-      await FilePicker.platform.saveFile(
+      await FilePicker.saveFile(
         dialogTitle: 'Save document',
         fileName: _filename(record),
         type: FileType.custom,

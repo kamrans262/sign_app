@@ -37,7 +37,7 @@ class Sign2DigitalSignatureActionCard extends StatelessWidget {
             (documentStyling ? AppColors.placeholder : AppColors.primary)),
           const SizedBox(height: 5),
           Text(label, maxLines: 2, textAlign: TextAlign.center,
-            style: const TextStyle(fontFamily: 'Inter', fontSize: 12,
+            style: TextStyle(fontFamily: 'Inter', fontSize: 12,
               fontWeight: FontWeight.w500,
               color: selected ? Colors.white :
                 (documentStyling ? AppColors.placeholder : AppColors.primary),
