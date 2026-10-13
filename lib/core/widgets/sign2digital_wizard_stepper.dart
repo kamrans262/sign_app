@@ -17,7 +17,8 @@ class Sign2DigitalWizardStepper extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       key: const Key('site-report-stepper'),
-      height: 65,
+      // Long labels may wrap on 320dp phones; allow a second line.
+      height: MediaQuery.sizeOf(context).width < 360 ? 80 : 65,
       child: Stack(
         children: [
           Positioned(

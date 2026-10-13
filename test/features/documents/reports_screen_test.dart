@@ -183,7 +183,10 @@ void main() {
         'Verified local section: $section',
       );
     }
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
     await tester.ensureVisible(find.byKey(const Key('site-report-next')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('site-report-next')));
     await tester.pumpAndSettle();
     expect(find.text('Review Site Report'), findsOneWidget);

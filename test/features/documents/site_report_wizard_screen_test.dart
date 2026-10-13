@@ -24,10 +24,14 @@ class _PhotoSource implements JobPhotoSource {
 }
 
 Future<void> _details(WidgetTester tester) async {
+  await tester.ensureVisible(find.byKey(const Key('site-report-title')));
+  await tester.pump();
   await tester.tap(find.byKey(const Key('site-report-title')));
   await tester.pumpAndSettle();
   await tester.tap(find.byKey(const Key('site-report-title-option-0')));
   await tester.pumpAndSettle();
+  await tester.ensureVisible(find.byKey(const Key('site-report-date')));
+  await tester.pump();
   await tester.tap(find.byKey(const Key('site-report-date')));
   await tester.pumpAndSettle();
   await tester.tap(find.text('OK'));
