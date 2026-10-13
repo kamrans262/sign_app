@@ -78,7 +78,7 @@ class Sign2DigitalWizardStepper extends StatelessWidget {
                         fontFamily: 'Inter', fontSize: 14,
                         fontWeight: FontWeight.w500,
                         letterSpacing: -0.3,
-                        color: index == currentStep
+                        color: index == currentStep || currentStep == 2
                             ? AppColors.primary : AppColors.dark,
                       ),
                     ),

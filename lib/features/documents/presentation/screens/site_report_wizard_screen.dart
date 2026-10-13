@@ -8,11 +8,14 @@ import '../../../../core/widgets/sign2digital_checkbox.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
 import '../../../../core/widgets/sign2digital_input_field.dart';
 import '../../../../core/widgets/sign2digital_outlined_container.dart';
+import '../../../../core/widgets/sign2digital_info_banner.dart';
 import '../../../../core/widgets/sign2digital_outlined_button.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../../../core/widgets/sign2digital_selection_field.dart';
 import '../../../../core/widgets/sign2digital_wizard_stepper.dart';
 import '../../../jobs/data/local_job_photo_source.dart';
+import '../../../jobs/data/mock_jobs.dart';
+import '../../../jobs/domain/job_model.dart';
 import '../../../jobs/presentation/widgets/sign2digital_photo_preview.dart';
 import '../../domain/document_record.dart';
 
@@ -22,12 +25,16 @@ class SiteReportWizardScreen extends StatefulWidget {
     super.key,
     this.initial,
     this.photoSource,
+    this.reportGenerator,
     this.onNavigationSelected,
     this.selectedNavigationIndex = 2,
   });
 
   final DocumentRecord? initial;
   final JobPhotoSource? photoSource;
+  /// Optional real report-generation service supplied by production wiring.
+  /// No success is assumed when absent; local drafts stay distinct.
+  final Future<DocumentRecord> Function(DocumentRecord draft)? reportGenerator;
   final ValueChanged<int>? onNavigationSelected;
   final int selectedNavigationIndex;
 
@@ -69,6 +76,9 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
   int _step = 0;
   String? _title;
   String? _weather;
+  JobModel? _selectedJob;
+  String _projectName = '';
+  String _clientName = '';
   DateTime? _reportDate;
   String? _error;
   bool _picking = false;
@@ -84,6 +94,14 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
     }
     final initial = widget.initial;
     if (initial != null) {
+      _projectName = initial.project;
+      _clientName = initial.customer;
+      for (final job in MockJobsData.jobs) {
+        if (job.title == initial.project && job.clientName == initial.customer) {
+          _selectedJob = job;
+          break;
+        }
+      }
       if (_reportTitles.contains(initial.title)) {
         _title = initial.title;
       } else {
@@ -330,47 +348,145 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
 
   Future<void> _save() async {
     if (_saving) { return; }
-    final error = _detailsIssue() ?? _contentIssue();
-    if (error != null) {
-      setState(() => _error = error);
+    final issue = _detailsIssue() ?? _contentIssue();
+    if (issue != null) {
+      setState(() => _error = issue);
       return;
     }
     setState(() => _saving = true);
     try {
-      final now = DateTime.now();
-      final id = widget.initial?.id ??
-          'local-site-report-${now.microsecondsSinceEpoch}';
-      final data = SiteReportDetails(
-        reportDate: _reportDate!,
-        preparedBy: _preparer.text.trim(),
-        weatherCondition: _weather!,
-        selectedSections: List.unmodifiable(
-          SiteReportSection.values.where(_selectedSections.contains)),
-        sectionContent: Map.unmodifiable({
-          for (final section in _selectedSections)
-            if (section != SiteReportSection.photos)
-              section: _contents[section]!.text.trim(),
-        }),
-        photos: List.unmodifiable(_photos),
-      );
-      final draft = DocumentRecord(
-        id: id,
-        category: DocumentCategory.reports,
-        reportKind: ReportKind.siteReport,
-        number: widget.initial?.number ?? id,
-        title: _actualTitle,
-        // An unlinked job/customer is not represented as a fictitious one.
-        project: widget.initial?.project ?? '',
-        customer: widget.initial?.customer ?? '',
-        timestamp: widget.initial?.timestamp ?? now,
-        status: 'Draft',
-        demoOnly: true,
-        createdAt: widget.initial?.createdAt ?? now,
-        updatedAt: now,
-        createdBy: data.preparedBy,
-        siteReportDetails: data,
-      );
+      final draft = _draftRecord();
       if (mounted) { Navigator.of(context).pop(draft); }
+    } finally {
+      if (mounted) { setState(() => _saving = false); }
+    }
+  }
+
+  Future<void> _chooseJob() async {
+    final selected = await showModalBottomSheet<JobModel>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheet) => SafeArea(child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(sheet).height * 0.7,
+        ),
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            const ListTile(title: Text('Select a job')),
+            for (final job in MockJobsData.jobs)
+              ListTile(
+                key: Key('review-report-job-${job.id}'),
+                title: Text(job.title),
+                subtitle: Text('${job.referenceNumber} • ${job.clientName}'),
+                onTap: () => Navigator.of(sheet).pop(job),
+              ),
+          ],
+        ),
+      )),
+    );
+    if (selected != null && mounted) {
+      setState(() {
+        _selectedJob = selected;
+        _projectName = selected.title;
+        _clientName = selected.clientName;
+        _error = null;
+      });
+    }
+  }
+
+  DocumentRecord _draftRecord() {
+    final now = DateTime.now();
+    final data = SiteReportDetails(
+      reportDate: _reportDate!,
+      preparedBy: _preparer.text.trim(),
+      weatherCondition: _weather!,
+      selectedSections: List.unmodifiable(
+          SiteReportSection.values.where(_selectedSections.contains)),
+      sectionContent: Map.unmodifiable({
+        for (final section in _selectedSections)
+          if (section != SiteReportSection.photos)
+            section: _contents[section]!.text.trim(),
+      }),
+      photos: List.unmodifiable(
+          _selectedSections.contains(SiteReportSection.photos)
+              ? _photos : <LocalJobPhotoSelection>[]),
+    );
+    final id = widget.initial?.id ??
+        'local-site-report-${now.microsecondsSinceEpoch}';
+    return DocumentRecord(
+      id: id,
+      category: DocumentCategory.reports,
+      reportKind: ReportKind.siteReport,
+      number: widget.initial?.number ?? id,
+      title: _actualTitle,
+      project: _projectName,
+      customer: _clientName,
+      timestamp: widget.initial?.timestamp ?? now,
+      status: 'Draft',
+      demoOnly: true,
+      createdAt: widget.initial?.createdAt ?? now,
+      updatedAt: now,
+      createdBy: data.preparedBy,
+      siteReportDetails: data,
+    );
+  }
+
+  Future<void> _generateReport() async {
+    if (_saving) { return; }
+    final issue = _detailsIssue() ?? _contentIssue();
+    if (issue != null) {
+      setState(() => _error = issue);
+      return;
+    }
+    if (_selectedJob == null ||
+        _projectName != _selectedJob!.title ||
+        _clientName != _selectedJob!.clientName) {
+      setState(() => _error =
+          'Select a linked job so its client can be verified.');
+      return;
+    }
+    final generator = widget.reportGenerator;
+    if (generator == null) {
+      final saveDraft = await showDialog<bool>(
+        context: context,
+        builder: (dialog) => AlertDialog(
+          title: const Text('Report generation unavailable'),
+          content: const Text(
+            'Report generation is not connected yet. '
+            'You can save this report as a local draft instead.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialog).pop(false),
+              child: const Text('Keep editing'),
+            ),
+            TextButton(
+              key: const Key('review-report-save-local-draft'),
+              onPressed: () => Navigator.of(dialog).pop(true),
+              child: const Text('Save local draft'),
+            ),
+          ],
+        ),
+      );
+      if (saveDraft == true && mounted) { await _save(); }
+      return;
+    }
+    setState(() { _saving = true; _error = null; });
+    try {
+      final result = await generator(_draftRecord());
+      if (!mounted) { return; }
+      if (result.id.trim().isEmpty ||
+          result.category != DocumentCategory.reports ||
+          result.reportKind != ReportKind.siteReport ||
+          result.demoOnly) {
+        throw StateError('The report service did not return a valid saved report.');
+      }
+      Navigator.of(context).pop(result);
+    } catch (_) {
+      if (mounted) {
+        setState(() => _error =
+          'Report generation failed. Your entered information is preserved.');
+      }
     } finally {
       if (mounted) { setState(() => _saving = false); }
     }
@@ -599,42 +715,176 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
     ],
   );
 
-  Widget _reviewLine(String label, String value) => Padding(
-    padding: const EdgeInsets.only(bottom: 12),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(
-          fontFamily: 'Inter', fontSize: 14, fontWeight: FontWeight.w600,
-          color: AppColors.dark)),
-        const SizedBox(height: 5),
-        Text(value, style: AppTextStyles.fieldInput),
-      ],
-    ),
-  );
-
-  Widget _review() => Sign2DigitalOutlinedContainer(
-    padding: const EdgeInsets.all(20),
-    child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      const Text('Review Site Report', style: AppTextStyles.fieldLabel),
-      const SizedBox(height: 20),
-      _reviewLine('Report Title', _actualTitle),
-      _reviewLine('Report Date', _dateText(_reportDate!)),
-      _reviewLine('Prepared By', _preparer.text.trim()),
-      _reviewLine('Weather Condition', _weather!),
-      for (final section in SiteReportSection.values)
-        if (_selectedSections.contains(section))
-          _reviewLine(section.label,
-            section == SiteReportSection.photos
-              ? _photos.map((photo) => photo.name).join(', ')
-              : _contents[section]!.text.trim()),
-      const Text(
-        'This is a local draft only. No report is submitted or approved.',
-        key: Key('site-report-demo-notice'),
-        style: TextStyle(fontFamily: 'Inter', fontSize: 12,
-          color: AppColors.secondaryText),
+  Widget _reviewValue({
+    required String label,
+    required String hint,
+    required String icon,
+    required String value,
+    VoidCallback? onTap,
+    bool withArrow = false,
+  }) {
+    final content = Sign2DigitalOutlinedContainer(
+      constraints: const BoxConstraints(minHeight: 71),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SvgPicture.asset(icon, width: 24, height: 24),
+          const SizedBox(width: 15),
+          Expanded(child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: AppTextStyles.fieldLabel),
+              const SizedBox(height: 5),
+              Text(
+                value.isEmpty ? hint : value,
+                style: value.isEmpty
+                    ? AppTextStyles.fieldHint : AppTextStyles.fieldInput,
+                softWrap: true,
+              ),
+            ],
+          )),
+          if (withArrow) ...[
+            const SizedBox(width: 8),
+            const Icon(Icons.keyboard_arrow_down_rounded,
+                color: AppColors.secondaryText),
+          ],
+        ],
       ),
-    ]),
+    );
+    return onTap == null ? content : InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: content,
+    );
+  }
+
+  Widget _reviewCover() {
+    final visiblePhotos = _selectedSections.contains(SiteReportSection.photos)
+        ? _photos : <LocalJobPhotoSelection>[];
+    return Container(
+      key: const Key('review-report-cover'),
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.lightBorder),
+        boxShadow: const [BoxShadow(
+          color: Color(0x0D000000),
+          offset: Offset(0, 4),
+          blurRadius: 24,
+        )],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: AspectRatio(
+          aspectRatio: 390 / 182,
+          child: visiblePhotos.isEmpty
+              ? const ColoredBox(
+                  color: Color(0xFFF3F5F7),
+                  child: Center(child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.image_outlined,
+                        color: AppColors.placeholder, size: 26),
+                      SizedBox(height: 5),
+                      Text('No report photo selected',
+                        style: TextStyle(
+                          fontFamily: 'Inter', fontSize: 13,
+                          color: AppColors.placeholder)),
+                    ],
+                  )),
+                )
+              : Image.memory(
+                  visiblePhotos.first.bytes,
+                  key: const Key('review-report-cover-image'),
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) => const Center(
+                    child: Icon(Icons.broken_image_outlined)),
+                ),
+        ),
+      ),
+    );
+  }
+
+  Widget _review() => Column(
+    key: const Key('review-reports-body'),
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      _reviewCover(),
+      const SizedBox(height: 20),
+      Text(_actualTitle,
+        key: const Key('review-report-title'),
+        style: const TextStyle(
+          fontFamily: 'Inter', fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: AppColors.dark,
+        ),
+      ),
+      const SizedBox(height: 20),
+      _reviewValue(
+        label: 'Job', hint: 'e.g, Site renovation',
+        icon: 'assets/icons/description.svg',
+        value: _projectName,
+        withArrow: true,
+        onTap: _chooseJob,
+      ),
+      const SizedBox(height: 15),
+      _reviewValue(
+        label: 'Client', hint: 'e.g, Marc dupont',
+        icon: 'assets/icons/user.svg',
+        value: _clientName,
+      ),
+      const SizedBox(height: 15),
+      _reviewValue(
+        label: 'Report Date', hint: 'Select date',
+        icon: 'assets/icons/calendar-outlined.svg',
+        value: _reportDate == null ? '' : _dateText(_reportDate!),
+        onTap: _chooseDate,
+      ),
+      const SizedBox(height: 15),
+      _reviewValue(
+        label: 'Prepared By', hint: 'e.g, Jean Dupont',
+        icon: 'assets/icons/user.svg',
+        value: _preparer.text.trim(),
+        onTap: () => _showStep(0),
+      ),
+      const SizedBox(height: 20),
+      for (final section in SiteReportSection.values)
+        if (_selectedSections.contains(section)) ...[
+          Row(children: [
+            IgnorePointer(child: Sign2DigitalCheckbox(
+              key: Key('review-report-section-${section.name}'),
+              value: true,
+              label: section.label,
+              showLabel: false,
+              boxSize: 16,
+              onChanged: (_) {},
+            )),
+            const SizedBox(width: 10),
+            Expanded(child: Text(
+              section.label,
+              style: const TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                letterSpacing: -0.3,
+                color: AppColors.placeholder,
+              ),
+            )),
+          ]),
+          const SizedBox(height: 15),
+        ],
+      const SizedBox(height: 5),
+      const Sign2DigitalInfoBanner(
+        key: Key('review-report-info'),
+        message: 'Please review all information before generating the report',
+        verticalPadding: 10,
+        iconSize: 24,
+        iconGap: 10,
+        fontSize: 13,
+      ),
+    ],
   );
 
   @override
@@ -644,7 +894,10 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
     body: SafeArea(
       bottom: false,
       child: Column(children: [
-        Sign2DigitalHeader(title: 'Site Reports', onBack: _back),
+        Sign2DigitalHeader(
+          title: _step == 2 ? 'Review Reports' : 'Site Reports',
+          onBack: _back,
+        ),
         Expanded(child: Center(child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 720),
           child: SingleChildScrollView(
@@ -668,7 +921,7 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
                     style: const TextStyle(fontFamily: 'Inter',
                       color: Color(0xFFB42318), fontSize: 12)),
                 ],
-                const SizedBox(height: 25),
+                SizedBox(height: _step == 2 ? 20 : 25),
                 if (_step == 0)
                   Sign2DigitalPrimaryButton(
                     key: const Key('site-report-next'),
@@ -683,12 +936,12 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
                       primaryOutline: true,
                       onPressed: _back,
                     )),
-                    const SizedBox(width: 12),
+                    SizedBox(width: _step == 2 ? 10 : 12),
                     Expanded(child: Sign2DigitalPrimaryButton(
                       key: const Key('site-report-next'),
-                      label: _step == 2 ? 'Save Draft' : 'Next',
+                      label: _step == 2 ? 'Generate Report' : 'Next',
                       loading: _saving,
-                      onPressed: _step == 2 ? _save : _next,
+                      onPressed: _step == 2 ? _generateReport : _next,
                     )),
                   ]),
               ],

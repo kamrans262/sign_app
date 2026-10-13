@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -8,6 +10,8 @@ import 'package:sign2digital/features/documents/data/demo_report_repository.dart
 import 'package:sign2digital/features/documents/domain/document_record.dart';
 import 'package:sign2digital/features/documents/presentation/screens/site_report_wizard_screen.dart';
 import 'package:sign2digital/features/jobs/data/local_job_photo_source.dart';
+import 'package:sign2digital/features/jobs/data/mock_jobs.dart';
+import 'package:sign2digital/core/widgets/sign2digital_info_banner.dart';
 
 class _PhotoSource implements JobPhotoSource {
   @override
@@ -85,8 +89,222 @@ DocumentRecord _figmaContentFixture() {
   );
 }
 
+DocumentRecord _completeReviewFixture({bool photo = true, String? title}) {
+  final job = MockJobsData.jobs.first;
+  return DocumentRecord(
+    id: 'site-review-test-1',
+    category: DocumentCategory.reports,
+    reportKind: ReportKind.siteReport,
+    number: 'SR-TEST-10',
+    title: title ?? 'Site Report - Week 3',
+    project: job.title,
+    customer: job.clientName,
+    timestamp: DateTime(2026, 8, 25),
+    status: 'Draft',
+    demoOnly: true,
+    siteReportDetails: SiteReportDetails(
+      reportDate: DateTime(2026, 8, 25),
+      preparedBy: 'Jean Dupont',
+      weatherCondition: 'Sunny',
+      selectedSections: [
+        SiteReportSection.siteProgress,
+        if (photo) SiteReportSection.photos,
+        SiteReportSection.notes,
+      ],
+      sectionContent: const {
+        SiteReportSection.siteProgress: 'Real site progress description',
+        SiteReportSection.notes: 'Actual site observations',
+      },
+      photos: photo ? [
+        LocalJobPhotoSelection(
+          name: 'real-cover.png',
+          bytes: base64Decode(
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJ'
+            'AAAADUlEQVQIHWP4z8DwHwAFgAI/ScL/nwAAAABJRU5ErkJggg=='),
+          sourceKey: 'cover-1',
+        ),
+      ] : [],
+    ),
+  );
+}
+
+Future<void> _openReview(WidgetTester tester) async {
+  await tester.ensureVisible(find.byKey(const Key('site-report-next')));
+  await tester.tap(find.byKey(const Key('site-report-next')));
+  await tester.pump();
+  await tester.ensureVisible(find.byKey(const Key('site-report-next')));
+  await tester.tap(find.byKey(const Key('site-report-next')));
+  await tester.pump();
+}
+
 void main() {
   setUp(DemoReportDraftSession.clear);
+
+
+  testWidgets('Review shows the selected cover, actual fields, sections and info',
+      (tester) async {
+    tester.view.physicalSize = const Size(430, 932);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(MaterialApp(home: SiteReportWizardScreen(
+      initial: _completeReviewFixture(),
+    )));
+    await _openReview(tester);
+    expect(find.text('Review Reports'), findsOneWidget);
+    expect(find.text('Site Reports'), findsNothing);
+    expect(find.byKey(const Key('review-reports-body')), findsOneWidget);
+    final cover = find.byKey(const Key('review-report-cover'));
+    expect(cover, findsOneWidget);
+    expect(find.byKey(const Key('review-report-cover-image')), findsOneWidget);
+    final image = tester.widget<Image>(
+      find.byKey(const Key('review-report-cover-image')));
+    expect(image.fit, BoxFit.cover);
+    final aspect = tester.widget<AspectRatio>(
+      find.descendant(of: cover, matching: find.byType(AspectRatio)));
+    expect(aspect.aspectRatio, closeTo(390/182, 0.001));
+    expect(find.text('Site Report - Week 3'), findsOneWidget);
+    expect(find.text(MockJobsData.jobs.first.title), findsOneWidget);
+    expect(find.text(MockJobsData.jobs.first.clientName), findsOneWidget);
+    expect(find.text('August 25, 2026'), findsOneWidget);
+    expect(find.text('Jean Dupont'), findsOneWidget);
+    for (final item in ['siteProgress', 'photos', 'notes']) {
+      final box = tester.widget<Sign2DigitalCheckbox>(
+        find.byKey(Key('review-report-section-$item')));
+      expect(box.value, isTrue);
+    }
+    expect(find.byKey(const Key('review-report-section-materials')), findsNothing);
+    final info = tester.widget<Sign2DigitalInfoBanner>(
+        find.byKey(const Key('review-report-info')));
+    expect(info.message,
+      'Please review all information before generating the report');
+    expect(find.text('Generate Report'), findsOneWidget);
+    expect(tester.widget<Sign2DigitalBottomNavigationBar>(
+      find.byType(Sign2DigitalBottomNavigationBar)).selectedIndex, 2);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Review back preserves all entered content and photo selection',
+      (tester) async {
+    await tester.pumpWidget(MaterialApp(home: SiteReportWizardScreen(
+      initial: _completeReviewFixture(),
+    )));
+    await _openReview(tester);
+    await tester.ensureVisible(find.byKey(const Key('site-report-content-back')));
+    await tester.tap(find.byKey(const Key('site-report-content-back')));
+    await tester.pump();
+    expect(find.text('Site Programs'), findsOneWidget);
+    expect(find.byKey(const Key('site-report-photo-0')), findsOneWidget);
+    final text = tester.widget<TextFormField>(
+        find.byKey(const Key('site-report-content-siteProgress')));
+    expect(text.controller!.text, 'Real site progress description');
+    await tester.ensureVisible(find.byKey(const Key('site-report-next')));
+    await tester.tap(find.byKey(const Key('site-report-next')));
+    await tester.pump();
+    expect(find.byKey(const Key('review-report-cover-image')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Without a cover image, an honest empty image state is used',
+      (tester) async {
+    await tester.pumpWidget(MaterialApp(home: SiteReportWizardScreen(
+      initial: _completeReviewFixture(photo: false),
+    )));
+    await _openReview(tester);
+    expect(find.text('No report photo selected'), findsOneWidget);
+    expect(find.byKey(const Key('review-report-cover-image')), findsNothing);
+    expect(find.byKey(const Key('review-report-section-photos')), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('No generation service offers an explicitly local draft',
+      (tester) async {
+    DocumentRecord? saved;
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: Builder(
+      builder: (context) => TextButton(
+        onPressed: () async {
+          saved = await Navigator.of(context).push<DocumentRecord>(
+            MaterialPageRoute(builder: (_) => SiteReportWizardScreen(
+              initial: _completeReviewFixture())),
+          );
+        },
+        child: const Text('Open report'),
+      ),
+    ))));
+    await tester.tap(find.text('Open report'));
+    await tester.pumpAndSettle();
+    await _openReview(tester);
+    await tester.ensureVisible(find.byKey(const Key('site-report-next')));
+    await tester.tap(find.byKey(const Key('site-report-next')));
+    await tester.pumpAndSettle();
+    expect(find.text('Report generation unavailable'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('review-report-save-local-draft')));
+    await tester.pumpAndSettle();
+    expect(saved?.status, 'Draft');
+    expect(saved?.demoOnly, isTrue);
+    expect(saved?.siteReportDetails?.photos.length, 1);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Failed real generation stays on Review, preventing duplicate calls',
+      (tester) async {
+    var calls = 0;
+    final waiting = Completer<DocumentRecord>();
+    await tester.pumpWidget(MaterialApp(home: SiteReportWizardScreen(
+      initial: _completeReviewFixture(),
+      reportGenerator: (draft) {
+        calls++;
+        expect(draft.title, 'Site Report - Week 3');
+        expect(draft.project, MockJobsData.jobs.first.title);
+        expect(draft.siteReportDetails?.sectionContent[
+            SiteReportSection.siteProgress], 'Real site progress description');
+        return waiting.future;
+      },
+    )));
+    await _openReview(tester);
+    await tester.ensureVisible(find.byKey(const Key('site-report-next')));
+    await tester.tap(find.byKey(const Key('site-report-next')));
+    await tester.pump();
+    expect(calls, 1);
+    expect(find.byKey(const Key('site-report-next')), findsOneWidget);
+    expect(tester.widget<SiteReportWizardScreen>(
+      find.byType(SiteReportWizardScreen)).reportGenerator, isNotNull);
+    waiting.completeError(StateError('Server offline'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('generation failed'), findsOneWidget);
+    expect(find.text('Review Reports'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  for (final size in [
+    const Size(320, 650), const Size(375, 667), const Size(390, 844),
+    const Size(430, 932), const Size(600, 950), const Size(768, 1024),
+    const Size(1024, 768), const Size(720, 390),
+  ]) {
+    testWidgets('Review responsive scroll, photo ratio, buttons and nav at $size',
+        (tester) async {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(MaterialApp(home: SiteReportWizardScreen(
+        initial: _completeReviewFixture(
+          title: 'Site Report - Week 3 with a long additional title for the job'),
+      )));
+      await _openReview(tester);
+      final scroll = find.byKey(const Key('site-report-wizard-scroll'));
+      final nav = find.byType(Sign2DigitalBottomNavigationBar);
+      expect(tester.getBottomRight(scroll).dy,
+        lessThanOrEqualTo(tester.getTopLeft(nav).dy + 1));
+      final cover = find.byKey(const Key('review-report-cover'));
+      final actual = tester.getSize(cover);
+      expect(actual.width / actual.height, closeTo(390/182, 0.08));
+      await tester.ensureVisible(find.byKey(const Key('site-report-next')));
+      await tester.pump();
+      expect(find.byKey(const Key('site-report-content-back')), findsOneWidget);
+      expect(tester.takeException(), isNull, reason: '$size');
+    });
+  }
 
   testWidgets('Figma Details step, shared fields, initial section selection and nav',
       (tester) async {
@@ -264,10 +482,16 @@ void main() {
     await tester.ensureVisible(find.byKey(const Key('site-report-next')));
     await tester.tap(find.byKey(const Key('site-report-next')));
     await tester.pump();
-    expect(find.text('Review Site Report'), findsOneWidget);
-    expect(find.text('Updated site progress'), findsOneWidget);
+    expect(find.text('Review Reports'), findsOneWidget);
+    expect(find.byKey(const Key('review-report-cover-image')), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const Key('site-report-content-back')));
+    await tester.tap(find.byKey(const Key('site-report-content-back')));
+    await tester.pump();
+    final retained = tester.widget<TextFormField>(
+      find.byKey(const Key('site-report-content-siteProgress')));
+    expect(retained.controller!.text, 'Updated site progress');
     expect(find.text('Quality issue'), findsOneWidget);
-    expect(find.text('photo-0.png, photo-2.png'), findsOneWidget);
+    expect(find.byKey(const Key('site-report-photo-1')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -336,12 +560,18 @@ void main() {
     await tester.ensureVisible(find.byKey(const Key('site-report-next')));
     await tester.tap(find.byKey(const Key('site-report-next')));
     await tester.pump();
-    expect(find.text('Review Site Report'), findsOneWidget);
+    expect(find.text('Review Reports'), findsOneWidget);
+    expect(find.byKey(const Key('review-report-title')), findsOneWidget);
     expect(find.text('Site Inspection'), findsOneWidget);
     expect(find.text('Original preparer'), findsOneWidget);
-    expect(find.text('Cloudy'), findsOneWidget);
+    expect(find.text('Existing job'), findsOneWidget);
+    expect(find.text('Existing customer'), findsOneWidget);
+    expect(find.text('August 25, 2026'), findsOneWidget);
+    expect(find.byKey(const Key('review-report-info')), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const Key('site-report-content-back')));
+    await tester.tap(find.byKey(const Key('site-report-content-back')));
+    await tester.pump();
     expect(find.text('Verified progress description'), findsOneWidget);
-    expect(find.byKey(const Key('site-report-demo-notice')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

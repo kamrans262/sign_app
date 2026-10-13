@@ -189,9 +189,21 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('site-report-next')));
     await tester.pumpAndSettle();
-    expect(find.text('Review Site Report'), findsOneWidget);
+    expect(find.text('Review Reports'), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const Key('review-report-cover')));
+    await tester.pumpAndSettle();
+    // Associate the actual demo job and its client before generating.
+    await tester.ensureVisible(find.text('Job'));
+    await tester.tap(find.text('Job'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('review-report-job-demo-active-1')));
+    await tester.pumpAndSettle();
+
     await tester.ensureVisible(find.byKey(const Key('site-report-next')));
     await tester.tap(find.byKey(const Key('site-report-next')));
+    await tester.pumpAndSettle();
+    expect(find.text('Report generation unavailable'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('review-report-save-local-draft')));
     await tester.pumpAndSettle();
 
     expect(DemoReportDraftSession.drafts, hasLength(1));

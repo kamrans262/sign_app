@@ -21,6 +21,7 @@ class ReportsScreen extends StatefulWidget {
     this.repository,
     this.onReportTap,
     this.onCreateReport,
+    this.reportGenerator,
     this.onNavigationSelected,
     this.onNotificationTap,
     this.onProfileTap,
@@ -30,6 +31,8 @@ class ReportsScreen extends StatefulWidget {
   final DocumentRepository? repository;
   final ValueChanged<DocumentRecord>? onReportTap;
   final VoidCallback? onCreateReport;
+  /// Optional real report generation. Absence keeps local draft behavior.
+  final Future<DocumentRecord> Function(DocumentRecord draft)? reportGenerator;
   final ValueChanged<int>? onNavigationSelected;
   final VoidCallback? onNotificationTap;
   final VoidCallback? onProfileTap;
@@ -117,12 +120,25 @@ class _ReportsScreenState extends State<ReportsScreen> {
       MaterialPageRoute<DocumentRecord>(
         builder: (_) => SiteReportWizardScreen(
           initial: existing,
+          reportGenerator: widget.reportGenerator,
           selectedNavigationIndex: widget.selectedNavigationIndex,
           onNavigationSelected: _navigation,
         ),
       ),
     );
     if (!mounted || report == null) { return; }
+    if (!report.demoOnly) {
+      // The connected repository owns real generated reports and statuses.
+      await _load();
+      if (mounted) {
+        await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+          builder: (_) => DocumentDetailsScreen(
+            documentId: report.id, document: report,
+          ),
+        ));
+      }
+      return;
+    }
     try {
       DemoReportDraftSession.save(report);
       await _load();
