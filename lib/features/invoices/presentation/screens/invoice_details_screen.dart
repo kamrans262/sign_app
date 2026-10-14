@@ -50,6 +50,15 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
     _record = widget.invoice;
   }
 
+  @override
+  void didUpdateWidget(covariant InvoiceDetailsScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.invoice.id != widget.invoice.id) {
+      _record = widget.invoice;
+      _tab = 0;
+    }
+  }
+
   static const _months = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December',
