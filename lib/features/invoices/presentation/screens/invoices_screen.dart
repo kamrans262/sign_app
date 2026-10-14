@@ -7,9 +7,10 @@ import '../../../../core/widgets/sign2digital_entry_list_card.dart';
 import '../../../../core/widgets/sign2digital_list_sort_control.dart';
 import '../../../../core/widgets/sign2digital_search_field.dart';
 import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
-import '../../data/demo_deposit_repository.dart';
-import '../../domain/deposit_record.dart';
-import 'add_deposit_screen.dart';
+import '../../data/demo_invoice_repository.dart';
+import '../../domain/invoice_record.dart';
+import 'add_invoice_screen.dart';
+import 'invoice_details_screen.dart';
 
 enum InvoiceSort {
   newest('Date (newest)'),
@@ -147,7 +148,10 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
     }
     final draft = await Navigator.of(context).push<InvoiceRecord>(
       MaterialPageRoute<InvoiceRecord>(
-        builder: (_) => const AddInvoiceScreen(),
+        builder: (_) => AddInvoiceScreen(
+          selectedNavigationIndex: widget.selectedNavigationIndex,
+          onNavigationSelected: widget.onNavigationSelected,
+        ),
       ),
     );
     if (draft == null || !mounted) { return; }

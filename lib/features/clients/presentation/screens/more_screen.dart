@@ -4,6 +4,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../documents/presentation/screens/reports_screen.dart';
 import '../../../expenses/presentation/screens/expenses_screen.dart';
 import '../../../deposits/presentation/screens/deposits_screen.dart';
+import '../../../invoices/presentation/screens/invoices_screen.dart';
 import '../../../labour/presentation/screens/time_labour_screen.dart';
 import '../../../quotes/presentation/screens/quote_ui_demo_screen.dart';
 
@@ -46,6 +47,16 @@ class MoreScreen extends StatelessWidget {
             title: 'Time & Labour',
             icon: Icons.access_time_outlined,
             onTap: () => _open(context, TimeLabourScreen(
+              onNavigationSelected: onTabSelected,
+              onNotificationTap: () => onNotReady?.call('Notifications'),
+              onProfileTap: () => onNotReady?.call('Profile'),
+            ))),
+          const SizedBox(height: 15),
+          _tile(context,
+            key: const Key('open-invoices'),
+            title: 'Invoices',
+            icon: Icons.description_outlined,
+            onTap: () => _open(context, InvoicesScreen(
               onNavigationSelected: onTabSelected,
               onNotificationTap: () => onNotReady?.call('Notifications'),
               onProfileTap: () => onNotReady?.call('Profile'),

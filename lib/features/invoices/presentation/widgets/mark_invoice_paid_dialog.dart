@@ -5,7 +5,6 @@ import '../../../../core/widgets/sign2digital_modal_surface.dart';
 import '../../../../core/widgets/sign2digital_outlined_button.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../domain/invoice_record.dart';
-import '../../data/demo_invoice_repository.dart';
 
 /// Confirmation is separate from invoice-row navigation and never changes
 /// an invoice until the repository successfully accepts the operation.

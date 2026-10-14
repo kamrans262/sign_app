@@ -5,7 +5,6 @@ import '../../../../core/widgets/sign2digital_header.dart';
 import '../../../../core/widgets/sign2digital_information_table.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../../clients/presentation/widgets/sign2digital_status_badge.dart';
-import '../../data/demo_invoice_repository.dart';
 import '../../domain/invoice_record.dart';
 import '../widgets/mark_invoice_paid_dialog.dart';
 
