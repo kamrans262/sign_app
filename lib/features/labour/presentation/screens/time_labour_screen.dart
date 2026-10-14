@@ -93,10 +93,12 @@ class _TimeLabourScreenState extends State<TimeLabourScreen> {
         _loading = false;
       });
     } catch (_) {
-      if (mounted) setState(() {
-        _loading = false;
-        _error = 'Unable to load time entries.';
-      });
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _error = 'Unable to load time entries.';
+        });
+      }
     }
   }
 
@@ -209,11 +211,15 @@ class _TimeLabourScreenState extends State<TimeLabourScreen> {
       if (!mounted) return;
       setState(() { _jobId = entry.jobId; });
       await _load();
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Time entry saved locally as Pending.')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Time entry saved locally as Pending.')));
+      }
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Could not save the time entry.')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Could not save the time entry.')));
+      }
     }
   }
 
