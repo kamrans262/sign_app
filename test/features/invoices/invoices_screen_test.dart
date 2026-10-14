@@ -177,6 +177,13 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(AddInvoiceScreen), findsOneWidget);
     expect(find.text('Create Invoice'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('invoice-create-save')), 140,
+      scrollable: find.descendant(
+        of: find.byKey(const Key('invoice-create-scroll')),
+        matching: find.byType(Scrollable)).first);
+    await tester.ensureVisible(find.byKey(const Key('invoice-create-save')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('invoice-create-save')));
     await tester.pump();
     expect(find.byKey(const Key('invoice-create-error')), findsOneWidget);
