@@ -112,11 +112,11 @@ class DemoLabourRepository implements LabourRepository {
   }
 
   LabourEntry? _find(String id) {
-    if (_deleted.contains(id)) return null;
+    if (_deleted.contains(id)) { return null; }
     final saved = _saved[id];
-    if (saved != null) return saved;
+    if (saved != null) { return saved; }
     for (final fixture in _fixtures) {
-      if (fixture.id == id) return fixture;
+      if (fixture.id == id) { return fixture; }
     }
     return null;
   }
