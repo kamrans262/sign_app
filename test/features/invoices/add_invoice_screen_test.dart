@@ -17,7 +17,8 @@ class _Invoices extends InvoiceRepository {
       saved == null ? [] : [saved!];
   @override
   Future<InvoiceRecord> markAsPaid(String id) =>
-      Future<InvoiceRecord>.error(UnsupportedError());
+      Future<InvoiceRecord>.error(
+        UnsupportedError('Mark as Paid is not supported by this test fake.'));
   @override
   Future<void> saveDraft(InvoiceRecord invoice) async {
     if (reject) { throw StateError('Not saved'); }
@@ -25,7 +26,7 @@ class _Invoices extends InvoiceRepository {
   }
 }
 
-class _Deposits implements DepositRepository {
+class _Deposits extends DepositRepository {
   @override
   Future<List<DepositRecord>> listDeposits() async => [
     DepositRecord(
