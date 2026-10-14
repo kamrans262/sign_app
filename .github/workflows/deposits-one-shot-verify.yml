@@ -30,3 +30,5 @@ jobs:
           flutter analyze --no-pub             lib/features/deposits             lib/features/clients/presentation/screens/more_screen.dart             lib/features/clients/presentation/widgets/sign2digital_details_tabs.dart             lib/features/clients/presentation/widgets/sign2digital_status_badge.dart             test/features/deposits/deposits_screen_test.dart
       - name: Test Deposits screen only
         run: flutter test --no-pub --concurrency=1 --reporter expanded --timeout 45s test/features/deposits/deposits_screen_test.dart
+
+# Final focused verification after two Deposits analyzer fixes.
