@@ -30,9 +30,9 @@ class LabourVoiceSuggestion {
 
   static int? _time(Object? raw) {
     final value = _text(raw);
-    if (value == null) return null;
+    if (value == null) { return null; }
     final parts = RegExp(r'^([01]\d|2[0-3]):([0-5]\d)$').firstMatch(value);
-    if (parts == null) return null;
+    if (parts == null) { return null; }
     return int.parse(parts.group(1)!) * 60 + int.parse(parts.group(2)!);
   }
 
@@ -171,12 +171,12 @@ class OpenAiLabourVoiceExtractionService implements LabourVoiceExtractionService
       }
       return suggestion;
     } finally {
-      if (_client == null) client.close();
+      if (_client == null) { client.close(); }
     }
   }
 
   static void _checkStatus(int status) {
-    if (status >= 200 && status < 300) return;
+    if (status >= 200 && status < 300) { return; }
     if (status == 401 || status == 403) {
       throw StateError('AI key rejected. Enter a valid key and retry.');
     }
