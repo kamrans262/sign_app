@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -170,8 +168,22 @@ void main() {
     await tester.tap(find.byKey(const Key('invoice-details-edit')));
     await tester.pumpAndSettle();
     expect(find.byType(AddInvoiceScreen), findsOneWidget);
-    expect(find.text('Save Changes'), findsWidgets);
-    expect(find.text('INV-2026-0098'), findsWidgets);
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('invoice-create-number')), -125,
+      scrollable: find.descendant(
+        of: find.byKey(const Key('invoice-create-scroll')),
+        matching: find.byType(Scrollable)).first);
+    final numberInput = find.descendant(
+      of: find.byKey(const Key('invoice-create-number')),
+      matching: find.byType(EditableText));
+    expect(tester.widget<EditableText>(numberInput).controller.text,
+      'INV-2026-0098');
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('invoice-create-save')), 140,
+      scrollable: find.descendant(
+        of: find.byKey(const Key('invoice-create-scroll')),
+        matching: find.byType(Scrollable)).first);
+    expect(find.text('Save Changes'), findsOneWidget);
     await tester.pumpWidget(const MaterialApp(home: SizedBox()));
     await _open(tester, _invoice(status: InvoiceStatus.paid, items: _items));
     await _reach(tester, 'invoice-details-edit');
