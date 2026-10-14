@@ -15,7 +15,7 @@ class Sign2DigitalStatusBadge extends StatelessWidget {
       'quote' => (DashboardColors.paleBlue, AppColors.primary),
       'in progress' => (const Color(0xFFFFE9E9), const Color(0xFFB42318)),
       'draft' => (const Color(0xFFFFF0F0), const Color(0xFFF04438)),
-      'approved' || 'reimbursed' =>
+      'approved' || 'reimbursed' || 'received' =>
         (const Color(0xFFC4F0D0), const Color(0xFF18733D)),
       'paid' => (const Color(0xFFC4F0D0), const Color(0xFF18733D)),
       'sent for signature' || 'signed' || 'completed' =>

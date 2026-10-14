@@ -62,10 +62,11 @@ class _DepositsScreenState extends State<DepositsScreen> {
   }
 
   Future<void> _load() async {
+    if (!mounted) { return; }
     setState(() { _loading = true; _error = null; });
     try {
       final records = await _repository.listDeposits();
-      if (!mounted) return;
+      if (!mounted) { return; }
       setState(() { _all = records; _loading = false; });
     } catch (_) {
       if (!mounted) return;
@@ -213,7 +214,7 @@ class _DepositsScreenState extends State<DepositsScreen> {
                             color: AppColors.lightBorder)),
                         Sign2DigitalDetailsTabs(
                           labels: const [
-                            'All', 'To Review', 'Approved', 'Reimbursed'],
+                            'All', 'Pending', 'Received', 'Refunded'],
                           selectedIndex: _tab,
                           onSelected: (index) => setState(() => _tab = index),
                         ),
