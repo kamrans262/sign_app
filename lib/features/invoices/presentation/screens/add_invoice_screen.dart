@@ -35,6 +35,7 @@ class AddInvoiceScreen extends StatefulWidget {
     this.currency = 'CHF',
     this.vatBasisPoints = 0,
     this.initialItems = const [],
+    this.initialInvoice,
     this.voiceRecorderFactory,
     this.voiceExtractionService,
     this.requestTemporaryApiKey,
@@ -49,6 +50,7 @@ class AddInvoiceScreen extends StatefulWidget {
   final String initialIban, currency;
   final int vatBasisPoints;
   final List<InvoiceLineItem> initialItems;
+  final InvoiceRecord? initialInvoice;
   final VoiceRecorderService Function()? voiceRecorderFactory;
   final InvoiceVoiceExtractionService? voiceExtractionService;
   final Future<String?> Function(BuildContext)? requestTemporaryApiKey;
@@ -73,11 +75,14 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
   String? _error, _voiceJobHint;
 
   List<JobModel> get _jobs => widget.jobs ?? LabourDemoJobs.all;
+  String get _currency => widget.initialInvoice?.currency ?? widget.currency;
+  int get _vatBasisPoints => widget.initialInvoice?.vatBasisPoints ??
+      widget.vatBasisPoints;
   int? get _subtotalMinor => _items.isEmpty ||
       _items.any((item) => !item.valid || item.totalMinor == null)
       ? null : _items.fold<int>(0, (sum, item) => sum + item.totalMinor!);
   int? get _vatMinor => _subtotalMinor == null ? null
-      : percentOfMinor(_subtotalMinor!, widget.vatBasisPoints);
+      : percentOfMinor(_subtotalMinor!, _vatBasisPoints);
   int? get _totalMinor => _subtotalMinor == null ? null
       : _subtotalMinor! + _vatMinor!;
   int? get _dueMinor => _totalMinor == null ? null
@@ -88,11 +93,26 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
     super.initState();
     _repository = widget.repository ?? const DemoInvoiceRepository();
     _deposits = widget.depositRepository ?? const DemoDepositRepository();
-    _iban.text = widget.initialIban;
-    _items.addAll(widget.initialItems);
-    // Invoice numbers are generated for the demo session, not assumed to
-    // correspond to an external accounting system.
-    _number.text = 'INV-${DateTime.now().microsecondsSinceEpoch}';
+    final initial = widget.initialInvoice;
+    _iban.text = initial?.iban ?? widget.initialIban;
+    _items.addAll(initial?.items ?? widget.initialItems);
+    _number.text = initial?.number ??
+        'INV-${DateTime.now().microsecondsSinceEpoch}';
+    if (initial != null) {
+      _client.text = initial.clientName;
+      _notes.text = initial.notes;
+      _issueDate = initial.date;
+      _dueDate = initial.dueDate;
+      _depositPaidMinor = initial.depositPaidMinor;
+      for (final candidate in _jobs) {
+        if (candidate.id == initial.jobId ||
+            candidate.title == initial.project) {
+          _job = candidate;
+          break;
+        }
+      }
+      if (_job == null) { _voiceJobHint = initial.project; }
+    }
   }
 
   @override
@@ -501,7 +521,7 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
     if (job == null || _client.text.trim().isEmpty ||
         _number.text.trim().isEmpty || issued == null || due == null ||
         due.isBefore(issued) || !isValidInvoiceIban(_iban.text) ||
-        widget.vatBasisPoints < 0 || widget.vatBasisPoints > 10000 ||
+        _vatBasisPoints < 0 || _vatBasisPoints > 10000 ||
         subtotal == null || total == null || total <= 0 ||
         _items.any((item) => !item.valid)) {
       setState(() => _error = 'Select a job, client, valid IBAN and dates '
@@ -510,24 +530,35 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
     }
     setState(() { _saving = true; _error = null; });
     try {
+      final initial = widget.initialInvoice;
       final draft = InvoiceRecord(
-        id: 'local-invoice-${DateTime.now().microsecondsSinceEpoch}',
+        id: initial?.id ??
+            'local-invoice-${DateTime.now().microsecondsSinceEpoch}',
         number: _number.text.trim(),
         project: job.title, jobId: job.id,
         clientName: _client.text.trim(),
         amount: total / 100,
         date: issued, dueDate: due,
-        status: InvoiceStatus.draft,
+        status: initial?.status ?? InvoiceStatus.draft,
+        manuallyPaidAt: initial?.manuallyPaidAt,
+        sentAt: initial?.sentAt,
+        history: initial?.history ?? const [],
+        payments: initial?.payments ?? const [],
+        demoOnly: initial?.demoOnly ?? true,
         iban: _iban.text.trim(),
         notes: _notes.text.trim(),
         currency: widget.currency,
-        vatBasisPoints: widget.vatBasisPoints,
+        vatBasisPoints: _vatBasisPoints,
         depositPaidMinor: _depositPaidMinor,
         items: List<InvoiceLineItem>.unmodifiable(_items),
       );
-      await _repository.saveDraft(draft);
-      if (!mounted) { return; }
-      Navigator.of(context).pop(draft);
+      if (initial == null) {
+        await _repository.saveDraft(draft);
+        if (mounted) { Navigator.of(context).pop(draft); }
+      } else {
+        final saved = await _repository.updateInvoice(draft);
+        if (mounted) { Navigator.of(context).pop(saved); }
+      }
     } catch (_) {
       if (mounted) {
         setState(() => _error =
@@ -608,7 +639,7 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
             label: 'Subtotal', value: _money(_subtotalMinor)),
           const SizedBox(height: 15),
           Sign2DigitalDocumentAmountRow(
-            label: 'VAT (${(widget.vatBasisPoints / 100).toStringAsFixed(0)}%)',
+            label: 'VAT (${(_vatBasisPoints / 100).toStringAsFixed(0)}%)',
             value: _money(_vatMinor)),
           const SizedBox(height: 15),
           Sign2DigitalDocumentAmountRow(
@@ -708,7 +739,8 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
               const SizedBox(width: 10),
               Expanded(child: Sign2DigitalPrimaryButton(
                 key: const Key('invoice-create-save'),
-                label: 'Create Invoice', loading: _saving,
+                label: widget.initialInvoice == null ? 'Create Invoice' : 'Save Changes',
+                loading: _saving,
                 onPressed: _save)),
             ]),
           ],
