@@ -1,3 +1,5 @@
+import '../../jobs/data/local_job_photo_source.dart';
+
 enum DepositStatus {
   pending('Pending'),
   received('Received'),
@@ -17,6 +19,11 @@ class DepositRecord {
     required this.date,
     required this.status,
     this.jobReference,
+    this.jobId,
+    this.paymentMethod = '',
+    this.referenceNumber = '',
+    this.notes = '',
+    this.photos = const [],
     this.demoOnly = true,
   });
 
@@ -27,6 +34,11 @@ class DepositRecord {
   final DateTime date;
   final DepositStatus status;
   final String? jobReference;
+  final String? jobId;
+  final String paymentMethod;
+  final String referenceNumber;
+  final String notes;
+  final List<LocalJobPhotoSelection> photos;
   final bool demoOnly;
 
   String get formattedAmount => 'CHF ${amount.toStringAsFixed(2)}';
@@ -36,6 +48,7 @@ class DepositRecord {
     if (query.isEmpty) { return true; }
     return [
       id, title, clientName, status.label, formattedAmount,
+      paymentMethod, referenceNumber, notes,
       ?jobReference,
     ].any((value) => value.toLowerCase().contains(query));
   }
@@ -43,4 +56,7 @@ class DepositRecord {
 
 abstract class DepositRepository {
   Future<List<DepositRecord>> listDeposits();
+
+  Future<void> saveDeposit(DepositRecord deposit) =>
+      Future<void>.error(UnsupportedError('Deposit saving is unavailable.'));
 }
