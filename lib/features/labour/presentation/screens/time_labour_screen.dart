@@ -185,9 +185,22 @@ class _TimeLabourScreenState extends State<TimeLabourScreen> {
       widget.onEntryTap!(record);
       return;
     }
-    await Navigator.of(context).push<void>(MaterialPageRoute<void>(
-      builder: (_) => LabourEntryDetailsScreen(entry: record),
-    ));
+    final deleted = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) => LabourEntryDetailsScreen(
+          entry: record,
+          repository: _repository,
+        ),
+      ),
+    );
+    if (!mounted) { return; }
+    // Re-read after a detail route, so the listing reflects edits/deletion.
+    await _load();
+    if (deleted == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Labour entry deleted.'),
+      ));
+    }
   }
 
   Future<void> _create() async {
