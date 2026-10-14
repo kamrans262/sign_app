@@ -205,15 +205,15 @@ void main() {
     await tester.tap(find.byKey(
       Key('invoice-pick-job-${LabourDemoJobs.riverside.id}')));
     await tester.pumpAndSettle();
-    await _scroll(tester, 'invoice-financial-summary');
-    expect(find.text('CHF 12.50'), findsOneWidget);
-    expect(find.text('CHF 97.50'), findsOneWidget);
     await _scroll(tester, 'invoice-create-date');
     await tester.tap(find.byKey(const Key('invoice-create-date')));
     await tester.pumpAndSettle();
     await _scroll(tester, 'invoice-create-due-date');
     await tester.tap(find.byKey(const Key('invoice-create-due-date')));
     await tester.pumpAndSettle();
+    await _scroll(tester, 'invoice-financial-summary');
+    expect(find.text('CHF 12.50'), findsOneWidget);
+    expect(find.text('CHF 97.50'), findsOneWidget);
     await _scroll(tester, 'invoice-create-save');
     await tester.tap(find.byKey(const Key('invoice-create-save')));
     await tester.pumpAndSettle();
