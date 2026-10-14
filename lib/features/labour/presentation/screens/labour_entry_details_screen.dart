@@ -62,7 +62,7 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
   }
 
   static String _clock(int? value) {
-    if (value == null) return 'Not recorded';
+    if (value == null) { return 'Not recorded'; }
     final hours = value ~/ 60;
     final minutes = (value % 60).toString().padLeft(2, '0');
     return '${hours}:${minutes}';
