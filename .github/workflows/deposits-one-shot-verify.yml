@@ -35,3 +35,5 @@ jobs:
           flutter test --no-pub --concurrency=1 --reporter expanded --timeout 45s \
             test/features/deposits/deposits_screen_test.dart \
             test/features/deposits/add_deposit_screen_test.dart
+
+# Final Create Deposit verification after reported lint fixes.
