@@ -129,6 +129,9 @@ void main() {
       await tester.pumpWidget(MaterialApp(home:
         InvoiceDetailsScreen(invoice: repo.record, repository: repo)));
       await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byKey(
+        const Key('invoice-details-mark-paid')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('invoice-details-mark-paid')));
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('invoice-paid-confirm')), findsOneWidget);
