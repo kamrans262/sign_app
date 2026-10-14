@@ -31,6 +31,35 @@ class InvoiceLineItem {
           (unitPriceMinor! >= 0 && unitPriceMinor! <= 99999999999));
 }
 
+/// A recorded payment associated with this exact invoice.
+class InvoicePaymentRecord {
+  const InvoicePaymentRecord({
+    required this.id,
+    required this.amountMinor,
+    required this.paidAt,
+    required this.method,
+    required this.status,
+    this.referenceNumber,
+  });
+  final String id, method, status;
+  final int amountMinor;
+  final DateTime paidAt;
+  final String? referenceNumber;
+}
+
+/// Only recorded events appear in Invoice History.
+class InvoiceHistoryEvent {
+  const InvoiceHistoryEvent({
+    required this.id,
+    required this.title,
+    required this.occurredAt,
+    this.description,
+  });
+  final String id, title;
+  final DateTime occurredAt;
+  final String? description;
+}
+
 class InvoiceRecord {
   const InvoiceRecord({
     required this.id, required this.number, required this.project,
@@ -40,6 +69,7 @@ class InvoiceRecord {
     this.iban = '', this.dueDate, this.notes = '',
     this.currency = 'CHF', this.vatBasisPoints = 0,
     this.depositPaidMinor = 0, this.items = const [],
+    this.payments = const [], this.history = const [], this.sentAt,
   });
 
   final String id, number, project, clientName;
@@ -55,6 +85,13 @@ class InvoiceRecord {
   final int vatBasisPoints;
   final int depositPaidMinor;
   final List<InvoiceLineItem> items;
+  final List<InvoicePaymentRecord> payments;
+  final List<InvoiceHistoryEvent> history;
+  final DateTime? sentAt;
+
+  int get receivedMinor => payments.where((p) =>
+      p.status.toLowerCase() == 'paid').fold<int>(0,
+      (sum, payment) => sum + payment.amountMinor);
 
   String get formattedAmount => quoteMoney((amount * 100).round(), currency);
 
@@ -75,7 +112,8 @@ class InvoiceRecord {
   int? get totalMinor => subtotalMinor == null
       ? null : subtotalMinor! + vatMinor!;
   int? get amountDueMinor => totalMinor == null
-      ? null : (totalMinor! - depositPaidMinor).clamp(0, totalMinor!).toInt();
+      ? null : (totalMinor! - depositPaidMinor - receivedMinor)
+          .clamp(0, totalMinor!).toInt();
 
   InvoiceRecord withStatus(InvoiceStatus next, {DateTime? paidAt}) =>
       InvoiceRecord(
@@ -86,12 +124,17 @@ class InvoiceRecord {
         iban: iban, dueDate: dueDate, notes: notes,
         currency: currency, vatBasisPoints: vatBasisPoints,
         depositPaidMinor: depositPaidMinor, items: items,
+        payments: payments, history: history, sentAt: sentAt,
       );
 }
 
 abstract class InvoiceRepository {
   Future<List<InvoiceRecord>> listInvoices();
   Future<InvoiceRecord> markAsPaid(String invoiceId);
+
+  Future<InvoiceRecord> updateInvoice(InvoiceRecord updated) =>
+      Future<InvoiceRecord>.error(
+        UnsupportedError('Invoice editing is unavailable.'));
 
   Future<void> saveDraft(InvoiceRecord invoice) =>
       Future<void>.error(UnsupportedError('Invoice creation is not available.'));
