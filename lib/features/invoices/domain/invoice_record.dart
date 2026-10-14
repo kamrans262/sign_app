@@ -75,7 +75,7 @@ class InvoiceRecord {
   int? get totalMinor => subtotalMinor == null
       ? null : subtotalMinor! + vatMinor!;
   int? get amountDueMinor => totalMinor == null
-      ? null : (totalMinor! - depositPaidMinor).clamp(0, totalMinor!);
+      ? null : (totalMinor! - depositPaidMinor).clamp(0, totalMinor!).toInt();
 
   InvoiceRecord withStatus(InvoiceStatus next, {DateTime? paidAt}) =>
       InvoiceRecord(

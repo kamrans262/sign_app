@@ -150,20 +150,17 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
     final draft = await Navigator.of(context).push<InvoiceRecord>(
       MaterialPageRoute<InvoiceRecord>(
         builder: (_) => AddInvoiceScreen(
+          repository: _repository,
           selectedNavigationIndex: widget.selectedNavigationIndex,
           onNavigationSelected: widget.onNavigationSelected,
         ),
       ),
     );
     if (draft == null || !mounted) { return; }
-    try {
-      await _repository.saveDraft(draft);
-      if (!mounted) { return; }
-      await _load();
-      _notice('Invoice draft saved locally.');
-    } catch (_) {
-      _notice('Unable to save this invoice draft.');
-    }
+    // The create route awaited repository.saveDraft before returning.
+    // Do not save twice (or falsely report a duplicate as an error).
+    await _load();
+    if (mounted) { _notice('Invoice draft saved locally.'); }
   }
 
   void _navigation(int index) {

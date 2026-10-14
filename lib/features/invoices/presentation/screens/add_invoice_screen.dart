@@ -81,7 +81,7 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
   int? get _totalMinor => _subtotalMinor == null ? null
       : _subtotalMinor! + _vatMinor!;
   int? get _dueMinor => _totalMinor == null ? null
-      : (_totalMinor! - _depositPaidMinor).clamp(0, _totalMinor!);
+      : (_totalMinor! - _depositPaidMinor).clamp(0, _totalMinor!).toInt();
 
   @override
   void initState() {
@@ -465,28 +465,31 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
       _iban.text.trim().isNotEmpty || _issueDate != null ||
       _dueDate != null || _items.isNotEmpty || _notes.text.trim().isNotEmpty;
 
+  Future<bool> _confirmDiscard() async {
+    if (_saving) { return false; }
+    if (!_dirty) { return true; }
+    return await showDialog<bool>(
+      context: context,
+      builder: (dialog) => AlertDialog(
+        title: const Text('Discard invoice?'),
+        content: const Text('Unsaved invoice details will be lost.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialog).pop(false),
+            child: const Text('Keep editing')),
+          TextButton(
+            key: const Key('invoice-discard-confirm'),
+            onPressed: () => Navigator.of(dialog).pop(true),
+            child: const Text('Discard')),
+        ],
+      ),
+    ) ?? false;
+  }
+
   Future<void> _cancel() async {
-    if (_saving) { return; }
-    if (_dirty) {
-      final confirm = await showDialog<bool>(
-        context: context,
-        builder: (dialog) => AlertDialog(
-          title: const Text('Discard invoice?'),
-          content: const Text('Unsaved invoice details will be lost.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialog).pop(false),
-              child: const Text('Keep editing')),
-            TextButton(
-              key: const Key('invoice-discard-confirm'),
-              onPressed: () => Navigator.of(dialog).pop(true),
-              child: const Text('Discard')),
-          ],
-        ),
-      );
-      if (confirm != true || !mounted) { return; }
+    if (await _confirmDiscard() && mounted) {
+      Navigator.of(context).pop();
     }
-    if (mounted) { Navigator.of(context).pop(); }
   }
 
   Future<void> _save() async {
@@ -535,12 +538,12 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
     }
   }
 
-  void _navigate(int index) {
+  Future<void> _navigate(int index) async {
     if (index == widget.selectedNavigationIndex || _saving) { return; }
-    // Preserve the existing bottom bar callback after leaving the form.
-    _cancel().then((_) {
-      if (!mounted) { widget.onNavigationSelected?.call(index); }
-    });
+    if (!await _confirmDiscard() || !mounted) { return; }
+    final callback = widget.onNavigationSelected;
+    Navigator.of(context).pop();
+    callback?.call(index);
   }
 
   Widget _itemsTable() => Column(
