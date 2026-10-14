@@ -122,6 +122,8 @@ void main() {
     await tester.tap(find.byKey(const Key('labour-detail-edit')));
     await tester.pump();
     expect(find.textContaining('locked'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('labour-detail-delete')));
     await tester.pump();
     expect(find.byKey(const Key('labour-confirm-delete')), findsNothing);
@@ -157,7 +159,6 @@ void main() {
     await _reveal(tester, 'labour-detail-edit');
     await tester.tap(find.byKey(const Key('labour-detail-edit')));
     await tester.pumpAndSettle();
-    expect(find.text('Save Changes'), findsOneWidget);
     final scroll = find.descendant(
       of: find.byKey(const Key('labour-entry-form-scroll')),
       matching: find.byType(Scrollable),
@@ -178,6 +179,7 @@ void main() {
       scrollable: scroll,
     );
     await tester.ensureVisible(find.byKey(const Key('labour-form-save')));
+    expect(find.text('Save Changes'), findsOneWidget);
     await tester.tap(find.byKey(const Key('labour-form-save')));
     await tester.pumpAndSettle();
     final records = (await repository.list())
