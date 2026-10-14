@@ -74,6 +74,15 @@ class DemoInvoiceRepository extends InvoiceRepository {
         invoice.status != InvoiceStatus.draft ||
         !invoice.amount.isFinite || invoice.amount <= 0 ||
         invoice.amount > 999999999 ||
+        (invoice.items.isNotEmpty && (
+          invoice.totalMinor == null ||
+          invoice.totalMinor != (invoice.amount * 100).round() ||
+          invoice.dueDate == null ||
+          invoice.dueDate!.isBefore(invoice.date) ||
+          !isValidInvoiceIban(invoice.iban) ||
+          invoice.vatBasisPoints < 0 ||
+          invoice.vatBasisPoints > 10000
+        )) ||
         (await listInvoices()).any((item) =>
             item.id == invoice.id || item.number == invoice.number)) {
       throw ArgumentError('Invalid or duplicate invoice draft.');
