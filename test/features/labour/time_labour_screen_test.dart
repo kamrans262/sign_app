@@ -47,7 +47,8 @@ Future<void> _scrollToEntryField(WidgetTester tester, String key) async {
       matching: find.byType(Scrollable),
     ).first,
   );
-  await tester.pump();
+  await tester.ensureVisible(find.byKey(Key(key)));
+  await tester.pumpAndSettle();
 }
 
 void main() {
@@ -188,6 +189,8 @@ void main() {
       'electrician');
     await _scrollToEntryField(tester, 'labour-form-hours');
     await tester.enterText(find.byKey(const Key('labour-form-hours')), '5.50');
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
     await _scrollToEntryField(tester, 'labour-form-save');
     await tester.tap(find.byKey(const Key('labour-form-save')));
     await tester.pumpAndSettle();
