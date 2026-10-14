@@ -67,10 +67,24 @@ void main() {
     expect(find.text('Riverside Villa'), findsWidgets);
     expect(find.byKey(const Key('invoice-details-table')), findsOneWidget);
     expect(find.text('CHF 108.10'), findsWidgets);
-    await _reach(tester, 'information-row-copy');
+    String? copiedJob;
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    messenger.setMockMethodCallHandler(
+      SystemChannels.platform, (call) async {
+        if (call.method == 'Clipboard.setData') {
+          copiedJob = (call.arguments as Map)['text'] as String?;
+        }
+        return null;
+      },
+    );
+    addTearDown(() => messenger.setMockMethodCallHandler(
+      SystemChannels.platform, null));
+    await tester.ensureVisible(find.byKey(const Key('information-row-copy')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('information-row-copy')));
-    final clipboard = await Clipboard.getData('text/plain');
-    expect(clipboard?.text, 'Riverside Villa');
+    await tester.pump();
+    expect(copiedJob, 'Riverside Villa');
     expect(find.text('Paid Date'), findsNothing);
     expect(find.text('Sent Date'), findsNothing);
     expect(tester.takeException(), isNull);
@@ -184,7 +198,11 @@ void main() {
         of: find.byKey(const Key('invoice-create-scroll')),
         matching: find.byType(Scrollable)).first);
     expect(find.text('Save Changes'), findsOneWidget);
-    await tester.pumpWidget(const MaterialApp(home: SizedBox()));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Paid invoices prevent opening the edit form',
+      (tester) async {
     await _open(tester, _invoice(status: InvoiceStatus.paid, items: _items));
     await _reach(tester, 'invoice-details-edit');
     await tester.tap(find.byKey(const Key('invoice-details-edit')));
