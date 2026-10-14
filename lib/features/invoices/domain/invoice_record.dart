@@ -1,4 +1,4 @@
-import '../../../quotes/domain/quote_review_models.dart';
+import '../../quotes/domain/quote_review_models.dart';
 
 enum InvoiceStatus {
   draft('Draft'), sent('Sent'), pending('Payment Pending'),

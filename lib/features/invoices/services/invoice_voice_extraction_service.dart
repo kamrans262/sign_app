@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
-import '../../../quotes/domain/quote_review_models.dart';
+import '../../quotes/domain/quote_review_models.dart';
 
 class InvoiceVoiceSuggestion {
   const InvoiceVoiceSuggestion({
