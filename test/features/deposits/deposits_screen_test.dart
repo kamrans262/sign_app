@@ -143,7 +143,7 @@ void main() {
     expect(find.byType(AddDepositScreen), findsOneWidget);
     expect(find.text('Deposits'), findsOneWidget);
     expect(find.text('Create with AI Voice'), findsOneWidget);
-    await tester.pageBack();
+    await tester.tap(find.byIcon(Icons.arrow_back_ios_new_rounded));
     await tester.pumpAndSettle();
     expect(find.byType(DepositsScreen), findsOneWidget);
     expect(tester.takeException(), isNull);
