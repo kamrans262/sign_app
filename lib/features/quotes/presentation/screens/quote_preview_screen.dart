@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../widgets/sign2digital_document_items_table.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
 import '../../domain/quote_document_tracking.dart';
 import '../../domain/quote_review_models.dart';
@@ -231,63 +232,22 @@ class _QuotePreviewScreenState extends State<QuotePreviewScreen> {
     ],
   );
 
-  Widget _tableCell(String value, {bool heading = false,
-      TextAlign alignment = TextAlign.left, double size = 12,
-      bool description = false, bool total = false}) =>
-      Padding(padding: EdgeInsets.fromLTRB(
-          description ? 20 : 5, 13, total ? 20 : 5, 13),
-        child: Text(value, textAlign: alignment, softWrap: true,
-          style: _text(size,
-            color: heading ? Colors.white : AppColors.dark,
-            weight: FontWeight.w500)));
-
-  Widget _itemsTable() => LayoutBuilder(builder: (context, constraints) {
-    // Fixed table layout proportional to available document width; the content
-    // can grow vertically and remains scrollable if fonts are scaled up.
-    final rows = <TableRow>[
-      TableRow(decoration: const BoxDecoration(color: AppColors.primary), children: [
-        _tableCell('Description', heading: true, description: true),
-        _tableCell('Qty', heading: true, alignment: TextAlign.center),
-        _tableCell('Unit Price', heading: true, alignment: TextAlign.center),
-        _tableCell('Total', heading: true, alignment: TextAlign.right, total: true),
-      ]),
+  Widget _itemsTable() => Sign2DigitalDocumentItemsTable(
+    key: const Key('quote-preview-items-table'),
+    items: [
       for (final item in _quote.items)
-        TableRow(children: [
-          _tableCell(item.title.isEmpty ? 'Unspecified item' : item.title,
-            size: 10, description: true),
-          _tableCell(item.quantity.isEmpty ? '—' : item.quantity,
-              alignment: TextAlign.center),
-          _tableCell(quoteMoney(item.priceMinor, _quote.currency),
-              alignment: TextAlign.center),
-          _tableCell(quoteMoney(item.totalMinor, _quote.currency),
-              alignment: TextAlign.right, total: true),
-        ]),
-    ];
-    return Table(
-      key: const Key('quote-preview-items-table'),
-      columnWidths: const {
-        0: FlexColumnWidth(3.6), 1: FlexColumnWidth(.8),
-        2: FlexColumnWidth(2.0), 3: FlexColumnWidth(2.0),
-      },
-      border: const TableBorder(
-        horizontalInside: BorderSide(color: _border),
-        verticalInside: BorderSide(color: _border),
-      ),
-      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-      children: rows,
-    );
-  });
+        Sign2DigitalDocumentTableLine(
+          description: item.title.isEmpty ? 'Unspecified item' : item.title,
+          quantity: item.quantity.isEmpty ? '—' : item.quantity,
+          unitPrice: quoteMoney(item.priceMinor, _quote.currency),
+          total: quoteMoney(item.totalMinor, _quote.currency),
+        ),
+    ],
+  );
 
   Widget _amountRow(String label, String value, {bool total = false}) =>
-      Container(padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-        color: total ? AppColors.primary : Colors.white,
-        child: Row(children: [
-          Expanded(child: Text(label,
-            style: _text(12, color: total ? Colors.white : AppColors.placeholder))),
-          const SizedBox(width: 12),
-          Expanded(child: Text(value, textAlign: TextAlign.right,
-            style: _text(12, color: total ? Colors.white : AppColors.dark))),
-        ]));
+      Sign2DigitalDocumentAmountRow(
+        label: label, value: value, highlight: total);
 
   Widget _quoteDocument() => _card(child: Column(
     crossAxisAlignment: CrossAxisAlignment.stretch, children: [
