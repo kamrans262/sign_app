@@ -9,7 +9,7 @@ import 'package:sign2digital/features/deposits/domain/deposit_record.dart';
 import 'package:sign2digital/features/deposits/presentation/screens/deposits_screen.dart';
 import 'package:sign2digital/features/deposits/presentation/screens/add_deposit_screen.dart';
 
-class _StubRepository implements DepositRepository {
+class _StubRepository extends DepositRepository {
   _StubRepository(this.records, {this.fail = false});
   final List<DepositRecord> records;
   bool fail;
