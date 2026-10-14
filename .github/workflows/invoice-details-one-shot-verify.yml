@@ -46,3 +46,5 @@ jobs:
           path: test/features/invoices/goldens/*.png
           if-no-files-found: warn
           retention-days: 7
+
+# Final focused rerun after InvoiceRepository const constructor repair.
