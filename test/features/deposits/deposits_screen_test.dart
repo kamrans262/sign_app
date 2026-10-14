@@ -7,6 +7,7 @@ import 'package:sign2digital/features/clients/presentation/widgets/sign2digital_
 import 'package:sign2digital/features/deposits/data/demo_deposit_repository.dart';
 import 'package:sign2digital/features/deposits/domain/deposit_record.dart';
 import 'package:sign2digital/features/deposits/presentation/screens/deposits_screen.dart';
+import 'package:sign2digital/features/deposits/presentation/screens/add_deposit_screen.dart';
 
 class _StubRepository implements DepositRepository {
   _StubRepository(this.records, {this.fail = false});
@@ -125,7 +126,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('FAB delegates creation; missing flows show honest messages',
+  testWidgets('FAB delegates creation or opens Create Deposit',
       (tester) async {
     var createCalls = 0;
     await tester.pumpWidget(MaterialApp(home: DepositsScreen(
@@ -138,8 +139,13 @@ void main() {
     await tester.pumpWidget(const MaterialApp(home: DepositsScreen()));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('deposits-create')));
-    await tester.pump();
-    expect(find.text('Deposit creation is not connected yet.'), findsOneWidget);
+    await tester.pumpAndSettle();
+    expect(find.byType(AddDepositScreen), findsOneWidget);
+    expect(find.text('Deposits'), findsOneWidget);
+    expect(find.text('Create with AI Voice'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.byType(DepositsScreen), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
