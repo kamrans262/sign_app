@@ -161,25 +161,32 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
     final receipt = _record.photos[index];
     await showDialog<void>(
       context: context,
-      builder: (dialog) => Dialog(
-        child: Stack(children: [
-          InteractiveViewer(
-            child: Image.memory(receipt.bytes,
-              fit: BoxFit.contain,
-              errorBuilder: (_, _, _) =>
-                  const Icon(Icons.broken_image_outlined)),
+      builder: (dialog) {
+        final size = MediaQuery.sizeOf(dialog);
+        return Dialog(
+          child: SizedBox(
+            width: (size.width - 64).clamp(220.0, 500.0),
+            height: (size.height * .65).clamp(200.0, 520.0),
+            child: Column(children: [
+              Align(
+                alignment: Alignment.centerRight,
+                child: IconButton(
+                  key: const Key('deposit-receipt-close'),
+                  tooltip: 'Close receipt',
+                  onPressed: () => Navigator.of(dialog).pop(),
+                  icon: const Icon(Icons.close),
+                ),
+              ),
+              Expanded(child: InteractiveViewer(
+                child: Image.memory(receipt.bytes,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, _, _) =>
+                      const Icon(Icons.broken_image_outlined)),
+              )),
+            ]),
           ),
-          Positioned(
-            top: 0, right: 0,
-            child: IconButton(
-              key: const Key('deposit-receipt-close'),
-              tooltip: 'Close receipt',
-              onPressed: () => Navigator.of(dialog).pop(),
-              icon: const Icon(Icons.close),
-            ),
-          ),
-        ]),
-      ),
+        );
+      },
     );
   }
 
