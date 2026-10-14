@@ -69,7 +69,7 @@ class _DepositsScreenState extends State<DepositsScreen> {
       if (!mounted) { return; }
       setState(() { _all = records; _loading = false; });
     } catch (_) {
-      if (!mounted) return;
+      if (!mounted) { return; }
       setState(() {
         _error = 'Unable to load deposits';
         _loading = false;
@@ -111,7 +111,9 @@ class _DepositsScreenState extends State<DepositsScreen> {
         ],
       )),
     );
-    if (choice != null && mounted) setState(() => _sort = choice);
+    if (choice != null && mounted) {
+      setState(() => _sort = choice);
+    }
   }
 
   void _notice(String message) {
