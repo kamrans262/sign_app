@@ -73,7 +73,7 @@ class _AddLabourEntryScreenState extends State<AddLabourEntryScreen> {
   static int _minutes(TimeOfDay time) => time.hour * 60 + time.minute;
 
   int? get _duration {
-    if (_start == null || _end == null) return null;
+    if (_start == null || _end == null) { return null; }
     return LabourTimeRange.durationMinutes(
       _minutes(_start!), _minutes(_end!));
   }
