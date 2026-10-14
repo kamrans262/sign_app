@@ -8,11 +8,13 @@ class Sign2DigitalDetailsTabs extends StatelessWidget {
     required this.labels,
     required this.selectedIndex,
     required this.onSelected,
+    this.horizontalPadding = 11,
   });
 
   final List<String> labels;
   final int selectedIndex;
   final ValueChanged<int> onSelected;
+  final double horizontalPadding;
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +27,7 @@ class Sign2DigitalDetailsTabs extends StatelessWidget {
             key: Key('details-tab-$index'),
             onTap: () => onSelected(index),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 13),
+              padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 13),
               decoration: BoxDecoration(
                 border: Border(
                   bottom: BorderSide(

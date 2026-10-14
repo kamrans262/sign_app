@@ -215,6 +215,7 @@ class _DepositsScreenState extends State<DepositsScreen> {
                         Sign2DigitalDetailsTabs(
                           labels: const [
                             'All', 'Pending', 'Received', 'Refunded'],
+                          horizontalPadding: 15,
                           selectedIndex: _tab,
                           onSelected: (index) => setState(() => _tab = index),
                         ),
