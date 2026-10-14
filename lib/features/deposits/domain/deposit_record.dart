@@ -36,7 +36,7 @@ class DepositRecord {
     if (query.isEmpty) { return true; }
     return [
       id, title, clientName, status.label, formattedAmount,
-      if (jobReference != null) jobReference!,
+      ?jobReference,
     ].any((value) => value.toLowerCase().contains(query));
   }
 }

@@ -18,3 +18,4 @@ class DemoDepositRepository implements DepositRepository {
             jobReference: 'JOB-L-001',
           ),
       ]);
+}
