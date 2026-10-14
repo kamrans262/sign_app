@@ -25,6 +25,7 @@ class AddDepositScreen extends StatefulWidget {
     super.key,
     required this.jobs,
     this.initialJob,
+    this.initialDeposit,
     this.selectedNavigationIndex = 4,
     this.onNavigationSelected,
     this.photoSource,
@@ -36,6 +37,7 @@ class AddDepositScreen extends StatefulWidget {
 
   final List<JobModel> jobs;
   final JobModel? initialJob;
+  final DepositRecord? initialDeposit;
   final int selectedNavigationIndex;
   final ValueChanged<int>? onNavigationSelected;
   final JobPhotoSource? photoSource;
@@ -66,7 +68,24 @@ class _AddDepositScreenState extends State<AddDepositScreen> {
   @override
   void initState() {
     super.initState();
+    final original = widget.initialDeposit;
     _job = widget.initialJob;
+    if (original != null) {
+      for (final job in widget.jobs) {
+        if (job.id == original.jobId || job.title == original.title) {
+          _job = job;
+          break;
+        }
+      }
+      _client.text = original.clientName;
+      _amount.text = original.amount.toStringAsFixed(2);
+      _date = original.date;
+      _method.text = original.paymentMethod;
+      _reference.text = original.referenceNumber;
+      _notes.text = original.notes;
+      _photos.addAll(original.photos);
+      if (_job == null) { _voiceJobHint = original.title; }
+    }
   }
 
   @override
@@ -380,19 +399,25 @@ class _AddDepositScreenState extends State<AddDepositScreen> {
       return;
     }
     setState(() { _saving = true; _error = null; });
+    final original = widget.initialDeposit;
     Navigator.of(context).pop(DepositRecord(
-      id: 'local-deposit-${DateTime.now().microsecondsSinceEpoch}',
+      id: original?.id ??
+          'local-deposit-${DateTime.now().microsecondsSinceEpoch}',
       title: _job!.title,
       clientName: _client.text.trim(),
       amount: amount,
       date: _date!,
-      status: DepositStatus.pending,
+      status: original?.status ?? DepositStatus.pending,
       jobId: _job!.id,
       jobReference: _job!.referenceNumber,
       paymentMethod: _method.text.trim(),
       referenceNumber: _reference.text.trim(),
       notes: _notes.text.trim(),
       photos: List.unmodifiable(_photos),
+      history: original?.history ?? const [],
+      receivedAt: original?.receivedAt,
+      receivedBy: original?.receivedBy,
+      refundedAt: original?.refundedAt,
     ));
   }
 
@@ -520,7 +545,7 @@ class _AddDepositScreenState extends State<AddDepositScreen> {
                       Expanded(
                         child: Sign2DigitalPrimaryButton(
                           key: const Key('deposit-form-save'),
-                          label: 'Save Deposit',
+                          label: widget.initialDeposit == null ? 'Save Deposit' : 'Save Changes',
                           loading: _saving,
                           onPressed: _save,
                         ),
