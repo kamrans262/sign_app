@@ -179,14 +179,18 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
     onTap: _selectSort,
   );
 
-  Widget _card(InvoiceRecord record) => Sign2DigitalEntryListCard(
+  Widget _card(InvoiceRecord record) => LayoutBuilder(
+    builder: (context, constraints) {
+      // Keep the full Figma layout on standard phones; compact narrowly.
+      final compact = constraints.maxWidth < 300;
+      return Sign2DigitalEntryListCard(
     key: Key('invoice-card-${record.id}'),
     shadow: true,
     leading: CircleAvatar(
-      radius: 20,
+      radius: compact ? 16 : 20,
       backgroundColor: const Color(0xFFE3ECF0),
       child: SvgPicture.asset('assets/icons/description.svg',
-        width: 24, height: 24,
+        width: compact ? 20 : 24, height: compact ? 20 : 24,
         colorFilter: const ColorFilter.mode(
           AppColors.primary, BlendMode.srcIn)),
     ),
@@ -196,8 +200,11 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
     dateText: _shortDate(record.date),
     trailingValue: record.formattedAmount,
     trailingKey: Key('invoice-amount-${record.id}'),
-    status: record.status.label,
+    status: compact && record.status == InvoiceStatus.pending
+        ? 'Pending' : record.status.label,
     onTap: () => _open(record),
+      );
+    },
   );
 
   static String _shortDate(DateTime date) {

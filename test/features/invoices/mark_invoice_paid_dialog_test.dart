@@ -35,6 +35,21 @@ class _ControlledRepository extends InvoiceRepository {
   }
 }
 
+Future<void> _openPaidDialog(WidgetTester tester) async {
+  final action = find.byKey(const Key('invoice-details-mark-paid'));
+  await tester.scrollUntilVisible(
+    action, 120,
+    scrollable: find.descendant(
+      of: find.byKey(const Key('invoice-details-scroll')),
+      matching: find.byType(Scrollable),
+    ).first,
+  );
+  await tester.ensureVisible(action);
+  await tester.pumpAndSettle();
+  await tester.tap(action);
+  await tester.pumpAndSettle();
+}
+
 void main() {
   testWidgets('Confirmation modal matches shared UI, never updates on Cancel',
       (tester) async {
@@ -42,8 +57,7 @@ void main() {
     await tester.pumpWidget(MaterialApp(home:
       InvoiceDetailsScreen(invoice: repo.record, repository: repo)));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('invoice-details-mark-paid')));
-    await tester.pumpAndSettle();
+    await _openPaidDialog(tester);
     expect(find.byKey(const Key('invoice-paid-confirm-heading')), findsOneWidget);
     expect(find.text('This will record the invoice as manually paid'),
       findsOneWidget);
@@ -62,8 +76,7 @@ void main() {
     await tester.pumpWidget(MaterialApp(home:
       InvoiceDetailsScreen(invoice: repo.record, repository: repo)));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('invoice-details-mark-paid')));
-    await tester.pumpAndSettle();
+    await _openPaidDialog(tester);
     await tester.tap(find.byKey(const Key('invoice-paid-confirm')));
     await tester.pump();
     expect(repo.confirmations, 1);
@@ -85,8 +98,7 @@ void main() {
     await tester.pumpWidget(MaterialApp(home:
       InvoiceDetailsScreen(invoice: repo.record, repository: repo)));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('invoice-details-mark-paid')));
-    await tester.pumpAndSettle();
+    await _openPaidDialog(tester);
     await tester.tap(find.byKey(const Key('invoice-paid-confirm')));
     await tester.pump();
     repo.response.completeError(StateError('Network failed'));
@@ -129,11 +141,7 @@ void main() {
       await tester.pumpWidget(MaterialApp(home:
         InvoiceDetailsScreen(invoice: repo.record, repository: repo)));
       await tester.pumpAndSettle();
-      await tester.ensureVisible(find.byKey(
-        const Key('invoice-details-mark-paid')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('invoice-details-mark-paid')));
-      await tester.pumpAndSettle();
+      await _openPaidDialog(tester);
       expect(find.byKey(const Key('invoice-paid-confirm')), findsOneWidget);
       expect(tester.takeException(), isNull, reason: '$size');
     });

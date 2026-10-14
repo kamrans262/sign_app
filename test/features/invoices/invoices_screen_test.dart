@@ -44,6 +44,21 @@ Future<void> _reveal(WidgetTester tester, String id) async {
   await tester.pumpAndSettle();
 }
 
+Future<void> _openPaidDialog(WidgetTester tester) async {
+  final action = find.byKey(const Key('invoice-details-mark-paid'));
+  await tester.scrollUntilVisible(
+    action, 120,
+    scrollable: find.descendant(
+      of: find.byKey(const Key('invoice-details-scroll')),
+      matching: find.byType(Scrollable),
+    ).first,
+  );
+  await tester.ensureVisible(action);
+  await tester.pumpAndSettle();
+  await tester.tap(action);
+  await tester.pumpAndSettle();
+}
+
 void main() {
   setUp(DemoInvoiceRepository.clearLocalChanges);
 
@@ -148,14 +163,12 @@ void main() {
     expect(find.byType(InvoiceDetailsScreen), findsOneWidget);
     expect(find.byKey(const Key('invoice-details-mark-paid')), findsOneWidget);
     expect(find.byKey(const Key('invoice-paid-confirm-heading')), findsNothing);
-    await tester.tap(find.byKey(const Key('invoice-details-mark-paid')));
-    await tester.pumpAndSettle();
+    await _openPaidDialog(tester);
     expect(find.byKey(const Key('invoice-paid-confirm-heading')), findsOneWidget);
     await tester.tap(find.byKey(const Key('invoice-paid-cancel')));
     await tester.pumpAndSettle();
     expect(repo.records.single.status, InvoiceStatus.pending);
-    await tester.tap(find.byKey(const Key('invoice-details-mark-paid')));
-    await tester.pumpAndSettle();
+    await _openPaidDialog(tester);
     await tester.tap(find.byKey(const Key('invoice-paid-confirm')));
     await tester.pumpAndSettle();
     expect(repo.records.single.status, InvoiceStatus.paid);
@@ -214,6 +227,15 @@ void main() {
       await tester.pumpWidget(const MaterialApp(home: InvoicesScreen()));
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('invoices-create')), findsOneWidget);
+      await tester.ensureVisible(find.byKey(const Key('details-tab-5')));
+      if (size.width == 320) {
+        await tester.ensureVisible(find.byKey(const Key('details-tab-3')));
+        await tester.tap(find.byKey(const Key('details-tab-3')));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('invoice-card-invoice-demo-pending-1')),
+          findsOneWidget);
+        expect(tester.takeException(), isNull, reason: '$size');
+      }
       await tester.ensureVisible(find.byKey(const Key('details-tab-5')));
       await tester.tap(find.byKey(const Key('details-tab-5')));
       await tester.pumpAndSettle();
