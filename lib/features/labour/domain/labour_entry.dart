@@ -4,6 +4,22 @@ import '../../jobs/data/local_job_photo_source.dart';
 enum LabourEntryKind { labour, timeSheet }
 enum LabourEntryStatus { pending, approved }
 
+/// An actual event recorded by the local repository or a future API.
+class LabourHistoryEvent {
+  const LabourHistoryEvent({
+    required this.id,
+    required this.title,
+    required this.occurredAt,
+    this.actorName,
+    this.description,
+  });
+  final String id;
+  final String title;
+  final DateTime occurredAt;
+  final String? actorName;
+  final String? description;
+}
+
 class LabourEntry {
   const LabourEntry({
     required this.id,
@@ -20,6 +36,9 @@ class LabourEntry {
     this.endMinutes,
     this.hourlyRate,
     this.photos = const [],
+    this.approvedBy,
+    this.approvedAt,
+    this.history = const [],
     this.isDemo = false,
   });
 
@@ -38,8 +57,46 @@ class LabourEntry {
   final int? endMinutes;
   final double? hourlyRate;
   final List<LocalJobPhotoSelection> photos;
+  final String? approvedBy;
+  final DateTime? approvedAt;
+  final List<LabourHistoryEvent> history;
   double? get totalLabourCost => hourlyRate == null ? null : hours * hourlyRate!;
   final bool isDemo;
+
+  /// Keeps the same record ID and protected approval status on edit.
+  LabourEntry copyWith({
+    String? workerName,
+    String? role,
+    String? jobId,
+    String? jobName,
+    DateTime? date,
+    double? hours,
+    String? task,
+    int? startMinutes,
+    int? endMinutes,
+    double? hourlyRate,
+    List<LocalJobPhotoSelection>? photos,
+    List<LabourHistoryEvent>? history,
+  }) => LabourEntry(
+    id: id,
+    kind: kind,
+    workerName: workerName ?? this.workerName,
+    role: role ?? this.role,
+    jobId: jobId ?? this.jobId,
+    jobName: jobName ?? this.jobName,
+    date: date ?? this.date,
+    hours: hours ?? this.hours,
+    task: task ?? this.task,
+    startMinutes: startMinutes ?? this.startMinutes,
+    endMinutes: endMinutes ?? this.endMinutes,
+    hourlyRate: hourlyRate ?? this.hourlyRate,
+    photos: photos ?? this.photos,
+    history: history ?? this.history,
+    status: status,
+    approvedBy: approvedBy,
+    approvedAt: approvedAt,
+    isDemo: isDemo,
+  );
 
   String get initials {
     final parts = workerName.trim().split(RegExp(r'\s+'));
@@ -62,6 +119,13 @@ abstract class LabourRepository {
   Future<List<LabourEntry>> list();
   Future<void> save(LabourEntry entry);
   Future<List<JobModel>> jobs();
+
+  /// Older repositories remain compatible until their backend supports edits.
+  Future<void> update(LabourEntry entry) async =>
+      throw UnsupportedError('Labour editing is not available.');
+
+  Future<void> delete(String id) async =>
+      throw UnsupportedError('Labour deletion is not available.');
 }
 
 
