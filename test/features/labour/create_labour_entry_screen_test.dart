@@ -140,16 +140,29 @@ void main() {
     await _reach(tester, 'labour-form-end');
     await tester.tap(find.byKey(const Key('labour-form-end')));
     await tester.pumpAndSettle();
+    await _reach(tester, 'labour-total-hours');
     expect(find.text('8:00 hours'), findsOneWidget);
 
     await _reach(tester, 'labour-form-worker');
-    await tester.enterText(find.byType(EditableText).first, 'Taylor Reed');
+    await tester.enterText(find.descendant(
+      of: find.byKey(const Key('labour-form-worker')),
+      matching: find.byType(EditableText),
+    ), 'Taylor Reed');
     await _reach(tester, 'labour-form-role');
-    await tester.enterText(find.byType(EditableText).last, 'Electrician');
+    await tester.enterText(find.descendant(
+      of: find.byKey(const Key('labour-form-role')),
+      matching: find.byType(EditableText),
+    ), 'Electrician');
     await _reach(tester, 'labour-form-rate');
-    await tester.enterText(find.byType(EditableText).last, '85.00');
+    await tester.enterText(find.descendant(
+      of: find.byKey(const Key('labour-form-rate')),
+      matching: find.byType(EditableText),
+    ), '85.00');
     await _reach(tester, 'labour-form-task');
-    await tester.enterText(find.byType(EditableText).last, 'Renovate terrace');
+    await tester.enterText(find.descendant(
+      of: find.byKey(const Key('labour-form-task')),
+      matching: find.byType(EditableText),
+    ), 'Renovate terrace');
     FocusManager.instance.primaryFocus?.unfocus();
     await tester.pumpAndSettle();
 
