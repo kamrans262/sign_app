@@ -18,7 +18,7 @@ import '../../../jobs/services/voice_recorder_service.dart';
 import '../../domain/deposit_record.dart';
 import '../../services/deposit_voice_extraction_service.dart';
 
-/// Create a deposit using the same inputs, photos and AI dialogs as Deposit.
+/// Create a deposit using the same inputs, photos and AI dialogs as Labour.
 /// Returns a typed pending deposit for the listing repository to save.
 class AddDepositScreen extends StatefulWidget {
   const AddDepositScreen({
@@ -334,7 +334,7 @@ class _AddDepositScreenState extends State<AddDepositScreen> {
           recorder: widget.voiceRecorderFactory?.call() ??
               LocalVoiceRecorderService(),
           extraction: OpenAiVoiceJobExtractionService(),
-          recordingTitle: 'Record labour Details',
+          recordingTitle: 'Record Deposit Details',
           onAudioProcessed: (path) async {
             final key = await (widget.requestTemporaryApiKey?.call(context) ??
                 _askApiKey(context));

@@ -9,6 +9,8 @@ import '../../../../core/widgets/sign2digital_search_field.dart';
 import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import '../../data/demo_deposit_repository.dart';
 import '../../domain/deposit_record.dart';
+import '../../../labour/data/demo_labour_repository.dart';
+import 'add_deposit_screen.dart';
 
 enum DepositSort {
   newest('Date (newest)'),
@@ -131,12 +133,31 @@ class _DepositsScreenState extends State<DepositsScreen> {
     _notice('Deposit details are not connected yet.');
   }
 
-  void _create() {
+  Future<void> _create() async {
     if (widget.onCreateDeposit != null) {
       widget.onCreateDeposit!();
       return;
     }
-    _notice('Deposit creation is not connected yet.');
+    final deposit = await Navigator.of(context).push<DepositRecord>(
+      MaterialPageRoute<DepositRecord>(
+        builder: (_) => AddDepositScreen(
+          jobs: LabourDemoJobs.all,
+          selectedNavigationIndex: widget.selectedNavigationIndex,
+          onNavigationSelected: widget.onNavigationSelected,
+        ),
+      ),
+    );
+    if (deposit == null || !mounted) { return; }
+    try {
+      await _repository.saveDeposit(deposit);
+      if (!mounted) { return; }
+      _search.clear();
+      setState(() => _tab = 0);
+      await _load();
+      _notice('Deposit saved locally as Pending.');
+    } catch (_) {
+      _notice('Unable to save the deposit. Please try again.');
+    }
   }
 
   void _navigation(int index) {
