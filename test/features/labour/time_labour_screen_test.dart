@@ -38,6 +38,18 @@ LabourEntry record(String id, {LabourEntryKind kind=LabourEntryKind.labour,
   hours: hours, status: status,
 );
 
+Future<void> _scrollToEntryField(WidgetTester tester, String key) async {
+  await tester.scrollUntilVisible(
+    find.byKey(Key(key)),
+    120,
+    scrollable: find.descendant(
+      of: find.byKey(const Key('labour-entry-form-scroll')),
+      matching: find.byType(Scrollable),
+    ).first,
+  );
+  await tester.pump();
+}
+
 void main() {
   setUp(DemoLabourRepository.clearLocalEntries);
 
@@ -164,16 +176,19 @@ void main() {
     await tester.tap(find.byKey(const Key('labour-create')));
     await tester.pumpAndSettle();
     expect(find.byType(AddLabourEntryScreen), findsOneWidget);
-    await tester.ensureVisible(find.byKey(const Key('labour-form-save')));
+    await _scrollToEntryField(tester, 'labour-form-save');
     await tester.tap(find.byKey(const Key('labour-form-save')));
     await tester.pump();
     expect(find.byKey(const Key('labour-form-error')), findsOneWidget);
+    await _scrollToEntryField(tester, 'labour-form-worker');
     await tester.enterText(find.byKey(const Key('labour-form-worker')),
       'Taylor Reed');
+    await _scrollToEntryField(tester, 'labour-form-role');
     await tester.enterText(find.byKey(const Key('labour-form-role')),
       'electrician');
+    await _scrollToEntryField(tester, 'labour-form-hours');
     await tester.enterText(find.byKey(const Key('labour-form-hours')), '5.50');
-    await tester.ensureVisible(find.byKey(const Key('labour-form-save')));
+    await _scrollToEntryField(tester, 'labour-form-save');
     await tester.tap(find.byKey(const Key('labour-form-save')));
     await tester.pumpAndSettle();
     expect(stub.entries.length, 1);
@@ -212,7 +227,7 @@ void main() {
         jobs: [LabourDemoJobs.riverside],
         initialJob: LabourDemoJobs.riverside,
       )));
-      await tester.ensureVisible(find.byKey(const Key('labour-form-save')));
+      await _scrollToEntryField(tester, 'labour-form-save');
       await tester.pump();
       expect(find.byKey(const Key('labour-form-hours')), findsOneWidget);
       expect(tester.takeException(), isNull, reason: '$size');
