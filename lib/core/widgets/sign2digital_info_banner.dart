@@ -7,7 +7,6 @@ import '../theme/dashboard_colors.dart';
 class Sign2DigitalInfoBanner extends StatelessWidget {
   const Sign2DigitalInfoBanner({
     super.key,
-    super.key,
     required this.message,
     this.iconAsset = 'assets/icons/info-circle-filled.svg',
     this.verticalPadding = 20,
@@ -60,7 +59,7 @@ class Sign2DigitalInfoBanner extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (title != null) ...[
-                    Text(title!, style: const TextStyle(
+                    Text(title!, style: TextStyle(
                       fontFamily: 'Inter', fontSize: 14,
                       fontWeight: FontWeight.w600, color: titleColor,
                     )),
