@@ -11,6 +11,7 @@ import '../../data/demo_deposit_repository.dart';
 import '../../domain/deposit_record.dart';
 import '../../../labour/data/demo_labour_repository.dart';
 import 'add_deposit_screen.dart';
+import 'deposit_details_screen.dart';
 
 enum DepositSort {
   newest('Date (newest)'),
@@ -124,13 +125,19 @@ class _DepositsScreenState extends State<DepositsScreen> {
       SnackBar(content: Text(message)));
   }
 
-  void _open(DepositRecord deposit) {
+  Future<void> _open(DepositRecord deposit) async {
     FocusManager.instance.primaryFocus?.unfocus();
     if (widget.onDepositTap != null) {
       widget.onDepositTap!(deposit);
       return;
     }
-    _notice('Deposit details are not connected yet.');
+    await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) => DepositDetailsScreen(
+          deposit: deposit, repository: _repository),
+      ),
+    );
+    if (mounted) { await _load(); }
   }
 
   Future<void> _create() async {
