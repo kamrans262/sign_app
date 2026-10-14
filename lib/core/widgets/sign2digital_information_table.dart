@@ -34,12 +34,23 @@ class Sign2DigitalInformationTable extends StatelessWidget {
         SizedBox(width: labelWidth, child: Text(
           entry.label, softWrap: true, style: _label)),
         const SizedBox(width: 10),
-        Expanded(child: Align(
-          alignment: Alignment.centerLeft,
-          child: entry.isStatus
-              ? Sign2DigitalStatusBadge(status: entry.value)
-              : Text(entry.value, softWrap: true, style: _value),
-        )),
+        Expanded(child: Row(children: [
+          Expanded(child: Align(
+            alignment: Alignment.centerLeft,
+            child: entry.isStatus
+                ? Sign2DigitalStatusBadge(status: entry.value)
+                : Text(entry.value, softWrap: true, style: _value),
+          )),
+          if (entry.onCopy != null)
+            IconButton(
+              key: const Key('information-row-copy'),
+              tooltip: 'Copy job',
+              visualDensity: VisualDensity.compact,
+              onPressed: entry.onCopy,
+              icon: const Icon(Icons.copy_all_outlined,
+                size: 24, color: AppColors.primary),
+            ),
+        ])),
       ]);
     }),
   );
@@ -75,9 +86,10 @@ class Sign2DigitalInformationTable extends StatelessWidget {
 
 class Sign2DigitalInformationRow {
   const Sign2DigitalInformationRow(
-    this.label, this.value, {this.isStatus = false});
+    this.label, this.value, {this.isStatus = false, this.onCopy});
 
   final String label;
   final String value;
   final bool isStatus;
+  final VoidCallback? onCopy;
 }
