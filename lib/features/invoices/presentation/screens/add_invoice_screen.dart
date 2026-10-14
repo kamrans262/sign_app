@@ -574,7 +574,7 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
                     total: _money(item.totalMinor),
                   ),
               ],
-        onItemTap: (index) => _editItem(index),
+        onItemTap: _items.isEmpty ? null : (index) => _editItem(index),
       ),
       Align(alignment: Alignment.centerRight,
         child: TextButton.icon(
