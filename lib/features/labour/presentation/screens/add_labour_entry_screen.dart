@@ -28,6 +28,7 @@ class AddLabourEntryScreen extends StatefulWidget {
     required this.kind,
     required this.jobs,
     this.initialJob,
+    this.initialEntry,
     this.selectedNavigationIndex = 4,
     this.onNavigationSelected,
     this.photoSource,
@@ -41,6 +42,7 @@ class AddLabourEntryScreen extends StatefulWidget {
   final LabourEntryKind kind;
   final List<JobModel> jobs;
   final JobModel? initialJob;
+  final LabourEntry? initialEntry;
   final int selectedNavigationIndex;
   final ValueChanged<int>? onNavigationSelected;
   final JobPhotoSource? photoSource;
@@ -81,7 +83,34 @@ class _AddLabourEntryScreenState extends State<AddLabourEntryScreen> {
   @override
   void initState() {
     super.initState();
+    final previous = widget.initialEntry;
     _job = widget.initialJob;
+    if (previous != null) {
+      for (final job in widget.jobs) {
+        if (job.id == previous.jobId) {
+          _job = job;
+          break;
+        }
+      }
+      _worker.text = previous.workerName;
+      _role.text = previous.role;
+      _description.text = previous.task;
+      _rate.text = previous.hourlyRate?.toStringAsFixed(2) ?? '';
+      _date = previous.date;
+      if (previous.startMinutes != null) {
+        _start = TimeOfDay(
+          hour: previous.startMinutes! ~/ 60,
+          minute: previous.startMinutes! % 60,
+        );
+      }
+      if (previous.endMinutes != null) {
+        _end = TimeOfDay(
+          hour: previous.endMinutes! ~/ 60,
+          minute: previous.endMinutes! % 60,
+        );
+      }
+      _photos.addAll(previous.photos);
+    }
   }
 
   @override
@@ -400,8 +429,16 @@ class _AddLabourEntryScreenState extends State<AddLabourEntryScreen> {
     }
     setState(() { _saving = true; _error = null; });
     final now = DateTime.now();
+    final previous = widget.initialEntry;
+    if (previous != null && previous.status != LabourEntryStatus.pending) {
+      setState(() {
+        _saving = false;
+        _error = 'Approved entries cannot be edited.';
+      });
+      return;
+    }
     Navigator.of(context).pop(LabourEntry(
-      id: 'local-time-${now.microsecondsSinceEpoch}',
+      id: previous?.id ?? 'local-time-${now.microsecondsSinceEpoch}',
       kind: widget.kind,
       workerName: _worker.text.trim(),
       role: _role.text.trim(),
@@ -414,7 +451,11 @@ class _AddLabourEntryScreenState extends State<AddLabourEntryScreen> {
       hourlyRate: rate,
       task: _description.text.trim(),
       photos: List.unmodifiable(_photos),
-      status: LabourEntryStatus.pending,
+      status: previous?.status ?? LabourEntryStatus.pending,
+      history: previous?.history ?? const [],
+      approvedBy: previous?.approvedBy,
+      approvedAt: previous?.approvedAt,
+      isDemo: previous?.isDemo ?? false,
     ));
   }
 
@@ -567,7 +608,8 @@ class _AddLabourEntryScreenState extends State<AddLabourEntryScreen> {
                       Expanded(
                         child: Sign2DigitalPrimaryButton(
                           key: const Key('labour-form-save'),
-                          label: 'Save Labour Entry',
+                          label: widget.initialEntry == null
+                              ? 'Save Labour Entry' : 'Save Changes',
                           loading: _saving,
                           onPressed: _save,
                         ),
