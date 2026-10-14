@@ -165,8 +165,8 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
         final size = MediaQuery.sizeOf(dialog);
         return Dialog(
           child: SizedBox(
-            width: (size.width - 64).clamp(220.0, 500.0),
-            height: (size.height * .65).clamp(200.0, 520.0),
+            width: (size.width - 64).clamp(220.0, 500.0).toDouble(),
+            height: (size.height * .65).clamp(200.0, 520.0).toDouble(),
             child: Column(children: [
               Align(
                 alignment: Alignment.centerRight,
