@@ -72,7 +72,7 @@ abstract final class LabourTimeRange {
     if (start < 0 || start >= 1440 || end < 0 || end >= 1440) {
       throw RangeError('Time must be within one calendar day.');
     }
-    if (start == end) return 0;
+    if (start == end) { return 0; }
     return (end - start + 1440) % 1440;
   }
 
