@@ -125,6 +125,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     await Navigator.of(context).push<void>(MaterialPageRoute<void>(
       builder: (_) => ExpenseDetailsScreen(
         expense: expense, repository: _repository,
+        selectedNavigationIndex: widget.selectedNavigationIndex,
+        onNavigationSelected: widget.onNavigationSelected,
       )));
     if (mounted) await _load();
   }

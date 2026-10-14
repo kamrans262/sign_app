@@ -58,6 +58,15 @@ class Sign2DigitalSignatureDrawCanvas extends StatelessWidget {
 }
 
 
+/// Established muted signature/receipt panel treatment.
+abstract final class Sign2DigitalMutedPreviewStyle {
+  static BoxDecoration get decoration => BoxDecoration(
+    color: const Color(0x1A8A9AA8),
+    border: Border.all(color: const Color(0x4DD9E2EA)),
+    borderRadius: BorderRadius.circular(10),
+  );
+}
+
 /// Read-only counterpart of the shared signature canvas styling.
 /// Accepts only a trusted saved image, never creates a signature.
 class Sign2DigitalSignatureDisplay extends StatelessWidget {
@@ -78,11 +87,7 @@ class Sign2DigitalSignatureDisplay extends StatelessWidget {
         height: height,
         width: double.infinity,
         alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: const Color(0x1A8A9AA8),
-          border: Border.all(color: const Color(0x4DD9E2EA)),
-          borderRadius: BorderRadius.circular(10),
-        ),
+        decoration: Sign2DigitalMutedPreviewStyle.decoration,
         child: signaturePng == null || signaturePng!.isEmpty
             ? const SizedBox.shrink()
             : Padding(

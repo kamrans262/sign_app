@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -20,6 +19,7 @@ import '../../../jobs/services/voice_job_extraction_service.dart';
 import '../../../jobs/services/voice_recorder_service.dart';
 import '../../domain/expense_record.dart';
 import '../../services/expense_voice_extraction_service.dart';
+import '../widgets/sign2digital_expense_upload_tile.dart';
 
 /// Full Create Expense page; returns a validated local record for the caller
 /// to save via its injected ExpenseRepository.
@@ -241,17 +241,10 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     itemCount: _photos.length + 1,
     itemBuilder: (context,index) {
       if (index == _photos.length) {
-        return InkWell(key: const Key('expense-add-photo'),
-          onTap: _busy ? null : _addPhotos,
-          borderRadius: BorderRadius.circular(10),
-          child: Sign2DigitalOutlinedContainer(
-            child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-              SvgPicture.asset('assets/icons/cloud-upload-outlined.svg',
-                width: 24, height: 24),
-              const SizedBox(height: 8),
-              const Text('Add Photo',style: AppTextStyles.outlinedButton),
-            ]),
-          ),
+        return Sign2DigitalExpenseUploadTile(
+          key: const Key('expense-add-photo'),
+          enabled: !_busy,
+          onTap: _addPhotos,
         );
       }
       return Sign2DigitalPhotoPreview(

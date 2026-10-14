@@ -10,6 +10,8 @@ import 'package:sign2digital/features/expenses/data/demo_expense_repository.dart
 import 'package:sign2digital/features/expenses/domain/expense_record.dart';
 import 'package:sign2digital/features/expenses/presentation/screens/expense_details_screen.dart';
 import 'package:sign2digital/features/expenses/presentation/screens/add_expense_screen.dart';
+import 'package:sign2digital/features/expenses/presentation/screens/receipt_screen.dart';
+import 'package:sign2digital/features/clients/presentation/widgets/sign2digital_details_tabs.dart';
 import 'package:sign2digital/features/jobs/data/local_job_photo_source.dart';
 
 final _png = base64Decode(
@@ -82,7 +84,7 @@ void main() {
     }
   });
 
-  testWidgets('Receipt tab shows every attached image and full preview',
+  testWidgets('Receipt tab opens page with all attachments and restores tab',
       (tester) async {
     final pictures = [
       for (var i = 0; i < 3; i++)
@@ -97,30 +99,39 @@ void main() {
     )));
     await tester.tap(find.byKey(const Key('details-tab-1')));
     await tester.pumpAndSettle();
+    expect(find.byType(ReceiptScreen), findsOneWidget);
     for (var i = 0; i < pictures.length; i++) {
-      expect(find.byKey(Key('expense-receipt-$i')), findsOneWidget);
+      expect(find.byKey(Key('receipt-thumbnail-$i')), findsOneWidget);
     }
-    await tester.tap(find.byKey(const Key('expense-receipt-1')));
+    expect(find.byKey(const Key('receipt-preview-image')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('receipt-thumbnail-1')));
+    await tester.pump();
+    expect(find.byKey(const Key('receipt-preview-image')), findsOneWidget);
+    await tester.pageBack();
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('expense-receipt-full-1')), findsOneWidget);
-    await tester.tap(find.byTooltip('Close receipt'));
-    await tester.pumpAndSettle();
-    expect(find.byKey(const Key('expense-receipt-full-1')), findsNothing);
+    expect(find.byType(ExpenseDetailsScreen), findsOneWidget);
+    expect(tester.widget<Sign2DigitalDetailsTabs>(
+      find.byType(Sign2DigitalDetailsTabs)).selectedIndex, 1);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Empty receipts keep visible Add Photo edit entry',
+  testWidgets('Empty Receipt page offers actual upload workflow',
       (tester) async {
     await tester.pumpWidget(MaterialApp(home: ExpenseDetailsScreen(
       expense: expense(),
     )));
     await tester.tap(find.byKey(const Key('details-tab-1')));
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('expense-add-receipt')), findsOneWidget);
-    await tester.tap(find.byKey(const Key('expense-add-receipt')));
+    expect(find.byType(ReceiptScreen), findsOneWidget);
+    expect(find.byKey(const Key('receipt-preview-empty')), findsOneWidget);
+    expect(find.byKey(const Key('receipt-add-photo')), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const Key('receipt-add-photo')));
+    await tester.tap(find.byKey(const Key('receipt-add-photo')));
     await tester.pumpAndSettle();
-    expect(find.byType(AddExpenseScreen), findsOneWidget);
-    expect(find.byKey(const Key('expense-add-photo')), findsOneWidget);
+    expect(find.byKey(const Key('receipt-pick-gallery')), findsOneWidget);
+    expect(find.byKey(const Key('receipt-pick-camera')), findsOneWidget);
+    expect(find.byKey(const Key('receipt-pick-pdf')), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('Only recorded history events appear, chronologically',

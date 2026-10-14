@@ -12,6 +12,7 @@ class Sign2DigitalPhotoPreview extends StatelessWidget {
     required this.showDemo,
     required this.onRemove,
     this.compactTile = false,
+    this.showRemove = true,
   });
 
   final Uint8List? bytes;
@@ -19,6 +20,7 @@ class Sign2DigitalPhotoPreview extends StatelessWidget {
   final VoidCallback onRemove;
   /// Two-column grid mode; previous Add Photos presentation is unchanged.
   final bool compactTile;
+  final bool showRemove;
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +64,7 @@ class Sign2DigitalPhotoPreview extends StatelessWidget {
                       ),
                     ),
                   ),
-                if (bytes != null || showDemo)
+                if (showRemove && (bytes != null || showDemo))
                   Positioned(
                     top: compactTile ? 0 : 8,
                     right: compactTile ? 0 : 8,

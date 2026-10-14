@@ -13,6 +13,8 @@ import '../../data/demo_expense_repository.dart';
 import '../../domain/expense_record.dart';
 import '../widgets/sign2digital_expense_category_icon.dart';
 import 'add_expense_screen.dart';
+import 'receipt_screen.dart';
+import '../../../jobs/data/local_job_photo_source.dart';
 
 typedef ExpenseDetailsLoader = Future<ExpenseRecord?> Function(String expenseId);
 typedef ExpenseReimbursementAction = Future<ExpenseRecord> Function(ExpenseRecord expense);
@@ -25,12 +27,22 @@ class ExpenseDetailsScreen extends StatefulWidget {
     this.repository,
     this.loadExpense,
     this.onRequestReimbursement,
+    this.receiptPhotoSource,
+    this.onReceiptShare,
+    this.onReceiptDownload,
+    this.onNavigationSelected,
+    this.selectedNavigationIndex = 4,
   });
 
   final ExpenseRecord expense;
   final ExpenseRepository? repository;
   final ExpenseDetailsLoader? loadExpense;
   final ExpenseReimbursementAction? onRequestReimbursement;
+  final JobPhotoSource? receiptPhotoSource;
+  final ReceiptShare? onReceiptShare;
+  final ReceiptDownload? onReceiptDownload;
+  final ValueChanged<int>? onNavigationSelected;
+  final int selectedNavigationIndex;
 
   @override
   State<ExpenseDetailsScreen> createState() => _ExpenseDetailsScreenState();
@@ -169,31 +181,26 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
       key: const Key('expense-information-table'), rows: rows);
   }
 
-  void _openReceipt(int index) {
-    final file = _record.photos[index];
-    showDialog<void>(
-      context: context,
-      builder: (dialog) => Dialog(
-        insetPadding: const EdgeInsets.all(15),
-        child: SizedBox(
-          width: MediaQuery.sizeOf(dialog).width * .9,
-          height: MediaQuery.sizeOf(dialog).height * .78,
-          child: Stack(children: [
-            Positioned.fill(child: InteractiveViewer(
-              child: Center(child: Image.memory(file.bytes,
-                key: Key('expense-receipt-full-$index'),
-                fit: BoxFit.contain,
-                errorBuilder: (_, _, _) =>
-                  const Text('Receipt image cannot be displayed.'))))),
-            Positioned(top: 5, right: 5,
-              child: IconButton(
-                tooltip: 'Close receipt',
-                onPressed: () => Navigator.of(dialog).pop(),
-                icon: const Icon(Icons.close))),
-          ]),
-        ),
+  Future<void> _openReceipt(int index) async {
+    if (_busy) return;
+    setState(() => _tab = 1);
+    await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+      builder: (_) => ReceiptScreen(
+        expense: _record,
+        repository: _repository,
+        initialIndex: index,
+        photoSource: widget.receiptPhotoSource,
+        onShare: widget.onReceiptShare,
+        onDownload: widget.onReceiptDownload,
+        selectedNavigationIndex: widget.selectedNavigationIndex,
+        onNavigationSelected: widget.onNavigationSelected,
+        onExpenseChanged: (value) {
+          if (mounted && value.id == _record.id) {
+            setState(() => _record = value);
+          }
+        },
       ),
-    );
+    ));
   }
 
   Widget _receipts() {
@@ -415,7 +422,13 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
                           Sign2DigitalDetailsTabs(
                             labels: const ['Details', 'Receipt', 'History'],
                             selectedIndex: _tab,
-                            onSelected: (index) => setState(() => _tab = index)),
+                            onSelected: (index) {
+                              if (index == 1) {
+                                _openReceipt(0);
+                              } else {
+                                setState(() => _tab = index);
+                              }
+                            }),
                         ]),
                         const SizedBox(height: 20),
                         if (_tab == 0) _details()
