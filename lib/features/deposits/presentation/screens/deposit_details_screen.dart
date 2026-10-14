@@ -64,6 +64,10 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
   static String _date(DateTime date) =>
       '${date.day} ${_months[date.month - 1]} ${date.year}';
 
+  static String _shortDate(DateTime date) =>
+      '${_months[date.month - 1].substring(0, 3)} '
+      '${date.day}, ${date.year}';
+
   static String _timestamp(DateTime when) {
     final date = when.toLocal();
     final hour = date.hour % 12 == 0 ? 12 : date.hour % 12;
@@ -107,7 +111,7 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
             style: const TextStyle(fontFamily: 'Inter', fontSize: 14,
               color: AppColors.placeholder)),
           const SizedBox(height: 3),
-          Text(_date(_record.date),
+          Text(_shortDate(_record.date),
             style: const TextStyle(fontFamily: 'Inter', fontSize: 14,
               color: AppColors.placeholder)),
         ],
@@ -125,7 +129,8 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
         style: const TextStyle(fontFamily: 'Inter',
           fontWeight: FontWeight.w700, fontSize: 22, color: AppColors.dark)),
       const SizedBox(height: 5),
-      Text(_timestamp(_record.receivedAt ?? _record.date),
+      Text(_record.receivedAt == null
+          ? _date(_record.date) : _timestamp(_record.receivedAt!),
         style: const TextStyle(fontFamily: 'Inter', fontSize: 14,
           color: AppColors.placeholder)),
     ],
