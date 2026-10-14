@@ -37,6 +37,7 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
   late LabourRepository _repository;
   int _tab = 0;
   bool _busy = false;
+  bool _confirmingDeletion = false;
 
   @override
   void initState() {
@@ -300,11 +301,12 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
   }
 
   Future<void> _delete() async {
-    if (_busy) { return; }
+    if (_busy || _confirmingDeletion) { return; }
     if (_record.status != LabourEntryStatus.pending) {
       _notice('Approved entries are locked and cannot be deleted.');
       return;
     }
+    _confirmingDeletion = true;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialog) => AlertDialog(
@@ -322,6 +324,7 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
         ],
       ),
     );
+    _confirmingDeletion = false;
     if (confirmed != true || !mounted) { return; }
     setState(() => _busy = true);
     try {
