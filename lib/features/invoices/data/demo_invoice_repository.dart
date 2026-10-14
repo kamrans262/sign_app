@@ -2,7 +2,7 @@ import '../domain/invoice_record.dart';
 
 /// Session-local reference records. Not actual remote payment confirmations.
 class DemoInvoiceRepository extends InvoiceRepository {
-  DemoInvoiceRepository();
+  const DemoInvoiceRepository();
 
   static final Map<String, InvoiceRecord> _saved = {};
   static void clearLocalChanges() => _saved.clear();
