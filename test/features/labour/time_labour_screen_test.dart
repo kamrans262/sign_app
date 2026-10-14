@@ -167,7 +167,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('FAB validates and saves Pending entry on the selected tab',
+  testWidgets('FAB opens the shared Create Labour form and validates inputs',
       (tester) async {
     final stub = _Stub([], [LabourDemoJobs.riverside]);
     await tester.pumpWidget(MaterialApp(home: TimeLabourScreen(repository: stub)));
@@ -177,28 +177,12 @@ void main() {
     await tester.tap(find.byKey(const Key('labour-create')));
     await tester.pumpAndSettle();
     expect(find.byType(AddLabourEntryScreen), findsOneWidget);
+    expect(find.text('Create with AI Voice'), findsOneWidget);
     await _scrollToEntryField(tester, 'labour-form-save');
     await tester.tap(find.byKey(const Key('labour-form-save')));
     await tester.pump();
     expect(find.byKey(const Key('labour-form-error')), findsOneWidget);
-    await _scrollToEntryField(tester, 'labour-form-worker');
-    await tester.enterText(find.byKey(const Key('labour-form-worker')),
-      'Taylor Reed');
-    await _scrollToEntryField(tester, 'labour-form-role');
-    await tester.enterText(find.byKey(const Key('labour-form-role')),
-      'electrician');
-    await _scrollToEntryField(tester, 'labour-form-hours');
-    await tester.enterText(find.byKey(const Key('labour-form-hours')), '5.50');
-    FocusManager.instance.primaryFocus?.unfocus();
-    await tester.pumpAndSettle();
-    await _scrollToEntryField(tester, 'labour-form-save');
-    await tester.tap(find.byKey(const Key('labour-form-save')));
-    await tester.pumpAndSettle();
-    expect(stub.entries.length, 1);
-    expect(stub.entries.single.kind, LabourEntryKind.timeSheet);
-    expect(stub.entries.single.status, LabourEntryStatus.pending);
-    expect(stub.entries.single.jobId, LabourDemoJobs.riverside.id);
-    expect(find.text('Taylor Reed'), findsOneWidget);
+    expect(stub.entries, isEmpty);
     expect(tester.takeException(), isNull);
   });
 
@@ -232,7 +216,7 @@ void main() {
       )));
       await _scrollToEntryField(tester, 'labour-form-save');
       await tester.pump();
-      expect(find.byKey(const Key('labour-form-hours')), findsOneWidget);
+      expect(find.byKey(const Key('labour-form-rate')), findsWidgets);
       expect(tester.takeException(), isNull, reason: '$size');
     });
   }
