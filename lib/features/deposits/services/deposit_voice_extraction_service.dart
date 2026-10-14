@@ -67,8 +67,7 @@ abstract class DepositVoiceExtractionService {
 /// Reuses the same transcribe-then-extract API workflow as Labour.
 /// Temporary keys are never persisted or embedded in the application.
 class OpenAiDepositVoiceExtractionService implements DepositVoiceExtractionService {
-  const OpenAiDepositVoiceExtractionService({http.Client? client})
-      : _client = client;
+  const OpenAiDepositVoiceExtractionService({this._client});
 
   final http.Client? _client;
 
