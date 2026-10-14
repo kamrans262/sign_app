@@ -2,7 +2,6 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:printing/printing.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -88,10 +87,8 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
       CircleAvatar(
         radius: 20,
         backgroundColor: const Color(0xFFE3ECF0),
-        child: SvgPicture.asset('assets/icons/description.svg',
-          width: 24, height: 24,
-          colorFilter: const ColorFilter.mode(
-            AppColors.primary, BlendMode.srcIn)),
+        child: const Icon(Icons.account_balance_outlined,
+          size: 24, color: AppColors.primary),
       ),
       const SizedBox(width: 10),
       Expanded(child: Column(
