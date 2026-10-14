@@ -75,7 +75,6 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
   String? _error, _voiceJobHint;
 
   List<JobModel> get _jobs => widget.jobs ?? LabourDemoJobs.all;
-  String get _currency => widget.initialInvoice?.currency ?? widget.currency;
   int get _vatBasisPoints => widget.initialInvoice?.vatBasisPoints ??
       widget.vatBasisPoints;
   int? get _subtotalMinor => _items.isEmpty ||

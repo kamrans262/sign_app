@@ -129,6 +129,7 @@ class InvoiceRecord {
 }
 
 abstract class InvoiceRepository {
+  const InvoiceRepository();
   Future<List<InvoiceRecord>> listInvoices();
   Future<InvoiceRecord> markAsPaid(String invoiceId);
 

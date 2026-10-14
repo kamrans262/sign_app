@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -63,7 +61,7 @@ class Sign2DigitalInvoicePdfBuilder {
         if (invoice.iban.trim().isNotEmpty)
           pw.Text('IBAN: ${invoice.iban}', style: style(11)),
         pw.SizedBox(height: 20),
-        pw.Table.fromTextArray(
+        pw.TableHelper.fromTextArray(
           headers: const ['Description', 'Qty', 'Unit Price', 'Total'],
           data: invoice.items.isEmpty
               ? [['No itemized lines recorded', '-', '-', '-']]

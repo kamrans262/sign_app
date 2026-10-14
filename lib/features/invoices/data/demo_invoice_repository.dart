@@ -99,35 +99,35 @@ class DemoInvoiceRepository extends InvoiceRepository {
   }
 
   @override
-  Future<InvoiceRecord> updateInvoice(InvoiceRecord next) async {
+  Future<InvoiceRecord> updateInvoice(InvoiceRecord updated) async {
     final records = await listInvoices();
     InvoiceRecord? original;
     for (final item in records) {
-      if (item.id == next.id) { original = item; break; }
+      if (item.id == updated.id) { original = item; break; }
     }
     if (original == null) { throw StateError('Invoice not found.'); }
     if (original.status == InvoiceStatus.paid ||
-        original.status != next.status ||
-        next.number.trim().isEmpty || next.project.trim().isEmpty ||
-        next.clientName.trim().isEmpty ||
+        original.status != updated.status ||
+        updated.number.trim().isEmpty || updated.project.trim().isEmpty ||
+        updated.clientName.trim().isEmpty ||
         (await listInvoices()).any((item) =>
-            item.id != next.id && item.number == next.number) ||
-        !next.amount.isFinite || next.amount <= 0 ||
-        next.items.isEmpty || next.totalMinor == null ||
-        next.totalMinor != (next.amount * 100).round() ||
-        next.dueDate == null || next.dueDate!.isBefore(next.date) ||
-        !isValidInvoiceIban(next.iban)) {
+            item.id != updated.id && item.number == updated.number) ||
+        !updated.amount.isFinite || updated.amount <= 0 ||
+        updated.items.isEmpty || updated.totalMinor == null ||
+        updated.totalMinor != (updated.amount * 100).round() ||
+        updated.dueDate == null || updated.dueDate!.isBefore(updated.date) ||
+        !isValidInvoiceIban(updated.iban)) {
       throw StateError('Invoice changes are not valid or editable.');
     }
     final now = DateTime.now();
-    final updated = InvoiceRecord(
-      id: original.id, number: next.number,
-      project: next.project, clientName: next.clientName,
-      amount: next.amount, date: next.date, status: original.status,
-      jobId: next.jobId, dueDate: next.dueDate,
-      iban: next.iban, notes: next.notes, currency: next.currency,
-      vatBasisPoints: next.vatBasisPoints,
-      depositPaidMinor: next.depositPaidMinor, items: next.items,
+    final saved = InvoiceRecord(
+      id: original.id, number: updated.number,
+      project: updated.project, clientName: updated.clientName,
+      amount: updated.amount, date: updated.date, status: original.status,
+      jobId: updated.jobId, dueDate: updated.dueDate,
+      iban: updated.iban, notes: updated.notes, currency: updated.currency,
+      vatBasisPoints: updated.vatBasisPoints,
+      depositPaidMinor: updated.depositPaidMinor, items: updated.items,
       sentAt: original.sentAt, manuallyPaidAt: original.manuallyPaidAt,
       demoOnly: original.demoOnly,
       payments: original.payments,
@@ -137,8 +137,8 @@ class DemoInvoiceRepository extends InvoiceRepository {
           title: 'Invoice updated', occurredAt: now),
       ],
     );
-    _saved[updated.id] = updated;
-    return updated;
+    _saved[saved.id] = saved;
+    return saved;
   }
 
   @override
