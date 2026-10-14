@@ -214,9 +214,10 @@ void main() {
         jobs: [LabourDemoJobs.riverside],
         initialJob: LabourDemoJobs.riverside,
       )));
+      await _scrollToEntryField(tester, 'labour-form-rate');
+      expect(find.byKey(const Key('labour-form-rate')), findsOneWidget);
       await _scrollToEntryField(tester, 'labour-form-save');
-      await tester.pump();
-      expect(find.byKey(const Key('labour-form-rate')), findsWidgets);
+      expect(find.byKey(const Key('labour-form-save')), findsOneWidget);
       expect(tester.takeException(), isNull, reason: '$size');
     });
   }
