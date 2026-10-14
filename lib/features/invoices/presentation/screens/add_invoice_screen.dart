@@ -551,15 +551,29 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
     children: [
       Sign2DigitalDocumentItemsTable(
         key: const Key('invoice-items-table'),
-        items: [
-          for (final item in _items)
-            Sign2DigitalDocumentTableLine(
-              description: item.description,
-              quantity: item.quantity.toString(),
-              unitPrice: _money(item.unitPriceMinor),
-              total: _money(item.totalMinor),
-            ),
-        ],
+        // Visual-only Figma examples until genuine items are added.
+        // They are never included in totals or saved invoice records.
+        items: _items.isEmpty
+            ? [
+                Sign2DigitalDocumentTableLine(
+                  description: 'Electric Installation', quantity: '1',
+                  unitPrice: _money(9800), total: _money(9800)),
+                const Sign2DigitalDocumentTableLine(
+                  description: 'Material', quantity: '1',
+                  unitPrice: '—', total: '—'),
+                Sign2DigitalDocumentTableLine(
+                  description: 'Labour', quantity: '1',
+                  unitPrice: _money(9800), total: _money(9800)),
+              ]
+            : [
+                for (final item in _items)
+                  Sign2DigitalDocumentTableLine(
+                    description: item.description,
+                    quantity: item.quantity.toString(),
+                    unitPrice: _money(item.unitPriceMinor),
+                    total: _money(item.totalMinor),
+                  ),
+              ],
         onItemTap: (index) => _editItem(index),
       ),
       Align(alignment: Alignment.centerRight,
@@ -569,6 +583,11 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
           icon: const Icon(Icons.add),
           label: const Text('Add item'),
         )),
+      if (_items.isEmpty)
+        const Text('Example items only — add your actual invoice items.',
+          key: Key('invoice-example-items-notice'),
+          style: TextStyle(fontFamily: 'Inter', fontSize: 12,
+            color: AppColors.placeholder)),
       if (_items.any((item) => item.totalMinor == null))
         const Text('Unpriced items must be completed before creating.',
           key: Key('invoice-unpriced-notice'),
