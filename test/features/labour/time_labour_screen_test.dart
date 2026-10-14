@@ -41,7 +41,7 @@ LabourEntry record(String id, {LabourEntryKind kind=LabourEntryKind.labour,
 Future<void> _scrollToEntryField(WidgetTester tester, String key) async {
   await tester.scrollUntilVisible(
     find.byKey(Key(key)),
-    120,
+    key == 'labour-form-worker' ? -120 : 120,
     scrollable: find.descendant(
       of: find.byKey(const Key('labour-entry-form-scroll')),
       matching: find.byType(Scrollable),
