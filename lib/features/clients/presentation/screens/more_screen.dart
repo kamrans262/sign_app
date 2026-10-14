@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../documents/presentation/screens/reports_screen.dart';
 import '../../../expenses/presentation/screens/expenses_screen.dart';
+import '../../../labour/presentation/screens/time_labour_screen.dart';
 import '../../../quotes/presentation/screens/quote_ui_demo_screen.dart';
 
 /// Entry points for UI-only tools belong to More, not the Clients list.
@@ -34,6 +35,16 @@ class MoreScreen extends StatelessWidget {
             title: 'Reports',
             icon: Icons.assessment_outlined,
             onTap: () => _open(context, ReportsScreen(
+              onNavigationSelected: onTabSelected,
+              onNotificationTap: () => onNotReady?.call('Notifications'),
+              onProfileTap: () => onNotReady?.call('Profile'),
+            ))),
+          const SizedBox(height: 15),
+          _tile(context,
+            key: const Key('open-time-labour'),
+            title: 'Time & Labour',
+            icon: Icons.access_time_outlined,
+            onTap: () => _open(context, TimeLabourScreen(
               onNavigationSelected: onTabSelected,
               onNotificationTap: () => onNotReady?.call('Notifications'),
               onProfileTap: () => onNotReady?.call('Profile'),

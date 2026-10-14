@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
 import '../../../../core/widgets/sign2digital_dashboard_header.dart';
-import '../../../../core/widgets/sign2digital_outlined_container.dart';
+import '../../../../core/widgets/sign2digital_entry_list_card.dart';
+import '../../../../core/widgets/sign2digital_list_sort_control.dart';
 import '../../../../core/widgets/sign2digital_search_field.dart';
 import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
-import '../../../clients/presentation/widgets/sign2digital_status_badge.dart';
 import '../../data/demo_expense_repository.dart';
 import '../../domain/expense_record.dart';
 import 'add_expense_screen.dart';
@@ -170,83 +170,25 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     widget.onNavigationSelected!(index);
   }
 
-  Widget _sortControl() => Align(
-    alignment: Alignment.centerLeft,
-    child: InkWell(
-      key: const Key('expenses-sort'),
-      onTap: _selectSort,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          const Text('Sort By: ', style: TextStyle(
-            fontFamily: 'Inter', fontSize: 16, letterSpacing: -0.3,
-            fontWeight: FontWeight.w500, color: AppColors.dark)),
-          Flexible(child: Text(_sort.label,
-            key: const Key('expenses-sort-value'),
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontFamily: 'Inter', fontSize: 16, letterSpacing: -0.3,
-              fontWeight: FontWeight.w500, color: AppColors.primary))),
-          const SizedBox(width: 8),
-          const Icon(Icons.keyboard_arrow_down_rounded,
-            size: 24, color: AppColors.secondaryText),
-        ]),
-      ),
-    ),
+  Widget _sortControl() => Sign2DigitalListSortControl(
+    key: const Key('expenses-sort'),
+    value: _sort.label,
+    valueKey: const Key('expenses-sort-value'),
+    onTap: _selectSort,
   );
 
-  Widget _card(ExpenseRecord record) => Material(
+  Widget _card(ExpenseRecord record) => Sign2DigitalEntryListCard(
     key: Key('expense-card-${record.id}'),
-    color: Colors.transparent,
-    child: InkWell(
-      onTap: () => _open(record),
-      borderRadius: BorderRadius.circular(10),
-      child: Sign2DigitalOutlinedContainer(
-        padding: const EdgeInsets.all(15),
-        child: LayoutBuilder(builder: (context, box) {
-          final compact = box.maxWidth < 290;
-          return Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-            Sign2DigitalExpenseCategoryIcon(category: record.category),
-            SizedBox(width: compact ? 9 : 15),
-            Expanded(child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(record.title,
-                  key: Key('expense-title-${record.id}'),
-                  maxLines: 2, overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontFamily: 'Inter', fontSize: 16,
-                    fontWeight: FontWeight.w600, letterSpacing: -0.3,
-                    color: AppColors.dark)),
-                const SizedBox(height: 5),
-                Text([record.job, record.report]
-                    .where((part) => part.isNotEmpty).join(', '),
-                  maxLines: 2, overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontFamily: 'Inter', fontSize: 13,
-                    color: AppColors.placeholder, fontWeight: FontWeight.w500)),
-                const SizedBox(height: 4),
-                Text(_shortDate(record.date),
-                  style: const TextStyle(fontFamily: 'Inter', fontSize: 13,
-                    color: AppColors.placeholder, fontWeight: FontWeight.w500)),
-              ],
-            )),
-            SizedBox(width: compact ? 4 : 10),
-            Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-              Text(record.formattedAmount,
-                key: Key('expense-amount-${record.id}'),
-                maxLines: 1, style: const TextStyle(
-                  fontFamily: 'Inter', fontSize: 14, height: 1,
-                  fontWeight: FontWeight.w500, letterSpacing: -0.3,
-                  color: AppColors.dark)),
-              const SizedBox(height: 5),
-              Sign2DigitalStatusBadge(status: record.status.label),
-            ]),
-            const SizedBox(width: 5),
-            const Icon(Icons.chevron_right_rounded,
-              size: 24, color: AppColors.secondaryText),
-          ]);
-        }),
-      ),
-    ),
+    leading: Sign2DigitalExpenseCategoryIcon(category: record.category),
+    title: record.title,
+    titleKey: Key('expense-title-${record.id}'),
+    subtitle: [record.job, record.report]
+      .where((part) => part.isNotEmpty).join(', '),
+    dateText: _shortDate(record.date),
+    trailingValue: record.formattedAmount,
+    trailingKey: Key('expense-amount-${record.id}'),
+    status: record.status.label,
+    onTap: () => _open(record),
   );
 
   static String _shortDate(DateTime date) {
