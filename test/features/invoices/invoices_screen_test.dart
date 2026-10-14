@@ -5,6 +5,7 @@ import 'package:sign2digital/features/invoices/domain/invoice_record.dart';
 import 'package:sign2digital/features/invoices/presentation/screens/add_invoice_screen.dart';
 import 'package:sign2digital/features/invoices/presentation/screens/invoice_details_screen.dart';
 import 'package:sign2digital/features/invoices/presentation/screens/invoices_screen.dart';
+import 'package:sign2digital/features/clients/presentation/screens/clients_screen.dart';
 
 InvoiceRecord _invoice(String id, InvoiceStatus status, double amount,
     DateTime date, {String? client, String? project}) => InvoiceRecord(
@@ -77,6 +78,19 @@ void main() {
       (x) => x.id == 'created').status, InvoiceStatus.draft);
     await expectLater(repo.saveDraft(draft), throwsArgumentError);
     await expectLater(repo.markAsPaid(draft.id), throwsStateError);
+  });
+
+  testWidgets('More menu opens Invoices, retaining global header and navigation',
+      (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: ClientsScreen()));
+    await tester.tap(find.byKey(const Key('dashboard-tab-4')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('open-invoices')));
+    await tester.pumpAndSettle();
+    expect(find.byType(InvoicesScreen), findsOneWidget);
+    expect(find.text('Search Invoices'), findsOneWidget);
+    expect(find.byKey(const Key('invoices-create')), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('Search, six tabs and numeric amount/date sorting work',
