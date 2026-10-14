@@ -7,6 +7,7 @@ import '../theme/dashboard_colors.dart';
 class Sign2DigitalInfoBanner extends StatelessWidget {
   const Sign2DigitalInfoBanner({
     super.key,
+    super.key,
     required this.message,
     this.iconAsset = 'assets/icons/info-circle-filled.svg',
     this.verticalPadding = 20,
@@ -15,6 +16,8 @@ class Sign2DigitalInfoBanner extends StatelessWidget {
     this.iconGap = 12,
     this.fontSize = 13,
     this.title,
+    this.leadingIcon,
+    this.titleColor = AppColors.dark,
   });
 
   final String message;
@@ -25,6 +28,8 @@ class Sign2DigitalInfoBanner extends StatelessWidget {
   final double iconGap;
   final double fontSize;
   final String? title;
+  final IconData? leadingIcon;
+  final Color titleColor;
 
   @override
   Widget build(BuildContext context) {
@@ -37,15 +42,18 @@ class Sign2DigitalInfoBanner extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: 20, vertical: verticalPadding),
         child: Row(
           children: [
-            SvgPicture.asset(
-              iconAsset,
-              width: iconSize,
-              height: iconSize,
-              colorFilter: const ColorFilter.mode(
-                AppColors.primary,
-                BlendMode.srcIn,
+            if (leadingIcon != null)
+              Icon(leadingIcon, size: iconSize, color: AppColors.primary)
+            else
+              SvgPicture.asset(
+                iconAsset,
+                width: iconSize,
+                height: iconSize,
+                colorFilter: const ColorFilter.mode(
+                  AppColors.primary,
+                  BlendMode.srcIn,
+                ),
               ),
-            ),
             SizedBox(width: iconGap),
             Expanded(
               child: Column(
@@ -54,7 +62,7 @@ class Sign2DigitalInfoBanner extends StatelessWidget {
                   if (title != null) ...[
                     Text(title!, style: const TextStyle(
                       fontFamily: 'Inter', fontSize: 14,
-                      fontWeight: FontWeight.w600, color: AppColors.dark,
+                      fontWeight: FontWeight.w600, color: titleColor,
                     )),
                     const SizedBox(height: 5),
                   ],
