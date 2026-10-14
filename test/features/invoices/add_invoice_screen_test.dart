@@ -6,7 +6,6 @@ import 'package:sign2digital/features/deposits/domain/deposit_record.dart';
 import 'package:sign2digital/features/invoices/domain/invoice_record.dart';
 import 'package:sign2digital/features/invoices/presentation/screens/add_invoice_screen.dart';
 import 'package:sign2digital/features/invoices/services/invoice_voice_extraction_service.dart';
-import 'package:sign2digital/features/jobs/domain/job_model.dart';
 import 'package:sign2digital/features/labour/data/demo_labour_repository.dart';
 import 'package:sign2digital/features/jobs/services/voice_recorder_service.dart';
 

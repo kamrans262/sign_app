@@ -587,17 +587,17 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
         children: [
           Sign2DigitalDocumentAmountRow(
             label: 'Subtotal', value: _money(_subtotalMinor)),
-          const SizedBox(height: 7),
+          const SizedBox(height: 15),
           Sign2DigitalDocumentAmountRow(
             label: 'VAT (${(widget.vatBasisPoints / 100).toStringAsFixed(0)}%)',
             value: _money(_vatMinor)),
-          const SizedBox(height: 7),
+          const SizedBox(height: 15),
           Sign2DigitalDocumentAmountRow(
             label: 'Total', value: _money(_totalMinor), highlight: true),
-          const SizedBox(height: 7),
+          const SizedBox(height: 15),
           Sign2DigitalDocumentAmountRow(
             label: 'Deposit Paid', value: _money(_depositPaidMinor)),
-          const SizedBox(height: 7),
+          const SizedBox(height: 15),
           Sign2DigitalDocumentAmountRow(
             label: 'Amount Due', value: _money(_dueMinor),
             highlight: true),
