@@ -61,9 +61,83 @@ class DemoInvoiceRepository extends InvoiceRepository {
     if (!current.status.canMarkPaid) {
       throw StateError('Only sent, pending or overdue invoices can be marked paid.');
     }
-    final updated = current.withStatus(
-      InvoiceStatus.paid, paidAt: DateTime.now());
+    final now = DateTime.now();
+    // Manually marked paid is a local accounting assertion, not a bank event.
+    final minor = (current.amount * 100).round();
+    final remaining = (minor - current.depositPaidMinor -
+        current.receivedMinor).clamp(0, minor).toInt();
+    final updated = InvoiceRecord(
+      id: current.id, number: current.number,
+      project: current.project, clientName: current.clientName,
+      amount: current.amount, date: current.date, status: InvoiceStatus.paid,
+      jobId: current.jobId, manuallyPaidAt: now,
+      demoOnly: current.demoOnly, iban: current.iban,
+      dueDate: current.dueDate, notes: current.notes,
+      currency: current.currency, vatBasisPoints: current.vatBasisPoints,
+      depositPaidMinor: current.depositPaidMinor, items: current.items,
+      sentAt: current.sentAt,
+      payments: [
+        ...current.payments,
+        if (remaining > 0)
+          InvoicePaymentRecord(
+            id: 'manual-${current.id}-${now.microsecondsSinceEpoch}',
+            amountMinor: remaining, paidAt: now,
+            method: 'Manual record', status: 'Paid',
+          ),
+      ],
+      history: [
+        ...current.history,
+        InvoiceHistoryEvent(
+          id: 'marked-paid-${now.microsecondsSinceEpoch}',
+          title: 'Invoice marked paid', occurredAt: now,
+          description: 'Locally recorded manual payment status',
+        ),
+      ],
+    );
     _saved[invoiceId] = updated;
+    return updated;
+  }
+
+  @override
+  Future<InvoiceRecord> updateInvoice(InvoiceRecord next) async {
+    final records = await listInvoices();
+    InvoiceRecord? original;
+    for (final item in records) {
+      if (item.id == next.id) { original = item; break; }
+    }
+    if (original == null) { throw StateError('Invoice not found.'); }
+    if (original.status == InvoiceStatus.paid ||
+        original.status != next.status ||
+        next.number.trim().isEmpty || next.project.trim().isEmpty ||
+        next.clientName.trim().isEmpty ||
+        (await listInvoices()).any((item) =>
+            item.id != next.id && item.number == next.number) ||
+        !next.amount.isFinite || next.amount <= 0 ||
+        next.items.isEmpty || next.totalMinor == null ||
+        next.totalMinor != (next.amount * 100).round() ||
+        next.dueDate == null || next.dueDate!.isBefore(next.date) ||
+        !isValidInvoiceIban(next.iban)) {
+      throw StateError('Invoice changes are not valid or editable.');
+    }
+    final now = DateTime.now();
+    final updated = InvoiceRecord(
+      id: original.id, number: next.number,
+      project: next.project, clientName: next.clientName,
+      amount: next.amount, date: next.date, status: original.status,
+      jobId: next.jobId, dueDate: next.dueDate,
+      iban: next.iban, notes: next.notes, currency: next.currency,
+      vatBasisPoints: next.vatBasisPoints,
+      depositPaidMinor: next.depositPaidMinor, items: next.items,
+      sentAt: original.sentAt, manuallyPaidAt: original.manuallyPaidAt,
+      demoOnly: original.demoOnly,
+      payments: original.payments,
+      history: [
+        ...original.history,
+        InvoiceHistoryEvent(id: 'edited-${now.microsecondsSinceEpoch}',
+          title: 'Invoice updated', occurredAt: now),
+      ],
+    );
+    _saved[updated.id] = updated;
     return updated;
   }
 
@@ -87,6 +161,24 @@ class DemoInvoiceRepository extends InvoiceRepository {
             item.id == invoice.id || item.number == invoice.number)) {
       throw ArgumentError('Invalid or duplicate invoice draft.');
     }
-    _saved[invoice.id] = invoice;
+    final now = DateTime.now();
+    _saved[invoice.id] = InvoiceRecord(
+      id: invoice.id, number: invoice.number,
+      project: invoice.project, clientName: invoice.clientName,
+      amount: invoice.amount, date: invoice.date,
+      status: invoice.status, jobId: invoice.jobId,
+      manuallyPaidAt: invoice.manuallyPaidAt,
+      demoOnly: invoice.demoOnly, iban: invoice.iban,
+      dueDate: invoice.dueDate, notes: invoice.notes,
+      currency: invoice.currency, vatBasisPoints: invoice.vatBasisPoints,
+      depositPaidMinor: invoice.depositPaidMinor, items: invoice.items,
+      payments: invoice.payments, sentAt: invoice.sentAt,
+      history: [
+        ...invoice.history,
+        InvoiceHistoryEvent(
+          id: 'created-${now.microsecondsSinceEpoch}',
+          title: 'Invoice created', occurredAt: now),
+      ],
+    );
   }
 }
