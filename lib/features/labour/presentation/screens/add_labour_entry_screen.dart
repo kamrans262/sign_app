@@ -34,6 +34,8 @@ class AddLabourEntryScreen extends StatefulWidget {
     this.voiceRecorderFactory,
     this.voiceExtractionService,
     this.requestTemporaryApiKey,
+    this.timePicker,
+    this.datePicker,
   });
 
   final LabourEntryKind kind;
@@ -45,6 +47,8 @@ class AddLabourEntryScreen extends StatefulWidget {
   final VoiceRecorderService Function()? voiceRecorderFactory;
   final LabourVoiceExtractionService? voiceExtractionService;
   final Future<String?> Function(BuildContext)? requestTemporaryApiKey;
+  final Future<TimeOfDay?> Function(BuildContext, TimeOfDay)? timePicker;
+  final Future<DateTime?> Function(BuildContext, DateTime)? datePicker;
 
   @override
   State<AddLabourEntryScreen> createState() => _AddLabourEntryScreenState();
@@ -98,7 +102,7 @@ class _AddLabourEntryScreenState extends State<AddLabourEntryScreen> {
   }
 
   void _notice(String message) {
-    if (!mounted) return;
+    if (!mounted) { return; }
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
@@ -151,22 +155,23 @@ class _AddLabourEntryScreenState extends State<AddLabourEntryScreen> {
   }
 
   Future<void> _pickDate() async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: _date ?? DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
+    final initial = _date ?? DateTime.now();
+    final date = await (widget.datePicker?.call(context, initial) ??
+        showDatePicker(
+          context: context,
+          initialDate: initial,
+          firstDate: DateTime(2000),
+          lastDate: DateTime(2100),
+        ));
     if (date != null && mounted) {
       setState(() { _date = date; _error = null; });
     }
   }
 
   Future<void> _pickTime({required bool start}) async {
-    final time = await showTimePicker(
-      context: context,
-      initialTime: (start ? _start : _end) ?? _start ?? TimeOfDay.now(),
-    );
+    final initial = (start ? _start : _end) ?? _start ?? TimeOfDay.now();
+    final time = await (widget.timePicker?.call(context, initial) ??
+        showTimePicker(context: context, initialTime: initial));
     if (time != null && mounted) {
       setState(() {
         if (start) {
@@ -180,7 +185,7 @@ class _AddLabourEntryScreenState extends State<AddLabourEntryScreen> {
   }
 
   Future<void> _addPhotos() async {
-    if (_photoBusy || _saving) return;
+    if (_photoBusy || _saving) { return; }
     final camera = await showModalBottomSheet<bool>(
       context: context,
       builder: (sheet) => SafeArea(
@@ -200,7 +205,7 @@ class _AddLabourEntryScreenState extends State<AddLabourEntryScreen> {
         ]),
       ),
     );
-    if (camera == null || !mounted) return;
+    if (camera == null || !mounted) { return; }
     setState(() => _photoBusy = true);
     try {
       final source = widget.photoSource ?? DeviceJobPhotoSource();
@@ -212,11 +217,11 @@ class _AddLabourEntryScreenState extends State<AddLabourEntryScreen> {
       for (final photo in chosen) {
         DeviceJobPhotoSource.validate(photo.name, photo.bytes);
       }
-      if (!mounted) return;
+      if (!mounted) { return; }
       setState(() {
         final sources = _photos.map((p) => p.sourceKey).toSet();
         for (final photo in chosen) {
-          if (sources.add(photo.sourceKey)) _photos.add(photo);
+          if (sources.add(photo.sourceKey)) { _photos.add(photo); }
         }
       });
     } on FormatException catch (error) {
@@ -224,7 +229,7 @@ class _AddLabourEntryScreenState extends State<AddLabourEntryScreen> {
     } catch (_) {
       _notice('Unable to access photos. Please try again.');
     } finally {
-      if (mounted) setState(() => _photoBusy = false);
+      if (mounted) { setState(() => _photoBusy = false); }
     }
   }
 
@@ -300,7 +305,7 @@ class _AddLabourEntryScreenState extends State<AddLabourEntryScreen> {
   }
 
   void _applyVoice(LabourVoiceSuggestion suggestion) {
-    if (!mounted) return;
+    if (!mounted) { return; }
     JobModel? matched;
     final reference = suggestion.jobReference?.toLowerCase();
     if (reference != null) {
@@ -314,9 +319,9 @@ class _AddLabourEntryScreenState extends State<AddLabourEntryScreen> {
       }
     }
     setState(() {
-      if (matched != null) _job = matched;
-      if (suggestion.worker != null) _worker.text = suggestion.worker!;
-      if (suggestion.date != null) _date = suggestion.date;
+      if (matched != null) { _job = matched; }
+      if (suggestion.worker != null) { _worker.text = suggestion.worker!; }
+      if (suggestion.date != null) { _date = suggestion.date; }
       if (suggestion.startMinutes case final minutes?) {
         _start = TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60);
       }
@@ -342,7 +347,7 @@ class _AddLabourEntryScreenState extends State<AddLabourEntryScreen> {
   }
 
   Future<void> _voice() async {
-    if (_voiceOpen || _saving) return;
+    if (_voiceOpen || _saving) { return; }
     _voiceOpen = true;
     try {
       await showDialog<void>(
@@ -372,12 +377,12 @@ class _AddLabourEntryScreenState extends State<AddLabourEntryScreen> {
   }
 
   void _cancel() {
-    if (_saving) return;
+    if (_saving) { return; }
     Navigator.of(context).pop();
   }
 
   void _save() {
-    if (_saving) return;
+    if (_saving) { return; }
     FocusManager.instance.primaryFocus?.unfocus();
     final minutes = _duration;
     final rate = double.tryParse(
@@ -414,7 +419,7 @@ class _AddLabourEntryScreenState extends State<AddLabourEntryScreen> {
   }
 
   void _navigate(int index) {
-    if (index == widget.selectedNavigationIndex || _saving) return;
+    if (index == widget.selectedNavigationIndex || _saving) { return; }
     Navigator.of(context).pop();
     widget.onNavigationSelected?.call(index);
   }
