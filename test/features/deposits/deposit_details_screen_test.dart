@@ -145,8 +145,10 @@ void main() {
     expect(find.byKey(const Key('deposit-receipt-close')), findsOneWidget);
     await tester.tap(find.byKey(const Key('deposit-receipt-close')));
     await tester.pumpAndSettle();
+    await _reach(tester, 'deposit-receipt-share-0');
     await tester.tap(find.byKey(const Key('deposit-receipt-share-0')));
     await tester.pumpAndSettle();
+    await _reach(tester, 'deposit-receipt-download-0');
     await tester.tap(find.byKey(const Key('deposit-receipt-download-0')));
     await tester.pumpAndSettle();
     expect(shared, 1);
@@ -211,6 +213,12 @@ void main() {
       find.byType(AddDepositScreen));
     expect(form.initialDeposit?.id, record.id);
     expect(form.initialDeposit?.amount, record.amount);
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('deposit-form-save')), 130,
+      scrollable: find.descendant(
+        of: find.byKey(const Key('deposit-entry-form-scroll')),
+        matching: find.byType(Scrollable)).first);
+    await tester.pumpAndSettle();
     expect(find.text('Save Changes'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
@@ -263,6 +271,8 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
       final record = _record();
       await _show(tester, record, _Repository(record));
+      await tester.ensureVisible(find.byKey(const Key('details-tab-2')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('details-tab-2')));
       await tester.pumpAndSettle();
       await _reach(tester, 'deposit-detail-edit');
