@@ -26,8 +26,12 @@ abstract final class LabourDemoJobs {
 class DemoLabourRepository implements LabourRepository {
   const DemoLabourRepository();
   static final Map<String, LabourEntry> _saved = {};
+  static final Set<String> _deleted = {};
 
-  static void clearLocalEntries() => _saved.clear();
+  static void clearLocalEntries() {
+    _saved.clear();
+    _deleted.clear();
+  }
 
   static final List<LabourEntry> _fixtures = List<LabourEntry>.unmodifiable([
     for (var i = 0; i < 4; i++)
@@ -76,7 +80,7 @@ class DemoLabourRepository implements LabourRepository {
   Future<List<LabourEntry>> list() async {
     return [
       for (final fixture in _fixtures)
-        if (!_saved.containsKey(fixture.id)) fixture,
+        if (!_saved.containsKey(fixture.id) && !_deleted.contains(fixture.id)) fixture,
       ..._saved.values,
     ];
   }
@@ -96,6 +100,61 @@ class DemoLabourRepository implements LabourRepository {
         _fixtures.any((fixture) => fixture.id == entry.id)) {
       throw StateError('Entry already exists');
     }
-    _saved[entry.id] = entry;
+    final now = DateTime.now();
+    _saved[entry.id] = entry.copyWith(history: [
+      ...entry.history,
+      LabourHistoryEvent(
+        id: 'created-${entry.id}-${now.microsecondsSinceEpoch}',
+        title: 'Labour entry created',
+        occurredAt: now,
+      ),
+    ]);
+  }
+
+  LabourEntry? _find(String id) {
+    if (_deleted.contains(id)) return null;
+    final saved = _saved[id];
+    if (saved != null) return saved;
+    for (final fixture in _fixtures) {
+      if (fixture.id == id) return fixture;
+    }
+    return null;
+  }
+
+  @override
+  Future<void> update(LabourEntry entry) async {
+    final previous = _find(entry.id);
+    if (previous == null) {
+      throw StateError('Time entry no longer exists.');
+    }
+    if (previous.status != LabourEntryStatus.pending ||
+        entry.status != previous.status || entry.kind != previous.kind ||
+        entry.workerName.trim().isEmpty || entry.role.trim().isEmpty ||
+        entry.jobId.trim().isEmpty || !entry.hours.isFinite ||
+        entry.hours <= 0 || entry.hours > 24) {
+      throw StateError('Only valid pending time entries can be edited.');
+    }
+    final now = DateTime.now();
+    _saved[entry.id] = entry.copyWith(history: [
+      ...previous.history,
+      LabourHistoryEvent(
+        id: 'updated-${entry.id}-${now.microsecondsSinceEpoch}',
+        title: 'Labour entry updated',
+        occurredAt: now,
+      ),
+    ]);
+  }
+
+  @override
+  Future<void> delete(String id) async {
+    final record = _find(id);
+    if (record == null) {
+      throw StateError('Time entry no longer exists.');
+    }
+    if (record.status != LabourEntryStatus.pending) {
+      throw StateError('Approved time entries cannot be deleted.');
+    }
+    _saved.remove(id);
+    _deleted.add(id);
   }
 }
