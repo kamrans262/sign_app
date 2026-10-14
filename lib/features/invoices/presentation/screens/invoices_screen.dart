@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
@@ -184,11 +185,13 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
   Widget _card(InvoiceRecord record) => Sign2DigitalEntryListCard(
     key: Key('invoice-card-${record.id}'),
     shadow: true,
-    leading: const CircleAvatar(
+    leading: CircleAvatar(
       radius: 20,
-      backgroundColor: Color(0xFFE3ECF0),
-      child: Icon(Icons.description_outlined,
-        size: 24, color: AppColors.primary),
+      backgroundColor: const Color(0xFFE3ECF0),
+      child: SvgPicture.asset('assets/icons/description.svg',
+        width: 24, height: 24,
+        colorFilter: const ColorFilter.mode(
+          AppColors.primary, BlendMode.srcIn)),
     ),
     title: record.number,
     titleKey: Key('invoice-title-${record.id}'),
