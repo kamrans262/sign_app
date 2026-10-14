@@ -1,9 +1,8 @@
-name: Deposits focused one-shot verification
+name: Deposits focused verification
 
 on:
   push:
-    branches:
-      - ui-development
+    branches: [ui-development]
     paths:
       - '.github/workflows/deposits-one-shot-verify.yml'
   workflow_dispatch:
@@ -16,19 +15,23 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Install Flutter stable
-        uses: subosito/flutter-action@v2
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
-      - name: Get dependencies
+      - name: Dependencies
         run: flutter pub get
-      - name: Analyze Deposits and directly reused components only
+      - name: Check Deposits formatting and syntax
+        run: dart format --output=none lib/features/deposits test/features/deposits
+      - name: Analyze Deposits and only directly touched shared widgets
         run: |
-          flutter analyze --no-pub             lib/features/deposits             lib/features/clients/presentation/screens/more_screen.dart             lib/features/clients/presentation/widgets/sign2digital_details_tabs.dart             lib/features/clients/presentation/widgets/sign2digital_status_badge.dart             test/features/deposits/deposits_screen_test.dart
-      - name: Test Deposits screen only
-        run: flutter test --no-pub --concurrency=1 --reporter expanded --timeout 45s test/features/deposits/deposits_screen_test.dart
-
-# Final focused verification after two Deposits analyzer fixes.
+          flutter analyze --no-pub lib/features/deposits test/features/deposits \
+            lib/features/clients/presentation/screens/more_screen.dart \
+            lib/features/clients/presentation/widgets/sign2digital_details_tabs.dart \
+            lib/features/clients/presentation/widgets/sign2digital_status_badge.dart
+      - name: Run Deposits listing and Create Deposit tests only
+        run: |
+          flutter test --no-pub --concurrency=1 --reporter expanded --timeout 45s \
+            test/features/deposits/deposits_screen_test.dart \
+            test/features/deposits/add_deposit_screen_test.dart
