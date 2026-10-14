@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
-import '../../../quotes/domain/quote_review_models.dart';
+import '../../quotes/domain/quote_review_models.dart';
 import '../domain/invoice_record.dart';
 
 /// Invoice-specific document backed by the same PDF package as Quote PDF.
