@@ -32,7 +32,7 @@ void main() {
     expect(maintained.maintenance.single.description, 'Inspect hydraulics');
     expect(maintained.hours, 2.5);
     expect(maintained.history.length, 4);
-    expect(await repository.saveEquipment(original), throwsStateError);
+    await expectLater(repository.saveEquipment(original), throwsStateError);
   });
 
   testWidgets('Listing reuses global header and filters actual status',
