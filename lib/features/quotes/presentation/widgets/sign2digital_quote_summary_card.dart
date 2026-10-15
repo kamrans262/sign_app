@@ -18,6 +18,7 @@ class Sign2DigitalQuoteSummaryCard extends StatelessWidget {
     this.status,
     this.onTap,
     this.listStyle = false,
+    this.aiDocumentStyle = false,
     this.detailsStyle = false,
     this.linkedStyle = false,
     this.onRemoveLink,
@@ -33,6 +34,8 @@ class Sign2DigitalQuoteSummaryCard extends StatelessWidget {
   final String? status;
   final VoidCallback? onTap;
   final bool listStyle;
+  /// Existing list card adapted for AI document title/project/date/status.
+  final bool aiDocumentStyle;
   final bool detailsStyle;
   final bool linkedStyle;
   final VoidCallback? onRemoveLink;
@@ -64,6 +67,44 @@ class Sign2DigitalQuoteSummaryCard extends StatelessWidget {
       Text(stamp, style: _metaStyle, softWrap: true),
     ],
   );
+
+  Widget _aiInfo() => LayoutBuilder(
+    builder: (context, constraints) {
+      final name = Text(titleOverride ?? 'Quote $quoteNumber',
+        maxLines: 2, overflow: TextOverflow.ellipsis,
+        style: const TextStyle(
+          fontFamily: 'Inter', fontSize: 16, fontWeight: FontWeight.w600,
+          letterSpacing: -0.3, color: AppColors.dark),
+      );
+      final badge = status == null ? const SizedBox.shrink()
+          : Sign2DigitalStatusBadge(status: status!);
+      return Column(crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (constraints.maxWidth < 205) ...[
+            Align(alignment: Alignment.centerRight, child: badge),
+            const SizedBox(height: 5),
+            name,
+          ] else Row(children: [
+            Expanded(child: name),
+            if (status != null) ...[const SizedBox(width: 8), badge],
+          ]),
+          const SizedBox(height: 5),
+          Text(projectName, maxLines: 2,
+            overflow: TextOverflow.ellipsis, style: _metaStyle),
+          if (documentDate != null)
+            Text(_aiDate(documentDate!), style: _metaStyle),
+        ],
+      );
+    },
+  );
+
+  String _aiDate(DateTime date) {
+    const months = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December',
+    ];
+    return '${months[date.month - 1]} ${date.day}, ${date.year}';
+  }
 
   Widget _info() => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -204,8 +245,8 @@ class Sign2DigitalQuoteSummaryCard extends StatelessWidget {
               color: listStyle ? AppColors.primary : AppColors.dark, size: 23),
           ),
           SizedBox(width: listStyle ? 15 : 10),
-          Expanded(child: _info()),
-          if (listStyle) ...[
+          Expanded(child: aiDocumentStyle ? _aiInfo() : _info()),
+          if (listStyle && !aiDocumentStyle) ...[
             const SizedBox(width: 10),
             const Icon(Icons.chevron_right_rounded,
               color: AppColors.secondaryText, size: 24),
