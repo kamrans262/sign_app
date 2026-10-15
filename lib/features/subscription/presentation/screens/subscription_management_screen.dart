@@ -1,0 +1,291 @@
+import 'package:flutter/material.dart';
+
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
+import '../../../../core/widgets/sign2digital_header.dart';
+import '../../data/subscription_overview_repository.dart';
+import '../../domain/subscription_plan.dart';
+import '../widgets/subscription_current_plan_card.dart';
+import '../widgets/subscription_management_action_card.dart';
+import 'choose_plan_screen.dart';
+
+/// Manages an existing subscription without pretending demo status is verified.
+/// Payment and billing callbacks are supplied by the future backend integration.
+class SubscriptionManagementScreen extends StatefulWidget {
+  const SubscriptionManagementScreen({
+    super.key,
+    this.repository,
+    this.flowState,
+    this.onPaymentMethod,
+    this.onBillingHistory,
+    this.onUsage,
+    this.onConfirmCancellation,
+    this.onNavigationSelected,
+  });
+
+  final SubscriptionOverviewRepository? repository;
+  final SubscriptionPlanFlowState? flowState;
+  final VoidCallback? onPaymentMethod;
+  final VoidCallback? onBillingHistory;
+  final VoidCallback? onUsage;
+  final Future<void> Function(SubscriptionOverview)? onConfirmCancellation;
+  final ValueChanged<int>? onNavigationSelected;
+
+  @override
+  State<SubscriptionManagementScreen> createState() =>
+      _SubscriptionManagementScreenState();
+}
+
+class _SubscriptionManagementScreenState
+    extends State<SubscriptionManagementScreen> {
+  late final SubscriptionOverviewRepository _repository;
+  late final SubscriptionPlanFlowState _flowState;
+  SubscriptionOverview? _data;
+  bool _loading = true;
+  bool _cancelling = false;
+  String? _error;
+
+  static const _sectionStyle = TextStyle(
+    fontFamily: 'Inter',
+    fontSize: 20,
+    fontWeight: FontWeight.w700,
+    letterSpacing: -0.3,
+    color: AppColors.dark,
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _repository = widget.repository ??
+        const DemoSubscriptionOverviewRepository();
+    _flowState = widget.flowState ?? SubscriptionPlanFlowState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    if (!mounted) return;
+    setState(() { _loading = true; _error = null; });
+    try {
+      final value = await _repository.load();
+      if (!mounted) return;
+      setState(() { _data = value; _loading = false; });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _data = null;
+        _loading = false;
+        _error = 'Unable to load subscription information.';
+      });
+    }
+  }
+
+  void _notice(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _changePlan() async {
+    await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+      builder: (_) => ChoosePlanScreen(flowState: _flowState),
+    ));
+  }
+
+  void _paymentMethod() {
+    final handler = widget.onPaymentMethod;
+    if (handler != null) { handler(); return; }
+    _notice('Payment Method is not connected yet.');
+  }
+
+  void _billingHistory() {
+    final handler = widget.onBillingHistory;
+    if (handler != null) { handler(); return; }
+    _notice('Subscription billing history is not connected yet.');
+  }
+
+  void _usage() {
+    final handler = widget.onUsage;
+    if (handler != null) { handler(); return; }
+    final data = _data;
+    if (data == null) return;
+    final usage = data.usage;
+
+    showModalBottomSheet<void>(
+      context: context,
+      useSafeArea: true,
+      builder: (sheet) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
+        child: Column(mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Text('Usage This Month', style: _sectionStyle),
+          const SizedBox(height: 20),
+          _usageLine('Documents', usage.documents),
+          const SizedBox(height: 12),
+          _usageLine('Clients', usage.clients),
+          const SizedBox(height: 12),
+          _usageLine('Equipments', usage.equipment),
+          if (data.demoOnly) ...[
+            const SizedBox(height: 16),
+            const Text('Demo preview · Usage values are samples.',
+              style: TextStyle(
+                fontFamily: 'Inter', fontSize: 12,
+                color: AppColors.placeholder)),
+          ],
+        ]),
+      ),
+    );
+  }
+
+  Widget _usageLine(String label, int? value) => Row(
+    children: [
+      Expanded(child: Text(label, style: const TextStyle(
+        fontFamily: 'Inter', fontSize: 14,
+        fontWeight: FontWeight.w500, color: AppColors.dark))),
+      Text(value?.toString() ?? 'Unavailable', style: const TextStyle(
+        fontFamily: 'Inter', fontSize: 14,
+        fontWeight: FontWeight.w500, color: AppColors.placeholder)),
+    ],
+  );
+
+  Future<void> _cancelSubscription() async {
+    if (_cancelling || _data == null) return;
+    final approved = await showDialog<bool>(
+      context: context,
+      builder: (dialog) => AlertDialog(
+        title: const Text('Cancel Subscription?'),
+        content: const Text(
+          'The effective cancellation date is not available. '
+          'It depends on your subscription terms. '
+          'No cancellation takes place unless a connected service '
+          'confirms your request. Do you want to proceed?'),
+        actions: [
+          TextButton(
+            key: const Key('subscription-keep-plan'),
+            onPressed: () => Navigator.of(dialog).pop(false),
+            child: const Text('Keep Plan'),
+          ),
+          TextButton(
+            key: const Key('subscription-confirm-cancel'),
+            onPressed: () => Navigator.of(dialog).pop(true),
+            child: const Text('Confirm Cancellation'),
+          ),
+        ],
+      ),
+    );
+    if (approved != true || !mounted) return;
+    final callback = widget.onConfirmCancellation;
+    if (callback == null) {
+      _notice('Cancellation is not connected. No changes were made.');
+      return;
+    }
+    setState(() => _cancelling = true);
+    try {
+      await callback(_data!);
+      if (mounted) await _load();
+    } catch (_) {
+      _notice('Cancellation request could not be completed.');
+    } finally {
+      if (mounted) setState(() => _cancelling = false);
+    }
+  }
+
+  void _navigation(int index) {
+    if (index == 4) {
+      Navigator.of(context).maybePop();
+      return;
+    }
+    final callback = widget.onNavigationSelected;
+    if (callback == null) {
+      _notice('Navigation is not connected yet.');
+      return;
+    }
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    callback(index);
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: AppColors.white,
+    body: SafeArea(bottom: false, child: Column(children: [
+      const Sign2DigitalHeader(title: 'Subscription'),
+      Expanded(child: Center(child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 720),
+        child: RefreshIndicator(
+          onRefresh: _load,
+          child: ListView(
+            key: const Key('subscription-management-scroll'),
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+            children: [
+              if (_loading)
+                const Padding(
+                  padding: EdgeInsets.only(top: 40),
+                  child: Center(child: CircularProgressIndicator(
+                    key: Key('subscription-management-loading'))))
+              else if (_error != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 20),
+                  child: Center(child: TextButton(
+                    key: const Key('subscription-management-retry'),
+                    onPressed: _load,
+                    child: Text('$_error Tap to retry.'))))
+              else if (_data != null) ...[
+                const Text('Current Plan', style: _sectionStyle),
+                const SizedBox(height: 10),
+                SubscriptionCurrentPlanCard(
+                  key: const Key('subscription-management-plan-card'),
+                  data: _data!,
+                  variant: SubscriptionPlanCardVariant.management,
+                ),
+                const SizedBox(height: 20),
+                SubscriptionManagementActionCard(
+                  key: const Key('subscription-action-change-plan'),
+                  title: 'Change Plan',
+                  subtitle: 'Upgrade or downgrade your plan',
+                  icon: Icons.swap_horiz_rounded,
+                  onTap: _changePlan,
+                ),
+                const SizedBox(height: 20),
+                SubscriptionManagementActionCard(
+                  key: const Key('subscription-action-payment-method'),
+                  title: 'Payment Method',
+                  subtitle: 'Update your card or bank details',
+                  icon: Icons.credit_card_outlined,
+                  onTap: _paymentMethod,
+                ),
+                const SizedBox(height: 20),
+                SubscriptionManagementActionCard(
+                  key: const Key('subscription-action-billing-history'),
+                  title: 'Billing History',
+                  subtitle: 'View and document your invoices',
+                  icon: Icons.receipt_long_outlined,
+                  onTap: _billingHistory,
+                ),
+                const SizedBox(height: 20),
+                SubscriptionManagementActionCard(
+                  key: const Key('subscription-action-usage'),
+                  title: 'Usage',
+                  subtitle: 'See your current plan usage',
+                  icon: Icons.format_list_bulleted_rounded,
+                  onTap: _usage,
+                ),
+                const SizedBox(height: 20),
+                SubscriptionManagementActionCard(
+                  key: const Key('subscription-action-cancel'),
+                  title: 'Cancel Subscription',
+                  subtitle: 'Cancel your subscription anytime',
+                  icon: Icons.cancel_outlined,
+                  onTap: _cancelling ? () {} : _cancelSubscription,
+                ),
+              ],
+            ],
+          ),
+        ),
+      ))),
+    ])),
+    bottomNavigationBar: Sign2DigitalBottomNavigationBar(
+      selectedIndex: 4,
+      onSelected: _navigation,
+    ),
+  );
+}
