@@ -142,6 +142,10 @@ void main() {
     // SliverList builds only on-screen cards at a given viewport size.
     expect(find.byType(Sign2DigitalEntryListCard), findsWidgets);
     expect(find.byKey(const Key('reminders-add')), findsOneWidget);
+    expect(find.byType(FloatingActionButton), findsOneWidget);
+    expect(tester.getSize(find.byKey(const Key('reminders-add'))),
+        const Size(50, 50));
+    expect(find.text('Add Reminder'), findsNothing);
     await tester.tap(find.byKey(const Key('details-tab-1')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('reminder-card-up-1')), findsOneWidget);

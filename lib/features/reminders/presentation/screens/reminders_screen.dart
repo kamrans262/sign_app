@@ -4,7 +4,6 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
 import '../../../../core/widgets/sign2digital_dashboard_header.dart';
 import '../../../../core/widgets/sign2digital_entry_list_card.dart';
-import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../../../core/widgets/sign2digital_search_field.dart';
 import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import '../../data/demo_reminder_repository.dart';
@@ -187,8 +186,8 @@ class _RemindersScreenState extends State<RemindersScreen> {
           onProfileTap: widget.onProfileTap),
         Expanded(child: Center(child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 720),
-          child: Column(children: [
-            Expanded(child: CustomScrollView(
+          child: Stack(children: [
+            CustomScrollView(
               key: const Key('reminders-scroll'),
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               slivers: [
@@ -231,7 +230,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
                         color: AppColors.placeholder))))
                 else
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 95),
                     sliver: SliverList.builder(
                       itemCount: visible.length,
                       itemBuilder: (context, index) => Padding(
@@ -242,16 +241,17 @@ class _RemindersScreenState extends State<RemindersScreen> {
                     ),
                   ),
               ],
-            )),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-              child: Sign2DigitalPrimaryButton(
-                key: const Key('reminders-add'),
-                label: 'Add Reminder', height: 50,
-                leading: const Icon(Icons.add, size: 26, color: Colors.white),
-                onPressed: () => _edit(null),
-              ),
             ),
+            Positioned(right: 20, bottom: 20,
+              child: SizedBox(width: 50, height: 50,
+                child: FloatingActionButton(
+                  key: const Key('reminders-add'),
+                  heroTag: 'reminders-add',
+                  tooltip: 'Add Reminder',
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  elevation: 3, onPressed: () => _edit(null),
+                  child: const Icon(Icons.add, size: 30)))),
           ]),
         ))),
       ])),
