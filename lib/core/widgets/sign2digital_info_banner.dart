@@ -10,6 +10,7 @@ class Sign2DigitalInfoBanner extends StatelessWidget {
     required this.message,
     this.iconAsset = 'assets/icons/info-circle-filled.svg',
     this.verticalPadding = 20,
+    this.horizontalPadding = 20,
     this.textColor = AppColors.primary,
     this.iconSize = 20,
     this.iconGap = 12,
@@ -22,6 +23,7 @@ class Sign2DigitalInfoBanner extends StatelessWidget {
   final String message;
   final String iconAsset;
   final double verticalPadding;
+  final double horizontalPadding;
   final Color textColor;
   final double iconSize;
   final double iconGap;
@@ -38,7 +40,8 @@ class Sign2DigitalInfoBanner extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
       ),
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 20, vertical: verticalPadding),
+        padding: EdgeInsets.symmetric(
+          horizontal: horizontalPadding, vertical: verticalPadding),
         child: Row(
           children: [
             if (leadingIcon != null)
