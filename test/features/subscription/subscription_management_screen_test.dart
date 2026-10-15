@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sign2digital/core/widgets/sign2digital_bottom_navigation_bar.dart';
 import 'package:sign2digital/core/widgets/sign2digital_header.dart';
+import 'package:sign2digital/features/clients/presentation/screens/more_screen.dart';
 import 'package:sign2digital/features/subscription/data/subscription_overview_repository.dart';
 import 'package:sign2digital/features/subscription/domain/subscription_plan.dart';
 import 'package:sign2digital/features/subscription/presentation/screens/choose_plan_screen.dart';
@@ -53,6 +54,18 @@ void main() {
     expect(find.text('CHF 49 / month'), findsOneWidget);
     expect(find.text('Active'), findsOneWidget);
     expect(find.byKey(const Key('subscription-demo-notice')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('More opens Subscription Management in the existing navigation',
+      (tester) async {
+    await tester.pumpWidget(const MaterialApp(
+      home: Scaffold(body: MoreScreen()),
+    ));
+    await tester.tap(find.byKey(const Key('open-subscription-management')));
+    await tester.pumpAndSettle();
+    expect(find.byType(SubscriptionManagementScreen), findsOneWidget);
+    expect(find.text('Current Plan'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
