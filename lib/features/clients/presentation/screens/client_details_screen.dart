@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 
 import '../../../jobs/presentation/screens/create_job_screen.dart';
 import '../../../jobs/domain/create_job_draft.dart';
+import '../../../jobs/domain/job_model.dart';
+import '../../../jobs/data/demo_created_job_repository.dart';
+import '../../../jobs/presentation/screens/job_details_screen.dart';
 
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -32,6 +35,9 @@ class ClientDetailsScreen extends StatefulWidget {
     this.onNewQuote,
     this.onNewJob,
     this.onViewAllJobs,
+    this.onJobCreated,
+    this.onOpenJob,
+    this.createdJobs = const [],
   });
 
   final ClientProfile client;
@@ -39,6 +45,9 @@ class ClientDetailsScreen extends StatefulWidget {
   final ValueChanged<ClientProfile>? onNewQuote;
   final ValueChanged<ClientProfile>? onNewJob;
   final ValueChanged<ClientProfile>? onViewAllJobs;
+  final JobModel Function(CreateJobDraft)? onJobCreated;
+  final ValueChanged<JobModel>? onOpenJob;
+  final List<JobModel> createdJobs;
 
   @override
   State<ClientDetailsScreen> createState() => _ClientDetailsScreenState();
@@ -47,6 +56,22 @@ class ClientDetailsScreen extends StatefulWidget {
 class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
   late ClientProfile _client;
   int _tabIndex = 0;
+  final DemoCreatedJobRepository _standaloneJobs = DemoCreatedJobRepository();
+
+  List<JobModel> get _clientJobs => <JobModel>[
+    ...widget.createdJobs.where((job) => job.clientId == _client.id),
+    ..._standaloneJobs.forClient(_client.id),
+  ];
+
+  Future<void> _openExistingJob(JobModel job) async {
+    if (widget.onOpenJob != null) {
+      widget.onOpenJob!(job);
+      return;
+    }
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(builder: (_) => JobDetailsScreen(job: job)),
+    );
+  }
 
   @override
   void initState() {
@@ -97,11 +122,11 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
     if (!mounted || draft == null) {
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Job draft created locally. Not saved to the server.'),
-      ),
-    );
+    final job = widget.onJobCreated?.call(draft) ??
+        _standaloneJobs.create(draft);
+    if (!mounted) return;
+    setState(() => _tabIndex = 0);
+    await _openExistingJob(job);
   }
 
   void _notReady(String action) {
@@ -142,7 +167,7 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
                         const SizedBox(height: 25),
                         Sign2DigitalDetailsTabs(
                           labels: [
-                            'Jobs (${details.jobs.length})',
+                            'Jobs (${details.jobs.length + _clientJobs.length})',
                             'Quotes',
                             'Documents',
                             'Invoices',
@@ -285,7 +310,7 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
             SizedBox(
               width: width,
               child: Sign2DigitalStatisticsCard(
-                count: _client.jobCount,
+                count: _client.jobCount + _clientJobs.length,
                 label: 'Total jobs',
                 iconAsset: 'assets/icons/jobs.svg',
                 fallbackIcon: Icons.work_outline,
@@ -324,7 +349,17 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
 
   Widget _tabContent(ClientDetailsModel details) {
     final records = switch (_tabIndex) {
-      0 => details.jobs,
+      0 => <ClientRelatedRecord>[
+          for (final job in _clientJobs)
+            ClientRelatedRecord(
+              id: job.id,
+              title: job.title,
+              description: job.description,
+              meta: job.referenceNumber,
+              status: job.statusLabel,
+            ),
+          ...details.jobs,
+        ],
       1 => details.quotes,
       2 => details.documents,
       3 => details.invoices,
@@ -348,14 +383,24 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
           Sign2DigitalClientRelatedItemCard(
             key: ValueKey(record.id),
             item: record,
-            onTap: () => _notReady('Open ${names[_tabIndex]} item'),
+            onTap: () {
+              if (_tabIndex == 0) {
+                for (final job in _clientJobs) {
+                  if (job.id == record.id) {
+                    _openExistingJob(job);
+                    return;
+                  }
+                }
+              }
+              _notReady('Open ${names[_tabIndex]} item');
+            },
           ),
           const SizedBox(height: 20),
         ],
         if (_tabIndex == 0)
           Sign2DigitalPrimaryButton(
             key: const Key('view-all-jobs-button'),
-            label: 'View All Jobs (${_client.jobCount})',
+            label: 'View All Jobs (${_client.jobCount + _clientJobs.length})',
             onPressed: () => widget.onViewAllJobs != null
                 ? widget.onViewAllJobs!(_client)
                 : _notReady('View All Jobs'),
