@@ -18,6 +18,18 @@ class _StubRepository implements SubscriptionOverviewRepository {
   }
 }
 
+Future<void> _scrollTo(WidgetTester tester, Key key) async {
+  await tester.scrollUntilVisible(
+    find.byKey(key),
+    180,
+    scrollable: find.descendant(
+      of: find.byKey(const Key('subscription-scroll')),
+      matching: find.byType(Scrollable),
+    ).first,
+  );
+  await tester.pumpAndSettle();
+}
+
 void main() {
   testWidgets('More opens Subscription with the global header and More nav',
       (tester) async {
@@ -63,8 +75,7 @@ void main() {
     expect(find.text('AI document generation'), findsOneWidget);
     expect(find.text('Unlimited projects'), findsOneWidget);
     final usage = find.byKey(const Key('subscription-usage-documents'));
-    await tester.ensureVisible(usage);
-    await tester.pumpAndSettle();
+    await _scrollTo(tester, const Key('subscription-usage-documents'));
     expect(find.descendant(of: usage, matching: find.text('7')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
@@ -88,9 +99,7 @@ void main() {
     expect(billing, 1);
     expect(manage, 1);
 
-    await tester.ensureVisible(
-      find.byKey(const Key('subscription-view-details')));
-    await tester.pumpAndSettle();
+    await _scrollTo(tester, const Key('subscription-view-details'));
     await tester.tap(find.byKey(const Key('subscription-view-details')));
     expect(details, 1);
     expect(tester.takeException(), isNull);
