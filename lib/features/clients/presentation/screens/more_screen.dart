@@ -11,6 +11,7 @@ import '../../../invoices/presentation/screens/invoices_screen.dart';
 import '../../../labour/presentation/screens/time_labour_screen.dart';
 import '../../../quotes/presentation/screens/quote_ui_demo_screen.dart';
 import '../../../subscription/presentation/screens/subscription_overview_screen.dart';
+import '../../../subscription/presentation/screens/subscription_management_screen.dart';
 
 /// Entry points for UI-only tools belong to More, not the Clients list.
 class MoreScreen extends StatelessWidget {
@@ -40,6 +41,14 @@ class MoreScreen extends StatelessWidget {
               onNavigationSelected: onTabSelected,
               onNotificationTap: () => onNotReady?.call('Notifications'),
               onProfileTap: () => onNotReady?.call('Profile'),
+            ))),
+          const SizedBox(height: 15),
+          _tile(context,
+            key: const Key('open-subscription-management'),
+            title: 'Subscription Management',
+            icon: Icons.manage_accounts_outlined,
+            onTap: () => _open(context, SubscriptionManagementScreen(
+              onNavigationSelected: onTabSelected,
             ))),
           const SizedBox(height: 15),
           _tile(context,
