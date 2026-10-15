@@ -53,10 +53,14 @@ class _ProfilePreferencesScreenState extends State<ProfilePreferencesScreen> {
     setState(() { _loading = true; _error = null; });
     try {
       final saved = await widget.repository.load();
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() { _draft = saved; _loading = false; });
     } catch (_) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() {
         _loading = false;
         _error = 'Could not load preferences.';
