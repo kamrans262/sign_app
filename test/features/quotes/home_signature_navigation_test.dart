@@ -36,12 +36,13 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('dashboard-tab-0')));
     await tester.pumpAndSettle();
-    expect(find.text('Signature Requests'), findsOneWidget);
-    expect(find.textContaining('No quote to track yet'), findsOneWidget);
+    expect(find.byKey(const Key('home-dashboard-scroll')), findsOneWidget);
+    expect(find.byKey(const Key('home-demo-disclaimer')), findsOneWidget);
     expect(find.text('Document Sent'), findsNothing);
-    await tester.tap(find.text('View Clients'));
+    expect(find.byKey(const Key('home-open-signature-tracking')), findsNothing);
+    await tester.tap(find.byKey(const Key('home-card-documents')));
     await tester.pumpAndSettle();
-    expect(find.text('Clients'), findsWidgets);
+    expect(find.byKey(const Key('documents-scroll')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -53,7 +54,12 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('dashboard-tab-0')));
     await tester.pumpAndSettle();
-    expect(find.text('Create Quote'), findsOneWidget);
+    expect(find.byKey(const Key('home-dashboard-scroll')), findsOneWidget);
+    final track = find.byKey(const Key('home-open-signature-tracking'));
+    await tester.ensureVisible(track);
+    await tester.pumpAndSettle();
+    await tester.tap(track);
+    await tester.pumpAndSettle();
     expect(find.text('Viewed by Customer'), findsOneWidget);
     expect(find.text('Jean Dupont'), findsOneWidget);
     expect(
@@ -65,7 +71,7 @@ void main() {
     expect(find.text('Active (12)'), findsOneWidget);
     await tester.tap(find.byKey(const Key('dashboard-tab-0')));
     await tester.pumpAndSettle();
-    expect(find.text('Create Quote'), findsOneWidget);
+    expect(find.byKey(const Key('home-dashboard-scroll')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
