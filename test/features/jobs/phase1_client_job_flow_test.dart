@@ -92,6 +92,8 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(find.text('New Job'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('New Job'));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('create-job-scroll')), findsOneWidget);
