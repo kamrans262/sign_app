@@ -36,6 +36,7 @@ void main() {
     expect(find.text('Business Plan'), findsOneWidget);
     expect(find.text('CHF 20 / month'), findsOneWidget);
     expect(find.text('Email support'), findsOneWidget);
+    await _scrollTo(tester, const Key('choose-plan-demo-notice'));
     expect(find.byKey(const Key('choose-plan-demo-notice')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
@@ -114,7 +115,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('choose-plan-select')));
     await tester.pumpAndSettle();
-    await tester.pageBack();
+    await tester.tap(find.byIcon(Icons.arrow_back_ios_new_rounded));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('subscription-manage-plan')));
     await tester.pumpAndSettle();
