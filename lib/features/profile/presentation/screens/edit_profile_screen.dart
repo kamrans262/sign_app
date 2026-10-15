@@ -350,6 +350,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   hintText: 'e.g. Project Manager',
                   iconAsset: '',
                   leadingIcon: Icons.description_outlined,
+                  leadingIconSize: 24,
                   value: _title,
                   trailing: const Icon(Icons.keyboard_arrow_down_rounded,
                     color: AppColors.secondaryText),
