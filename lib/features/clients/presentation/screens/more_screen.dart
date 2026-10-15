@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../documents/presentation/screens/reports_screen.dart';
 import '../../../documents/presentation/screens/ai_documents_screen.dart';
+import '../../../documents/presentation/screens/generate_ai_document_screen.dart';
 import '../../../expenses/presentation/screens/expenses_screen.dart';
 import '../../../deposits/presentation/screens/deposits_screen.dart';
 import '../../../invoices/presentation/screens/invoices_screen.dart';
@@ -11,9 +12,11 @@ import '../../../quotes/presentation/screens/quote_ui_demo_screen.dart';
 
 /// Entry points for UI-only tools belong to More, not the Clients list.
 class MoreScreen extends StatelessWidget {
-  const MoreScreen({super.key, this.onTabSelected, this.onNotReady});
+  const MoreScreen({super.key, this.onTabSelected, this.onNotReady,
+    this.documentGenerator});
   final ValueChanged<int>? onTabSelected;
   final ValueChanged<String>? onNotReady;
+  final AiDocumentGenerator? documentGenerator;
 
   Future<void> _open(BuildContext context, Widget screen) =>
       Navigator.of(context).push<void>(
@@ -38,6 +41,7 @@ class MoreScreen extends StatelessWidget {
             title: 'AI Documents',
             icon: Icons.auto_awesome_outlined,
             onTap: () => _open(context, AiDocumentsScreen(
+              documentGenerator: documentGenerator,
               onNavigationSelected: onTabSelected,
               onNotificationTap: () => onNotReady?.call('Notifications'),
               onProfileTap: () => onNotReady?.call('Profile'),
