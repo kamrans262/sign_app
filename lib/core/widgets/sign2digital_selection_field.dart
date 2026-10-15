@@ -18,6 +18,7 @@ class Sign2DigitalSelectionField extends StatelessWidget {
     this.leadingIcon,
     this.leadingIconSize = 20,
     this.trailing,
+    this.valueTextStyle,
   });
 
   final String label;
@@ -29,6 +30,8 @@ class Sign2DigitalSelectionField extends StatelessWidget {
   final IconData? leadingIcon;
   final double leadingIconSize;
   final Widget? trailing;
+  /// Optional selected-value tint (default remains the shared input style).
+  final TextStyle? valueTextStyle;
 
   @override
   Widget build(BuildContext context) {
@@ -76,7 +79,7 @@ class Sign2DigitalSelectionField extends StatelessWidget {
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: selected
-                                ? AppTextStyles.fieldInput
+                                ? (valueTextStyle ?? AppTextStyles.fieldInput)
                                 : AppTextStyles.fieldHint,
                           ),
                         ],
