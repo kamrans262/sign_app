@@ -94,7 +94,7 @@ Finder _editablePassword() => find.descendant(
 
 Future<void> _scrollTo(WidgetTester tester, Key key) async {
   await tester.scrollUntilVisible(
-    find.byKey(key), -170,
+    find.byKey(key), 170,
     maxScrolls: 25,
     scrollable: find.descendant(
       of: find.byKey(const Key('security-scroll')),
