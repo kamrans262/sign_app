@@ -536,7 +536,12 @@ class _ClientsContentState extends State<_ClientsContent> {
                     key: ValueKey(matches[index].id),
                     padding: const EdgeInsets.only(bottom: 20),
                     child: Sign2DigitalClientCard(
-                      client: matches[index],
+                      client: widget.createdJobsForClient(matches[index].id).isEmpty
+                          ? matches[index]
+                          : matches[index].withJobCount(
+                              matches[index].jobCount +
+                              widget.createdJobsForClient(matches[index].id).length,
+                            ),
                       onTap: () => _openClientDetails(matches[index]),
                     ),
                   ),
