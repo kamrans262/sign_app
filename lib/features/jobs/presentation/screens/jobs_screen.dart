@@ -20,14 +20,11 @@ class JobsScreen extends StatefulWidget {
     this.onCreateJob,
     this.onJobTap,
     this.onNotReady,
-    this.createdJobs = const [],
   });
 
   final VoidCallback? onCreateJob;
   final ValueChanged<JobModel>? onJobTap;
   final ValueChanged<String>? onNotReady;
-  /// Additional session-local jobs; original screenshot/demo rows are unchanged.
-  final List<JobModel> createdJobs;
 
   @override
   State<JobsScreen> createState() => _JobsScreenState();
@@ -72,11 +69,7 @@ class _JobsScreenState extends State<JobsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final jobs = <JobModel>[
-      ...widget.createdJobs.where(
-        (job) => job.category == _category && job.matches(_search.text)),
-      ...MockJobsData.search(category: _category, query: _search.text),
-    ];
+    final jobs = MockJobsData.search(category: _category, query: _search.text);
     final categories = JobCategory.values;
     final labels = [
       for (final category in categories)
@@ -84,7 +77,7 @@ class _JobsScreenState extends State<JobsScreen> {
           JobCategory.active => 'Active',
           JobCategory.completed => 'Completed',
           JobCategory.archived => 'Archived',
-        }} (${MockJobsData.count(category) + widget.createdJobs.where((job) => job.category == category).length})',
+        }} (${MockJobsData.count(category)})',
     ];
     return Center(
       child: ConstrainedBox(

@@ -4,7 +4,6 @@ import '../../../jobs/presentation/screens/jobs_screen.dart';
 import '../../../jobs/presentation/screens/job_details_screen.dart';
 import '../../../jobs/domain/job_model.dart';
 import '../../../jobs/domain/create_job_draft.dart';
-import '../../../jobs/data/demo_created_job_repository.dart';
 import '../../../jobs/presentation/screens/create_job_screen.dart';
 import '../../../home/presentation/screens/home_dashboard_screen.dart';
 import '../../../documents/domain/document_record.dart';
@@ -59,13 +58,6 @@ class _ClientsScreenState extends State<ClientsScreen> {
   int _homeRevision = 0;
   int _clientsRevision = 0;
   late final ClientRepository _repository;
-  final DemoCreatedJobRepository _createdJobs = DemoCreatedJobRepository();
-
-  JobModel _recordCreatedJob(CreateJobDraft draft) {
-    final job = _createdJobs.create(draft);
-    setState(() => _homeRevision++);
-    return job;
-  }
 
   @override
   void initState() {
@@ -111,13 +103,10 @@ class _ClientsScreenState extends State<ClientsScreen> {
         builder: (_) => CreateJobScreen(clientRepository: _repository),
       ),
     );
-    if (!mounted || draft == null) return;
-    try {
-      final job = _recordCreatedJob(draft);
-      await _openJobDetails(job);
-    } catch (_) {
-      _notifyHome('Unable to save the local job.');
+    if (draft != null) {
+      _notifyHome('Job draft created locally. Not saved to the server.');
     }
+    if (mounted) setState(() => _homeRevision++);
   }
 
   Future<void> _createClientFromHome() async {
@@ -237,17 +226,10 @@ class _ClientsScreenState extends State<ClientsScreen> {
         builder: (_) => JobDetailsScreen(
           job: job,
           onTabSelected: (index) {
-            // Job Details can be opened from inside Client Details. Return
-            // to the actual dashboard before selecting another bottom tab.
-            final dashboardRoute = ModalRoute.of(context);
-            if (dashboardRoute != null) {
-              Navigator.of(context).popUntil(
-                (route) => identical(route, dashboardRoute),
-              );
-            } else {
-              Navigator.of(context).pop();
+            Navigator.of(context).pop();
+            if (mounted) {
+              setState(() => _selectedIndex = index);
             }
-            _selectDashboardTab(index);
           },
         ),
       ),
@@ -284,21 +266,15 @@ class _ClientsScreenState extends State<ClientsScreen> {
                   HomeDashboardScreen(
                     selectedQuote: currentQuote,
                     refreshRevision: _homeRevision,
-                    additionalActiveJobs: _createdJobs.jobs.length,
                     onAction: _onHomeAction,
                   ),
                   JobsScreen(
-                    createdJobs: _createdJobs.jobs,
-                    onCreateJob: _createJobFromHome,
                     onNotReady: _showNotReady,
                     onJobTap: _openJobDetails,
                   ),
                   _ClientsContent(
                     key: ValueKey('clients-content-$_clientsRevision'),
                     repository: _repository,
-                    createdJobsForClient: _createdJobs.forClient,
-                    onJobCreated: _recordCreatedJob,
-                    onOpenJob: _openJobDetails,
                     showNotReady: _showNotReady,
                     onTabSelected: (index) =>
                         setState(() => _selectedIndex = index),
@@ -330,17 +306,11 @@ class _ClientsContent extends StatefulWidget {
     required this.repository,
     required this.showNotReady,
     required this.onTabSelected,
-    required this.createdJobsForClient,
-    required this.onJobCreated,
-    required this.onOpenJob,
   });
 
   final ClientRepository repository;
   final ValueChanged<String> showNotReady;
   final ValueChanged<int> onTabSelected;
-  final List<JobModel> Function(String clientId) createdJobsForClient;
-  final JobModel Function(CreateJobDraft draft) onJobCreated;
-  final ValueChanged<JobModel> onOpenJob;
 
   @override
   State<_ClientsContent> createState() => _ClientsContentState();
@@ -413,17 +383,8 @@ class _ClientsContentState extends State<_ClientsContent> {
     FocusManager.instance.primaryFocus?.unfocus();
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
-        builder: (_) => ClientDetailsScreen(
-          client: client,
-          repository: widget.repository,
-          createdJobsForClient: widget.createdJobsForClient,
-          onJobCreated: widget.onJobCreated,
-          onOpenJob: widget.onOpenJob,
-          onViewAllJobs: (_) {
-            Navigator.of(context).pop();
-            widget.onTabSelected(1);
-          },
-        ),
+        builder: (_) =>
+            ClientDetailsScreen(client: client, repository: widget.repository),
       ),
     );
     if (!mounted) {
@@ -543,12 +504,7 @@ class _ClientsContentState extends State<_ClientsContent> {
                     key: ValueKey(matches[index].id),
                     padding: const EdgeInsets.only(bottom: 20),
                     child: Sign2DigitalClientCard(
-                      client: widget.createdJobsForClient(matches[index].id).isEmpty
-                          ? matches[index]
-                          : matches[index].withJobCount(
-                              matches[index].jobCount +
-                              widget.createdJobsForClient(matches[index].id).length,
-                            ),
+                      client: matches[index],
                       onTap: () => _openClientDetails(matches[index]),
                     ),
                   ),
