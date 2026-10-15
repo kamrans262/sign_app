@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sign2digital/core/widgets/sign2digital_entry_list_card.dart';
+import 'package:sign2digital/core/widgets/sign2digital_input_field.dart';
 import 'package:sign2digital/features/clients/presentation/screens/more_screen.dart';
 import 'package:sign2digital/features/reminders/data/demo_reminder_repository.dart';
 import 'package:sign2digital/features/reminders/domain/reminder_record.dart';
@@ -244,6 +245,35 @@ void main() {
     await tester.pumpAndSettle();
     expect(recorder.cancels, 1);
     expect(find.byType(AiVoiceFlowDialog), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('AI processing applies approved suggestion and preserves entries',
+      (tester) async {
+    final recorder = FakeVoiceRecorder();
+    await tester.pumpWidget(MaterialApp(home: AddReminderScreen(
+      voiceRecorderFactory: () => recorder,
+      voiceExtractionService: _FakeReminderVoice(() async =>
+        const ReminderVoiceSuggestion(
+          title: 'Call client', type: ReminderType.client,
+          time: TimeOfDay(hour: 17, minute: 0))),
+      requestTemporaryApiKey: (_) async => 'temporary-test-key',
+    )));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField).first, 'Manual title');
+    await tester.tap(find.byKey(const Key('create-with-ai-voice-button')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 120));
+    await tester.tap(find.byKey(const Key('voice-save')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(find.text('Use extracted reminder details?'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('reminder-voice-apply')));
+    await tester.pumpAndSettle();
+    final field = tester.widget<Sign2DigitalInputField>(
+      find.byKey(const Key('reminder-title')));
+    expect(field.controller.text, 'Manual title');
+    expect(recorder.disposed, isTrue);
     expect(tester.takeException(), isNull);
   });
 

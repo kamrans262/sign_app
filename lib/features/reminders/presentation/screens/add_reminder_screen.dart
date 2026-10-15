@@ -373,7 +373,8 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
       Switch.adaptive(
         key: const Key('reminder-notification-toggle'),
         value: _notify,
-        activeColor: AppColors.primary,
+        activeTrackColor: AppColors.primary,
+        activeThumbColor: AppColors.white,
         onChanged: (value) => setState(() => _notify = value)),
     ],
   );
