@@ -24,4 +24,16 @@ abstract final class AppTheme {
       highlightColor: AppColors.primary.withAlpha(10),
     );
   }
+  /// Material-level dark colors. Legacy screen-specific fixed colors will
+  /// migrate independently; the theme choice already updates MaterialApp.
+  static ThemeData get dark => ThemeData(
+    useMaterial3: true,
+    fontFamily: 'Inter',
+    brightness: Brightness.dark,
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: AppColors.primary,
+      brightness: Brightness.dark,
+    ),
+    scaffoldBackgroundColor: const Color(0xFF122536),
+  );
 }
