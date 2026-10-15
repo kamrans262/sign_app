@@ -14,6 +14,7 @@ class Sign2DigitalOutlinedButton extends StatelessWidget {
     this.leading,
     this.enabled = true,
     this.primaryOutline = false,
+    this.destructive = false,
     super.key,
   });
 
@@ -23,6 +24,7 @@ class Sign2DigitalOutlinedButton extends StatelessWidget {
   final Widget? leading;
   final bool enabled;
   final bool primaryOutline;
+  final bool destructive;
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +32,9 @@ class Sign2DigitalOutlinedButton extends StatelessWidget {
       color: AppColors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadius.button),
-        side: BorderSide(color: primaryOutline ? AppColors.primary : AppColors.lightBorder),
+        side: BorderSide(color: destructive
+            ? const Color(0xFFFF1B23)
+            : primaryOutline ? AppColors.primary : AppColors.lightBorder),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -63,7 +67,8 @@ class Sign2DigitalOutlinedButton extends StatelessWidget {
                       maxLines: 2,
                       textAlign: TextAlign.center,
                       style: AppTextStyles.outlinedButton.copyWith(
-                        color: primaryOutline ? AppColors.primary : AppColors.dark,
+                        color: destructive ? const Color(0xFFFF1B23)
+                            : primaryOutline ? AppColors.primary : AppColors.dark,
                       ),
                     ),
                   ),
