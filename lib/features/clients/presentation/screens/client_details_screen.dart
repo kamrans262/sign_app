@@ -38,6 +38,7 @@ class ClientDetailsScreen extends StatefulWidget {
     this.onJobCreated,
     this.onOpenJob,
     this.createdJobs = const [],
+    this.createdJobsForClient,
   });
 
   final ClientProfile client;
@@ -48,6 +49,8 @@ class ClientDetailsScreen extends StatefulWidget {
   final JobModel Function(CreateJobDraft)? onJobCreated;
   final ValueChanged<JobModel>? onOpenJob;
   final List<JobModel> createdJobs;
+  /// Live lookup also reflects jobs created while this details route is open.
+  final List<JobModel> Function(String clientId)? createdJobsForClient;
 
   @override
   State<ClientDetailsScreen> createState() => _ClientDetailsScreenState();
@@ -59,7 +62,8 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
   final DemoCreatedJobRepository _standaloneJobs = DemoCreatedJobRepository();
 
   List<JobModel> get _clientJobs => <JobModel>[
-    ...widget.createdJobs.where((job) => job.clientId == _client.id),
+    ...(widget.createdJobsForClient?.call(_client.id) ??
+        widget.createdJobs.where((job) => job.clientId == _client.id)),
     ..._standaloneJobs.forClient(_client.id),
   ];
 
