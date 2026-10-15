@@ -10,6 +10,7 @@ import 'package:sign2digital/features/profile/presentation/screens/edit_profile_
 import 'package:sign2digital/features/profile/presentation/screens/profile_sections_screen.dart';
 import 'package:sign2digital/features/profile/presentation/screens/profile_settings_screen.dart';
 import 'package:sign2digital/features/profile/presentation/screens/profile_preferences_screen.dart';
+import 'package:sign2digital/features/profile/presentation/screens/security_access_screen.dart';
 import 'package:sign2digital/features/profile/data/profile_preferences_repository.dart';
 import 'package:sign2digital/features/profile/presentation/widgets/profile_settings_action_card.dart';
 
@@ -193,19 +194,21 @@ void main() {
     await tester.tap(find.byIcon(Icons.arrow_back_ios_new_rounded));
     await tester.pumpAndSettle();
 
-    for (final pair in [
-      (const Key('profile-action-security'), 'Security & Access'),
-      (const Key('profile-action-app-settings'), 'App Settings'),
-    ]) {
-      await _scrollTo(tester, pair.$1);
-      await tester.tap(find.byKey(pair.$1));
-      await tester.pumpAndSettle();
-      expect(find.byType(ProfileSectionUnavailableScreen), findsOneWidget);
-      expect(find.text(pair.$2), findsOneWidget);
-      await tester.tap(find.byIcon(Icons.arrow_back_ios_new_rounded));
-      await tester.pumpAndSettle();
-      expect(find.byType(ProfileSettingsScreen), findsOneWidget);
-    }
+    await _scrollTo(tester, const Key('profile-action-security'));
+    await tester.tap(find.byKey(const Key('profile-action-security')));
+    await tester.pumpAndSettle();
+    expect(find.byType(SecurityAccessScreen), findsOneWidget);
+    expect(find.text('Security'), findsOneWidget);
+    await tester.tap(find.byIcon(Icons.arrow_back_ios_new_rounded));
+    await tester.pumpAndSettle();
+
+    await _scrollTo(tester, const Key('profile-action-app-settings'));
+    await tester.tap(find.byKey(const Key('profile-action-app-settings')));
+    await tester.pumpAndSettle();
+    expect(find.byType(ProfileSectionUnavailableScreen), findsOneWidget);
+    expect(find.text('App Settings'), findsOneWidget);
+    await tester.tap(find.byIcon(Icons.arrow_back_ios_new_rounded));
+    await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
   });
 
