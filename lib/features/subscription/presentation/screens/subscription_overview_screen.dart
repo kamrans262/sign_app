@@ -116,7 +116,7 @@ class _SubscriptionOverviewScreenState
             onRefresh: _load,
             child: ListView(
               key: const Key('subscription-scroll'),
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
               children: [
                 if (_loading)
                   const Padding(
@@ -221,12 +221,12 @@ class _SubscriptionOverviewScreenState
                 children: [
                   const Text('Current Plan', style: TextStyle(
                     fontFamily: 'Inter',
-                    fontSize: 14,
+                    fontSize: 12,
                     fontWeight: FontWeight.w500,
                     letterSpacing: -0.3,
                     color: AppColors.dark,
                   )),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 2),
                   Text(data.planName ?? 'Plan unavailable',
                     key: const Key('subscription-plan-name'),
                     style: const TextStyle(
