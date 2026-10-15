@@ -9,6 +9,8 @@ import 'package:sign2digital/features/clients/presentation/screens/more_screen.d
 import 'package:sign2digital/features/profile/presentation/screens/edit_profile_screen.dart';
 import 'package:sign2digital/features/profile/presentation/screens/profile_sections_screen.dart';
 import 'package:sign2digital/features/profile/presentation/screens/profile_settings_screen.dart';
+import 'package:sign2digital/features/profile/presentation/screens/profile_preferences_screen.dart';
+import 'package:sign2digital/features/profile/data/profile_preferences_repository.dart';
 import 'package:sign2digital/features/profile/presentation/widgets/profile_settings_action_card.dart';
 
 class _StubAccountRepository implements AccountRepository {
@@ -26,6 +28,14 @@ class _StubAccountRepository implements AccountRepository {
   Future<void> saveDraft(AccountProfile value) async {
     profile = value;
   }
+}
+
+class _StubPreferencesRepository implements ProfilePreferencesRepository {
+  ProfilePreferences value = const ProfilePreferences();
+  @override
+  Future<ProfilePreferences> load() async => value;
+  @override
+  Future<void> save(ProfilePreferences newValue) async { value = newValue; }
 }
 
 AccountProfile _profile([String name = 'Verified User']) => AccountProfile(
@@ -170,11 +180,20 @@ void main() {
     await tester.pumpWidget(MaterialApp(
       home: ProfileSettingsScreen(
         accountRepository: _StubAccountRepository(_profile()),
+        preferencesRepository: _StubPreferencesRepository(),
       ),
     ));
     await tester.pumpAndSettle();
+
+    await _scrollTo(tester, const Key('profile-action-preferences'));
+    await tester.tap(find.byKey(const Key('profile-action-preferences')));
+    await tester.pumpAndSettle();
+    expect(find.byType(ProfilePreferencesScreen), findsOneWidget);
+    expect(find.text('Preferences'), findsOneWidget);
+    await tester.tap(find.byIcon(Icons.arrow_back_ios_new_rounded));
+    await tester.pumpAndSettle();
+
     for (final pair in [
-      (const Key('profile-action-preferences'), 'Preferences'),
       (const Key('profile-action-security'), 'Security & Access'),
       (const Key('profile-action-app-settings'), 'App Settings'),
     ]) {
