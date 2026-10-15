@@ -25,8 +25,35 @@ class JobDetailsModel {
   final int remainingBalanceChf;
   final List<JobSectionDetails> sections;
 
-  /// Screenshot reference amounts are intentionally independent, not a ledger.
-  factory JobDetailsModel.demoFor(JobModel job) => JobDetailsModel(
+  /// New session jobs start without quotes, payments or attached records.
+  /// Preserve the screenshot demo values for existing example jobs only.
+  factory JobDetailsModel.demoFor(JobModel job) {
+    if (job.id.startsWith('local-job-')) {
+      return JobDetailsModel(
+        job: job,
+        quoteAmountChf: 0,
+        expensesChf: 0,
+        labourCostChf: 0,
+        depositsChf: 0,
+        invoicedChf: 0,
+        receivedChf: 0,
+        remainingBalanceChf: 0,
+        sections: const [
+          JobSectionDetails(JobSection.quotes, '0 quotes'),
+          JobSectionDetails(JobSection.addenda, '0 addenda'),
+          JobSectionDetails(JobSection.documents, '0 files'),
+          JobSectionDetails(JobSection.photos, '0 photos'),
+          JobSectionDetails(JobSection.notes, '0 notes'),
+          JobSectionDetails(JobSection.purchases, '0 items'),
+          JobSectionDetails(JobSection.time, '0 hours'),
+          JobSectionDetails(JobSection.deposits, '0 deposits'),
+          JobSectionDetails(JobSection.siteReports, '0 reports'),
+          JobSectionDetails(JobSection.acceptance, 'pending'),
+          JobSectionDetails(JobSection.invoices, '0 invoices'),
+        ],
+      );
+    }
+    return JobDetailsModel(
     job: job,
     quoteAmountChf: 24500,
     expensesChf: 24500,
@@ -49,6 +76,7 @@ class JobDetailsModel {
       JobSectionDetails(JobSection.invoices, '5 invoices'),
     ],
   );
+  }
 
   static String formatChf(int amount) {
     final negative = amount < 0 ? '-' : '';
