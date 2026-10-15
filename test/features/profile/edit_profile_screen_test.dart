@@ -129,8 +129,8 @@ void main() {
       (tester) async {
     final repo = _AccountRepo(_account());
     final bytes = base64Decode(
-      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4'
-      'z8DwHwAFgAI/ScL/nwAAAABJRU5ErkJggg==');
+      'iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFElEQVR4'
+      'nGPk6Tnxn4GBgYGJAQoAI2wCY4ExR6wAAAAASUVORK5CYII=');
     await tester.pumpWidget(MaterialApp(home: Scaffold(body: Builder(builder: (context) =>
       ElevatedButton(onPressed: () => Navigator.of(context).push<bool>(
         MaterialPageRoute<bool>(builder: (_) => EditProfileScreen(
@@ -156,8 +156,8 @@ void main() {
   testWidgets('Selected photo updates shared session only after Save',
       (tester) async {
     final bytes = Uint8List.fromList(base64Decode(
-      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4'
-      'z8DwHwAFgAI/ScL/nwAAAABJRU5ErkJggg=='));
+      'iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFElEQVR4'
+      'nGPk6Tnxn4GBgYGJAQoAI2wCY4ExR6wAAAAASUVORK5CYII='));
     final repo = _AccountRepo(_account());
     await tester.pumpWidget(MaterialApp(home: Scaffold(body: Builder(builder: (context) =>
       ElevatedButton(onPressed: () => Navigator.of(context).push<bool>(
