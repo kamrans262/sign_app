@@ -25,6 +25,7 @@ class Sign2DigitalInputField extends StatelessWidget {
     this.maxLines = 1,
     this.maxLength,
     this.leadingIcon,
+    this.leadingIconSize = 20,
     super.key,
   });
 
@@ -45,6 +46,7 @@ class Sign2DigitalInputField extends StatelessWidget {
   final int? maxLines;
   final int? maxLength;
   final IconData? leadingIcon;
+  final double leadingIconSize;
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +60,7 @@ class Sign2DigitalInputField extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (leadingIcon != null)
-            Icon(leadingIcon, size: 20)
+            Icon(leadingIcon, size: leadingIconSize)
           else
             SvgPicture.asset(
               iconAsset,
