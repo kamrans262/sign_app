@@ -10,6 +10,7 @@ import '../../../equipment/presentation/screens/equipment_screen.dart';
 import '../../../invoices/presentation/screens/invoices_screen.dart';
 import '../../../labour/presentation/screens/time_labour_screen.dart';
 import '../../../quotes/presentation/screens/quote_ui_demo_screen.dart';
+import '../../../subscription/presentation/screens/subscription_overview_screen.dart';
 
 /// Entry points for UI-only tools belong to More, not the Clients list.
 class MoreScreen extends StatelessWidget {
@@ -31,6 +32,16 @@ class MoreScreen extends StatelessWidget {
         key: const Key('more-menu-scroll'),
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 25),
         children: [
+          _tile(context,
+            key: const Key('open-subscription'),
+            title: 'Subscription',
+            icon: Icons.workspace_premium_outlined,
+            onTap: () => _open(context, SubscriptionOverviewScreen(
+              onNavigationSelected: onTabSelected,
+              onNotificationTap: () => onNotReady?.call('Notifications'),
+              onProfileTap: () => onNotReady?.call('Profile'),
+            ))),
+          const SizedBox(height: 15),
           _tile(context,
             key: const Key('open-quote-ui-demo'),
             title: 'Quote UI Demo',
