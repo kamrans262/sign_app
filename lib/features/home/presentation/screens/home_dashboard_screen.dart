@@ -259,9 +259,9 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
           child: ListView(
             key: const Key('home-dashboard-scroll'),
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 25),
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 25),
             children: [
-              Sign2DigitalQuoteShadowPanel(
+              _HomePanel(
                 clip: true,
                 child: Material(
                   color: AppColors.white,
@@ -316,8 +316,9 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
               ),
               const SizedBox(height: 20),
               Row(children: [
-                const Expanded(child: Text('Dashboard',
-                    style: AppTextStyles.heading)),
+                const Expanded(
+                  child: Text('Overview', style: AppTextStyles.fieldLabel),
+                ),
                 IconButton(
                   key: const Key('home-refresh'),
                   tooltip: 'Refresh dashboard',
@@ -326,36 +327,6 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                     color: AppColors.primary, size: 22),
                 ),
               ]),
-              const SizedBox(height: 6),
-              const Text('Your business at a glance',
-                style: AppTextStyles.subtitle),
-              const SizedBox(height: 15),
-              Container(
-                key: const Key('home-demo-disclaimer'),
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: DashboardColors.paleBlue,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.info_outline_rounded,
-                      color: AppColors.primary, size: 18),
-                    SizedBox(width: 10),
-                    Expanded(child: Text(
-                      'Demo workspace · Figures come from sample/local '
-                      'records. Company switching does not filter these '
-                      'records until the backend is connected.',
-                      style: TextStyle(fontFamily: 'Inter',
-                        fontSize: 11, height: 1.4,
-                        color: AppColors.primary),
-                    )),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 22),
-              const Text('Overview', style: AppTextStyles.fieldLabel),
               const SizedBox(height: 15),
               LayoutBuilder(builder: (context, constraints) {
                 final columns = constraints.maxWidth >= 600 ? 3 : 2;
@@ -405,7 +376,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                 const Text('Signature Tracking',
                   style: AppTextStyles.fieldLabel),
                 const SizedBox(height: 15),
-                Sign2DigitalQuoteShadowPanel(
+                _HomePanel(
                   padding: const EdgeInsets.all(15),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -437,6 +408,36 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   }
 }
 
+/// Home-only softened version of the existing light-border shadow panel.
+/// The shared component keeps its original blur on other screens.
+class _HomePanel extends StatelessWidget {
+  const _HomePanel({
+    required this.child,
+    this.padding = EdgeInsets.zero,
+    this.clip = false,
+  });
+
+  final Widget child;
+  final EdgeInsetsGeometry padding;
+  final bool clip;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    clipBehavior: clip ? Clip.antiAlias : Clip.none,
+    decoration: Sign2DigitalQuoteShadowPanel.decoration.copyWith(
+      boxShadow: const [
+        BoxShadow(
+          color: Color(0x1A000000),
+          offset: Offset(0, 4),
+          blurRadius: 10,
+        ),
+      ],
+    ),
+    padding: padding,
+    child: child,
+  );
+}
+
 class _HomeMetric {
   const _HomeMetric(this.title, this.value, this.hint,
       this.icon, this.action, this.id);
@@ -458,7 +459,7 @@ class _MetricCard extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => Sign2DigitalQuoteShadowPanel(
+  Widget build(BuildContext context) => _HomePanel(
     clip: true,
     child: Material(
       color: AppColors.white,
@@ -514,7 +515,7 @@ class _QuickActionCard extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => Sign2DigitalQuoteShadowPanel(
+  Widget build(BuildContext context) => _HomePanel(
     clip: true,
     child: Material(
       color: AppColors.white,
