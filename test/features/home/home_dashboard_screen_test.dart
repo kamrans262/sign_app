@@ -71,7 +71,7 @@ void main() {
     await tester.tap(createQuote);
     await tester.pumpAndSettle();
     expect(find.byType(CreateQuoteScreen), findsOneWidget);
-    await tester.pageBack();
+    await tester.tap(find.byIcon(Icons.arrow_back_ios_new_rounded));
     await tester.pumpAndSettle();
 
     await tester.scrollUntilVisible(
@@ -81,12 +81,10 @@ void main() {
     );
     await tester.ensureVisible(find.byKey(const Key('home-view-all-jobs')));
     await tester.pumpAndSettle();
-    await tester.drag(_homeScrollable(), const Offset(0, -230));
-    await tester.pumpAndSettle();
     // Recent demo cards use the same Job Details route as the Jobs tab.
     final job = find.byKey(const ValueKey('job-image-demo-active-1'));
     await tester.scrollUntilVisible(
-      job, 160, scrollable: _homeScrollable());
+      job, 130, maxScrolls: 25, scrollable: _homeScrollable());
     await tester.ensureVisible(job);
     await tester.pumpAndSettle();
     await tester.tap(job);
