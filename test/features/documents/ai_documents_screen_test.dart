@@ -32,7 +32,8 @@ Future<void> _screen(WidgetTester tester, {
   DocumentRepository? repository,
 }) async {
   await tester.pumpWidget(MaterialApp(
-    home: AiDocumentsScreen(repository: repository),
+    home: AiDocumentsScreen(
+      key: ValueKey(repository), repository: repository),
   ));
   await tester.pumpAndSettle();
 }
