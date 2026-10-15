@@ -87,6 +87,11 @@ Finder _passwordField() => find.descendant(
   matching: find.byType(TextFormField),
 );
 
+Finder _editablePassword() => find.descendant(
+  of: find.byKey(const Key('security-confirm-password')),
+  matching: find.byType(TextField),
+);
+
 Future<void> _scrollTo(WidgetTester tester, Key key) async {
   await tester.scrollUntilVisible(
     find.byKey(key), -170,
@@ -119,6 +124,7 @@ void main() {
     expect(find.text('2 FA is enabled'), findsOneWidget);
     expect(find.byKey(const Key('security-demo-notice')), findsOneWidget);
     expect(find.text('MacBook Pro'), findsOneWidget);
+    await _scrollTo(tester, const Key('security-session-preview-iphone'));
     expect(find.text('iPhone 15'), findsOneWidget);
     expect(tester.widget<Sign2DigitalBottomNavigationBar>(
       find.byType(Sign2DigitalBottomNavigationBar)).selectedIndex, 4);
@@ -131,13 +137,13 @@ void main() {
       home: SecurityAccessScreen(repository: _SecurityRepository()),
     ));
     await tester.pumpAndSettle();
-    expect(tester.widget<TextFormField>(_passwordField()).obscureText, isTrue);
+    expect(tester.widget<TextField>(_editablePassword()).obscureText, isTrue);
     await tester.tap(find.byKey(const Key('security-password-visibility')));
     await tester.pump();
-    expect(tester.widget<TextFormField>(_passwordField()).obscureText, isFalse);
+    expect(tester.widget<TextField>(_editablePassword()).obscureText, isFalse);
     await tester.tap(find.byKey(const Key('security-password-visibility')));
     await tester.pump();
-    expect(tester.widget<TextFormField>(_passwordField()).obscureText, isTrue);
+    expect(tester.widget<TextField>(_editablePassword()).obscureText, isTrue);
     expect(tester.takeException(), isNull);
   });
 
