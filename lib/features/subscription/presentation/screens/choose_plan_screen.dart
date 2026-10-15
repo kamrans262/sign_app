@@ -219,7 +219,7 @@ class _ChoosePlanScreenState extends State<ChoosePlanScreen> {
                           height: 1.0,
                           color: AppColors.dark,
                         )),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 5),
                       Text(plan.description, style: const TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 12,
