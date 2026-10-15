@@ -72,7 +72,8 @@ class _AppEntryState extends State<_AppEntry> {
           onSubmit: (email, password, rememberMe) {
             // UI-only demo route; real authentication will be added with the API.
             Navigator.of(loginContext).pushReplacement<void, void>(
-              MaterialPageRoute<void>(builder: (_) => const ClientsScreen()),
+              MaterialPageRoute<void>(
+                builder: (_) => const ClientsScreen(initialTab: 0)),
             );
           },
         ),
