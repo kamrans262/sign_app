@@ -55,7 +55,14 @@ void main() {
 
       expect(find.byKey(const Key('home-dashboard-scroll')), findsOneWidget);
       expect(find.byKey(const Key('home-company-switcher')), findsOneWidget);
-      expect(find.byKey(const Key('home-demo-disclaimer')), findsOneWidget);
+      expect(find.byKey(const Key('home-demo-disclaimer')), findsNothing);
+      expect(find.text('Dashboard'), findsNothing);
+      expect(find.text('Your business at a glance'), findsNothing);
+      expect(find.text('Overview'), findsOneWidget);
+      final homeList = tester.widget<ListView>(
+        find.byKey(const Key('home-dashboard-scroll')));
+      expect(homeList.padding,
+        const EdgeInsets.fromLTRB(20, 20, 20, 25));
       expect(find.byKey(const Key('dashboard-tab-0')), findsOneWidget);
       for (final id in [
         'jobs','quotes','invoices','documents','reminders','expenses',
@@ -96,7 +103,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('home-company-name')), findsOneWidget);
     expect(find.text('Alpine Studio'), findsOneWidget);
-    expect(find.byKey(const Key('home-demo-disclaimer')), findsOneWidget);
+    expect(find.byKey(const Key('home-demo-disclaimer')), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
