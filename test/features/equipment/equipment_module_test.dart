@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sign2digital/features/equipment/data/demo_equipment_repository.dart';
 import 'package:sign2digital/features/equipment/domain/equipment_record.dart';
+import 'package:sign2digital/features/equipment/services/equipment_voice_extraction_service.dart';
 import 'package:sign2digital/features/equipment/presentation/screens/equipment_screen.dart';
 import 'package:sign2digital/features/equipment/presentation/screens/add_equipment_screen.dart';
 import 'package:sign2digital/features/equipment/presentation/screens/equipment_details_screen.dart';
@@ -33,6 +34,19 @@ void main() {
     expect(maintained.hours, 2.5);
     expect(maintained.history.length, 4);
     await expectLater(repository.saveEquipment(original), throwsStateError);
+  });
+
+  test('AI suggestions reject invented or malformed data', () {
+    final suggestion = EquipmentVoiceSuggestion.fromJson({
+      'name': 'Excavator',
+      'equipmentId': 'EQ-0009',
+      'purchaseDate': '2026-02-31',
+      'status': 'In Use',
+    });
+    expect(suggestion.name, 'Excavator');
+    expect(suggestion.status, EquipmentStatus.inUse);
+    expect(suggestion.purchaseDate, isNull);
+    expect(EquipmentVoiceSuggestion.fromJson({}).hasData, isFalse);
   });
 
   testWidgets('Listing reuses global header and filters actual status',
