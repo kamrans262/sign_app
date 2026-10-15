@@ -14,6 +14,7 @@ import '../../../../core/widgets/sign2digital_input_field.dart';
 import '../../../../core/widgets/sign2digital_outlined_button.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../../../core/widgets/sign2digital_selection_field.dart';
+import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import '../../../auth/data/account_repository.dart';
 import '../../../auth/domain/account_profile.dart';
 
@@ -119,25 +120,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     FocusManager.instance.primaryFocus?.unfocus();
     final options = {...widget.availableTitles, ?_title}
       .where((item) => item.trim().isNotEmpty).toList();
-    final choice = await showModalBottomSheet<String>(
-      context: context,
-      useSafeArea: true,
-      builder: (sheet) => SafeArea(child: ListView(
-        shrinkWrap: true,
-        children: [
-          for (final option in options)
-            ListTile(
-              key: Key('profile-title-${option.toLowerCase().replaceAll(' ', '-')}'),
-              title: Text(option),
-              onTap: () => Navigator.of(sheet).pop(option),
-            ),
-          ListTile(
-            key: const Key('profile-title-other'),
-            title: const Text('Other title...'),
-            onTap: () => Navigator.of(sheet).pop('__other__'),
-          ),
-        ],
-      )),
+    final choice = await Sign2DigitalSelectionSheet.show(
+      context,
+      title: 'Job Title',
+      options: [...options, '__other__'],
+      selected: _title,
+      icon: Icons.description_outlined,
+      labelForOption: (value) =>
+          value == '__other__' ? 'Other title...' : value,
+      keyForOption: (value) => value == '__other__'
+          ? const Key('profile-title-other')
+          : Key('profile-title-${value.toLowerCase().replaceAll(' ', '-')}'),
     );
     if (!mounted || choice == null) return;
     if (choice != '__other__') {
