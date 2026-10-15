@@ -6,6 +6,7 @@ import '../../../jobs/domain/job_model.dart';
 import '../../../documents/presentation/screens/documents_screen.dart';
 import '../../../quotes/domain/quote_tracking_home_session.dart';
 import '../../../quotes/presentation/screens/signature_request_screen.dart';
+import '../../../profile/presentation/screens/profile_settings_screen.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -96,7 +97,16 @@ class _ClientsScreenState extends State<ClientsScreen> {
           children: [
             Sign2DigitalDashboardHeader(
               onNotificationTap: () => _showNotReady('Notifications'),
-              onProfileTap: () => _showNotReady('Profile'),
+              onProfileTap: () => Navigator.of(context).push<void>(
+                MaterialPageRoute<void>(
+                  builder: (_) => ProfileSettingsScreen(
+                    onNotificationTap: () => _showNotReady('Notifications'),
+                    onNavigationSelected: (index) {
+                      if (mounted) setState(() => _selectedIndex = index);
+                    },
+                  ),
+                ),
+              ),
             ),
             Expanded(
               child: IndexedStack(
