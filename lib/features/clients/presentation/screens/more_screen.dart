@@ -11,6 +11,7 @@ import '../../../global_search/presentation/screens/global_search_screen.dart';
 import '../../../invoices/presentation/screens/invoices_screen.dart';
 import '../../../labour/presentation/screens/time_labour_screen.dart';
 import '../../../quotes/presentation/screens/quote_ui_demo_screen.dart';
+import '../../../profile/presentation/screens/profile_settings_screen.dart';
 import '../../../subscription/presentation/screens/subscription_overview_screen.dart';
 import '../../../subscription/presentation/screens/subscription_management_screen.dart';
 
@@ -34,6 +35,15 @@ class MoreScreen extends StatelessWidget {
         key: const Key('more-menu-scroll'),
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 25),
         children: [
+          _tile(context,
+            key: const Key('open-profile-settings'),
+            title: 'Profile & Settings',
+            icon: Icons.account_circle_outlined,
+            onTap: () => _open(context, ProfileSettingsScreen(
+              onNavigationSelected: onTabSelected,
+              onNotificationTap: () => onNotReady?.call('Notifications'),
+            ))),
+          const SizedBox(height: 15),
           _tile(context,
             key: const Key('open-global-search'),
             title: 'Search Across the App',
