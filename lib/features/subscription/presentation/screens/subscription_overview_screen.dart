@@ -3,16 +3,18 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
-import '../../../../core/widgets/sign2digital_checkbox.dart';
 import '../../../../core/widgets/sign2digital_dashboard_header.dart';
 import '../../../../core/widgets/sign2digital_outlined_button.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../../clients/presentation/widgets/sign2digital_status_badge.dart';
 import '../../../quotes/presentation/widgets/sign2digital_quote_shadow_panel.dart';
 import '../../data/subscription_overview_repository.dart';
+import '../../domain/subscription_plan.dart';
+import '../widgets/subscription_feature_list.dart';
+import 'choose_plan_screen.dart';
 
-/// Subscription module entry point. Choose Plan and Payment Details are not
-/// available yet; callers can provide navigation callbacks when wired up.
+/// Subscription module entry point. Manage Plan opens Choose Plan;
+/// Payment Details remains a separate upcoming feature.
 class SubscriptionOverviewScreen extends StatefulWidget {
   const SubscriptionOverviewScreen({
     super.key,
@@ -44,6 +46,13 @@ class _SubscriptionOverviewScreenState
   SubscriptionOverview? _overview;
   bool _loading = true;
   String? _error;
+  final SubscriptionPlanFlowState _planDraft = SubscriptionPlanFlowState();
+
+  Future<void> _openManagePlan() async {
+    await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+      builder: (_) => ChoosePlanScreen(flowState: _planDraft),
+    ));
+  }
 
   @override
   void initState() {
@@ -143,14 +152,13 @@ class _SubscriptionOverviewScreenState
                     const Text('Plan features are unavailable.',
                       style: AppTextStyles.subtitle)
                   else
-                    for (var i = 0; i < SubscriptionFeature.values.length; i++) ...[
-                      _featureRow(
-                        SubscriptionFeature.values[i],
-                        _overview!.features!.contains(SubscriptionFeature.values[i]),
-                      ),
-                      if (i < SubscriptionFeature.values.length - 1)
-                        const SizedBox(height: 15),
-                    ],
+                    SubscriptionFeatureList(items: [
+                      for (final feature in SubscriptionFeature.values)
+                        SubscriptionFeatureItem(
+                          label: feature.label,
+                          included: _overview!.features!.contains(feature),
+                        ),
+                    ]),
                   const SizedBox(height: 20),
                   Row(children: [
                     const Expanded(child: Text('Usage This Month',
@@ -274,8 +282,7 @@ class _SubscriptionOverviewScreenState
                 key: const Key('subscription-manage-plan'),
                 label: 'Manage Plan',
                 height: 52,
-                onPressed: widget.onManagePlan ??
-                    () => _unavailable('Plan management'),
+                onPressed: widget.onManagePlan ?? _openManagePlan,
               )),
             ]),
             if (data.demoOnly) ...[
@@ -292,31 +299,6 @@ class _SubscriptionOverviewScreenState
             ],
           ],
         ),
-      );
-
-  Widget _featureRow(SubscriptionFeature feature, bool enabled) =>
-      Semantics(
-        label: '${feature.label}: ${enabled ? "included" : "not included"}',
-        child: Row(children: [
-          ExcludeSemantics(child: IgnorePointer(
-            child: Sign2DigitalCheckbox(
-              value: enabled,
-              onChanged: (_) {},
-              showLabel: false,
-              boxSize: 16,
-            ),
-          )),
-          const SizedBox(width: 10),
-          Expanded(child: Text(
-            feature.label,
-            style: const TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: AppColors.placeholder,
-            ),
-          )),
-        ]),
       );
 
   Widget _usageCard({
