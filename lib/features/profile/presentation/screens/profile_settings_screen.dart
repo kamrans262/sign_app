@@ -13,10 +13,12 @@ import '../../../quotes/presentation/widgets/sign2digital_quote_shadow_panel.dar
 import '../widgets/profile_settings_action_card.dart';
 import '../../data/profile_preferences_repository.dart';
 import '../../data/security_access_repository.dart';
+import '../../data/app_settings_repository.dart';
 import 'edit_profile_screen.dart';
 import 'profile_sections_screen.dart';
 import 'profile_preferences_screen.dart';
 import 'security_access_screen.dart';
+import 'app_settings_screen.dart';
 
 /// Profile entry point for More and the dashboard avatar.
 /// Reads the existing session account, never an independent profile fixture.
@@ -32,6 +34,8 @@ class ProfileSettingsScreen extends StatefulWidget {
     this.onSecurity,
     this.securityRepository,
     this.onAppSettings,
+    this.appSettingsRepository,
+    this.appCache,
   });
 
   final AccountRepository? accountRepository;
@@ -43,6 +47,8 @@ class ProfileSettingsScreen extends StatefulWidget {
   final VoidCallback? onSecurity;
   final SecurityAccessRepository? securityRepository;
   final VoidCallback? onAppSettings;
+  final AppSettingsRepository? appSettingsRepository;
+  final AppDisposableCache? appCache;
 
   @override
   State<ProfileSettingsScreen> createState() => _ProfileSettingsScreenState();
@@ -217,10 +223,20 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                     icon: Icons.settings_outlined,
                     title: 'App Settings',
                     subtitle: 'Appearance, units and default',
-                    onTap: () => _section('App Settings',
-                      'Appearance, units and default settings '
-                      'are not connected to persistent application preferences.',
-                      widget.onAppSettings),
+                    onTap: () {
+                      final callback = widget.onAppSettings;
+                      if (callback != null) {
+                        callback();
+                      } else {
+                        _open(AppSettingsScreen(
+                          repository: widget.appSettingsRepository ??
+                              LocalAppSettingsRepository.shared,
+                          cache: widget.appCache ??
+                              LocalDisposableCache.shared,
+                          onNavigationSelected: _navigate,
+                        ));
+                      }
+                    },
                   ),
                 ],
               ],
