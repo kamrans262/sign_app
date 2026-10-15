@@ -37,7 +37,8 @@ void main() {
     await tester.tap(find.byKey(const Key('dashboard-tab-0')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('home-dashboard-scroll')), findsOneWidget);
-    expect(find.byKey(const Key('home-demo-disclaimer')), findsOneWidget);
+    expect(find.byKey(const Key('home-demo-disclaimer')), findsNothing);
+    expect(find.text('Overview'), findsOneWidget);
     expect(find.text('Document Sent'), findsNothing);
     expect(find.byKey(const Key('home-open-signature-tracking')), findsNothing);
     await tester.ensureVisible(
