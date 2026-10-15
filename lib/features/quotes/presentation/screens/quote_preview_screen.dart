@@ -1,9 +1,8 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../widgets/sign2digital_document_items_table.dart';
+import '../widgets/sign2digital_financial_document_sections.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
 import '../../domain/quote_document_tracking.dart';
 import '../../domain/quote_review_models.dart';
@@ -171,202 +170,22 @@ class _QuotePreviewScreenState extends State<QuotePreviewScreen> {
     ));
   }
 
-  static String _date(DateTime? date) => date == null
-      ? 'Not specified'
-      : '${date.day} ${_months[date.month - 1]} ${date.year}';
-  static const _months = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December',
-  ];
-
   TextStyle _text(double size, {Color color = AppColors.dark,
       FontWeight weight = FontWeight.w500}) => TextStyle(
     fontFamily: 'Inter', fontSize: size, fontWeight: weight, color: color,
     letterSpacing: -0.3,
   );
 
-  Widget _card({required Widget child, EdgeInsets padding = EdgeInsets.zero}) =>
-      Container(decoration: BoxDecoration(color: Colors.white,
-        border: Border.all(color: _border),
-        borderRadius: BorderRadius.circular(10)),
-        padding: padding, child: child);
-
-  Widget _billingSection() => LayoutBuilder(builder: (context, constraints) {
-    final billTo = Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text('Bill To:', style: _text(14, weight: FontWeight.w600)),
-      const SizedBox(height: 9),
-      for (final line in [
-        _quote.clientName, _quote.billingAddress,
-        _quote.clientEmail, _quote.clientPhone,
-      ]) if (line.trim().isNotEmpty) ...[
-        Text(line, style: _text(12, color: AppColors.placeholder)),
-        const SizedBox(height: 5),
-      ],
-    ]);
-    final dates = Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      _dateLine('Date:', _date(_quote.date)),
-      const SizedBox(height: 9),
-      _dateLine('Valid Until:', _date(_quote.validUntil)),
-    ]);
-    if (constraints.maxWidth < 340) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [billTo, const SizedBox(height: 15), dates],
+  Sign2DigitalFinancialDocumentSections get _sections =>
+      Sign2DigitalFinancialDocumentSections(
+        document: _quote,
+        documentTitle: widget.customerView ? widget.documentTitle : 'Quote',
+        showSignature: !widget.customerView,
       );
-    }
-    return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Expanded(child: billTo), const SizedBox(width: 16),
-      Expanded(child: dates),
-    ]);
-  });
 
-  Widget _dateLine(String label, String value) => Row(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      SizedBox(width: 76, child: Text(label,
-        softWrap: false, maxLines: 1,
-        style: _text(12, weight: FontWeight.w600))),
-      const SizedBox(width: 7),
-      Expanded(child: Text(value,
-        style: _text(12, color: AppColors.placeholder))),
-    ],
-  );
-
-  Widget _itemsTable() => Sign2DigitalDocumentItemsTable(
-    key: const Key('quote-preview-items-table'),
-    items: [
-      for (final item in _quote.items)
-        Sign2DigitalDocumentTableLine(
-          description: item.title.isEmpty ? 'Unspecified item' : item.title,
-          quantity: item.quantity.isEmpty ? '—' : item.quantity,
-          unitPrice: quoteMoney(item.priceMinor, _quote.currency),
-          total: quoteMoney(item.totalMinor, _quote.currency),
-        ),
-    ],
-  );
-
-  Widget _amountRow(String label, String value, {bool total = false}) =>
-      Sign2DigitalDocumentAmountRow(
-        label: label, value: value, highlight: total);
-
-  Widget _quoteDocument() => _card(child: Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      Padding(padding: const EdgeInsets.fromLTRB(20, 25, 20, 0),
-        child: Row(crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            Flexible(child: Image.asset('assets/header_logo.png',
-              key: const Key('quote-preview-logo'), width: 132, height: 43,
-              fit: BoxFit.contain,
-              errorBuilder: (_, _, _) => Text('Company logo unavailable',
-                style: _text(10, color: AppColors.placeholder)))),
-            const SizedBox(width: 8),
-            Flexible(child: Column(crossAxisAlignment: CrossAxisAlignment.end,
-              children: [Text(widget.customerView ? widget.documentTitle : 'Quote',
-                key: const Key('quote-preview-document-title'),
-                style: _text(18, weight: FontWeight.bold)),
-                const SizedBox(height: 9),
-                Text(_quote.quoteNumber.isEmpty ? 'Unnumbered draft'
-                      : _quote.quoteNumber,
-                  textAlign: TextAlign.right,
-                  style: _text(12, color: AppColors.placeholder))])),
-          ])),
-      Padding(padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
-        child: _billingSection()),
-      _itemsTable(),
-      if (!_quote.allItemPricesValid)
-        Padding(padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-          child: Text('Pricing incomplete — missing values are not zero.',
-            style: _text(11, color: const Color(0xFFE6A23C)))),
-      const SizedBox(height: 10),
-      Padding(
-        padding: const EdgeInsets.only(right: 20),
-        child: Align(
-          alignment: Alignment.centerRight,
-          child: FractionallySizedBox(
-            widthFactor: 0.75,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _amountRow('Subtotal', quoteMoney(_quote.subtotalMinor, _quote.currency)),
-                _amountRow('Tax (${(_quote.vatBasisPoints / 100).toStringAsFixed(0)}%)',
-                    quoteMoney(_quote.vatMinor, _quote.currency)),
-                _amountRow('Total', quoteMoney(_quote.totalMinor, _quote.currency),
-                    total: true),
-              ],
-            ),
-          ),
-        ),
-      ),
-      if (widget.customerView)
-        const SizedBox(height: 25)
-      else ...[
-        const SizedBox(height: 80),
-        Padding(padding: const EdgeInsets.fromLTRB(20, 0, 20, 25),
-          child: Row(children: [
-            for (var i = 0; i < 2; i++) ...[
-              if (i > 0) const SizedBox(width: 20),
-              Expanded(child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(height: 2, color: AppColors.placeholder),
-                  const SizedBox(height: 7),
-                  Text(i == 0 ? 'Customer Signature' : 'Date',
-                    style: _text(10, color: AppColors.placeholder)),
-                ],
-              )),
-            ],
-          ])),
-      ],
-    ]));
-
-  Widget _paymentDetails() {
-    final payment = _quote.payment;
-    final payload = _quote.isDemo ? null : payment?.swissQrBillPayload(
-      currency: _quote.currency, amountMinor: _quote.totalMinor);
-    return _card(padding: const EdgeInsets.all(15), child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('Payment Details', style: _text(14, weight: FontWeight.w600)),
-        const SizedBox(height: 5),
-        Text(payload == null ? 'Payment QR unavailable' : 'Scan to Pay',
-            style: _text(12)),
-        const SizedBox(height: 20),
-        if (payload == null)
-          Text('A valid Swiss payment account, payee address and payable amount '
-            'are needed to display a payment QR.',
-            style: _text(12, color: AppColors.placeholder))
-        else Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Container(width: 92, height: 92, padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: AppColors.primary.withAlpha(20),
-              borderRadius: BorderRadius.circular(10)),
-            child: QrImageView(data: payload, size: 76, version: QrVersions.auto)),
-          const SizedBox(width: 14),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _paymentField('Account / payable to', payment!.iban),
-              _paymentField('Company Name', payment.accountHolder),
-              _paymentField('Payable amount', quoteMoney(_quote.totalMinor, _quote.currency)),
-              _paymentField('Currency', _quote.currency),
-            ])),
-        ]),
-      ]));
-  }
-
-  Widget _paymentField(String label, String value) => Padding(
-    padding: const EdgeInsets.only(bottom: 6),
-    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(label, style: _text(10)),
-      Text(value, softWrap: true,
-        style: _text(10, color: AppColors.placeholder)),
-    ]));
-
-  Widget _terms() => Column(crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text('General Terms & Conditions',
-        style: _text(15, weight: FontWeight.w600)),
-      const SizedBox(height: 15),
-      Text(_quote.terms.isEmpty ? 'No terms and conditions have been provided.'
-        : _quote.terms, style: _text(14, color: AppColors.placeholder)),
-    ]);
+  Widget _quoteDocument() => _sections.invoiceOrQuoteDocument();
+  Widget _paymentDetails() => _sections.paymentDetails();
+  Widget _terms() => _sections.terms();
 
   Widget _actions() => LayoutBuilder(builder: (context, constraints) {
     final save = SizedBox(height: 48, child: OutlinedButton(
