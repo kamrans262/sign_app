@@ -101,6 +101,10 @@ void main() {
         matching: find.byType(Scrollable),
       ).first,
     );
+    // scrollUntilVisible can leave the final item's centre just below the
+    // 320x568 viewport; bring it fully into the scrollable before tapping.
+    await tester.ensureVisible(find.text('Option 19'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Option 19'));
     await tester.pumpAndSettle();
     expect(chosen, 'Option 19');
