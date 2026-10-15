@@ -5,6 +5,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
 import '../../../../core/widgets/sign2digital_selection_field.dart';
+import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import '../../data/app_settings_repository.dart';
 import '../widgets/profile_notification_row.dart';
 
@@ -110,34 +111,20 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
     required String label,
     required String current,
     required List<String> values,
+    required IconData icon,
     required AppSettings Function(String) update,
   }) async {
     if (_saving || _loading) {
       return;
     }
-    final choice = await showModalBottomSheet<String>(
-      context: context,
-      useSafeArea: true,
-      builder: (sheet) => SafeArea(
-        child: ListView(
-          shrinkWrap: true,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-              child: Text(label, style: AppTextStyles.fieldLabel),
-            ),
-            for (final value in values)
-              ListTile(
-                key: Key('app-settings-option-${value.toLowerCase()
-                    .replaceAll(' ', '-').replaceAll('/', '-')}'),
-                title: Text(value),
-                selected: value == current,
-                trailing: value == current
-                  ? const Icon(Icons.check, color: AppColors.primary) : null,
-                onTap: () => Navigator.of(sheet).pop(value),
-              ),
-          ],
-        ),
+    final choice = await Sign2DigitalSelectionSheet.show(
+      context,
+      title: label,
+      options: values,
+      selected: current,
+      icon: icon,
+      keyForOption: (value) => Key(
+        'app-settings-option-${value.toLowerCase().replaceAll(' ', '-').replaceAll('/', '-')}',
       ),
     );
     if (!mounted || choice == null || choice == current) {
@@ -165,7 +152,8 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
     trailing: const Icon(Icons.keyboard_arrow_down_rounded,
       size: 24, color: AppColors.secondaryText),
     onTap: () => _pick(
-      label: title, current: value, values: options, update: update),
+      label: title, current: value, values: options,
+      icon: icon, update: update),
   );
 
   Future<void> _clearCache() async {
