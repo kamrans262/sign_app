@@ -211,6 +211,32 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('Verified session revocation refreshes list after View all',
+      (tester) async {
+    final repo = _SecurityRepository();
+    await tester.pumpWidget(MaterialApp(
+      home: SecurityAccessScreen(repository: repo),
+    ));
+    await tester.pumpAndSettle();
+    await _enterPassword(tester);
+    await _scrollTo(tester, const Key('security-view-all'));
+    await tester.tap(find.byKey(const Key('security-view-all')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('security-all-session-other')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('security-revoke-session')));
+    await tester.pumpAndSettle();
+    expect(find.text('Sign Out Other Phone?'), findsOneWidget);
+    expect(repo.revokeCalls, 0);
+    await tester.tap(find.byKey(const Key('security-dialog-confirm')));
+    await tester.pumpAndSettle();
+    expect(repo.revokeCalls, 1);
+    expect(repo.snapshot.sessions!.length, 1);
+    expect(repo.snapshot.sessions!.single.id, 'current');
+    expect(find.byKey(const Key('security-all-sessions')), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('Logout all requires confirmation and server confirmation',
       (tester) async {
     final repo = _SecurityRepository();
