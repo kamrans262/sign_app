@@ -144,36 +144,36 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       setState(() => _title = choice);
       return;
     }
-    final controller = TextEditingController(text: _title);
-    try {
-      final entered = await showDialog<String>(
-        context: context,
-        builder: (dialog) => AlertDialog(
-          title: const Text('Job Title'),
-          content: TextField(
-            key: const Key('profile-title-custom-input'),
-            controller: controller,
-            autofocus: true,
-            decoration: const InputDecoration(hintText: 'e.g. Project Manager'),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialog).pop(),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              key: const Key('profile-title-custom-save'),
-              onPressed: () => Navigator.of(dialog).pop(controller.text.trim()),
-              child: const Text('Use Title'),
-            ),
-          ],
+    // Let TextFormField own its controller until the dialog widget unmounts.
+    // Disposing a manual controller when showDialog completes is too early:
+    // the exit animation can still rebuild the TextField.
+    var draftTitle = _title ?? '';
+    final entered = await showDialog<String>(
+      context: context,
+      builder: (dialog) => AlertDialog(
+        title: const Text('Job Title'),
+        content: TextFormField(
+          key: const Key('profile-title-custom-input'),
+          initialValue: draftTitle,
+          autofocus: true,
+          onChanged: (value) => draftTitle = value,
+          decoration: const InputDecoration(hintText: 'e.g. Project Manager'),
         ),
-      );
-      if (mounted && entered != null && entered.isNotEmpty) {
-        setState(() => _title = entered);
-      }
-    } finally {
-      controller.dispose();
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialog).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            key: const Key('profile-title-custom-save'),
+            onPressed: () => Navigator.of(dialog).pop(draftTitle.trim()),
+            child: const Text('Use Title'),
+          ),
+        ],
+      ),
+    );
+    if (mounted && entered != null && entered.isNotEmpty) {
+      setState(() => _title = entered);
     }
   }
 
