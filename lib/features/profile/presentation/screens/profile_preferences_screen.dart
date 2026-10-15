@@ -6,6 +6,7 @@ import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../../../core/widgets/sign2digital_selection_field.dart';
+import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import '../../data/profile_preferences_repository.dart';
 import '../widgets/profile_notification_row.dart';
 
@@ -72,30 +73,17 @@ class _ProfilePreferencesScreenState extends State<ProfilePreferencesScreen> {
     required String title,
     required String current,
     required List<String> options,
+    required IconData icon,
     required ValueChanged<String> onPicked,
   }) async {
-    final value = await showModalBottomSheet<String>(
-      context: context,
-      useSafeArea: true,
-      builder: (sheet) => SafeArea(
-        child: ListView(
-          shrinkWrap: true,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-              child: Text(title, style: AppTextStyles.fieldLabel),
-            ),
-            for (final option in options)
-              ListTile(
-                key: Key('preferences-option-${option.replaceAll('/', '-').replaceAll(' ', '-')}'),
-                title: Text(option),
-                selected: option == current,
-                trailing: option == current
-                    ? const Icon(Icons.check, color: AppColors.primary) : null,
-                onTap: () => Navigator.of(sheet).pop(option),
-              ),
-          ],
-        ),
+    final value = await Sign2DigitalSelectionSheet.show(
+      context,
+      title: title,
+      options: options,
+      selected: current,
+      icon: icon,
+      keyForOption: (option) => Key(
+        'preferences-option-${option.replaceAll('/', '-').replaceAll(' ', '-')}',
       ),
     );
     if (mounted && value != null) {
@@ -178,6 +166,7 @@ class _ProfilePreferencesScreenState extends State<ProfilePreferencesScreen> {
       title: label,
       current: value,
       options: options,
+      icon: icon,
       onPicked: onSelected,
     ),
   );
