@@ -56,14 +56,20 @@ class _SecurityAccessScreenState extends State<SecurityAccessScreen> {
   }
 
   Future<void> _load() async {
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
     setState(() { _loading = true; _error = null; });
     try {
       final value = await widget.repository.load();
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() { _snapshot = value; _loading = false; });
     } catch (_) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() {
         _snapshot = null;
         _loading = false;
@@ -73,14 +79,18 @@ class _SecurityAccessScreenState extends State<SecurityAccessScreen> {
   }
 
   void _message(String text) {
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(text)));
   }
 
   bool _hasPassword() {
-    if (_password.text.isNotEmpty) return true;
+    if (_password.text.isNotEmpty) {
+      return true;
+    }
     _message('Enter your password to confirm this security action.');
     return false;
   }
@@ -114,12 +124,16 @@ class _SecurityAccessScreenState extends State<SecurityAccessScreen> {
 
   Future<void> _changeTwoFactor(bool enabled) async {
     final snapshot = _snapshot;
-    if (_busy || snapshot == null) return;
+    if (_busy || snapshot == null) {
+      return;
+    }
     if (snapshot.twoFactorEnabled == null) {
       _message('Two-factor status is unavailable from the account service.');
       return;
     }
-    if (!_hasPassword()) return;
+    if (!_hasPassword()) {
+      return;
+    }
     final confirmed = await _confirm(
       title: enabled ? 'Enable Two-Factor Authentication?' :
           'Disable Two-Factor Authentication?',
@@ -128,14 +142,18 @@ class _SecurityAccessScreenState extends State<SecurityAccessScreen> {
           'that service confirms it.',
       action: 'Continue',
     );
-    if (!confirmed) return;
+    if (!confirmed) {
+      return;
+    }
     setState(() => _busy = true);
     try {
       final accepted = await widget.repository.changeTwoFactor(
         enable: enabled,
         confirmationPassword: _password.text,
       );
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       if (accepted) {
         _password.clear();
         await _load();
@@ -146,12 +164,18 @@ class _SecurityAccessScreenState extends State<SecurityAccessScreen> {
     } catch (_) {
       _message('Unable to update two-factor authentication.');
     } finally {
-      if (mounted) setState(() => _busy = false);
+      // Credentials are never retained after a completed security request.
+      _password.clear();
+      if (mounted) {
+        setState(() => _busy = false);
+      }
     }
   }
 
   Future<void> _logoutAll() async {
-    if (_busy) return;
+    if (_busy) {
+      return;
+    }
     final confirmed = await _confirm(
       title: 'Log Out From All Devices?',
       description: 'Other sessions will be signed out after the account '
@@ -159,13 +183,17 @@ class _SecurityAccessScreenState extends State<SecurityAccessScreen> {
           'signed out depends on your account service.',
       action: 'Log Out',
     );
-    if (!confirmed || !_hasPassword()) return;
+    if (!confirmed || !_hasPassword()) {
+      return;
+    }
     setState(() => _busy = true);
     try {
       final success = await widget.repository.revokeOtherSessions(
         confirmationPassword: _password.text,
       );
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       if (success) {
         _password.clear();
         await _load();
@@ -176,26 +204,36 @@ class _SecurityAccessScreenState extends State<SecurityAccessScreen> {
     } catch (_) {
       _message('Unable to log out other devices.');
     } finally {
-      if (mounted) setState(() => _busy = false);
+      // Credentials are never retained after a completed security request.
+      _password.clear();
+      if (mounted) {
+        setState(() => _busy = false);
+      }
     }
   }
 
   Future<void> _revokeSession(SecurityDeviceSession session) async {
-    if (_busy || session.isCurrent) return;
+    if (_busy || session.isCurrent) {
+      return;
+    }
     final confirmed = await _confirm(
       title: 'Sign Out ${session.deviceName}?',
       description: 'The selected device will only be signed out after '
           'the account service verifies your request.',
       action: 'Sign Out',
     );
-    if (!confirmed || !_hasPassword()) return;
+    if (!confirmed || !_hasPassword()) {
+      return;
+    }
     setState(() => _busy = true);
     try {
       final done = await widget.repository.revokeSession(
         sessionId: session.id,
         confirmationPassword: _password.text,
       );
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       if (done) {
         _password.clear();
         await _load();
@@ -206,7 +244,11 @@ class _SecurityAccessScreenState extends State<SecurityAccessScreen> {
     } catch (_) {
       _message('Could not revoke this session.');
     } finally {
-      if (mounted) setState(() => _busy = false);
+      // Credentials are never retained after a completed security request.
+      _password.clear();
+      if (mounted) {
+        setState(() => _busy = false);
+      }
     }
   }
 
