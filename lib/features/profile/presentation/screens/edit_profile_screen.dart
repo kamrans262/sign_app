@@ -233,7 +233,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         child: ListView(
           key: const Key('profile-edit-scroll'),
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
           children: [
             Center(child: Column(children: [
               SizedBox(
