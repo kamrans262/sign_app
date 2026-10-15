@@ -11,6 +11,7 @@ import '../../../auth/data/demo_account_repository.dart';
 import '../../../auth/domain/account_profile.dart';
 import '../../../quotes/presentation/widgets/sign2digital_quote_shadow_panel.dart';
 import '../widgets/profile_settings_action_card.dart';
+import '../../data/profile_preferences_repository.dart';
 import 'edit_profile_screen.dart';
 import 'profile_sections_screen.dart';
 import 'profile_preferences_screen.dart';
@@ -25,6 +26,7 @@ class ProfileSettingsScreen extends StatefulWidget {
     this.onNavigationSelected,
     this.onBusinessInformation,
     this.onPreferences,
+    this.preferencesRepository,
     this.onSecurity,
     this.onAppSettings,
   });
@@ -34,6 +36,7 @@ class ProfileSettingsScreen extends StatefulWidget {
   final ValueChanged<int>? onNavigationSelected;
   final VoidCallback? onBusinessInformation;
   final VoidCallback? onPreferences;
+  final ProfilePreferencesRepository? preferencesRepository;
   final VoidCallback? onSecurity;
   final VoidCallback? onAppSettings;
 
@@ -178,6 +181,8 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                         callback();
                       } else {
                         _open(ProfilePreferencesScreen(
+                          repository: widget.preferencesRepository ??
+                              LocalProfilePreferencesRepository.shared,
                           onNavigationSelected: _navigate,
                         ));
                       }
