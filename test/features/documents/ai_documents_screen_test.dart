@@ -91,11 +91,11 @@ void main() {
 
   testWidgets('Summarize selection never invents an AI output',
       (tester) async {
-    await _screen(tester);
+    await _screen(tester, repository: _Repository([_generated(1)]));
     await tester.tap(find.byKey(const Key('ai-documents-summarize')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(
-      const Key('ai-documents-select-ai-document-figma-1')));
+      const Key('ai-documents-select-ai-document-test-1')));
     await tester.pumpAndSettle();
     expect(find.textContaining('not connected yet'), findsOneWidget);
     expect(tester.takeException(), isNull);
