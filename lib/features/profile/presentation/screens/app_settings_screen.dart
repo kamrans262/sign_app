@@ -55,10 +55,14 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
     setState(() { _loading = true; _error = null; });
     try {
       final value = await widget.repository.load();
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() { _settings = value; _loading = false; });
     } catch (_) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() {
         _loading = false;
         _error = 'Unable to load app settings.';
@@ -67,18 +71,24 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
   }
 
   void _message(String text) {
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(text)));
   }
 
   Future<void> _persist(AppSettings next) async {
-    if (_saving || _loading) return;
+    if (_saving || _loading) {
+      return;
+    }
     setState(() => _saving = true);
     try {
       await widget.repository.save(next);
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() => _settings = next);
       if (next.offlineMode && !_settingsSupportsOffline) {
         _message('Offline Mode preference saved. Offline access is not '
@@ -87,7 +97,9 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
     } catch (_) {
       _message('Unable to save this setting. Please try again.');
     } finally {
-      if (mounted) setState(() => _saving = false);
+      if (mounted) setState(() {
+        => _saving = false);
+      }
     }
   }
 
@@ -100,7 +112,9 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
     required List<String> values,
     required AppSettings Function(String) update,
   }) async {
-    if (_saving || _loading) return;
+    if (_saving || _loading) {
+      return;
+    }
     final choice = await showModalBottomSheet<String>(
       context: context,
       useSafeArea: true,
@@ -126,7 +140,9 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
         ),
       ),
     );
-    if (!mounted || choice == null || choice == current) return;
+    if (!mounted || choice == null || choice == current) {
+      return;
+    }
     await _persist(update(choice));
   }
 
@@ -153,7 +169,9 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
   );
 
   Future<void> _clearCache() async {
-    if (_clearing || _saving) return;
+    if (_clearing || _saving) {
+      return;
+    }
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialog) => AlertDialog(
@@ -176,7 +194,9 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
         ],
       ),
     );
-    if (!mounted || confirmed != true) return;
+    if (!mounted || confirmed != true) {
+      return;
+    }
     setState(() => _clearing = true);
     try {
       final removed = await widget.cache.clear();
@@ -188,7 +208,9 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
     } catch (_) {
       _message('Unable to clear disposable cache.');
     } finally {
-      if (mounted) setState(() => _clearing = false);
+      if (mounted) setState(() {
+        => _clearing = false);
+      }
     }
   }
 
