@@ -22,7 +22,7 @@ QuoteReviewDraft _quote() => QuoteReviewDraft(
     ),
   ],
   approvedLocally: true,
-  date: null,
+  date: DateTime(2026, 8, 23),
 );
 
 void main() {
