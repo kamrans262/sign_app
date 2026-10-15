@@ -71,6 +71,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
       MaterialPageRoute<bool>(builder: (_) => EditProfileScreen(
         repository: _repository,
         initialAccount: _account,
+        onNavigationSelected: _navigate,
       )),
     );
     if (changed == true && mounted) await _load();
