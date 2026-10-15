@@ -200,7 +200,7 @@ class _GenerateAiDocumentScreenState extends State<GenerateAiDocumentScreen> {
         builder: (dialog) => AlertDialog(
           title: const Text('Use AI suggestions?'),
           content: Text([
-            if (canFillDate) 'Document Date: ${_dateText(suggestedDate)}',
+            if (canFillDate) 'Document Date: ${_dateText(suggestedDate!)}',
             if (canFillText) 'Additional instruction: $suggestedText',
             'Existing entries will not be replaced.',
           ].join('\n\n')),
@@ -220,7 +220,7 @@ class _GenerateAiDocumentScreenState extends State<GenerateAiDocumentScreen> {
       if (approved != true || !mounted) { return; }
       setState(() {
         if (canFillDate) { _date = suggestedDate; }
-        if (canFillText) { _instructions.text = suggestedText; }
+        if (canFillText) { _instructions.text = suggestedText!; }
         _error = null;
       });
     } catch (_) {
