@@ -229,14 +229,18 @@ class _ChoosePlanScreenState extends State<ChoosePlanScreen> {
                   const SizedBox(width: 8),
                   ExcludeSemantics(child: SizedBox(
                     width: 40,
-                    child: Radio<SubscriptionPlanOption>(
-                      key: const Key('choose-plan-radio'),
-                      value: plan,
+                    child: RadioGroup<SubscriptionPlanOption>(
                       groupValue: selected ? plan : null,
-                      onChanged: (_) => _select(plan),
-                      activeColor: AppColors.primary,
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      visualDensity: VisualDensity.compact,
+                      onChanged: (value) {
+                        if (value != null) _select(value);
+                      },
+                      child: Radio<SubscriptionPlanOption>(
+                        key: const Key('choose-plan-radio'),
+                        value: plan,
+                        activeColor: AppColors.primary,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        visualDensity: VisualDensity.compact,
+                      ),
                     ),
                   )),
                 ],
