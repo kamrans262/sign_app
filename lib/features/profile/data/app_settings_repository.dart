@@ -131,7 +131,9 @@ class LocalDisposableCache implements AppDisposableCache {
     final temp = await getTemporaryDirectory();
     final cache = Directory('${temp.path}${Platform.pathSeparator}'
         'sign2digital_disposable_cache');
-    if (!await cache.exists()) return 0;
+    if (!await cache.exists()) {
+      return 0;
+    }
     var count = 0;
     await for (final entry in cache.list(followLinks: false)) {
       // Only direct disposable entries under our own cache folder.
