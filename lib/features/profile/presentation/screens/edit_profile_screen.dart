@@ -25,6 +25,7 @@ class EditProfileScreen extends StatefulWidget {
     required this.repository,
     this.initialAccount,
     this.imagePicker,
+    this.pickPhotoBytes,
     this.onNavigationSelected,
     this.availableTitles = const [
       'Project Manager',
@@ -37,6 +38,8 @@ class EditProfileScreen extends StatefulWidget {
   final AccountRepository repository;
   final AccountProfile? initialAccount;
   final ImagePicker? imagePicker;
+  /// Optional picker adapter for platform tests and injected gallery sources.
+  final Future<Uint8List?> Function()? pickPhotoBytes;
   final ValueChanged<int>? onNavigationSelected;
   /// Display suggestions, not an assumed backend directory of job titles.
   final List<String> availableTitles;
@@ -88,10 +91,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.dispose();
   }
 
-  void _cancel() => Navigator.of(context).maybePop();
+  void _cancel() { Navigator.of(context).maybePop(); }
 
   Future<void> _choosePhoto() async {
     try {
+      if (widget.pickPhotoBytes != null) {
+        final bytes = await widget.pickPhotoBytes!();
+        if (mounted && bytes != null) setState(() => _photo = bytes);
+        return;
+      }
       final file = await (widget.imagePicker ?? ImagePicker()).pickImage(
         source: ImageSource.gallery,
         imageQuality: 75,
@@ -374,11 +382,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ),
       ))),
     ])),
-    bottomNavigationBar: MediaQuery.viewInsetsOf(context).bottom > 0
-      ? null
-      : Sign2DigitalBottomNavigationBar(
-          selectedIndex: 4,
-          onSelected: _navigation,
-        ),
+    bottomNavigationBar: Sign2DigitalBottomNavigationBar(
+      selectedIndex: 4,
+      onSelected: _navigation,
+    ),
   );
 }
