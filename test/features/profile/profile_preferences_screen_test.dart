@@ -33,8 +33,19 @@ Finder _scrollable() => find.descendant(
 ).first;
 
 Future<void> _scrollTo(WidgetTester tester, Key key) async {
-  await tester.scrollUntilVisible(
-    find.byKey(key), 160, scrollable: _scrollable());
+  final target = find.byKey(key);
+  // ListView lazily builds the lower cards, especially on small phones.
+  if (target.evaluate().isNotEmpty) {
+    await tester.ensureVisible(target);
+  } else {
+    try {
+      await tester.scrollUntilVisible(
+        target, -160, maxScrolls: 20, scrollable: _scrollable());
+    } on StateError {
+      await tester.scrollUntilVisible(
+        target, 160, maxScrolls: 20, scrollable: _scrollable());
+    }
+  }
   await tester.pumpAndSettle();
 }
 
