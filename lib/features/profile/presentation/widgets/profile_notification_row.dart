@@ -8,11 +8,13 @@ class ProfileNotificationRow extends StatelessWidget {
   const ProfileNotificationRow({
     super.key,
     required this.title,
+    this.description = 'Receive important updates',
     required this.enabled,
     required this.onChanged,
   });
 
   final String title;
+  final String description;
   final bool enabled;
   final ValueChanged<bool> onChanged;
 
@@ -40,8 +42,8 @@ class ProfileNotificationRow extends StatelessWidget {
                   color: AppColors.dark,
                 )),
                 const SizedBox(height: 5),
-                const Text('Receive important updates',
-                  style: TextStyle(
+                Text(description,
+                  style: const TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
