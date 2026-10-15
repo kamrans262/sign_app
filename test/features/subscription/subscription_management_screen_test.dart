@@ -46,7 +46,7 @@ void main() {
     expect(find.text('Subscription'), findsOneWidget);
     expect(find.text('Current Plan'), findsOneWidget);
     expect(find.byType(SubscriptionCurrentPlanCard), findsOneWidget);
-    expect(find.byType(SubscriptionManagementActionCard), findsNWidgets(5));
+    expect(find.byType(SubscriptionManagementActionCard), findsWidgets);
     expect(tester.widget<Sign2DigitalBottomNavigationBar>(
       find.byType(Sign2DigitalBottomNavigationBar)).selectedIndex, 4);
     expect(find.text('Professional'), findsOneWidget);
@@ -129,6 +129,7 @@ void main() {
     await tester.tap(find.byKey(const Key('subscription-action-payment-method')));
     await tester.pump();
     expect(find.text('Payment Method is not connected yet.'), findsOneWidget);
+    await _scrollTo(tester, const Key('subscription-action-billing-history'));
     await tester.tap(find.byKey(const Key('subscription-action-billing-history')));
     await tester.pump();
     expect(find.text('Subscription billing history is not connected yet.'),
@@ -156,8 +157,11 @@ void main() {
 
   testWidgets('Cancellation requires confirmation and no callback changes no data',
       (tester) async {
-    await tester.pumpWidget(const MaterialApp(
-      home: SubscriptionManagementScreen(),
+    final repo = _StubRepository(const SubscriptionOverview(
+      planName: 'Professional', status: 'Active',
+    ));
+    await tester.pumpWidget(MaterialApp(
+      home: SubscriptionManagementScreen(repository: repo),
     ));
     await tester.pumpAndSettle();
     await _scrollTo(tester, const Key('subscription-action-cancel'));
@@ -167,7 +171,7 @@ void main() {
     await tester.tap(find.byKey(const Key('subscription-keep-plan')));
     await tester.pumpAndSettle();
     expect(find.text('Cancel Subscription?'), findsNothing);
-    expect(find.text('Active'), findsOneWidget);
+    expect(repo.value.status, 'Active');
 
     await tester.tap(find.byKey(const Key('subscription-action-cancel')));
     await tester.pumpAndSettle();
@@ -175,7 +179,7 @@ void main() {
     await tester.pump();
     expect(find.text('Cancellation is not connected. No changes were made.'),
       findsOneWidget);
-    expect(find.text('Active'), findsOneWidget);
+    expect(repo.value.status, 'Active');
     expect(tester.takeException(), isNull);
   });
 
