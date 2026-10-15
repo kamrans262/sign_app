@@ -77,7 +77,7 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
 
   static String _timeText(TimeOfDay value) {
     final hour = value.hour % 12 == 0 ? 12 : value.hour % 12;
-    return '${hour.toString()}:${value.minute.toString().padLeft(2, '0')} '
+    return '$hour:${value.minute.toString().padLeft(2, '0')} '
         '${value.hour < 12 ? 'AM' : 'PM'}';
   }
 
