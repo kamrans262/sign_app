@@ -4,13 +4,12 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
 import '../../../../core/widgets/sign2digital_dashboard_header.dart';
-import '../../../../core/widgets/sign2digital_outlined_button.dart';
-import '../../../../core/widgets/sign2digital_primary_button.dart';
-import '../../../clients/presentation/widgets/sign2digital_status_badge.dart';
 import '../../../quotes/presentation/widgets/sign2digital_quote_shadow_panel.dart';
 import '../../data/subscription_overview_repository.dart';
 import '../../domain/subscription_plan.dart';
 import '../widgets/subscription_feature_list.dart';
+import '../widgets/subscription_current_plan_card.dart';
+import 'subscription_management_screen.dart';
 import 'choose_plan_screen.dart';
 
 /// Subscription module entry point. Manage Plan opens Choose Plan;
@@ -51,6 +50,16 @@ class _SubscriptionOverviewScreenState
   Future<void> _openManagePlan() async {
     await Navigator.of(context).push<void>(MaterialPageRoute<void>(
       builder: (_) => ChoosePlanScreen(flowState: _planDraft),
+    ));
+  }
+
+  Future<void> _openSubscriptionManagement() async {
+    await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+      builder: (_) => SubscriptionManagementScreen(
+        repository: _repository,
+        flowState: _planDraft,
+        onNavigationSelected: widget.onNavigationSelected,
+      ),
     ));
   }
 
@@ -218,87 +227,10 @@ class _SubscriptionOverviewScreenState
   );
 
   Widget _currentPlan(SubscriptionOverview data) =>
-      Sign2DigitalQuoteShadowPanel(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Expanded(child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Current Plan', style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    letterSpacing: -0.3,
-                    color: AppColors.dark,
-                  )),
-                  const SizedBox(height: 2),
-                  Text(data.planName ?? 'Plan unavailable',
-                    key: const Key('subscription-plan-name'),
-                    style: const TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: -0.3,
-                      color: AppColors.dark,
-                    )),
-                  const SizedBox(height: 7),
-                  Text(data.priceLabel ?? 'Price unavailable',
-                    style: const TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.placeholder,
-                    )),
-                  const SizedBox(height: 4),
-                  Text(data.billingDescription ?? 'Billing date unavailable',
-                    style: const TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.placeholder,
-                    )),
-                ],
-              )),
-              const SizedBox(width: 8),
-              Sign2DigitalStatusBadge(
-                key: const Key('subscription-status'),
-                status: data.status ?? 'Unknown',
-              ),
-            ]),
-            const SizedBox(height: 25),
-            Row(children: [
-              Expanded(child: Sign2DigitalOutlinedButton(
-                key: const Key('subscription-view-billing'),
-                label: 'View Billing',
-                primaryOutline: true,
-                onPressed: widget.onViewBilling ??
-                    () => _unavailable('Billing'),
-              )),
-              const SizedBox(width: 10),
-              Expanded(child: Sign2DigitalPrimaryButton(
-                key: const Key('subscription-manage-plan'),
-                label: 'Manage Plan',
-                height: 52,
-                onPressed: widget.onManagePlan ?? _openManagePlan,
-              )),
-            ]),
-            if (data.demoOnly) ...[
-              const SizedBox(height: 12),
-              const Text(
-                'Demo preview · Sample subscription and usage; no billing connected.',
-                key: Key('subscription-demo-notice'),
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 11,
-                  color: AppColors.placeholder,
-                ),
-              ),
-            ],
-          ],
-        ),
+      SubscriptionCurrentPlanCard(
+        data: data,
+        onViewBilling: widget.onViewBilling ?? _openSubscriptionManagement,
+        onManagePlan: widget.onManagePlan ?? _openManagePlan,
       );
 
   Widget _usageCard({
