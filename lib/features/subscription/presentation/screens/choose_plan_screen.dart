@@ -105,7 +105,7 @@ class _ChoosePlanScreenState extends State<ChoosePlanScreen> {
             constraints: const BoxConstraints(maxWidth: 720),
             child: ListView(
               key: const Key('choose-plan-scroll'),
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
               children: [
                 Stack(children: [
                   const Positioned(
@@ -202,12 +202,12 @@ class _ChoosePlanScreenState extends State<ChoosePlanScreen> {
                     children: [
                       Text(plan.name, style: const TextStyle(
                         fontFamily: 'Inter',
-                        fontSize: 18,
+                        fontSize: 12,
                         fontWeight: FontWeight.w600,
                         letterSpacing: -0.3,
                         color: AppColors.dark,
                       )),
-                      const SizedBox(height: 5),
+                      const SizedBox(height: 2),
                       Text(plan.priceLabel,
                         key: const Key('choose-plan-price'),
                         style: const TextStyle(
