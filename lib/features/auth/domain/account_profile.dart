@@ -8,6 +8,7 @@ class AccountProfile {
     required this.countryIsoCode,
     required this.dialingCode,
     required this.phoneNumber,
+    this.title,
   });
 
   final String id;
@@ -16,4 +17,6 @@ class AccountProfile {
   final String countryIsoCode;
   final String dialingCode;
   final String phoneNumber;
+  /// Optional role/title; no migration required for existing signup records.
+  final String? title;
 }
