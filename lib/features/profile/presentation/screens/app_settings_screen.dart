@@ -97,8 +97,8 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
     } catch (_) {
       _message('Unable to save this setting. Please try again.');
     } finally {
-      if (mounted) setState(() {
-        => _saving = false);
+      if (mounted) {
+        setState(() => _saving = false);
       }
     }
   }
@@ -208,8 +208,8 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
     } catch (_) {
       _message('Unable to clear disposable cache.');
     } finally {
-      if (mounted) setState(() {
-        => _clearing = false);
+      if (mounted) {
+        setState(() => _clearing = false);
       }
     }
   }
