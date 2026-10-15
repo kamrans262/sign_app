@@ -94,11 +94,15 @@ class _ProfilePreferencesScreenState extends State<ProfilePreferencesScreen> {
         ),
       ),
     );
-    if (mounted && value != null) setState(() => onPicked(value));
+    if (mounted && value != null) {
+      setState(() => onPicked(value));
+    }
   }
 
   Future<void> _save() async {
-    if (_saving || _loading) return;
+    if (_saving || _loading) {
+      return;
+    }
     final valid = _languages.contains(_draft.language) &&
         _dateFormats.contains(_draft.dateFormat) &&
         _timeFormats.contains(_draft.timeFormat) &&
@@ -110,11 +114,17 @@ class _ProfilePreferencesScreenState extends State<ProfilePreferencesScreen> {
     setState(() => _saving = true);
     try {
       await widget.repository.save(_draft);
-      if (mounted) _showMessage('Preferences saved.');
+      if (mounted) {
+        _showMessage('Preferences saved.');
+      }
     } catch (_) {
-      if (mounted) _showMessage('Unable to save preferences. Try again.');
+      if (mounted) {
+        _showMessage('Unable to save preferences. Try again.');
+      }
     } finally {
-      if (mounted) setState(() => _saving = false);
+      if (mounted) {
+        setState(() => _saving = false);
+      }
     }
   }
 
@@ -142,6 +152,7 @@ class _ProfilePreferencesScreenState extends State<ProfilePreferencesScreen> {
     required Key key,
     required String label,
     required String value,
+    String? displayValue,
     required IconData icon,
     required List<String> options,
     required ValueChanged<String> onSelected,
@@ -149,8 +160,8 @@ class _ProfilePreferencesScreenState extends State<ProfilePreferencesScreen> {
   }) => Sign2DigitalSelectionField(
     key: key,
     label: label,
-    value: value,
-    hintText: value,
+    value: displayValue ?? value,
+    hintText: displayValue ?? value,
     iconAsset: '',
     leadingIcon: icon,
     leadingIconSize: 24,
@@ -202,8 +213,9 @@ class _ProfilePreferencesScreenState extends State<ProfilePreferencesScreen> {
               _selection(
                 key: const Key('preferences-date-format'),
                 label: 'Date Format',
-                value: _draft.dateFormat == 'DD/MM/YYYY'
-                    ? 'DD / MM / YYYY' : _draft.dateFormat,
+                value: _draft.dateFormat,
+                displayValue: _draft.dateFormat == 'DD/MM/YYYY'
+                    ? 'DD / MM / YYYY' : null,
                 icon: Icons.calendar_today_outlined,
                 options: _dateFormats,
                 onSelected: (value) =>
