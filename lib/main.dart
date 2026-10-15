@@ -6,11 +6,17 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'core/theme/app_theme.dart';
+import 'features/profile/data/app_settings_repository.dart';
 import 'features/auth/presentation/screens/login_screen.dart';
 import 'features/splash/presentation/splash_screen.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await LocalAppSettingsRepository.shared.load();
+  } catch (_) {
+    // A damaged local settings file must never prevent app startup.
+  }
   runApp(const Sign2DigitalApp());
 }
 
@@ -19,10 +25,14 @@ class Sign2DigitalApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return ValueListenableBuilder<AppSettings>(
+      valueListenable: AppSettingsSession.current,
+      builder: (context, settings, child) => MaterialApp(
       title: 'Sign2Digital',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      themeMode: settings.themeMode,
       // Sign2Digital keyboard dismissal for all routes.
       builder: (context, child) => GestureDetector(
         behavior: HitTestBehavior.translucent,
@@ -30,7 +40,7 @@ class Sign2DigitalApp extends StatelessWidget {
         child: child ?? const SizedBox.shrink(),
       ),
       home: const _AppEntry(),
-    );
+    ));
   }
 }
 
