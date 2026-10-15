@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../documents/presentation/screens/reports_screen.dart';
+import '../../../documents/presentation/screens/ai_documents_screen.dart';
 import '../../../expenses/presentation/screens/expenses_screen.dart';
 import '../../../deposits/presentation/screens/deposits_screen.dart';
 import '../../../invoices/presentation/screens/invoices_screen.dart';
@@ -31,6 +32,16 @@ class MoreScreen extends StatelessWidget {
             title: 'Quote UI Demo',
             icon: Icons.description_outlined,
             onTap: () => _open(context, const QuoteUiDemoScreen())),
+          const SizedBox(height: 15),
+          _tile(context,
+            key: const Key('open-ai-documents'),
+            title: 'AI Documents',
+            icon: Icons.auto_awesome_outlined,
+            onTap: () => _open(context, AiDocumentsScreen(
+              onNavigationSelected: onTabSelected,
+              onNotificationTap: () => onNotReady?.call('Notifications'),
+              onProfileTap: () => onNotReady?.call('Profile'),
+            ))),
           const SizedBox(height: 15),
           _tile(context,
             key: const Key('open-reports'),
