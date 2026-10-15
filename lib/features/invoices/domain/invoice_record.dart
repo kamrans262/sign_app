@@ -1,3 +1,4 @@
+import '../../jobs/data/local_job_photo_source.dart';
 import '../../quotes/domain/quote_review_models.dart';
 
 enum InvoiceStatus {
@@ -70,6 +71,9 @@ class InvoiceRecord {
     this.currency = 'CHF', this.vatBasisPoints = 0,
     this.depositPaidMinor = 0, this.items = const [],
     this.payments = const [], this.history = const [], this.sentAt,
+    this.billingAddress = '', this.clientEmail = '',
+    this.clientPhone = '', this.terms = '', this.payment,
+    this.photos = const [],
   });
 
   final String id, number, project, clientName;
@@ -88,6 +92,9 @@ class InvoiceRecord {
   final List<InvoicePaymentRecord> payments;
   final List<InvoiceHistoryEvent> history;
   final DateTime? sentAt;
+  final String billingAddress, clientEmail, clientPhone, terms;
+  final QuotePaymentDetails? payment;
+  final List<LocalJobPhotoSelection> photos;
 
   int get receivedMinor => payments.where((p) =>
       p.status.toLowerCase() == 'paid').fold<int>(0,
@@ -115,6 +122,21 @@ class InvoiceRecord {
       ? null : (totalMinor! - depositPaidMinor - receivedMinor)
           .clamp(0, totalMinor!).toInt();
 
+  /// Preserves all invoice accounting fields when attachments are edited.
+  InvoiceRecord withPhotos(List<LocalJobPhotoSelection> next) =>
+      InvoiceRecord(
+        id: id, number: number, project: project,
+        clientName: clientName, amount: amount, date: date,
+        status: status, jobId: jobId, demoOnly: demoOnly,
+        manuallyPaidAt: manuallyPaidAt, iban: iban,
+        dueDate: dueDate, notes: notes, currency: currency,
+        vatBasisPoints: vatBasisPoints, depositPaidMinor: depositPaidMinor,
+        items: items, payments: payments, history: history, sentAt: sentAt,
+        billingAddress: billingAddress, clientEmail: clientEmail,
+        clientPhone: clientPhone, terms: terms, payment: payment,
+        photos: List<LocalJobPhotoSelection>.unmodifiable(next),
+      );
+
   InvoiceRecord withStatus(InvoiceStatus next, {DateTime? paidAt}) =>
       InvoiceRecord(
         id: id, number: number, project: project,
@@ -125,6 +147,9 @@ class InvoiceRecord {
         currency: currency, vatBasisPoints: vatBasisPoints,
         depositPaidMinor: depositPaidMinor, items: items,
         payments: payments, history: history, sentAt: sentAt,
+        billingAddress: billingAddress, clientEmail: clientEmail,
+        clientPhone: clientPhone, terms: terms, payment: payment,
+        photos: photos,
       );
 }
 
@@ -132,6 +157,11 @@ abstract class InvoiceRepository {
   const InvoiceRepository();
   Future<List<InvoiceRecord>> listInvoices();
   Future<InvoiceRecord> markAsPaid(String invoiceId);
+
+  Future<InvoiceRecord> updateAttachments(String invoiceId,
+      List<LocalJobPhotoSelection> photos) =>
+      Future<InvoiceRecord>.error(
+        UnsupportedError('Invoice attachments are unavailable.'));
 
   Future<InvoiceRecord> updateInvoice(InvoiceRecord updated) =>
       Future<InvoiceRecord>.error(

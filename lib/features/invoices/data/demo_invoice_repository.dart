@@ -1,3 +1,4 @@
+import '../../jobs/data/local_job_photo_source.dart';
 import '../domain/invoice_record.dart';
 
 /// Session-local reference records. Not actual remote payment confirmations.
@@ -76,6 +77,10 @@ class DemoInvoiceRepository extends InvoiceRepository {
       currency: current.currency, vatBasisPoints: current.vatBasisPoints,
       depositPaidMinor: current.depositPaidMinor, items: current.items,
       sentAt: current.sentAt,
+      billingAddress: current.billingAddress,
+      clientEmail: current.clientEmail,
+      clientPhone: current.clientPhone, terms: current.terms,
+      payment: current.payment, photos: current.photos,
       payments: [
         ...current.payments,
         if (remaining > 0)
@@ -95,6 +100,29 @@ class DemoInvoiceRepository extends InvoiceRepository {
       ],
     );
     _saved[invoiceId] = updated;
+    return updated;
+  }
+
+  @override
+  Future<InvoiceRecord> updateAttachments(String invoiceId,
+      List<LocalJobPhotoSelection> photos) async {
+    final records = await listInvoices();
+    InvoiceRecord? original;
+    for (final record in records) {
+      if (record.id == invoiceId) { original = record; break; }
+    }
+    if (original == null) { throw StateError('Invoice not found.'); }
+    if (!original.demoOnly) {
+      throw UnsupportedError('Attachment backend is not connected.');
+    }
+    for (final photo in photos) {
+      DeviceJobPhotoSource.validate(photo.name, photo.bytes);
+    }
+    if (photos.length > 20) {
+      throw ArgumentError('Maximum 20 attachments per invoice.');
+    }
+    final updated = original.withPhotos(photos);
+    _saved[original.id] = updated;
     return updated;
   }
 
@@ -131,6 +159,10 @@ class DemoInvoiceRepository extends InvoiceRepository {
       sentAt: original.sentAt, manuallyPaidAt: original.manuallyPaidAt,
       demoOnly: original.demoOnly,
       payments: original.payments,
+      billingAddress: original.billingAddress,
+      clientEmail: original.clientEmail, clientPhone: original.clientPhone,
+      terms: original.terms, payment: original.payment,
+      photos: original.photos,
       history: [
         ...original.history,
         InvoiceHistoryEvent(id: 'edited-${now.microsecondsSinceEpoch}',
@@ -173,6 +205,10 @@ class DemoInvoiceRepository extends InvoiceRepository {
       currency: invoice.currency, vatBasisPoints: invoice.vatBasisPoints,
       depositPaidMinor: invoice.depositPaidMinor, items: invoice.items,
       payments: invoice.payments, sentAt: invoice.sentAt,
+      billingAddress: invoice.billingAddress,
+      clientEmail: invoice.clientEmail,
+      clientPhone: invoice.clientPhone, terms: invoice.terms,
+      payment: invoice.payment, photos: invoice.photos,
       history: [
         ...invoice.history,
         InvoiceHistoryEvent(
