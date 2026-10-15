@@ -12,9 +12,11 @@ import '../../../auth/domain/account_profile.dart';
 import '../../../quotes/presentation/widgets/sign2digital_quote_shadow_panel.dart';
 import '../widgets/profile_settings_action_card.dart';
 import '../../data/profile_preferences_repository.dart';
+import '../../data/security_access_repository.dart';
 import 'edit_profile_screen.dart';
 import 'profile_sections_screen.dart';
 import 'profile_preferences_screen.dart';
+import 'security_access_screen.dart';
 
 /// Profile entry point for More and the dashboard avatar.
 /// Reads the existing session account, never an independent profile fixture.
@@ -28,6 +30,7 @@ class ProfileSettingsScreen extends StatefulWidget {
     this.onPreferences,
     this.preferencesRepository,
     this.onSecurity,
+    this.securityRepository,
     this.onAppSettings,
   });
 
@@ -38,6 +41,7 @@ class ProfileSettingsScreen extends StatefulWidget {
   final VoidCallback? onPreferences;
   final ProfilePreferencesRepository? preferencesRepository;
   final VoidCallback? onSecurity;
+  final SecurityAccessRepository? securityRepository;
   final VoidCallback? onAppSettings;
 
   @override
@@ -194,10 +198,18 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                     icon: Icons.shield_outlined,
                     title: 'Security & Access',
                     subtitle: 'Password, and active sessions',
-                    onTap: () => _section('Security & Access',
-                      'Secure password and active-session management '
-                      'require an authenticated backend connection.',
-                      widget.onSecurity),
+                    onTap: () {
+                      final callback = widget.onSecurity;
+                      if (callback != null) {
+                        callback();
+                      } else {
+                        _open(SecurityAccessScreen(
+                          repository: widget.securityRepository ??
+                              const PreviewSecurityAccessRepository(),
+                          onNavigationSelected: _navigate,
+                        ));
+                      }
+                    },
                   ),
                   const SizedBox(height: 20),
                   ProfileSettingsActionCard(
