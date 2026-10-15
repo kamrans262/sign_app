@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sign2digital/features/clients/presentation/screens/more_screen.dart';
 import 'package:sign2digital/features/documents/domain/document_record.dart';
 import 'package:sign2digital/features/documents/presentation/screens/ai_documents_screen.dart';
-import 'package:sign2digital/features/jobs/presentation/screens/job_notes_screen.dart';
+import 'package:sign2digital/features/documents/presentation/screens/generate_ai_document_screen.dart';
 
 class _Repository implements DocumentRepository {
   _Repository(this.items, {this.fail = false});
@@ -77,15 +77,18 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Generate selects a job and opens existing Job Notes flow',
+  testWidgets('Generate action and FAB open the new AI Document form',
       (tester) async {
     await _screen(tester);
     await tester.tap(find.byKey(const Key('ai-documents-generate')));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(
-      const Key('ai-documents-job-demo-active-1')));
+    expect(find.byType(GenerateAiDocumentScreen), findsOneWidget);
+    expect(find.text('AI Document'), findsOneWidget);
+    await tester.pageBack();
     await tester.pumpAndSettle();
-    expect(find.byType(JobNotesScreen), findsOneWidget);
+    await tester.tap(find.byKey(const Key('ai-documents-create')));
+    await tester.pumpAndSettle();
+    expect(find.byType(GenerateAiDocumentScreen), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
