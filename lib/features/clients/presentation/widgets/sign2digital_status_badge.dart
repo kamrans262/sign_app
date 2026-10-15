@@ -17,7 +17,7 @@ class Sign2DigitalStatusBadge extends StatelessWidget {
       'draft' => (const Color(0xFFFFF0F0), const Color(0xFFF04438)),
       'approved' || 'reimbursed' || 'received' =>
         (const Color(0xFFC4F0D0), const Color(0xFF18733D)),
-      'in use' || 'available' || 'paid' || 'generated' =>
+      'today' || 'in use' || 'available' || 'paid' || 'generated' =>
         (const Color(0xFFC4F0D0), const Color(0xFF18733D)),
       'payment pending' || 'pending' =>
         (const Color(0xFFF0F2F4), AppColors.placeholder),
