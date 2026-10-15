@@ -213,7 +213,7 @@ void main() {
     await tester.tap(find.byKey(Key('global-search-result-jobs:${job.id}')));
     await tester.pumpAndSettle();
     expect(find.byType(JobDetailsScreen), findsOneWidget);
-    await tester.binding.handlePopRoute();
+    Navigator.of(tester.element(find.byType(JobDetailsScreen))).pop();
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(Key('global-search-result-invoices:${invoice.id}')));
     await tester.pumpAndSettle();
