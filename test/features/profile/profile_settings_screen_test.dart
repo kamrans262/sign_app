@@ -107,9 +107,24 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(EditProfileScreen), findsOneWidget);
 
-    await tester.enterText(find.byType(TextFormField).at(0), 'Updated User');
-    await tester.enterText(find.byType(TextFormField).at(1), 'new@example.com');
-    await tester.enterText(find.byType(TextFormField).at(2), '787654321');
+    await tester.enterText(
+      find.descendant(of: find.byKey(const Key('profile-edit-first-name')),
+        matching: find.byType(TextFormField)), 'Updated');
+    await tester.enterText(
+      find.descendant(of: find.byKey(const Key('profile-edit-last-name')),
+        matching: find.byType(TextFormField)), 'User');
+    await tester.enterText(
+      find.descendant(of: find.byKey(const Key('profile-edit-email')),
+        matching: find.byType(TextFormField)), 'new@example.com');
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('profile-edit-phone')), 150,
+      scrollable: find.byKey(const Key('profile-edit-scroll')));
+    await tester.enterText(
+      find.descendant(of: find.byKey(const Key('profile-edit-phone')),
+        matching: find.byType(TextFormField)), '787654321');
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('profile-edit-save')), 150,
+      scrollable: find.byKey(const Key('profile-edit-scroll')));
     await tester.tap(find.byKey(const Key('profile-edit-save')));
     await tester.pumpAndSettle();
 
