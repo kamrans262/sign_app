@@ -386,6 +386,7 @@ class _SecurityAccessScreenState extends State<SecurityAccessScreen> {
                   iconSize: 24,
                   iconGap: 10,
                   verticalPadding: 10,
+                  horizontalPadding: 10,
                   title: snapshot.twoFactorEnabled == null
                       ? '2FA status unavailable'
                       : isTwoFactorOn
