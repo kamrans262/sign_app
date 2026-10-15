@@ -11,7 +11,21 @@ class Sign2DigitalInvoicePdfBuilder {
   const Sign2DigitalInvoicePdfBuilder();
 
   Future<Uint8List> build(InvoiceRecord invoice) async {
-    final pdf = pw.Document();
+    // Reuse Quote PDF's bundled Inter font so CHF values and Unicode
+    // placeholders are rendered rather than lost in Helvetica fallback.
+    pw.Font? inter;
+    try {
+      inter = pw.Font.ttf(
+        await rootBundle.load('assets/fonts/Inter-Variable.ttf'),
+      );
+    } catch (_) {
+      // Keep the PDF usable if the bundled font cannot be read.
+    }
+    final pdf = pw.Document(
+      theme: inter == null
+          ? null
+          : pw.ThemeData.withFont(base: inter, bold: inter),
+    );
     pw.MemoryImage? logo;
     try {
       final data = await rootBundle.load('assets/header_logo.png');

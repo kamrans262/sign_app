@@ -116,6 +116,12 @@ void main() {
     await _reach(tester, 'invoice-preview-share');
     await tester.tap(find.byKey(const Key('invoice-preview-share')));
     await tester.pumpAndSettle();
+    // The Share success SnackBar temporarily overlays the Download button.
+    // Dismiss it before testing the second action rather than tapping through.
+    ScaffoldMessenger.of(
+      tester.element(find.byType(InvoicePreviewScreen)),
+    ).removeCurrentSnackBar();
+    await tester.pumpAndSettle();
     await _reach(tester, 'invoice-preview-download');
     await tester.tap(find.byKey(const Key('invoice-preview-download')));
     await tester.pumpAndSettle();

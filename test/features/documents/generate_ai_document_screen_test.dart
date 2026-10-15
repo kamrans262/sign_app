@@ -64,10 +64,7 @@ Future<void> _reach(WidgetTester tester, String key) async {
   final target = find.byKey(Key(key));
   await tester.scrollUntilVisible(
     target, 130,
-    scrollable: find.descendant(
-      of: find.byKey(const Key('generate-ai-document-scroll')),
-      matching: find.byType(Scrollable),
-    ).first,
+    scrollable: find.byType(Scrollable).first,
   );
   await tester.ensureVisible(target);
   await tester.pumpAndSettle();
@@ -82,6 +79,7 @@ void main() {
     expect(find.byKey(const Key('generate-ai-date')), findsOneWidget);
     expect(find.byKey(const Key('generate-ai-job')), findsOneWidget);
     for (final section in AiDocumentSection.values) {
+      await _reach(tester, 'generate-ai-section-${section.name}');
       expect(find.byKey(Key('generate-ai-section-${section.name}')),
         findsOneWidget);
     }
@@ -98,13 +96,17 @@ void main() {
     });
     await tester.tap(find.byKey(const Key('generate-ai-submit')));
     await tester.pumpAndSettle();
+    await _reach(tester, 'generate-ai-validation');
     expect(find.text('Select a document date.'), findsOneWidget);
+    await _reach(tester, 'generate-ai-date');
     await tester.tap(find.byKey(const Key('generate-ai-date')));
     await tester.pumpAndSettle();
     expect(find.text('August 25, 2026'), findsOneWidget);
     await tester.tap(find.byKey(const Key('generate-ai-submit')));
     await tester.pumpAndSettle();
+    await _reach(tester, 'generate-ai-validation');
     expect(find.text('Select a valid Job / Project.'), findsOneWidget);
+    await _reach(tester, 'generate-ai-job');
     await tester.tap(find.byKey(const Key('generate-ai-job')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(
@@ -122,6 +124,7 @@ void main() {
     expect(received?.documentDate, DateTime(2026, 8, 25));
     expect(received?.sections, isNot(contains(AiDocumentSection.photos)));
     expect(received?.instructions, 'Describe waterproofing only');
+    await _reach(tester, 'generate-ai-validation');
     expect(find.textContaining('entries are preserved'), findsOneWidget);
   });
 
@@ -167,7 +170,16 @@ void main() {
     await _reach(tester, 'generate-ai-instructions');
     await tester.enterText(find.byKey(const Key('generate-ai-instructions')),
       'Existing manual instructions');
-    await _reach(tester, 'generate-ai-voice');
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
+    // The voice control is at the start of a lazily built ListView.
+    // Scroll up explicitly before locating it.
+    await tester.drag(
+      find.byKey(const Key('generate-ai-document-scroll')),
+      const Offset(0, 900),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('generate-ai-voice')), findsOneWidget);
     await tester.tap(find.byKey(const Key('generate-ai-voice')));
     await tester.pumpAndSettle();
     expect(find.byType(AiVoiceFlowDialog), findsOneWidget);

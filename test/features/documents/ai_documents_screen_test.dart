@@ -38,6 +38,13 @@ Future<void> _screen(WidgetTester tester, {
   await tester.pumpAndSettle();
 }
 
+
+Future<void> _reach(WidgetTester tester, String id) async {
+  await tester.scrollUntilVisible(find.byKey(Key(id)), 130,
+    scrollable: find.byType(Scrollable).first);
+  await tester.pumpAndSettle();
+}
+
 void main() {
   testWidgets('More menu opens AI Documents using existing dashboard',
       (tester) async {
@@ -56,8 +63,10 @@ void main() {
       (tester) async {
     await _screen(tester);
     expect(find.text('Recent AI Documents'), findsOneWidget);
+    await _reach(tester, 'ai-document-card-ai-document-figma-1');
     expect(find.byKey(const Key('ai-document-card-ai-document-figma-1')),
-      findsWidgets);
+      findsOneWidget);
+    await _reach(tester, 'ai-documents-see-all');
     await tester.tap(find.byKey(const Key('ai-documents-see-all')));
     await tester.pumpAndSettle();
     expect(find.text('All AI Documents'), findsOneWidget);
@@ -70,7 +79,9 @@ void main() {
     await _screen(tester, repository: _Repository([
       _generated(1), _generated(2),
     ]));
+    await _reach(tester, 'ai-document-card-ai-document-test-2');
     expect(find.text('Generated Document 2'), findsOneWidget);
+    await _reach(tester, 'ai-document-card-ai-document-test-1');
     expect(find.text('Generated Document 1'), findsOneWidget);
     await _screen(tester, repository: _Repository([]));
     expect(find.byKey(const Key('ai-documents-empty')), findsOneWidget);
@@ -84,7 +95,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(GenerateAiDocumentScreen), findsOneWidget);
     expect(find.text('AI Document'), findsOneWidget);
-    await tester.pageBack();
+    await tester.tap(find.byIcon(Icons.arrow_back_ios_new_rounded));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('ai-documents-create')));
     await tester.pumpAndSettle();
