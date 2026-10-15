@@ -62,11 +62,18 @@ void main() {
       ]) {
         expect(find.byKey(Key('home-card-$id')), findsOneWidget);
       }
+      final homeScroll = find.descendant(
+        of: find.byKey(const Key('home-dashboard-scroll')),
+        matching: find.byType(Scrollable),
+      ).first;
       for (final id in [
         'create-quote','new-job','add-client','create-document',
         'add-expense','add-time',
       ]) {
-        expect(find.byKey(Key('home-action-$id')), findsOneWidget);
+        final action = find.byKey(Key('home-action-$id'));
+        await tester.scrollUntilVisible(
+          action, 140, scrollable: homeScroll, maxScrolls: 20);
+        expect(action, findsOneWidget);
       }
       expect(tester.takeException(), isNull);
     });
@@ -114,7 +121,14 @@ void main() {
     await tester.tap(find.byKey(const Key('dashboard-tab-0')));
     await tester.pumpAndSettle();
     final create = find.byKey(const Key('home-action-create-quote'));
-    await tester.ensureVisible(create);
+    await tester.scrollUntilVisible(
+      create, 140,
+      scrollable: find.descendant(
+        of: find.byKey(const Key('home-dashboard-scroll')),
+        matching: find.byType(Scrollable),
+      ).first,
+      maxScrolls: 20,
+    );
     await tester.pumpAndSettle();
     await tester.tap(create);
     await tester.pumpAndSettle();
