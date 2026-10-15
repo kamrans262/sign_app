@@ -31,6 +31,13 @@ class Sign2DigitalInvoicePdfBuilder {
           '${d.month.toString().padLeft(2, '0')}/${d.year}';
     String money(int? minor) => quoteMoney(minor, invoice.currency);
 
+    final payment = invoice.payment ??
+      (invoice.iban.trim().isNotEmpty
+        ? QuotePaymentDetails(iban: invoice.iban) : null);
+    final qrPayload = invoice.demoOnly ? null :
+      payment?.swissQrBillPayload(
+        currency: invoice.currency, amountMinor: invoice.amountDueMinor);
+
     pdf.addPage(pw.MultiPage(
       pageFormat: PdfPageFormat.a4,
       margin: const pw.EdgeInsets.all(38),
@@ -53,6 +60,9 @@ class Sign2DigitalInvoicePdfBuilder {
           ]),
         pw.SizedBox(height: 28),
         pw.Text('Bill To: ${invoice.clientName}', style: style(12, bold: true)),
+        for (final text in [invoice.billingAddress, invoice.clientEmail,
+          invoice.clientPhone]) if (text.trim().isNotEmpty)
+            pw.Text(text, style: style(10, color: grey)),
         pw.SizedBox(height: 8),
         pw.Text('Project: ${invoice.project}', style: style(11)),
         pw.Text('Issue date: ${date(invoice.date)}', style: style(11)),
@@ -101,6 +111,50 @@ class Sign2DigitalInvoicePdfBuilder {
                   style: style(10, bold: entry.$1 == 'Total'))),
             ]),
         ),
+        pw.SizedBox(height: 20),
+        pw.Container(
+          padding: const pw.EdgeInsets.all(15),
+          decoration: pw.BoxDecoration(
+            border: pw.Border.all(color: PdfColor.fromHex('#E4EAF0')),
+            borderRadius: pw.BorderRadius.circular(10)),
+          child: pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text('Payment Details', style: style(14, bold: true)),
+              pw.SizedBox(height: 5),
+              pw.Text(qrPayload == null
+                ? 'Payment QR unavailable' : 'Scan to Pay',
+                style: style(11)),
+              pw.SizedBox(height: 12),
+              if (qrPayload != null)
+                pw.BarcodeWidget(
+                  barcode: pw.Barcode.qrCode(),
+                  data: qrPayload, width: 92, height: 92),
+              if (qrPayload == null)
+                pw.Text('A validated Swiss payee address, IBAN and amount '
+                  'are required for a scannable payment QR.',
+                  style: style(10, color: grey)),
+              if (invoice.iban.trim().isNotEmpty)
+                pw.Text('Account / payable to: ${invoice.iban}',
+                  style: style(10)),
+              if (invoice.payment != null &&
+                  invoice.payment!.accountHolder.trim().isNotEmpty)
+                pw.Text('Company: ${invoice.payment!.accountHolder}',
+                  style: style(10)),
+              pw.Text('Payable amount: ${money(invoice.amountDueMinor)}',
+                style: style(10)),
+              pw.Text('Currency: ${invoice.currency}', style: style(10)),
+            ],
+          ),
+        ),
+        pw.SizedBox(height: 20),
+        pw.Text('General Terms & Conditions',
+          style: style(15, bold: true)),
+        pw.SizedBox(height: 10),
+        pw.Text(invoice.terms.trim().isEmpty
+          ? 'No terms and conditions have been provided.'
+          : invoice.terms,
+          style: style(11, color: grey)),
         if (invoice.notes.trim().isNotEmpty) ...[
           pw.SizedBox(height: 20),
           pw.Text('Notes', style: style(12, bold: true)),

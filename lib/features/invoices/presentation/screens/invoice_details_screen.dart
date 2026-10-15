@@ -15,6 +15,7 @@ import '../../../quotes/presentation/widgets/sign2digital_document_items_table.d
 import '../../domain/invoice_record.dart';
 import '../../services/invoice_pdf_service.dart';
 import 'add_invoice_screen.dart';
+import 'invoice_preview_screen.dart';
 import '../widgets/mark_invoice_paid_dialog.dart';
 
 typedef InvoicePdfAction = Future<void> Function(
@@ -29,11 +30,15 @@ class InvoiceDetailsScreen extends StatefulWidget {
     required this.repository,
     this.onDownload,
     this.onSend,
+    this.selectedNavigationIndex = 4,
+    this.onNavigationSelected,
   });
 
   final InvoiceRecord invoice;
   final InvoiceRepository repository;
   final InvoicePdfAction? onDownload, onSend;
+  final int selectedNavigationIndex;
+  final ValueChanged<int>? onNavigationSelected;
 
   @override
   State<InvoiceDetailsScreen> createState() => _InvoiceDetailsScreenState();
@@ -363,6 +368,32 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
     _notice('Invoice changes saved locally.');
   }
 
+  Future<void> _preview() async {
+    if (_busy) { return; }
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => InvoicePreviewScreen(
+          invoice: _record,
+          repository: widget.repository,
+          selectedNavigationIndex: widget.selectedNavigationIndex,
+          onNavigationSelected: widget.onNavigationSelected,
+        ),
+      ),
+    );
+    if (!mounted) { return; }
+    try {
+      final records = await widget.repository.listInvoices();
+      for (final record in records) {
+        if (record.id == _record.id) {
+          setState(() => _record = record);
+          break;
+        }
+      }
+    } catch (_) {
+      _notice('Unable to refresh invoice details.');
+    }
+  }
+
   Widget _actions() => Column(
     key: const Key('invoice-details-actions'),
     children: [
@@ -377,6 +408,14 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
           label: 'Send', primaryOutline: true,
           enabled: !_busy, onPressed: () => _pdf(share: true))),
       ]),
+      const SizedBox(height: 15),
+      FractionallySizedBox(
+        widthFactor: .5,
+        child: Sign2DigitalOutlinedButton(
+          key: const Key('invoice-details-preview'),
+          label: 'Preview Invoice', primaryOutline: true,
+          enabled: !_busy, onPressed: _preview),
+      ),
       const SizedBox(height: 15),
       FractionallySizedBox(
         widthFactor: .5,

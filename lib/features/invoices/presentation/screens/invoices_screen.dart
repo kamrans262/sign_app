@@ -136,6 +136,8 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
         builder: (_) => InvoiceDetailsScreen(
           invoice: invoice,
           repository: _repository,
+          selectedNavigationIndex: widget.selectedNavigationIndex,
+          onNavigationSelected: widget.onNavigationSelected,
         ),
       ),
     );
