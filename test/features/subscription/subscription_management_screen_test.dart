@@ -144,7 +144,8 @@ void main() {
     expect(find.text('Payment Method is not connected yet.'), findsOneWidget);
     await _scrollTo(tester, const Key('subscription-action-billing-history'));
     await tester.tap(find.byKey(const Key('subscription-action-billing-history')));
-    await tester.pump();
+    // The previous SnackBar must exit before the next one becomes visible.
+    await tester.pump(const Duration(milliseconds: 500));
     expect(find.text('Subscription billing history is not connected yet.'),
       findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -159,7 +160,11 @@ void main() {
     await tester.tap(find.byKey(const Key('subscription-action-usage')));
     await tester.pumpAndSettle();
     expect(find.text('Usage This Month'), findsOneWidget);
-    expect(find.text('Documents'), findsOneWidget);
+    // A second "Documents" label belongs to the fixed bottom navigation.
+    expect(find.descendant(
+      of: find.byType(BottomSheet),
+      matching: find.text('Documents'),
+    ), findsOneWidget);
     expect(find.text('24'), findsOneWidget);
     expect(find.text('8'), findsOneWidget);
     expect(find.text('5'), findsOneWidget);
