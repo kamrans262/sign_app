@@ -156,8 +156,19 @@ class _AiDocumentsScreenState extends State<AiDocumentsScreen> {
 
   Future<void> _selectDocumentFor(String operation) async {
     if (_loading || _error != null) { return; }
-    if (_documents.isEmpty) {
-      _notify('No AI documents are available to $operation.');
+    List<DocumentRecord> available;
+    try {
+      available = await _repository.listDocuments();
+    } catch (_) {
+      _notify('Unable to load documents for $operation.');
+      return;
+    }
+    if (!mounted) { return; }
+    // Select from real repository documents when available. The Figma
+    // fixtures are only a fallback for the disconnected demo repository.
+    final choices = available.isEmpty ? _documents : available;
+    if (choices.isEmpty) {
+      _notify('No documents are available to $operation.');
       return;
     }
     final picked = await showModalBottomSheet<DocumentRecord>(
@@ -172,9 +183,9 @@ class _AiDocumentsScreenState extends State<AiDocumentsScreen> {
                 style: const TextStyle(fontFamily: 'Inter',
                   fontSize: 16, fontWeight: FontWeight.w600))),
             Expanded(child: ListView.builder(
-              itemCount: _documents.length,
+              itemCount: choices.length,
               itemBuilder: (context, index) {
-                final record = _documents[index];
+                final record = choices[index];
                 return ListTile(
                   key: Key('ai-documents-select-${record.id}'),
                   title: Text(record.title),
