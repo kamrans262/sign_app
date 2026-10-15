@@ -60,13 +60,17 @@ Future<void> _show(
   await tester.pumpAndSettle();
 }
 
-Future<void> _reach(WidgetTester tester, String key) async {
+Future<void> _reach(WidgetTester tester, String key,
+    {bool up = false}) async {
   final target = find.byKey(Key(key));
-  await tester.scrollUntilVisible(
-    target, 130,
-    scrollable: find.byType(Scrollable).first,
-  );
-  await tester.ensureVisible(target);
+  if (target.evaluate().isNotEmpty) {
+    await tester.ensureVisible(target);
+  } else {
+    await tester.scrollUntilVisible(
+      target, up ? -130 : 130,
+      scrollable: find.byType(Scrollable).first,
+    );
+  }
   await tester.pumpAndSettle();
 }
 
@@ -98,7 +102,7 @@ void main() {
     await tester.pumpAndSettle();
     await _reach(tester, 'generate-ai-validation');
     expect(find.text('Select a document date.'), findsOneWidget);
-    await _reach(tester, 'generate-ai-date');
+    await _reach(tester, 'generate-ai-date', up: true);
     await tester.tap(find.byKey(const Key('generate-ai-date')));
     await tester.pumpAndSettle();
     expect(find.text('August 25, 2026'), findsOneWidget);
@@ -106,7 +110,7 @@ void main() {
     await tester.pumpAndSettle();
     await _reach(tester, 'generate-ai-validation');
     expect(find.text('Select a valid Job / Project.'), findsOneWidget);
-    await _reach(tester, 'generate-ai-job');
+    await _reach(tester, 'generate-ai-job', up: true);
     await tester.tap(find.byKey(const Key('generate-ai-job')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(

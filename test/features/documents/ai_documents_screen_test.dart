@@ -39,9 +39,14 @@ Future<void> _screen(WidgetTester tester, {
 }
 
 
-Future<void> _reach(WidgetTester tester, String id) async {
-  await tester.scrollUntilVisible(find.byKey(Key(id)), 130,
-    scrollable: find.byType(Scrollable).first);
+Future<void> _reach(WidgetTester tester, String id, {bool up = false}) async {
+  final target = find.byKey(Key(id));
+  if (target.evaluate().isNotEmpty) {
+    await tester.ensureVisible(target);
+  } else {
+    await tester.scrollUntilVisible(target, up ? -130 : 130,
+      scrollable: find.byType(Scrollable).first);
+  }
   await tester.pumpAndSettle();
 }
 
@@ -66,7 +71,7 @@ void main() {
     await _reach(tester, 'ai-document-card-ai-document-figma-1');
     expect(find.byKey(const Key('ai-document-card-ai-document-figma-1')),
       findsOneWidget);
-    await _reach(tester, 'ai-documents-see-all');
+    await _reach(tester, 'ai-documents-see-all', up: true);
     await tester.tap(find.byKey(const Key('ai-documents-see-all')));
     await tester.pumpAndSettle();
     expect(find.text('All AI Documents'), findsOneWidget);
@@ -81,7 +86,7 @@ void main() {
     ]));
     await _reach(tester, 'ai-document-card-ai-document-test-2');
     expect(find.text('Generated Document 2'), findsOneWidget);
-    await _reach(tester, 'ai-document-card-ai-document-test-1');
+    await _reach(tester, 'ai-document-card-ai-document-test-1', up: true);
     expect(find.text('Generated Document 1'), findsOneWidget);
     await _screen(tester, repository: _Repository([]));
     expect(find.byKey(const Key('ai-documents-empty')), findsOneWidget);
