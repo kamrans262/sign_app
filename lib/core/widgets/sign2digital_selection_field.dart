@@ -16,6 +16,7 @@ class Sign2DigitalSelectionField extends StatelessWidget {
     this.value,
     this.errorText,
     this.leadingIcon,
+    this.leadingIconSize = 20,
     this.trailing,
   });
 
@@ -26,6 +27,7 @@ class Sign2DigitalSelectionField extends StatelessWidget {
   final String? value;
   final String? errorText;
   final IconData? leadingIcon;
+  final double leadingIconSize;
   final Widget? trailing;
 
   @override
@@ -53,7 +55,7 @@ class Sign2DigitalSelectionField extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (leadingIcon != null)
-                      Icon(leadingIcon, size: 20)
+                      Icon(leadingIcon, size: leadingIconSize)
                     else
                       SvgPicture.asset(
                         iconAsset,
