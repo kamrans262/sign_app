@@ -7,10 +7,11 @@ import 'package:sign2digital/features/auth/data/account_repository.dart';
 import 'package:sign2digital/features/auth/domain/account_profile.dart';
 import 'package:sign2digital/features/clients/presentation/screens/more_screen.dart';
 import 'package:sign2digital/features/profile/presentation/screens/edit_profile_screen.dart';
-import 'package:sign2digital/features/profile/presentation/screens/profile_sections_screen.dart';
 import 'package:sign2digital/features/profile/presentation/screens/profile_settings_screen.dart';
 import 'package:sign2digital/features/profile/presentation/screens/profile_preferences_screen.dart';
 import 'package:sign2digital/features/profile/presentation/screens/security_access_screen.dart';
+import 'package:sign2digital/features/profile/presentation/screens/app_settings_screen.dart';
+import 'package:sign2digital/features/profile/data/app_settings_repository.dart';
 import 'package:sign2digital/features/profile/data/profile_preferences_repository.dart';
 import 'package:sign2digital/features/profile/presentation/widgets/profile_settings_action_card.dart';
 
@@ -29,6 +30,14 @@ class _StubAccountRepository implements AccountRepository {
   Future<void> saveDraft(AccountProfile value) async {
     profile = value;
   }
+}
+
+class _StubAppSettingsRepository implements AppSettingsRepository {
+  AppSettings value = const AppSettings();
+  @override
+  Future<AppSettings> load() async => value;
+  @override
+  Future<void> save(AppSettings value) async { this.value = value; }
 }
 
 class _StubPreferencesRepository implements ProfilePreferencesRepository {
@@ -182,6 +191,7 @@ void main() {
       home: ProfileSettingsScreen(
         accountRepository: _StubAccountRepository(_profile()),
         preferencesRepository: _StubPreferencesRepository(),
+        appSettingsRepository: _StubAppSettingsRepository(),
       ),
     ));
     await tester.pumpAndSettle();
@@ -205,8 +215,8 @@ void main() {
     await _scrollTo(tester, const Key('profile-action-app-settings'));
     await tester.tap(find.byKey(const Key('profile-action-app-settings')));
     await tester.pumpAndSettle();
-    expect(find.byType(ProfileSectionUnavailableScreen), findsOneWidget);
-    expect(find.text('App Settings'), findsOneWidget);
+    expect(find.byType(AppSettingsScreen), findsOneWidget);
+    expect(find.text('Settings'), findsOneWidget);
     await tester.tap(find.byIcon(Icons.arrow_back_ios_new_rounded));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
