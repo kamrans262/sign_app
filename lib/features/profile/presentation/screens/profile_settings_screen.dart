@@ -125,14 +125,6 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     _open(const ProfileBusinessInformationScreen());
   }
 
-  void _section(String title, String description, VoidCallback? callback) {
-    if (callback != null) { callback(); return; }
-    _open(ProfileSectionUnavailableScreen(
-      title: title,
-      details: description,
-    ));
-  }
-
   @override
   Widget build(BuildContext context) {
     final account = _account;
