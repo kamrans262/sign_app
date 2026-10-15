@@ -45,7 +45,7 @@ class MoreScreen extends StatelessWidget {
             key: const Key('open-profile-settings'),
             title: 'Profile & Settings',
             icon: Icons.account_circle_outlined,
-            onTap: () => _openProfile(context),
+            onTap: () => _openProfile(context)),
           const SizedBox(height: 15),
           _tile(context,
             key: const Key('open-global-search'),
