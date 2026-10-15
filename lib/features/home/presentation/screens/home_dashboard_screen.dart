@@ -162,6 +162,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     setState(() {
       _companies = companies;
       if (!companies.any((item) => item.id == _companyId)) {
+        _companyId = null;
         // Prefer the company actually created in the demo session.
         for (final item in companies) {
           if (item.id == 'demo-current-company') {
@@ -274,8 +275,17 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                         CircleAvatar(
                           radius: 23,
                           backgroundColor: DashboardColors.paleBlue,
-                          child: const Icon(Icons.business_outlined,
-                            color: AppColors.primary, size: 24),
+                          child: Text(
+                            company == null ? 'CO' :
+                              company.companyName.trim().split(
+                                RegExp(r'\\s+')).where((part) =>
+                                part.isNotEmpty).take(2).map((part) =>
+                                part[0].toUpperCase()).join(),
+                            style: const TextStyle(
+                              fontFamily: 'Inter', fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.primary),
+                          ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(child: Column(
