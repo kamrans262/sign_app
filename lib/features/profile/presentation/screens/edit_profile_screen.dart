@@ -117,7 +117,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   Future<void> _chooseTitle() async {
     FocusManager.instance.primaryFocus?.unfocus();
-    final options = {...widget.availableTitles, if (_title != null) _title!}
+    final options = {...widget.availableTitles, ?_title}
       .where((item) => item.trim().isNotEmpty).toList();
     final choice = await showModalBottomSheet<String>(
       context: context,
@@ -195,10 +195,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       ProfilePhotoSession.setPhoto(_photo);
       if (mounted) Navigator.of(context).pop(true);
     } catch (_) {
-      if (mounted) setState(() =>
-        _error = 'Unable to save your profile. Please try again.');
+      if (mounted) {
+        setState(() =>
+          _error = 'Unable to save your profile. Please try again.');
+      }
     } finally {
-      if (mounted) setState(() => _saving = false);
+      if (mounted) {
+        setState(() => _saving = false);
+      }
     }
   }
 
