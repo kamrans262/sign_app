@@ -91,7 +91,9 @@ class _RemindersScreenState extends State<RemindersScreen> {
     final day = DateTime(now.year, now.month, now.day);
     final date = record.remindAt;
     if (date.year == day.year && date.month == day.month &&
-        date.day == day.day && !date.isBefore(now)) return 'Today';
+        date.day == day.day && !date.isBefore(now)) {
+      return 'Today';
+    }
     if (date.isBefore(now)) return 'Overdue';
     return 'Upcoming';
   }
@@ -106,7 +108,9 @@ class _RemindersScreenState extends State<RemindersScreen> {
     final date = record.remindAt;
     final now = _now;
     if (date.year == now.year && date.month == now.month &&
-        date.day == now.day) return 'Today at ${_time(date)}';
+        date.day == now.day) {
+      return 'Today at ${_time(date)}';
+    }
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug',
       'Sep','Oct','Nov','Dec'];
     return '${months[date.month - 1]} ${date.day}, ${date.year} at ${_time(date)}';
