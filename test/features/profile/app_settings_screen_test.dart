@@ -45,9 +45,18 @@ Finder _scrollable() => find.descendant(
 ).first;
 
 Future<void> _findCard(WidgetTester tester, String name) async {
-  final key = Key('app-settings-$name');
-  await tester.scrollUntilVisible(find.byKey(key), 160,
-    maxScrolls: 25, scrollable: _scrollable());
+  final target = find.byKey(Key('app-settings-$name'));
+  if (target.evaluate().isNotEmpty) {
+    await tester.ensureVisible(target);
+  } else {
+    try {
+      await tester.scrollUntilVisible(target, 160,
+        maxScrolls: 25, scrollable: _scrollable());
+    } on StateError {
+      await tester.scrollUntilVisible(target, -160,
+        maxScrolls: 25, scrollable: _scrollable());
+    }
+  }
   await tester.pumpAndSettle();
 }
 
