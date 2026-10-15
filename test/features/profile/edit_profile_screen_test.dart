@@ -88,14 +88,14 @@ void main() {
       (tester) async {
     final repo = _AccountRepo(_account());
     await tester.pumpWidget(MaterialApp(
-      home: Builder(builder: (context) => ElevatedButton(
+      home: Scaffold(body: Builder(builder: (context) => ElevatedButton(
         onPressed: () => Navigator.of(context).push<bool>(
           MaterialPageRoute<bool>(builder: (_) => EditProfileScreen(
             repository: repo, initialAccount: repo.value,
           )),
         ),
         child: const Text('Edit'),
-      )),
+      ))),
     ));
     await tester.tap(find.text('Edit'));
     await tester.pumpAndSettle();
@@ -131,13 +131,13 @@ void main() {
     final bytes = base64Decode(
       'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4'
       'z8DwHwAFgAI/ScL/nwAAAABJRU5ErkJggg==');
-    await tester.pumpWidget(MaterialApp(home: Builder(builder: (context) =>
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: Builder(builder: (context) =>
       ElevatedButton(onPressed: () => Navigator.of(context).push<bool>(
         MaterialPageRoute<bool>(builder: (_) => EditProfileScreen(
           repository: repo,
           initialAccount: repo.value,
           pickPhotoBytes: () async => bytes,
-        ))), child: const Text('Edit')))));
+        ))), child: const Text('Edit'))))));
     await tester.tap(find.text('Edit'));
     await tester.pumpAndSettle();
     await tester.enterText(_field(const Key('profile-edit-first-name')), 'Unsaved');
@@ -159,13 +159,13 @@ void main() {
       'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4'
       'z8DwHwAFgAI/ScL/nwAAAABJRU5ErkJggg=='));
     final repo = _AccountRepo(_account());
-    await tester.pumpWidget(MaterialApp(home: Builder(builder: (context) =>
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: Builder(builder: (context) =>
       ElevatedButton(onPressed: () => Navigator.of(context).push<bool>(
         MaterialPageRoute<bool>(builder: (_) => EditProfileScreen(
           repository: repo,
           initialAccount: repo.value,
           pickPhotoBytes: () async => bytes,
-        ))), child: const Text('Edit')))));
+        ))), child: const Text('Edit'))))));
     await tester.tap(find.text('Edit'));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('profile-edit-camera')));
