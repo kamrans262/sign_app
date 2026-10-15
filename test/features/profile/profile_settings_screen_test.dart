@@ -8,6 +8,7 @@ import 'package:sign2digital/features/auth/domain/account_profile.dart';
 import 'package:sign2digital/features/clients/presentation/screens/more_screen.dart';
 import 'package:sign2digital/features/profile/presentation/screens/edit_profile_screen.dart';
 import 'package:sign2digital/features/profile/presentation/screens/profile_settings_screen.dart';
+import 'package:sign2digital/features/profile/presentation/screens/profile_sections_screen.dart';
 import 'package:sign2digital/features/profile/presentation/screens/profile_preferences_screen.dart';
 import 'package:sign2digital/features/profile/presentation/screens/security_access_screen.dart';
 import 'package:sign2digital/features/profile/presentation/screens/app_settings_screen.dart';
