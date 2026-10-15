@@ -277,6 +277,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                   HomeDashboardScreen(
                     selectedQuote: currentQuote,
                     refreshRevision: _homeRevision,
+                    additionalActiveJobs: _createdJobs.jobs.length,
                     onAction: _onHomeAction,
                   ),
                   JobsScreen(
