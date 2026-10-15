@@ -4,13 +4,11 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
 import '../../../../core/widgets/sign2digital_dashboard_header.dart';
 import '../../../../core/widgets/sign2digital_outlined_container.dart';
-import '../../../jobs/data/mock_jobs.dart';
-import '../../../jobs/domain/job_model.dart';
-import '../../../jobs/presentation/screens/job_notes_screen.dart';
 import '../../../quotes/presentation/widgets/sign2digital_quote_summary_card.dart';
 import '../../data/demo_document_repository.dart';
 import '../../domain/document_record.dart';
 import 'document_details_screen.dart';
+import 'generate_ai_document_screen.dart';
 
 /// AI document hub reusing the dashboard chrome and existing document cards.
 /// Default examples are clearly local Figma fixtures, not generated AI output.
@@ -20,6 +18,7 @@ class AiDocumentsScreen extends StatefulWidget {
     this.repository,
     this.onDocumentTap,
     this.onCreateDocument,
+    this.documentGenerator,
     this.onNavigationSelected,
     this.onNotificationTap,
     this.onProfileTap,
@@ -29,6 +28,7 @@ class AiDocumentsScreen extends StatefulWidget {
   final DocumentRepository? repository;
   final ValueChanged<DocumentRecord>? onDocumentTap;
   final VoidCallback? onCreateDocument;
+  final AiDocumentGenerator? documentGenerator;
   final ValueChanged<int>? onNavigationSelected;
   final VoidCallback? onNotificationTap, onProfileTap;
   final bool showAll;
@@ -113,45 +113,14 @@ class _AiDocumentsScreenState extends State<AiDocumentsScreen> {
       widget.onCreateDocument!();
       return;
     }
-    // The existing conversion flow needs a selected Job Note, not a blank
-    // fabricated note. Choose a job, then use its existing Notes workflow.
-    final jobs = MockJobsData.jobs;
-    final job = await showModalBottomSheet<JobModel>(
-      context: context,
-      isScrollControlled: true,
-      builder: (sheet) => SafeArea(
-        child: SizedBox(
-          height: MediaQuery.sizeOf(sheet).height * .65,
-          child: Column(children: [
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: Text('Select a job to generate a document',
-                style: TextStyle(fontFamily: 'Inter', fontSize: 16,
-                  fontWeight: FontWeight.w600)),
-            ),
-            Expanded(child: ListView.builder(
-              itemCount: jobs.length,
-              itemBuilder: (context, index) => ListTile(
-                key: Key('ai-documents-job-${jobs[index].id}'),
-                title: Text(jobs[index].title),
-                subtitle: Text(jobs[index].referenceNumber),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => Navigator.of(sheet).pop(jobs[index]),
-              ),
-            )),
-          ]),
-        ),
-      ),
-    );
-    if (!mounted || job == null) { return; }
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
-        builder: (_) => JobNotesScreen(
-          job: job,
-          onTabSelected: widget.onNavigationSelected,
+        builder: (_) => GenerateAiDocumentScreen(
+          documentGenerator: widget.documentGenerator,
         ),
       ),
     );
+    if (mounted) { await _load(); }
   }
 
   Future<void> _selectDocumentFor(String operation) async {
@@ -226,6 +195,7 @@ class _AiDocumentsScreenState extends State<AiDocumentsScreen> {
           repository: widget.repository,
           onDocumentTap: widget.onDocumentTap,
           onCreateDocument: widget.onCreateDocument,
+          documentGenerator: widget.documentGenerator,
           onNavigationSelected: widget.onNavigationSelected,
           onNotificationTap: widget.onNotificationTap,
           onProfileTap: widget.onProfileTap,
