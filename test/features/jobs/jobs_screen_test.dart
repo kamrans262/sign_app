@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sign2digital/features/clients/presentation/screens/clients_screen.dart';
 import 'package:sign2digital/features/jobs/data/mock_jobs.dart';
 import 'package:sign2digital/features/jobs/domain/job_model.dart';
+import 'package:sign2digital/core/widgets/sign2digital_search_field.dart';
 import 'package:sign2digital/features/jobs/presentation/widgets/sign2digital_job_card.dart';
 import 'package:sign2digital/features/jobs/presentation/widgets/sign2digital_job_progress_indicator.dart';
 
@@ -38,7 +39,22 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('dashboard-tab-1')));
     await tester.pumpAndSettle();
-    expect(find.text('Jobs'), findsWidgets);
+    // The bottom navigation retains the Jobs label, but the content no
+    // longer repeats its heading or descriptive text above the search field.
+    final jobsContent = find.byKey(const Key('jobs-scroll'));
+    expect(find.descendant(
+      of: jobsContent, matching: find.text('Jobs')), findsNothing);
+    expect(find.descendant(
+      of: jobsContent,
+      matching: find.text('Manage your clients and contacts'),
+    ), findsNothing);
+    final searchField = find.descendant(
+      of: jobsContent,
+      matching: find.byType(Sign2DigitalSearchField),
+    );
+    expect(searchField, findsOneWidget);
+    expect(tester.getTopLeft(searchField).dy,
+      lessThan(tester.getTopLeft(find.byKey(const Key('details-tab-0'))).dy));
     expect(find.text('Active (12)'), findsOneWidget);
     expect(find.text('Completed (8)'), findsOneWidget);
     expect(find.text('Archived (2)'), findsOneWidget);
