@@ -168,9 +168,10 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
 
-      await tester.drag(find.byKey(const Key('subscription-scroll')),
-        const Offset(0, -550));
-      await tester.pumpAndSettle();
+      // The last usage card is lazily built on narrow phones.
+      // Scroll until the card is actually visible instead of assuming
+      // a fixed pixel drag reaches it at every viewport size.
+      await _scrollTo(tester, const Key('subscription-usage-equipment'));
       expect(tester.takeException(), isNull);
       expect(find.byKey(const Key('subscription-usage-equipment')),
         findsOneWidget);
