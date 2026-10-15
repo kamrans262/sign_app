@@ -1,0 +1,259 @@
+import 'package:flutter/material.dart';
+
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/sign2digital_header.dart';
+import '../../../../core/widgets/sign2digital_primary_button.dart';
+import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
+import '../../../quotes/presentation/widgets/sign2digital_quote_shadow_panel.dart';
+import '../../domain/subscription_plan.dart';
+import '../widgets/subscription_feature_list.dart';
+
+/// Second screen of Subscription Overview -> Choose Plan -> Payment Details.
+/// Payment Details is intentionally not manufactured while that route is absent.
+class ChoosePlanScreen extends StatefulWidget {
+  const ChoosePlanScreen({
+    super.key,
+    this.catalog = const DemoSubscriptionPlanCatalog(),
+    this.flowState,
+    this.onContinue,
+  });
+
+  final SubscriptionPlanCatalog catalog;
+  final SubscriptionPlanFlowState? flowState;
+  final ValueChanged<SubscriptionPlanOption>? onContinue;
+
+  @override
+  State<ChoosePlanScreen> createState() => _ChoosePlanScreenState();
+}
+
+class _ChoosePlanScreenState extends State<ChoosePlanScreen> {
+  late final SubscriptionPlanFlowState _draft;
+
+  @override
+  void initState() {
+    super.initState();
+    _draft = widget.flowState ?? SubscriptionPlanFlowState();
+  }
+
+  SubscriptionPlanOption? _optionFor(SubscriptionBillingPeriod period) {
+    for (final plan in widget.catalog.options) {
+      if (plan.id == 'business' && plan.period == period) return plan;
+    }
+    return null;
+  }
+
+  SubscriptionPlanOption? get _current => _optionFor(_draft.period);
+
+  bool _isSelected(SubscriptionPlanOption plan) {
+    final chosen = _draft.selectedPlan;
+    return chosen != null &&
+        chosen.id == plan.id && chosen.period == plan.period;
+  }
+
+  void _changePeriod(SubscriptionBillingPeriod period) {
+    setState(() => _draft.changePeriod(period, _optionFor(period)));
+  }
+
+  void _select(SubscriptionPlanOption plan) {
+    setState(() => _draft.select(plan));
+  }
+
+  void _notice(String text) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(text)));
+  }
+
+  void _continue() {
+    final current = _current;
+    if (current == null) {
+      _notice('No configured plan is available for this billing period.');
+      return;
+    }
+    if (!_isSelected(current)) {
+      _notice('Select the Business Plan to continue.');
+      return;
+    }
+    // Refresh the draft to the catalog value, preserving price and benefits
+    // from the selected billing period across any downstream navigation.
+    _draft.select(current);
+    if (widget.onContinue == null) {
+      _notice('Payment Details is not connected yet. Your selection is saved.');
+      return;
+    }
+    widget.onContinue!(current);
+  }
+
+  static const _sectionStyle = TextStyle(
+    fontFamily: 'Inter',
+    fontSize: 20,
+    fontWeight: FontWeight.w700,
+    letterSpacing: -0.3,
+    color: AppColors.dark,
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final option = _current;
+    return Scaffold(
+      backgroundColor: AppColors.white,
+      body: SafeArea(
+        bottom: false,
+        child: Column(children: [
+          const Sign2DigitalHeader(title: 'Subscription'),
+          Expanded(child: Center(child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: ListView(
+              key: const Key('choose-plan-scroll'),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              children: [
+                Stack(children: [
+                  const Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: Divider(
+                      height: 1,
+                      thickness: 1,
+                      color: AppColors.lightBorder,
+                    ),
+                  ),
+                  Sign2DigitalDetailsTabs(
+                    labels: const ['Monthly', 'Yearly'],
+                    horizontalPadding: 15,
+                    selectedIndex: _draft.period.index,
+                    onSelected: (index) =>
+                        _changePeriod(SubscriptionBillingPeriod.values[index]),
+                  ),
+                ]),
+                const SizedBox(height: 20),
+                if (option == null)
+                  const Padding(
+                    padding: EdgeInsets.all(20),
+                    child: Text(
+                      'There is no configured plan for this billing period.',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        color: AppColors.placeholder,
+                      ),
+                    ),
+                  )
+                else ...[
+                  _planCard(option),
+                  if (option.demoOnly) ...[
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Demo preview · Pricing and benefits are not a payment offer.',
+                      key: Key('choose-plan-demo-notice'),
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 11,
+                        color: AppColors.placeholder,
+                      ),
+                    ),
+                  ],
+                ],
+              ],
+            ),
+          ))),
+        ]),
+      ),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Center(
+          heightFactor: 1,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+              child: Sign2DigitalPrimaryButton(
+                key: const Key('choose-plan-continue'),
+                label: 'Continue',
+                height: 48,
+                onPressed: _continue,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _planCard(SubscriptionPlanOption plan) {
+    final selected = _isSelected(plan);
+    return Sign2DigitalQuoteShadowPanel(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Semantics(
+            checked: selected,
+            inMutuallyExclusiveGroup: true,
+            label: '${plan.name}, ${plan.priceLabel}',
+            child: InkWell(
+              key: const Key('choose-plan-select'),
+              borderRadius: BorderRadius.circular(8),
+              onTap: () => _select(plan),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(plan.name, style: const TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: -0.3,
+                        color: AppColors.dark,
+                      )),
+                      const SizedBox(height: 5),
+                      Text(plan.priceLabel,
+                        key: const Key('choose-plan-price'),
+                        style: const TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: -0.3,
+                          color: AppColors.dark,
+                        )),
+                      const SizedBox(height: 6),
+                      Text(plan.description, style: const TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.placeholder,
+                      )),
+                    ],
+                  )),
+                  const SizedBox(width: 8),
+                  ExcludeSemantics(child: SizedBox(
+                    width: 40,
+                    child: Radio<SubscriptionPlanOption>(
+                      key: const Key('choose-plan-radio'),
+                      value: plan,
+                      groupValue: selected ? plan : null,
+                      onChanged: (_) => _select(plan),
+                      activeColor: AppColors.primary,
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  )),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 25),
+          const Text('Plan Features', style: _sectionStyle),
+          const SizedBox(height: 15),
+          SubscriptionFeatureList(
+            items: [
+              for (final name in plan.featureLabels)
+                SubscriptionFeatureItem(label: name),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
