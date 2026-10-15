@@ -61,18 +61,18 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
     _notice('Equipment ID copied.');
   }
 
-  Widget _image() => ClipRRect(
-    borderRadius: BorderRadius.circular(10),
-    child: SizedBox(
-      height: 50, width: 50,
-      child: _record.photos.isEmpty
-          ? const ColoredBox(color: Color(0xFFE3ECF0),
-              child: Icon(Icons.construction_outlined,
-                color: AppColors.primary, size: 28))
-          : Image.memory(_record.photos.first.bytes, fit: BoxFit.cover,
-              errorBuilder: (_, _, _) =>
-                  const Icon(Icons.broken_image_outlined)),
-    ),
+  Widget _image() => CircleAvatar(
+    radius: 20,
+    backgroundColor: const Color(0xFFE3ECF0),
+    child: _record.photos.isEmpty
+        ? const Icon(Icons.construction_outlined,
+            size: 24, color: AppColors.primary)
+        : ClipOval(
+            child: Image.memory(_record.photos.first.bytes,
+              width: 40, height: 40, fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => const Icon(
+                Icons.broken_image_outlined,
+                size: 24, color: AppColors.primary))),
   );
 
   Widget _summary() => Row(
@@ -256,7 +256,9 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
                 onPressed: () {
                   final value = double.tryParse(hours.text.trim());
                   if (value == null || !value.isFinite ||
-                      value <= 0 || value > 100000) return;
+                      value <= 0 || value > 100000) {
+                    return;
+                  }
                   Navigator.pop(dialog, EquipmentUsage(
                     id: 'usage-${DateTime.now().microsecondsSinceEpoch}',
                     date: day, hours: value, job: job.text.trim(),

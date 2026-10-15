@@ -120,7 +120,7 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
 
   Future<void> _chooseName() async {
     if (_saving) return;
-    final options = {...?widget.availableNames, if (_name != null) _name!};
+    final options = {...?widget.availableNames, ?_name};
     final chosen = await showModalBottomSheet<String>(
       context: context,
       builder: (sheet) => SafeArea(child: Column(
@@ -143,7 +143,7 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
 
   Future<void> _chooseCategory() async {
     if (_saving) return;
-    final choices = {..._categories, if (_category != null) _category!};
+    final choices = {..._categories, ?_category};
     final chosen = await showModalBottomSheet<String>(
       context: context,
       builder: (sheet) => SafeArea(child: Column(
@@ -169,10 +169,12 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
         ? await widget.datePicker!(context, initial)
         : await showDatePicker(context: context, initialDate: initial,
             firstDate: DateTime(2000), lastDate: DateTime(2100));
-    if (mounted && date != null) setState(() {
-      _purchaseDate = DateTime(date.year, date.month, date.day);
-      _error = null;
-    });
+    if (mounted && date != null) {
+      setState(() {
+        _purchaseDate = DateTime(date.year, date.month, date.day);
+        _error = null;
+      });
+    }
   }
 
   Future<void> _pickStatus() async {
@@ -189,10 +191,12 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
               onTap: () => Navigator.pop(sheet, status)),
         ])),
     );
-    if (mounted && choice != null) setState(() {
-      _status = choice;
-      _statusTouched = true;
-    });
+    if (mounted && choice != null) {
+      setState(() {
+        _status = choice;
+        _statusTouched = true;
+      });
+    }
   }
 
   Future<void> _pickPhoto() async {

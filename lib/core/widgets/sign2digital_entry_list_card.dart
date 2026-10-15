@@ -19,6 +19,7 @@ class Sign2DigitalEntryListCard extends StatelessWidget {
     this.titleKey,
     this.trailingKey,
     this.shadow = false,
+    this.showTrailingValue = true,
   });
 
   final Widget leading;
@@ -26,6 +27,9 @@ class Sign2DigitalEntryListCard extends StatelessWidget {
   final VoidCallback onTap;
   final Key? titleKey, trailingKey;
   final bool shadow;
+  /// Equipment cards have a status without a monetary value.
+  /// Other listing cards retain their existing amount layout.
+  final bool showTrailingValue;
 
   @override
   Widget build(BuildContext context) => Material(
@@ -72,12 +76,14 @@ class Sign2DigitalEntryListCard extends StatelessWidget {
                 Column(crossAxisAlignment: CrossAxisAlignment.end,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(trailingValue, key: trailingKey,
-                      maxLines: 1,
-                      style: const TextStyle(fontFamily: 'Inter',
-                        fontSize: 14, height: 1, fontWeight: FontWeight.w500,
-                        letterSpacing: -0.3, color: AppColors.dark)),
-                    const SizedBox(height: 5),
+                    if (showTrailingValue) ...[
+                      Text(trailingValue, key: trailingKey,
+                        maxLines: 1,
+                        style: const TextStyle(fontFamily: 'Inter',
+                          fontSize: 14, height: 1, fontWeight: FontWeight.w500,
+                          letterSpacing: -0.3, color: AppColors.dark)),
+                      const SizedBox(height: 5),
+                    ],
                     Sign2DigitalStatusBadge(status: status),
                   ]),
                 const SizedBox(width: 5),

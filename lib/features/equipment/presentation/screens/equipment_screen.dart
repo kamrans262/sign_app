@@ -4,10 +4,9 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
 import '../../../../core/widgets/sign2digital_dashboard_header.dart';
 import '../../../../core/widgets/sign2digital_list_sort_control.dart';
-import '../../../../core/widgets/sign2digital_outlined_container.dart';
+import '../../../../core/widgets/sign2digital_entry_list_card.dart';
 import '../../../../core/widgets/sign2digital_search_field.dart';
 import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
-import '../../../clients/presentation/widgets/sign2digital_status_badge.dart';
 import '../../data/demo_equipment_repository.dart';
 import '../../domain/equipment_record.dart';
 import 'add_equipment_screen.dart';
@@ -67,9 +66,12 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
       final all = await _repository.listEquipment();
       if (mounted) setState(() { _records = all; _loading = false; });
     } catch (_) {
-      if (mounted) setState(() {
-        _loading = false; _error = 'Unable to load equipment';
-      });
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _error = 'Unable to load equipment';
+        });
+      }
     }
   }
 
@@ -150,62 +152,35 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
     }
   }
 
-  Widget _photo(EquipmentRecord record) => ClipRRect(
-    borderRadius: BorderRadius.circular(10),
-    child: SizedBox(
-      width: 50, height: 50,
-      child: record.photos.isEmpty
-          ? const ColoredBox(
-              color: Color(0xFFE3ECF0),
-              child: Icon(Icons.construction_outlined,
-                size: 28, color: AppColors.primary))
-          : Image.memory(record.photos.first.bytes,
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => const Icon(Icons.broken_image_outlined)),
-    ),
+  Widget _photo(EquipmentRecord record) => CircleAvatar(
+    key: Key('equipment-leading-${record.id}'),
+    radius: 20,
+    backgroundColor: const Color(0xFFE3ECF0),
+    child: record.photos.isEmpty
+        ? const Icon(Icons.construction_outlined,
+            size: 24, color: AppColors.primary)
+        : ClipOval(
+            child: Image.memory(record.photos.first.bytes,
+              width: 40, height: 40, fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => const Icon(
+                Icons.broken_image_outlined,
+                size: 24, color: AppColors.primary))),
   );
 
-  Widget _card(EquipmentRecord record) => Material(
-    color: Colors.transparent,
-    child: InkWell(
-      key: Key('equipment-card-${record.id}'),
-      onTap: () => _open(record),
-      borderRadius: BorderRadius.circular(10),
-      child: Sign2DigitalOutlinedContainer(
-        padding: const EdgeInsets.all(15),
-        child: LayoutBuilder(builder: (context, constraints) {
-          final compact = constraints.maxWidth < 310;
-          return Row(children: [
-            _photo(record),
-            SizedBox(width: compact ? 10 : 15),
-            Expanded(child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(record.name,
-                  key: Key('equipment-title-${record.id}'),
-                  maxLines: 2, overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontFamily: 'Inter', fontSize: 16,
-                    fontWeight: FontWeight.w600, color: AppColors.dark)),
-                const SizedBox(height: 5),
-                Text(record.id, maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontFamily: 'Inter', fontSize: 13,
-                    color: AppColors.placeholder)),
-                Text(record.category, maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontFamily: 'Inter', fontSize: 13,
-                    color: AppColors.placeholder)),
-              ],
-            )),
-            const SizedBox(width: 6),
-            Sign2DigitalStatusBadge(status: record.status.label),
-            const SizedBox(width: 6),
-            const Icon(Icons.chevron_right_rounded, size: 24,
-              color: AppColors.secondaryText),
-          ]);
-        }),
-      ),
-    ),
+  // Exactly the same rounded card, typography, status and chevron as
+  // Expenses, Deposits and Invoices; Equipment has no monetary amount.
+  Widget _card(EquipmentRecord record) => Sign2DigitalEntryListCard(
+    key: Key('equipment-card-${record.id}'),
+    shadow: true,
+    leading: _photo(record),
+    title: record.name,
+    titleKey: Key('equipment-title-${record.id}'),
+    subtitle: record.id,
+    dateText: record.category,
+    trailingValue: '',
+    showTrailingValue: false,
+    status: record.status.label,
+    onTap: () => _open(record),
   );
 
   void _navigation(int index) {

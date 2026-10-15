@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sign2digital/core/widgets/sign2digital_entry_list_card.dart';
 import 'package:sign2digital/features/equipment/data/demo_equipment_repository.dart';
 import 'package:sign2digital/features/equipment/domain/equipment_record.dart';
 import 'package:sign2digital/features/equipment/services/equipment_voice_extraction_service.dart';
@@ -55,6 +56,11 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Search Equipment'), findsOneWidget);
     expect(find.byKey(const Key('equipment-card-EQP-0001')), findsOneWidget);
+    // Equipment must use the same invoice/expense card and circular leading.
+    expect(find.byType(Sign2DigitalEntryListCard), findsOneWidget);
+    expect(find.byKey(const Key('equipment-leading-EQP-0001')), findsOneWidget);
+    expect(find.byKey(const Key('equipment-create')), findsOneWidget);
+    expect(find.byType(FloatingActionButton), findsOneWidget);
     await tester.tap(find.byKey(const Key('details-tab-2')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('equipment-empty')), findsOneWidget);
@@ -92,7 +98,11 @@ void main() {
       home: EquipmentDetailsScreen(
         equipment: equipment, repository: repository)));
     await tester.pumpAndSettle();
-    expect(find.text('Mini Excavator'), findsOneWidget);
+    // The name legitimately appears in summary and in the details table.
+    expect(find.descendant(
+      of: find.byKey(const Key('equipment-detail-summary')),
+      matching: find.text('Mini Excavator'),
+    ), findsOneWidget);
     expect(find.byKey(const Key('equipment-details-table')), findsOneWidget);
     await tester.tap(find.byKey(const Key('details-tab-1')));
     await tester.pumpAndSettle();
