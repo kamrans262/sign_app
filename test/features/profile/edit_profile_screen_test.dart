@@ -89,8 +89,8 @@ void main() {
     final repo = _AccountRepo(_account());
     await tester.pumpWidget(MaterialApp(
       home: Builder(builder: (context) => ElevatedButton(
-        onPressed: () => Navigator.of(context).push<void>(
-          MaterialPageRoute<void>(builder: (_) => EditProfileScreen(
+        onPressed: () => Navigator.of(context).push<bool>(
+          MaterialPageRoute<bool>(builder: (_) => EditProfileScreen(
             repository: repo, initialAccount: repo.value,
           )),
         ),
@@ -128,10 +128,12 @@ void main() {
   testWidgets('Cancel discards unsaved profile and photo changes',
       (tester) async {
     final repo = _AccountRepo(_account());
-    final bytes = Uint8List.fromList([1, 2, 3, 4]);
+    final bytes = base64Decode(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4'
+      'z8DwHwAFgAI/ScL/nwAAAABJRU5ErkJggg==');
     await tester.pumpWidget(MaterialApp(home: Builder(builder: (context) =>
-      ElevatedButton(onPressed: () => Navigator.of(context).push<void>(
-        MaterialPageRoute<void>(builder: (_) => EditProfileScreen(
+      ElevatedButton(onPressed: () => Navigator.of(context).push<bool>(
+        MaterialPageRoute<bool>(builder: (_) => EditProfileScreen(
           repository: repo,
           initialAccount: repo.value,
           pickPhotoBytes: () async => bytes,
@@ -149,7 +151,6 @@ void main() {
     expect(repo.value?.fullName, 'Jean Dupont');
     expect(ProfilePhotoSession.bytes.value, isNull);
     expect(find.text('Edit'), findsOneWidget);
-    // Mock bytes are not an actual image; decoding errors do not alter state.
   });
 
   testWidgets('Selected photo updates shared session only after Save',
@@ -159,8 +160,8 @@ void main() {
       'z8DwHwAFgAI/ScL/nwAAAABJRU5ErkJggg=='));
     final repo = _AccountRepo(_account());
     await tester.pumpWidget(MaterialApp(home: Builder(builder: (context) =>
-      ElevatedButton(onPressed: () => Navigator.of(context).push<void>(
-        MaterialPageRoute<void>(builder: (_) => EditProfileScreen(
+      ElevatedButton(onPressed: () => Navigator.of(context).push<bool>(
+        MaterialPageRoute<bool>(builder: (_) => EditProfileScreen(
           repository: repo,
           initialAccount: repo.value,
           pickPhotoBytes: () async => bytes,
