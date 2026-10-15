@@ -36,10 +36,11 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('dashboard-tab-0')));
     await tester.pumpAndSettle();
-    expect(find.text('Signature Requests'), findsOneWidget);
-    expect(find.textContaining('No quote to track yet'), findsOneWidget);
+    expect(find.byKey(const Key('home-dashboard-scroll')), findsOneWidget);
+    expect(find.byKey(const Key('home-preview-notice')), findsOneWidget);
+    expect(find.text('Signature Requests'), findsNothing);
     expect(find.text('Document Sent'), findsNothing);
-    await tester.tap(find.text('View Clients'));
+    await tester.tap(find.byKey(const Key('home-stat-clients')));
     await tester.pumpAndSettle();
     expect(find.text('Clients'), findsWidgets);
     expect(tester.takeException(), isNull);
@@ -53,7 +54,22 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('dashboard-tab-0')));
     await tester.pumpAndSettle();
-    expect(find.text('Create Quote'), findsOneWidget);
+    expect(find.byKey(const Key('home-dashboard-scroll')), findsOneWidget);
+    final trackingLink = find.byKey(
+      const Key('home-open-signature-tracking'),
+    );
+    await tester.scrollUntilVisible(
+      trackingLink,
+      150,
+      scrollable: find.descendant(
+        of: find.byKey(const Key('home-dashboard-scroll')),
+        matching: find.byType(Scrollable),
+      ).first,
+    );
+    await tester.ensureVisible(trackingLink);
+    await tester.pumpAndSettle();
+    await tester.tap(trackingLink);
+    await tester.pumpAndSettle();
     expect(find.text('Viewed by Customer'), findsOneWidget);
     expect(find.text('Jean Dupont'), findsOneWidget);
     expect(
@@ -65,7 +81,7 @@ void main() {
     expect(find.text('Active (12)'), findsOneWidget);
     await tester.tap(find.byKey(const Key('dashboard-tab-0')));
     await tester.pumpAndSettle();
-    expect(find.text('Create Quote'), findsOneWidget);
+    expect(find.byKey(const Key('home-dashboard-scroll')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
