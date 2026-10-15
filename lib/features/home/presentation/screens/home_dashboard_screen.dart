@@ -101,13 +101,12 @@ class HomeDashboardScreen extends StatefulWidget {
 }
 
 class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
-  // Matches standalone section headings (for example Notifications in
-  // Preferences), not the text inside dashboard cards.
+  // Home-only section titles match the existing Subscription section style.
+  // This must not change label/value typography inside cards.
   static const TextStyle _sectionHeadingStyle = TextStyle(
     fontFamily: 'Inter',
-    fontSize: 18,
-    height: 1.0,
-    fontWeight: FontWeight.w600,
+    fontSize: 20,
+    fontWeight: FontWeight.w700,
     letterSpacing: -0.3,
     color: AppColors.dark,
   );
@@ -325,6 +324,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                   ),
                 ),
               ),
+              // Company container → Overview heading: 20px.
               const SizedBox(height: 20),
               Row(children: [
                 const Expanded(
@@ -334,11 +334,15 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                   key: const Key('home-refresh'),
                   tooltip: 'Refresh dashboard',
                   onPressed: _reload,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints.tightFor(
+                    width: 24, height: 24),
                   icon: const Icon(Icons.refresh_rounded,
                     color: AppColors.primary, size: 22),
                 ),
               ]),
-              const SizedBox(height: 15),
+              // Heading → overview cards: 10px.
+              const SizedBox(height: 10),
               LayoutBuilder(builder: (context, constraints) {
                 final columns = constraints.maxWidth >= 600 ? 3 : 2;
                 const space = 15.0;
@@ -359,9 +363,11 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                   ],
                 );
               }),
-              const SizedBox(height: 25),
+              // Overview cards → next section: 20px.
+              const SizedBox(height: 20),
               const Text('Quick Actions', style: _sectionHeadingStyle),
-              const SizedBox(height: 15),
+              // Heading → quick-action cards: 10px.
+              const SizedBox(height: 10),
               LayoutBuilder(builder: (context, constraints) {
                 final columns = constraints.maxWidth >= 600 ? 3 : 2;
                 const space = 15.0;
@@ -383,10 +389,11 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                 );
               }),
               if (widget.selectedQuote != null) ...[
-                const SizedBox(height: 25),
+                // Continue the same rhythm for any following sections.
+                const SizedBox(height: 20),
                 const Text('Signature Tracking',
-                  style: AppTextStyles.fieldLabel),
-                const SizedBox(height: 15),
+                  style: _sectionHeadingStyle),
+                const SizedBox(height: 10),
                 _HomePanel(
                   padding: const EdgeInsets.all(15),
                   child: Column(
