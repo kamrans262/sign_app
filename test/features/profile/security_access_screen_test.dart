@@ -123,6 +123,8 @@ void main() {
     expect(find.byType(ProfileNotificationRow), findsOneWidget);
     expect(find.text('2 FA is enabled'), findsOneWidget);
     expect(find.byKey(const Key('security-demo-notice')), findsOneWidget);
+    // Session cards are below the initial viewport on smaller screens.
+    await _scrollTo(tester, const Key('security-session-preview-current'));
     expect(find.text('MacBook Pro'), findsOneWidget);
     await _scrollTo(tester, const Key('security-session-preview-iphone'));
     expect(find.text('iPhone 15'), findsOneWidget);
