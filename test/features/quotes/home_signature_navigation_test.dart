@@ -40,6 +40,9 @@ void main() {
     expect(find.byKey(const Key('home-demo-disclaimer')), findsOneWidget);
     expect(find.text('Document Sent'), findsNothing);
     expect(find.byKey(const Key('home-open-signature-tracking')), findsNothing);
+    await tester.ensureVisible(
+      find.byKey(const Key('home-card-documents')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('home-card-documents')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('documents-scroll')), findsOneWidget);
