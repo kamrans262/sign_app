@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../assets/dashboard_assets.dart';
+import '../services/profile_photo_session.dart';
 import '../theme/app_colors.dart';
 import '../theme/dashboard_colors.dart';
 
@@ -74,12 +75,16 @@ class Sign2DigitalDashboardHeader extends StatelessWidget {
             child: InkWell(
               onTap: onProfileTap,
               customBorder: const CircleBorder(),
-              child: CircleAvatar(
-                radius: 24,
-                backgroundColor: DashboardColors.paleBlue,
-                backgroundImage:
-                    profileImage ??
-                    const AssetImage(DashboardAssets.demoAvatar),
+              child: ValueListenableBuilder(
+                valueListenable: ProfilePhotoSession.bytes,
+                builder: (context, photoBytes, child) => CircleAvatar(
+                  radius: 24,
+                  backgroundColor: DashboardColors.paleBlue,
+                  backgroundImage: profileImage ??
+                      (photoBytes == null
+                          ? const AssetImage(DashboardAssets.demoAvatar)
+                          : MemoryImage(photoBytes)),
+                ),
               ),
             ),
           ),
