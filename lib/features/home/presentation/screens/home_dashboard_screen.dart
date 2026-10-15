@@ -101,6 +101,17 @@ class HomeDashboardScreen extends StatefulWidget {
 }
 
 class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
+  // Matches standalone section headings (for example Notifications in
+  // Preferences), not the text inside dashboard cards.
+  static const TextStyle _sectionHeadingStyle = TextStyle(
+    fontFamily: 'Inter',
+    fontSize: 18,
+    height: 1.0,
+    fontWeight: FontWeight.w600,
+    letterSpacing: -0.3,
+    color: AppColors.dark,
+  );
+
   HomeOverview? _overview;
   List<CompanyProfile> _companies = const [];
   String? _companyId;
@@ -317,7 +328,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
               const SizedBox(height: 20),
               Row(children: [
                 const Expanded(
-                  child: Text('Overview', style: AppTextStyles.fieldLabel),
+                  child: Text('Overview', style: _sectionHeadingStyle),
                 ),
                 IconButton(
                   key: const Key('home-refresh'),
@@ -349,7 +360,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                 );
               }),
               const SizedBox(height: 25),
-              const Text('Quick Actions', style: AppTextStyles.fieldLabel),
+              const Text('Quick Actions', style: _sectionHeadingStyle),
               const SizedBox(height: 15),
               LayoutBuilder(builder: (context, constraints) {
                 final columns = constraints.maxWidth >= 600 ? 3 : 2;
