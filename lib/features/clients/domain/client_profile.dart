@@ -32,6 +32,23 @@ class ClientProfile {
   final String dialingCode;
   final String nationalPhoneNumber;
 
+  /// UI-only derived count without modifying the stored client profile.
+  ClientProfile withJobCount(int count) => ClientProfile(
+        id: id,
+        companyName: companyName,
+        companyType: companyType,
+        email: email,
+        phone: phone,
+        jobCount: count,
+        logoAsset: logoAsset,
+        fullName: fullName,
+        address: address,
+        notes: notes,
+        countryIsoCode: countryIsoCode,
+        dialingCode: dialingCode,
+        nationalPhoneNumber: nationalPhoneNumber,
+      );
+
   String get initials {
     final words = companyName.trim().split(RegExp(r'\s+'));
     if (words.isEmpty || words.first.isEmpty) return '?';
