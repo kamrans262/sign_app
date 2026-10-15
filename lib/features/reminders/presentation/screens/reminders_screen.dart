@@ -14,7 +14,7 @@ class RemindersScreen extends StatefulWidget {
   const RemindersScreen({
     super.key, this.repository, this.referenceSource,
     this.onNavigationSelected, this.onNotificationTap,
-    this.onProfileTap, this.now,
+    this.onProfileTap, this.now, this.selectedNavigationIndex = 4,
   });
 
   final ReminderRepository? repository;
@@ -22,6 +22,7 @@ class RemindersScreen extends StatefulWidget {
   final ValueChanged<int>? onNavigationSelected;
   final VoidCallback? onNotificationTap, onProfileTap;
   final DateTime Function()? now;
+  final int selectedNavigationIndex;
 
   @override
   State<RemindersScreen> createState() => _RemindersScreenState();
@@ -170,7 +171,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
   );
 
   void _navigation(int index) {
-    if (index == 4) return;
+    if (index == widget.selectedNavigationIndex) return;
     if (widget.onNavigationSelected == null) {
       Navigator.of(context).maybePop();
       return;
@@ -260,7 +261,8 @@ class _RemindersScreenState extends State<RemindersScreen> {
         ))),
       ])),
       bottomNavigationBar: Sign2DigitalBottomNavigationBar(
-        selectedIndex: 4, onSelected: _navigation),
+        selectedIndex: widget.selectedNavigationIndex,
+        onSelected: _navigation),
     );
   }
 }
