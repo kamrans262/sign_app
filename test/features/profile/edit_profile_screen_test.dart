@@ -179,6 +179,41 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('Phone selector saves chosen country and custom job title',
+      (tester) async {
+    final repo = _AccountRepo(_account());
+    await tester.pumpWidget(MaterialApp(home: EditProfileScreen(
+      repository: repo,
+      initialAccount: repo.value,
+    )));
+    await _scrollTo(tester, const Key('profile-edit-phone'));
+    await tester.tap(find.byKey(const Key('country-selector')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('country-search')), 'Canada');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('country-CA')));
+    await tester.pumpAndSettle();
+    await _scrollTo(tester, const Key('profile-edit-title'));
+    await tester.tap(find.byKey(const Key('profile-edit-title')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('profile-title-other')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('profile-title-custom-input')),
+      'Senior Architect');
+    await tester.tap(find.byKey(const Key('profile-title-custom-save')));
+    await tester.pumpAndSettle();
+    await _scrollTo(tester, const Key('profile-edit-save'));
+    await tester.tap(find.byKey(const Key('profile-edit-save')));
+    await tester.pumpAndSettle();
+    expect(repo.value?.countryIsoCode, 'CA');
+    expect(repo.value?.dialingCode, '+1');
+    expect(repo.value?.title, 'Senior Architect');
+    expect(repo.value?.id, 'account-123');
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('Invalid e-mail blocks saving and keeps the form open',
       (tester) async {
     final repo = _AccountRepo(_account());
