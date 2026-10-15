@@ -13,6 +13,7 @@ import '../../../quotes/presentation/widgets/sign2digital_quote_shadow_panel.dar
 import '../widgets/profile_settings_action_card.dart';
 import 'edit_profile_screen.dart';
 import 'profile_sections_screen.dart';
+import 'profile_preferences_screen.dart';
 
 /// Profile entry point for More and the dashboard avatar.
 /// Reads the existing session account, never an independent profile fixture.
@@ -171,10 +172,16 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                     icon: Icons.tune_rounded,
                     title: 'Preferences',
                     subtitle: 'Language, data, time and notification',
-                    onTap: () => _section('Preferences',
-                      'Language, date, time and notification settings '
-                      'are not connected to user preferences yet.',
-                      widget.onPreferences),
+                    onTap: () {
+                      final callback = widget.onPreferences;
+                      if (callback != null) {
+                        callback();
+                      } else {
+                        _open(ProfilePreferencesScreen(
+                          onNavigationSelected: _navigate,
+                        ));
+                      }
+                    },
                   ),
                   const SizedBox(height: 20),
                   ProfileSettingsActionCard(
