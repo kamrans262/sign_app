@@ -56,6 +56,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
   late int _selectedIndex;
   DocumentCategory? _documentsCategory;
   int _homeRevision = 0;
+  int _clientsRevision = 0;
   late final ClientRepository _repository;
 
   @override
@@ -117,6 +118,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
     if (draft == null || !mounted) return;
     try {
       await _repository.createClient(draft);
+      if (mounted) setState(() => _clientsRevision++);
       _notifyHome('Client added to the local demo list.');
     } catch (_) {
       _notifyHome('Unable to save the client.');
@@ -271,6 +273,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                     onJobTap: _openJobDetails,
                   ),
                   _ClientsContent(
+                    key: ValueKey('clients-content-$_clientsRevision'),
                     repository: _repository,
                     showNotReady: _showNotReady,
                     onTabSelected: (index) =>
