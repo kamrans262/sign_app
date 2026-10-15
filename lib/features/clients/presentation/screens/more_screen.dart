@@ -27,6 +27,12 @@ class MoreScreen extends StatelessWidget {
       Navigator.of(context).push<void>(
         MaterialPageRoute<void>(builder: (_) => screen));
 
+  void _openProfile(BuildContext context) => _open(context,
+    ProfileSettingsScreen(
+      onNavigationSelected: onTabSelected,
+      onNotificationTap: () => onNotReady?.call('Notifications'),
+    ));
+
   @override
   Widget build(BuildContext context) => Center(
     child: ConstrainedBox(
@@ -39,10 +45,7 @@ class MoreScreen extends StatelessWidget {
             key: const Key('open-profile-settings'),
             title: 'Profile & Settings',
             icon: Icons.account_circle_outlined,
-            onTap: () => _open(context, ProfileSettingsScreen(
-              onNavigationSelected: onTabSelected,
-              onNotificationTap: () => onNotReady?.call('Notifications'),
-            ))),
+            onTap: () => _openProfile(context),
           const SizedBox(height: 15),
           _tile(context,
             key: const Key('open-global-search'),
@@ -50,7 +53,7 @@ class MoreScreen extends StatelessWidget {
             icon: Icons.search_rounded,
             onTap: () => _open(context, GlobalSearchScreen(
               onNotificationTap: () => onNotReady?.call('Notifications'),
-              onProfileTap: () => onNotReady?.call('Profile'),
+              onProfileTap: () => _openProfile(context),
             ))),
           const SizedBox(height: 15),
           _tile(context,
@@ -60,7 +63,7 @@ class MoreScreen extends StatelessWidget {
             onTap: () => _open(context, SubscriptionOverviewScreen(
               onNavigationSelected: onTabSelected,
               onNotificationTap: () => onNotReady?.call('Notifications'),
-              onProfileTap: () => onNotReady?.call('Profile'),
+              onProfileTap: () => _openProfile(context),
             ))),
           const SizedBox(height: 15),
           _tile(context,
@@ -85,7 +88,7 @@ class MoreScreen extends StatelessWidget {
               documentGenerator: documentGenerator,
               onNavigationSelected: onTabSelected,
               onNotificationTap: () => onNotReady?.call('Notifications'),
-              onProfileTap: () => onNotReady?.call('Profile'),
+              onProfileTap: () => _openProfile(context),
             ))),
           const SizedBox(height: 15),
           _tile(context,
@@ -95,7 +98,7 @@ class MoreScreen extends StatelessWidget {
             onTap: () => _open(context, ReportsScreen(
               onNavigationSelected: onTabSelected,
               onNotificationTap: () => onNotReady?.call('Notifications'),
-              onProfileTap: () => onNotReady?.call('Profile'),
+              onProfileTap: () => _openProfile(context),
             ))),
           const SizedBox(height: 15),
           _tile(context,
@@ -105,7 +108,7 @@ class MoreScreen extends StatelessWidget {
             onTap: () => _open(context, TimeLabourScreen(
               onNavigationSelected: onTabSelected,
               onNotificationTap: () => onNotReady?.call('Notifications'),
-              onProfileTap: () => onNotReady?.call('Profile'),
+              onProfileTap: () => _openProfile(context),
             ))),
           const SizedBox(height: 15),
           _tile(context,
@@ -115,7 +118,7 @@ class MoreScreen extends StatelessWidget {
             onTap: () => _open(context, InvoicesScreen(
               onNavigationSelected: onTabSelected,
               onNotificationTap: () => onNotReady?.call('Notifications'),
-              onProfileTap: () => onNotReady?.call('Profile'),
+              onProfileTap: () => _openProfile(context),
             ))),
           const SizedBox(height: 15),
           _tile(context,
@@ -125,7 +128,7 @@ class MoreScreen extends StatelessWidget {
             onTap: () => _open(context, EquipmentScreen(
               onNavigationSelected: onTabSelected,
               onNotificationTap: () => onNotReady?.call('Notifications'),
-              onProfileTap: () => onNotReady?.call('Profile'),
+              onProfileTap: () => _openProfile(context),
             ))),
           const SizedBox(height: 15),
           _tile(context,
@@ -135,7 +138,7 @@ class MoreScreen extends StatelessWidget {
             onTap: () => _open(context, DepositsScreen(
               onNavigationSelected: onTabSelected,
               onNotificationTap: () => onNotReady?.call('Notifications'),
-              onProfileTap: () => onNotReady?.call('Profile'),
+              onProfileTap: () => _openProfile(context),
             ))),
           const SizedBox(height: 15),
           _tile(context,
@@ -145,7 +148,7 @@ class MoreScreen extends StatelessWidget {
             onTap: () => _open(context, ExpensesScreen(
               onNavigationSelected: onTabSelected,
               onNotificationTap: () => onNotReady?.call('Notifications'),
-              onProfileTap: () => onNotReady?.call('Profile'),
+              onProfileTap: () => _openProfile(context),
             ))),
         ],
       ),
