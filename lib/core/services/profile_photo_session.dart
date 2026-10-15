@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flutter/foundation.dart';
 
 /// A session-only profile photo. The app has no authenticated photo API yet.
