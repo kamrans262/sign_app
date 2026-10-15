@@ -133,7 +133,9 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
     }
     final result = await Navigator.of(context).push<EquipmentRecord>(
       MaterialPageRoute<EquipmentRecord>(
-        builder: (_) => const AddEquipmentScreen()),
+        builder: (_) => AddEquipmentScreen(
+          availableNames: _records.map((r) => r.name).toSet().toList(),
+        )),
     );
     if (result == null || !mounted) return;
     try {

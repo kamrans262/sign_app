@@ -113,7 +113,7 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
       Sign2DigitalInformationRow('Current Location',
         _record.location.isEmpty ? 'Not specified' : _record.location),
       Sign2DigitalInformationRow('Hours',
-        '${_record.hours.toStringAsFixed(1)}h'),
+        '${_record.hours == _record.hours.roundToDouble() ? _record.hours.toStringAsFixed(0) : _record.hours.toStringAsFixed(1)}h'),
     ],
   );
 

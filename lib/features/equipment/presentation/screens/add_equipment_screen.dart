@@ -47,6 +47,7 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
   DateTime? _purchaseDate;
   EquipmentStatus _status = EquipmentStatus.available;
   bool _saving = false, _photoBusy = false, _voiceOpen = false;
+  bool _statusTouched = false;
   String? _error;
 
   static const _categories = [
@@ -188,7 +189,10 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
               onTap: () => Navigator.pop(sheet, status)),
         ])),
     );
-    if (mounted && choice != null) setState(() => _status = choice);
+    if (mounted && choice != null) setState(() {
+      _status = choice;
+      _statusTouched = true;
+    });
   }
 
   Future<void> _pickPhoto() async {
@@ -313,7 +317,9 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
       if (_location.text.trim().isEmpty) _location.text = suggestion.location ?? '';
       if (_notes.text.trim().isEmpty) _notes.text = suggestion.notes ?? '';
       _purchaseDate ??= suggestion.purchaseDate;
-      // Status is a deliberate user choice; never override it from audio.
+      if (!_statusTouched && suggestion.status != null) {
+        _status = suggestion.status!;
+      }
       _error = null;
     });
   }
@@ -361,6 +367,10 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
     }
     setState(() { _saving = true; _error = null; });
     final old = widget.initialEquipment;
+    if (old != null && _id.text.trim() != old.id) {
+      setState(() { _saving = false; _error = 'Equipment ID cannot change during edit.'; });
+      return;
+    }
     Navigator.of(context).pop(EquipmentRecord(
       id: old?.id ?? _id.text.trim(),
       name: _name!.trim(), category: _category!.trim(),
