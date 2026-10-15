@@ -118,13 +118,19 @@ void main() {
         matching: find.byType(TextFormField)), 'new@example.com');
     await tester.scrollUntilVisible(
       find.byKey(const Key('profile-edit-phone')), 150,
-      scrollable: find.byKey(const Key('profile-edit-scroll')));
+      scrollable: find.descendant(
+        of: find.byKey(const Key('profile-edit-scroll')),
+        matching: find.byType(Scrollable),
+      ).first);
     await tester.enterText(
       find.descendant(of: find.byKey(const Key('profile-edit-phone')),
         matching: find.byType(TextFormField)), '787654321');
     await tester.scrollUntilVisible(
       find.byKey(const Key('profile-edit-save')), 150,
-      scrollable: find.byKey(const Key('profile-edit-scroll')));
+      scrollable: find.descendant(
+        of: find.byKey(const Key('profile-edit-scroll')),
+        matching: find.byType(Scrollable),
+      ).first);
     await tester.tap(find.byKey(const Key('profile-edit-save')));
     await tester.pumpAndSettle();
 
