@@ -348,7 +348,7 @@ class _AiDocumentsScreenState extends State<AiDocumentsScreen> {
                   onTap: _generate),
                 const SizedBox(height: 20),
                 _actionCard(
-                  title: 'Summerize Document', id: 'summarize',
+                  title: 'Summarize Document', id: 'summarize',
                   onTap: () => _selectDocumentFor('summarize')),
                 const SizedBox(height: 20),
                 _actionCard(
