@@ -302,6 +302,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
 
 class _ClientsContent extends StatefulWidget {
   const _ClientsContent({
+    super.key,
     required this.repository,
     required this.showNotReady,
     required this.onTabSelected,
