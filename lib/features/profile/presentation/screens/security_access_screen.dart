@@ -212,7 +212,8 @@ class _SecurityAccessScreenState extends State<SecurityAccessScreen> {
     }
   }
 
-  Future<void> _revokeSession(SecurityDeviceSession session) async {
+  Future<void> _revokeSession(SecurityDeviceSession session,
+      {bool fromAll = false}) async {
     if (_busy || session.isCurrent) {
       return;
     }
@@ -237,6 +238,9 @@ class _SecurityAccessScreenState extends State<SecurityAccessScreen> {
       if (done) {
         _password.clear();
         await _load();
+        if (fromAll && mounted) {
+          Navigator.of(context).pop();
+        }
         _message('Session revoked by the account service.');
       } else {
         _message('Session revocation is not connected. No changes were made.');
@@ -252,7 +256,8 @@ class _SecurityAccessScreenState extends State<SecurityAccessScreen> {
     }
   }
 
-  void _sessionDetails(SecurityDeviceSession session) {
+  void _sessionDetails(SecurityDeviceSession session,
+      {bool fromAll = false}) {
     showModalBottomSheet<void>(
       context: context,
       useSafeArea: true,
@@ -280,7 +285,7 @@ class _SecurityAccessScreenState extends State<SecurityAccessScreen> {
                 key: const Key('security-revoke-session'),
                 onPressed: () {
                   Navigator.of(sheet).pop();
-                  _revokeSession(session);
+                  _revokeSession(session, fromAll: fromAll);
                 },
                 child: const Text('Sign Out This Device',
                   style: TextStyle(color: Color(0xFFFF1B23))),
@@ -298,7 +303,7 @@ class _SecurityAccessScreenState extends State<SecurityAccessScreen> {
       MaterialPageRoute<void>(builder: (_) => _SecuritySessionsScreen(
         sessions: sessions,
         demoOnly: _snapshot?.demoOnly ?? false,
-        onSelect: _sessionDetails,
+        onSelect: (session) => _sessionDetails(session, fromAll: true),
       )),
     );
   }
