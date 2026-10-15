@@ -59,7 +59,14 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('home-dashboard-scroll')), findsOneWidget);
     final track = find.byKey(const Key('home-open-signature-tracking'));
-    await tester.ensureVisible(track);
+    await tester.scrollUntilVisible(
+      track, 140,
+      scrollable: find.descendant(
+        of: find.byKey(const Key('home-dashboard-scroll')),
+        matching: find.byType(Scrollable),
+      ).first,
+      maxScrolls: 20,
+    );
     await tester.pumpAndSettle();
     await tester.tap(track);
     await tester.pumpAndSettle();
