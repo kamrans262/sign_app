@@ -3,6 +3,21 @@ import 'package:flutter/material.dart';
 import '../../../jobs/presentation/screens/jobs_screen.dart';
 import '../../../jobs/presentation/screens/job_details_screen.dart';
 import '../../../jobs/domain/job_model.dart';
+import '../../../jobs/domain/create_job_draft.dart';
+import '../../../jobs/presentation/screens/create_job_screen.dart';
+import '../../../home/presentation/screens/home_dashboard_screen.dart';
+import '../../../documents/domain/document_record.dart';
+import '../../../documents/presentation/screens/generate_ai_document_screen.dart';
+import '../../../quotes/presentation/screens/create_quote_screen.dart';
+import '../../../invoices/presentation/screens/invoices_screen.dart';
+import '../../../expenses/presentation/screens/expenses_screen.dart';
+import '../../../expenses/presentation/screens/add_expense_screen.dart';
+import '../../../expenses/data/demo_expense_repository.dart';
+import '../../../expenses/domain/expense_record.dart';
+import '../../../labour/presentation/screens/add_labour_entry_screen.dart';
+import '../../../labour/data/demo_labour_repository.dart';
+import '../../../labour/domain/labour_entry.dart';
+import '../../../reminders/presentation/screens/reminders_screen.dart';
 import '../../../documents/presentation/screens/documents_screen.dart';
 import '../../../quotes/domain/quote_tracking_home_session.dart';
 import '../../../quotes/presentation/screens/signature_request_screen.dart';
@@ -26,21 +41,27 @@ import '../widgets/sign2digital_client_card.dart';
 /// A temporary UI-only destination after demo Login.
 /// Replace this landing route with Home after the Home UI has been completed.
 class ClientsScreen extends StatefulWidget {
-  const ClientsScreen({super.key, this.repository});
+  const ClientsScreen({super.key, this.repository, this.initialTab = 2});
 
   final ClientRepository? repository;
+  /// The real login route starts on Home (0). Existing clients-only embed
+  /// points keep their original initial tab (2) for backwards compatibility.
+  final int initialTab;
 
   @override
   State<ClientsScreen> createState() => _ClientsScreenState();
 }
 
 class _ClientsScreenState extends State<ClientsScreen> {
-  int _selectedIndex = 2;
+  late int _selectedIndex;
+  DocumentCategory? _documentsCategory;
+  int _homeRevision = 0;
   late final ClientRepository _repository;
 
   @override
   void initState() {
     super.initState();
+    _selectedIndex = widget.initialTab;
     _repository = widget.repository ?? DemoClientRepository();
   }
 
@@ -50,6 +71,150 @@ class _ClientsScreenState extends State<ClientsScreen> {
         content: Text('$action is not connected yet. This is a UI preview.'),
       ),
     );
+  }
+
+  void _selectDashboardTab(int index, {DocumentCategory? category}) {
+    if (!mounted) return;
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState(() {
+      _selectedIndex = index;
+      if (index == 3) _documentsCategory = category;
+      if (index == 0) _homeRevision++;
+    });
+  }
+
+  void _notifyHome(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _openHomeRoute(Widget screen) async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(builder: (_) => screen));
+    if (mounted) setState(() => _homeRevision++);
+  }
+
+  Future<void> _createJobFromHome() async {
+    final draft = await Navigator.of(context).push<CreateJobDraft>(
+      MaterialPageRoute<CreateJobDraft>(
+        builder: (_) => CreateJobScreen(clientRepository: _repository),
+      ),
+    );
+    if (draft != null) {
+      _notifyHome('Job draft created locally. Not saved to the server.');
+    }
+    if (mounted) setState(() => _homeRevision++);
+  }
+
+  Future<void> _createClientFromHome() async {
+    final draft = await Navigator.of(context).push<ClientDraft>(
+      MaterialPageRoute<ClientDraft>(
+        builder: (_) => const AddClientScreen(),
+      ),
+    );
+    if (draft == null || !mounted) return;
+    try {
+      await _repository.createClient(draft);
+      _notifyHome('Client added to the local demo list.');
+    } catch (_) {
+      _notifyHome('Unable to save the client.');
+    }
+    if (mounted) setState(() => _homeRevision++);
+  }
+
+  Future<void> _createExpenseFromHome() async {
+    final draft = await Navigator.of(context).push<ExpenseRecord>(
+      MaterialPageRoute<ExpenseRecord>(
+        builder: (_) => const AddExpenseScreen(
+          selectedNavigationIndex: 0),
+      ),
+    );
+    if (draft == null || !mounted) return;
+    try {
+      await const DemoExpenseRepository().saveDraft(draft);
+      _notifyHome('Expense saved locally for review.');
+    } catch (_) {
+      _notifyHome('Unable to save the expense draft.');
+    }
+    if (mounted) setState(() => _homeRevision++);
+  }
+
+  Future<void> _createTimeFromHome() async {
+    final entry = await Navigator.of(context).push<LabourEntry>(
+      MaterialPageRoute<LabourEntry>(
+        builder: (_) => AddLabourEntryScreen(
+          kind: LabourEntryKind.timeSheet,
+          jobs: LabourDemoJobs.all,
+          selectedNavigationIndex: 0,
+        ),
+      ),
+    );
+    if (entry == null || !mounted) return;
+    try {
+      await const DemoLabourRepository().save(entry);
+      _notifyHome('Time entry saved locally as Pending.');
+    } catch (_) {
+      _notifyHome('Unable to save the time entry.');
+    }
+    if (mounted) setState(() => _homeRevision++);
+  }
+
+  Future<void> _openSelectedQuoteTracking() async {
+    final quote = QuoteTrackingHomeSession.currentQuote;
+    if (quote == null) return;
+    await _openHomeRoute(SignatureRequestScreen(
+      quote: quote,
+      selectedTab: 0,
+      onNavigationSelected: (index) {
+        Navigator.of(context).pop();
+        _selectDashboardTab(index);
+      },
+    ));
+  }
+
+  void _onHomeAction(HomeAction action) {
+    switch (action) {
+      case HomeAction.jobs:
+        _selectDashboardTab(1);
+      case HomeAction.quotes:
+        _selectDashboardTab(3, category: DocumentCategory.quotes);
+      case HomeAction.documents:
+        _selectDashboardTab(3);
+      case HomeAction.invoices:
+        _openHomeRoute(InvoicesScreen(
+          selectedNavigationIndex: 0,
+          onNavigationSelected: _selectDashboardTab,
+          onNotificationTap: () => _showNotReady('Notifications'),
+        ));
+      case HomeAction.reminders:
+        _openHomeRoute(RemindersScreen(
+          selectedNavigationIndex: 0,
+          onNavigationSelected: _selectDashboardTab,
+          onNotificationTap: () => _showNotReady('Notifications'),
+        ));
+      case HomeAction.expenses:
+        _openHomeRoute(ExpensesScreen(
+          selectedNavigationIndex: 0,
+          onNavigationSelected: _selectDashboardTab,
+          onNotificationTap: () => _showNotReady('Notifications'),
+        ));
+      case HomeAction.createQuote:
+        _openHomeRoute(const CreateQuoteScreen());
+      case HomeAction.newJob:
+        _createJobFromHome();
+      case HomeAction.addClient:
+        _createClientFromHome();
+      case HomeAction.createDocument:
+        _openHomeRoute(const GenerateAiDocumentScreen());
+      case HomeAction.addExpense:
+        _createExpenseFromHome();
+      case HomeAction.addTime:
+        _createTimeFromHome();
+      case HomeAction.signatureTracking:
+        _openSelectedQuoteTracking();
+    }
   }
 
   Future<void> _openJobDetails(JobModel job) async {
@@ -71,23 +236,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Home is the Signature Request tracking destination for the quote opened
-    // in this session. Show a real empty state if no quote is available.
-    final currentQuote = _selectedIndex == 0
-        ? QuoteTrackingHomeSession.currentQuote
-        : null;
-    if (currentQuote != null) {
-      return SignatureRequestScreen(
-        key: ValueKey('home-signature-${currentQuote.id}'),
-        quote: currentQuote,
-        selectedTab: 0,
-        onNavigationSelected: (index) {
-          if (mounted) {
-            setState(() => _selectedIndex = index);
-          }
-        },
-      );
-    }
+    final currentQuote = QuoteTrackingHomeSession.currentQuote;
     return Scaffold(
       backgroundColor: AppColors.white,
       resizeToAvoidBottomInset: true,
@@ -112,8 +261,10 @@ class _ClientsScreenState extends State<ClientsScreen> {
               child: IndexedStack(
                 index: _selectedIndex,
                 children: [
-                  _SignatureHomeEmptyState(
-                    onViewClients: () => setState(() => _selectedIndex = 2),
+                  HomeDashboardScreen(
+                    selectedQuote: currentQuote,
+                    refreshRevision: _homeRevision,
+                    onAction: _onHomeAction,
                   ),
                   JobsScreen(
                     onNotReady: _showNotReady,
@@ -125,7 +276,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                     onTabSelected: (index) =>
                         setState(() => _selectedIndex = index),
                   ),
-                  const DocumentsScreen(),
+                  DocumentsScreen(initialCategory: _documentsCategory),
                   MoreScreen(
                     onTabSelected: (index) {
                       if (mounted) setState(() => _selectedIndex = index);
@@ -140,46 +291,10 @@ class _ClientsScreenState extends State<ClientsScreen> {
       ),
       bottomNavigationBar: Sign2DigitalBottomNavigationBar(
         selectedIndex: _selectedIndex,
-        onSelected: (index) {
-          FocusManager.instance.primaryFocus?.unfocus();
-          if (_selectedIndex != index) setState(() => _selectedIndex = index);
-        },
+        onSelected: _selectDashboardTab,
       ),
     );
   }
-}
-
-/// A tracking screen needs an actual quote, never a fabricated signature.
-class _SignatureHomeEmptyState extends StatelessWidget {
-  const _SignatureHomeEmptyState({required this.onViewClients});
-
-  final VoidCallback onViewClients;
-
-  @override
-  Widget build(BuildContext context) => Center(
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.draw_outlined, color: AppColors.primary, size: 40),
-          const SizedBox(height: 16),
-          const Text('Signature Requests', style: AppTextStyles.heading),
-          const SizedBox(height: 12),
-          const Text(
-            'No quote to track yet. Open a client quote to prepare or review its signature status.',
-            textAlign: TextAlign.center,
-            style: AppTextStyles.subtitle,
-          ),
-          const SizedBox(height: 20),
-          OutlinedButton(
-            onPressed: onViewClients,
-            child: const Text('View Clients'),
-          ),
-        ],
-      ),
-    ),
-  );
 }
 
 class _ClientsContent extends StatefulWidget {
