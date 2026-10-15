@@ -92,11 +92,11 @@ class _JobsScreenState extends State<JobsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text('Jobs', style: AppTextStyles.heading),
-                    const SizedBox(height: 10),
-                    const Text(
-                      'Manage your clients and contacts',
-                      style: AppTextStyles.subtitle,
+                    Sign2DigitalSearchField(
+                      controller: _search,
+                      onChanged: (_) => setState(() {}),
+                      onTrailingTap: () =>
+                          FocusManager.instance.primaryFocus?.unfocus(),
                     ),
                     const SizedBox(height: 20),
                     Sign2DigitalDetailsTabs(
@@ -106,13 +106,6 @@ class _JobsScreenState extends State<JobsScreen> {
                         FocusManager.instance.primaryFocus?.unfocus();
                         setState(() => _category = categories[index]);
                       },
-                    ),
-                    const SizedBox(height: 20),
-                    Sign2DigitalSearchField(
-                      controller: _search,
-                      onChanged: (_) => setState(() {}),
-                      onTrailingTap: () =>
-                          FocusManager.instance.primaryFocus?.unfocus(),
                     ),
                     const SizedBox(height: 20),
                     // Reuse the existing primary button without modifying its API.
