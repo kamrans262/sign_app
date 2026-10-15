@@ -138,7 +138,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
     // IDs and typed records are taken directly from the same repository load.
     // Navigates to the existing details screens, not a generic mock preview.
     final repo = _provider is ExistingGlobalSearchProvider
-        ? _provider as ExistingGlobalSearchProvider
+        ? _provider
         : null;
     final Widget? destination = switch (entry.record) {
       final JobModel job => JobDetailsScreen(job: job),
