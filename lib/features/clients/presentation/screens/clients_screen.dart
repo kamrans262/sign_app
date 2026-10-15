@@ -237,10 +237,17 @@ class _ClientsScreenState extends State<ClientsScreen> {
         builder: (_) => JobDetailsScreen(
           job: job,
           onTabSelected: (index) {
-            Navigator.of(context).pop();
-            if (mounted) {
-              setState(() => _selectedIndex = index);
+            // Job Details can be opened from inside Client Details. Return
+            // to the actual dashboard before selecting another bottom tab.
+            final dashboardRoute = ModalRoute.of(context);
+            if (dashboardRoute != null) {
+              Navigator.of(context).popUntil(
+                (route) => identical(route, dashboardRoute),
+              );
+            } else {
+              Navigator.of(context).pop();
             }
+            _selectDashboardTab(index);
           },
         ),
       ),
