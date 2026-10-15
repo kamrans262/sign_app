@@ -176,14 +176,8 @@ void main() {
       'Existing manual instructions');
     FocusManager.instance.primaryFocus?.unfocus();
     await tester.pumpAndSettle();
-    // The voice control is at the start of a lazily built ListView.
-    // Scroll up explicitly before locating it.
-    await tester.drag(
-      find.byKey(const Key('generate-ai-document-scroll')),
-      const Offset(0, 900),
-    );
-    await tester.pumpAndSettle();
-    expect(find.byKey(const Key('generate-ai-voice')), findsOneWidget);
+    // Voice is above the instructions in the lazy form.
+    await _reach(tester, 'generate-ai-voice', up: true);
     await tester.tap(find.byKey(const Key('generate-ai-voice')));
     await tester.pumpAndSettle();
     expect(find.byType(AiVoiceFlowDialog), findsOneWidget);
