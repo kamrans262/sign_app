@@ -278,7 +278,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                           child: Text(
                             company == null ? 'CO' :
                               company.companyName.trim().split(
-                                RegExp(r'\\s+')).where((part) =>
+                                RegExp(r'\s+')).where((part) =>
                                 part.isNotEmpty).take(2).map((part) =>
                                 part[0].toUpperCase()).join(),
                             style: const TextStyle(
