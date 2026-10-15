@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:sign2digital/features/clients/presentation/screens/clients_screen.dart';
 import 'package:sign2digital/features/documents/data/demo_document_repository.dart';
-import 'package:sign2digital/features/documents/domain/document_record.dart';
 import 'package:sign2digital/features/expenses/data/demo_expense_repository.dart';
 import 'package:sign2digital/features/home/presentation/screens/home_dashboard_screen.dart';
 import 'package:sign2digital/features/invoices/data/demo_invoice_repository.dart';
