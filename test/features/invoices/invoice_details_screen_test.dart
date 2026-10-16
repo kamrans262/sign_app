@@ -241,9 +241,25 @@ void main() {
       await tester.ensureVisible(find.byKey(const Key('details-tab-3')));
       await tester.tap(find.byKey(const Key('details-tab-3')));
       await tester.pumpAndSettle();
-      await _reach(tester, 'invoice-details-download');
-      expect(find.byKey(const Key('invoice-details-send')), findsOneWidget);
-      expect(find.byKey(const Key('invoice-details-edit')), findsOneWidget);
+      await _reach(tester, 'invoice-details-preview');
+      final download = tester.getRect(
+        find.byKey(const Key('invoice-details-download')));
+      final send = tester.getRect(
+        find.byKey(const Key('invoice-details-send')));
+      final preview = tester.getRect(
+        find.byKey(const Key('invoice-details-preview')));
+      final edit = tester.getRect(
+        find.byKey(const Key('invoice-details-edit')));
+      // Both action rows must use the same two equal-width columns.
+      expect(download.top, closeTo(send.top, 1), reason: '$size');
+      expect(preview.top, closeTo(edit.top, 1), reason: '$size');
+      expect(preview.top, greaterThan(download.bottom), reason: '$size');
+      expect(download.width, closeTo(send.width, 1), reason: '$size');
+      expect(preview.width, closeTo(edit.width, 1), reason: '$size');
+      expect(preview.left, closeTo(download.left, 1), reason: '$size');
+      expect(edit.right, closeTo(send.right, 1), reason: '$size');
+      expect(preview.height, closeTo(edit.height, 1), reason: '$size');
+      expect(preview.height, closeTo(download.height, 1), reason: '$size');
       expect(tester.takeException(), isNull, reason: '$size');
     });
   }
