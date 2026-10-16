@@ -106,7 +106,9 @@ class CustomerDocumentViewScreen extends StatelessWidget {
     }
     onVerifiedSignature?.call(verifiedResult!);
     if (!context.mounted) return;
-    await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+    // Replace the now-obsolete signing page: returning from confirmation
+    // must not expose an earlier, still-signable snapshot of the request.
+    Navigator.of(context).pushReplacement<void, void>(MaterialPageRoute<void>(
       builder: (_) => DocumentSignedSuccessScreen(data: verifiedResult!),
     ));
   }
