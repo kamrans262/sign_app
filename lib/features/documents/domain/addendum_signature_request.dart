@@ -54,6 +54,7 @@ abstract final class AddendumSignatureRequestSession {
         draft.linkedDocumentId != original.id) {
       throw const FormatException('Signing request does not match addendum.');
     }
+    AddendumDraftSession.lockForSignature(draft.id);
     _requests[draft.id] = request;
   }
 
