@@ -1,4 +1,5 @@
 import 'quote_review_models.dart';
+import 'quote_document_tracking.dart';
 
 /// The most recently opened quote in this app session.
 ///
@@ -8,6 +9,22 @@ class QuoteTrackingHomeSession {
   QuoteTrackingHomeSession._();
 
   static QuoteReviewDraft? _currentQuote;
+  static final Map<String, QuoteDocumentTracking> _tracking = {};
+
+  /// Retains only statuses explicitly returned by a connected service.
+  /// It must not be called just because a native share sheet was opened.
+  static void rememberVerifiedTracking(QuoteDocumentTracking tracking) {
+    _tracking[tracking.quoteId] = QuoteDocumentTracking(
+      quoteId: tracking.quoteId,
+      requestId: tracking.requestId,
+      secureUrl: tracking.secureUrl,
+      expiresAt: tracking.expiresAt,
+      events: List<QuoteDocumentEvent>.unmodifiable(tracking.events),
+    );
+  }
+
+  static QuoteDocumentTracking? trackingFor(String quoteId) =>
+      _tracking[quoteId];
 
   static QuoteReviewDraft? get currentQuote => _currentQuote?.copy();
 
@@ -17,5 +34,6 @@ class QuoteTrackingHomeSession {
 
   static void clear() {
     _currentQuote = null;
+    _tracking.clear();
   }
 }
