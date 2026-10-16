@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
-import '../../quotes/domain/quote_review_models.dart' show quoteMoney;
+import '../../quotes/domain/quote_review_models.dart' show quoteMoney, parseQuoteMinorUnits;
 import '../domain/addendum_draft.dart';
 import '../domain/document_record.dart';
 
