@@ -238,11 +238,25 @@ class _ClientsScreenState extends State<ClientsScreen> {
 
   Future<void> _openJobDetails(JobModel job) async {
     FocusManager.instance.primaryFocus?.unfocus();
+    ClientProfile? linkedClient;
+    try {
+      final clients = await _repository.listClients();
+      for (final candidate in clients) {
+        if (candidate.id == job.clientId) {
+          linkedClient = candidate;
+          break;
+        }
+      }
+    } catch (_) {
+      // A missing contact must not prevent access to the job itself.
+    }
+    if (!mounted) return;
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
         builder: (_) => JobDetailsScreen(
           job: job,
           companyId: _selectedCompanyId,
+          client: linkedClient,
           onTabSelected: (index) {
             // Nested routes may include Client Details below Job Details.
             // Return to the existing dashboard before switching its tab.
