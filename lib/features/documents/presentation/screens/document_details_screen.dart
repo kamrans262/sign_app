@@ -15,6 +15,7 @@ import '../../../quotes/presentation/screens/send_quote_screen.dart';
 import '../../data/document_activity_session.dart';
 import '../../domain/document_record.dart';
 import '../../domain/addendum_draft.dart';
+import '../../domain/addendum_signature_request.dart';
 import '../../services/addendum_pdf_service.dart';
 import 'create_addendum_screen.dart';
 import '../widgets/sign2digital_document_history.dart';
@@ -31,6 +32,7 @@ class DocumentDetailsScreen extends StatefulWidget {
     this.loadDocument,
     this.loadSignedPdf,
     this.onViewSignatures,
+    this.requestAddendumSignature,
     this.initialTab = 0,
   });
 
@@ -39,6 +41,7 @@ class DocumentDetailsScreen extends StatefulWidget {
   final DocumentDetailsLoader? loadDocument;
   final DocumentPdfLoader? loadSignedPdf;
   final ValueChanged<DocumentHistoryEvent>? onViewSignatures;
+  final AddendumSignatureRequestService? requestAddendumSignature;
   final int initialTab;
 
   @override
@@ -54,6 +57,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
   int _action = 0;
   Future<Uint8List?>? _pdfFuture;
   List<DocumentHistoryEvent> _extraHistory = const [];
+  bool _requestingAddendum = false;
 
   static const tabs = ['Details', 'Preview', 'Related', 'History'];
 
@@ -175,6 +179,83 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
     } catch (_) { _message('Could not open the document share sheet.'); }
   }
 
+  Future<void> _sendAddendumForSignature() async {
+    final record = _record;
+    if (record == null || _requestingAddendum) return;
+    final service = widget.requestAddendumSignature;
+    if (service == null) {
+      _message('Sending an addendum for signature requires a connected '
+          'verified signing service.');
+      return;
+    }
+    final id = record.addendumDraftId;
+    final draft = id == null ? null : AddendumDraftSession.load(id);
+    if (draft == null || !draft.isCreatedLocally ||
+        draft.validationIssues.isNotEmpty) {
+      _message('Create and review the addendum before requesting signature.');
+      return;
+    }
+    final sources = record.related.where((source) =>
+        source.id == draft.linkedDocumentId &&
+        source.category != DocumentCategory.addends).toList();
+    if (sources.length != 1) {
+      _message('The original reference is missing or has changed.');
+      return;
+    }
+    setState(() => _requestingAddendum = true);
+    try {
+      final response = await service(draft, sources.single);
+      if (!mounted) return;
+      if (response == null) {
+        _message('Signing request was not confirmed by the service.');
+        return;
+      }
+      AddendumSignatureRequestSession.remember(draft, sources.single, response);
+      if (!mounted) return;
+      final link = response.secureUrl.toString();
+      await showModalBottomSheet<void>(
+        context: context,
+        builder: (sheet) => SafeArea(child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            const Text('Addendum Signature Request',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 10),
+            Text('Addendum: ${draft.number}'),
+            Text('Original document: ${sources.single.number}'),
+            Text('Status: ${response.status}',
+              key: const Key('addendum-signature-request-status')),
+            const SizedBox(height: 10),
+            const Text('The customer must sign the separate addendum. '
+              'The original signed document remains unchanged.'),
+            const SizedBox(height: 10),
+            SelectableText(link),
+            TextButton.icon(
+              key: const Key('addendum-copy-secure-link'),
+              onPressed: () async {
+                await Clipboard.setData(ClipboardData(text: link));
+                if (!sheet.mounted) return;
+                ScaffoldMessenger.of(sheet).showSnackBar(
+                  const SnackBar(content: Text('Secure link copied. '
+                    'Copying does not confirm delivery.')),
+                );
+              },
+              icon: const Icon(Icons.copy_outlined),
+              label: const Text('Copy secure link'),
+            ),
+          ]),
+        )),
+      );
+    } catch (_) {
+      if (mounted) {
+        _message('Could not confirm the addendum signing request.');
+      }
+    } finally {
+      if (mounted) setState(() => _requestingAddendum = false);
+    }
+  }
+
   void _more() {
     final record = _record;
     if (record == null) return;
@@ -197,6 +278,18 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
                   builder: (_) => SendQuoteScreen(
                     quote: record.quote!.copy()),
                 ));
+              },
+            ),
+          if (record.category == DocumentCategory.addends &&
+              AddendumDraftSession.load(record.addendumDraftId ?? '')
+                  ?.isCreatedLocally == true)
+            ListTile(
+              key: const Key('addendum-send-for-signature'),
+              leading: const Icon(Icons.draw_outlined),
+              title: const Text('Send for Signature'),
+              onTap: () {
+                Navigator.pop(sheet);
+                _sendAddendumForSignature();
               },
             ),
           if (record.category == DocumentCategory.quotes)
@@ -401,6 +494,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
               documentId: linked[i].id, document: linked[i],
               loadSignedPdf: widget.loadSignedPdf,
               onViewSignatures: widget.onViewSignatures,
+              requestAddendumSignature: widget.requestAddendumSignature,
             ),
           )),
         ),
