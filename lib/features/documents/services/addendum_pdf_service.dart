@@ -45,7 +45,7 @@ class AddendumPdfService {
         pw.Text('ADDENDUM ${draft.number}', style: pw.TextStyle(
           fontSize: 21, fontWeight: pw.FontWeight.bold)),
         pw.SizedBox(height: 12),
-        pw.Text('UNSIGNED — customer approval and signature not confirmed',
+        pw.Text('UNSIGNED - customer approval and signature not confirmed',
           style: pw.TextStyle(fontSize: 10, color: primary)),
         pw.SizedBox(height: 22),
         detail('Original document', original.number),
