@@ -159,7 +159,12 @@ void main() {
     expect(submitted!.consentAccepted, isTrue);
     expect(find.byType(DocumentSignedSuccessScreen), findsOneWidget);
     expect(find.text('Document Signed!'), findsOneWidget);
-    await tester.pageBack();
+    // Signed success has a Figma Close button, not a Cupertino back button.
+    // Use the actual user navigation control to return to tracking.
+    final close = find.text('Close');
+    await tester.ensureVisible(close);
+    await tester.pumpAndSettle();
+    await tester.tap(close);
     await tester.pumpAndSettle();
     expect(find.byType(SignatureRequestScreen), findsOneWidget);
     expect(find.text('Document Signed'), findsWidgets);
