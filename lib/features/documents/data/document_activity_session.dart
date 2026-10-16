@@ -28,8 +28,8 @@ abstract final class DocumentActivitySession {
     for (final item in quote.items)
       [item.id, item.title, item.description, item.quantity,
         item.unitPrice, item.dimensions ?? '',
-        ...item.otherFields.entries.toList()
-          ..sort((a, b) => a.key.compareTo(b.key)),
+        ...(item.otherFields.keys.toList()..sort())
+            .map((key) => '$key=${item.otherFields[key]}'),
       ].join('\u001f'),
   ].join('\u001e');
 
