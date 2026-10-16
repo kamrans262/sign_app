@@ -26,6 +26,11 @@ class CreateQuoteScreen extends StatefulWidget {
     super.key,
     this.clientId,
     this.jobId,
+    this.companyId,
+    this.clientName,
+    this.clientEmail,
+    this.clientPhone,
+    this.clientAddress,
     this.voiceRecorderFactory,
     this.pickImage,
     this.onInputPrepared,
@@ -34,6 +39,11 @@ class CreateQuoteScreen extends StatefulWidget {
 
   final String? clientId;
   final String? jobId;
+  final String? companyId;
+  final String? clientName;
+  final String? clientEmail;
+  final String? clientPhone;
+  final String? clientAddress;
   final VoiceRecorderService Function()? voiceRecorderFactory;
   final Future<XFile?> Function(ImageSource source)? pickImage;
   final ValueChanged<QuoteDraftInput>? onInputPrepared;
@@ -210,6 +220,11 @@ class _CreateQuoteScreenState extends State<CreateQuoteScreen> {
       createdAt: DateTime.now(),
       clientId: widget.clientId,
       jobId: widget.jobId,
+      companyId: widget.companyId,
+      clientName: widget.clientName,
+      clientEmail: widget.clientEmail,
+      clientPhone: widget.clientPhone,
+      clientAddress: widget.clientAddress,
       description: _method == QuoteInputMethod.text
           ? _description.text.trim()
           : null,
