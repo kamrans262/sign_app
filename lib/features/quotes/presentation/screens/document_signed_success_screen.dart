@@ -1,31 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:printing/printing.dart';
+
+import '../../domain/quote_signed_display_data.dart';
+export '../../domain/quote_signed_display_data.dart' show QuoteSignedDisplayData;
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_outlined_container.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../widgets/sign2digital_animated_success.dart';
 import '../widgets/sign2digital_quote_summary_card.dart';
-
-/// Display data: production callers must supply trusted signing/audit details.
-class QuoteSignedDisplayData {
-  const QuoteSignedDisplayData({
-    required this.documentId,
-    required this.quoteNumber,
-    required this.projectName,
-    required this.signerName,
-    required this.signedAt,
-    this.ipAddress,
-    this.demoOnly = false,
-  });
-
-  final String documentId;
-  final String quoteNumber;
-  final String projectName;
-  final String signerName;
-  final DateTime signedAt;
-  final String? ipAddress;
-  final bool demoOnly;
-}
 
 class DocumentSignedSuccessScreen extends StatelessWidget {
   const DocumentSignedSuccessScreen({
@@ -91,16 +74,33 @@ class DocumentSignedSuccessScreen extends StatelessWidget {
     projectName: data.projectName,
   );
 
-  void _viewDocument(BuildContext context) {
+  Future<void> _viewDocument(BuildContext context) async {
     if (onViewSignedDocument != null) {
       onViewSignedDocument!();
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(data.demoOnly
-            ? 'UI demo only: no real signed PDF exists. Use Quote Preview to inspect the sample quote.'
-            : 'Signed PDF is not available yet. Please try again later.'),
-      ));
+      return;
     }
+    final bytes = data.signedPdfBytes;
+    if (bytes != null && bytes.isNotEmpty) {
+      try {
+        await Printing.sharePdf(
+          bytes: bytes,
+          filename: 'Sign2Digital_Signed_${data.documentId.replaceAll(
+            RegExp(r'[^A-Za-z0-9_-]'), '_')}.pdf',
+        );
+      } catch (_) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Unable to share the signed PDF.'),
+        ));
+      }
+      return;
+    }
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(data.demoOnly
+          ? 'UI demo only: no real signed PDF exists.'
+          : 'The signing service did not provide a signed PDF.'),
+    ));
   }
 
   @override
