@@ -6,6 +6,7 @@ import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import 'document_details_screen.dart';
 import 'create_addendum_screen.dart';
 import '../../../quotes/presentation/widgets/sign2digital_quote_summary_card.dart';
+import '../../../quotes/data/signed_quote_file_store.dart';
 import '../../data/demo_document_repository.dart';
 import '../../domain/document_record.dart';
 
@@ -101,6 +102,13 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
         builder: (_) => DocumentDetailsScreen(
           documentId: record.id,
           document: record,
+          loadSignedPdf: (signedRecord) async {
+            final matches = (await SignedQuoteFileStore.shared.list())
+                .where((file) => file.documentId == signedRecord.id)
+                .toList();
+            if (matches.length != 1) return null;
+            return SignedQuoteFileStore.shared.read(matches.single);
+          },
         ),
       ));
     }
