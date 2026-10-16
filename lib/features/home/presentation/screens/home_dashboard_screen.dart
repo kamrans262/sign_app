@@ -85,6 +85,7 @@ class HomeDashboardScreen extends StatefulWidget {
     this.reminderRepository = const DemoReminderRepository(),
     this.expenseRepository = const DemoExpenseRepository(),
     this.refreshRevision = 0,
+    this.additionalActiveJobs = 0,
   });
 
   final ValueChanged<HomeAction> onAction;
@@ -95,6 +96,7 @@ class HomeDashboardScreen extends StatefulWidget {
   final ReminderRepository reminderRepository;
   final ExpenseRepository expenseRepository;
   final int refreshRevision;
+  final int additionalActiveJobs;
 
   @override
   State<HomeDashboardScreen> createState() => _HomeDashboardScreenState();
@@ -226,7 +228,8 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     final company = _company;
     final cards = [
       _HomeMetric('Active Jobs',
-          value?.activeJobs.toString() ?? '…', 'Open jobs',
+          value == null ? '…' : '${value.activeJobs + widget.additionalActiveJobs}',
+          'Open jobs',
           Icons.work_outline_rounded, HomeAction.jobs, 'jobs'),
       _HomeMetric('Pending Quotes',
           _count(value?.pendingQuotes), 'Awaiting action',
