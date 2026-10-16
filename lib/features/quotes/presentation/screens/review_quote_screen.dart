@@ -194,7 +194,9 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
     _draft.depositBasisPoints = depositBasisPoints;
     _draft.currency = chosenCurrency;
     if (client.trim() != _draft.clientName.trim()) {
+      // An edited customer cannot remain associated with another client's job.
       _draft.clientId = null;
+      _draft.jobId = null;
     }
     _draft.clientName = client.trim();
     _draft.quoteNumber = number.trim();
