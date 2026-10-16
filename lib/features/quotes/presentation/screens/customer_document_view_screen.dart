@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../domain/quote_document_tracking.dart';
 import '../../domain/quote_review_models.dart';
+import '../../data/signed_quote_file_store.dart';
 import '../../domain/quote_signature_draft.dart';
 import '../../domain/quote_signing_context.dart';
 export '../../domain/quote_signing_context.dart' show QuoteSigningContext;
@@ -60,8 +61,15 @@ class CustomerDocumentViewScreen extends StatelessWidget {
       if (result == null ||
           result.documentId != signer!.documentId ||
           result.quoteNumber != draft.quoteNumber ||
+          (result.quoteId != null && result.quoteId != draft.id) ||
+          (result.jobId != null && result.jobId != draft.jobId) ||
           (result.demoOnly && !draft.isDemo)) {
         return false;
+      }
+      // Do not report completion if a service-supplied PDF cannot be
+      // safely associated with this exact quote and job.
+      if (result.signedPdfBytes != null) {
+        await SignedQuoteFileStore.shared.storeVerified(draft, result);
       }
       verifiedResult = result;
       return true;
