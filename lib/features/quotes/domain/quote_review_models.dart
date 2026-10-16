@@ -156,6 +156,7 @@ class QuoteReviewDraft {
     required this.id,
     this.clientId,
     this.jobId,
+    this.companyId,
     this.sourceNoteId,
     this.clientName = '',
     this.quoteNumber = '',
@@ -173,7 +174,8 @@ class QuoteReviewDraft {
 
   final String id;
   String? clientId;
-  final String? jobId;
+  String? jobId;
+  final String? companyId;
   final String? sourceNoteId;
   String clientName;
   String quoteNumber;
@@ -225,7 +227,12 @@ class QuoteReviewDraft {
         id: 'quote-${DateTime.now().microsecondsSinceEpoch}',
         clientId: source?.clientId,
         jobId: source?.jobId,
+        companyId: source?.companyId,
         sourceNoteId: source?.sourceNoteId,
+        clientName: source?.clientName ?? '',
+        clientEmail: source?.clientEmail ?? '',
+        clientPhone: source?.clientPhone ?? '',
+        billingAddress: source?.clientAddress ?? '',
         date: DateTime.now(),
         currency: snapshot.currency ?? 'CHF',
         items: [
@@ -270,7 +277,12 @@ class QuoteReviewDraft {
     return QuoteReviewDraft(
       id: 'quote-${DateTime.now().microsecondsSinceEpoch}',
       clientId: source?.clientId, jobId: source?.jobId,
+      companyId: source?.companyId,
       sourceNoteId: source?.sourceNoteId,
+      clientName: source?.clientName ?? '',
+      clientEmail: source?.clientEmail ?? '',
+      clientPhone: source?.clientPhone ?? '',
+      billingAddress: source?.clientAddress ?? '',
       date: DateTime.now(),
       items: [QuoteReviewWorkItem(
         id: 'extracted-1', title: items, description: description,
@@ -329,6 +341,7 @@ class QuoteReviewDraft {
 
   QuoteReviewDraft copy() => QuoteReviewDraft(
     id: id, clientId: clientId, jobId: jobId,
+    companyId: companyId,
     sourceNoteId: sourceNoteId, clientName: clientName,
     quoteNumber: quoteNumber, date: date, currency: currency,
     vatBasisPoints: vatBasisPoints, depositBasisPoints: depositBasisPoints,
