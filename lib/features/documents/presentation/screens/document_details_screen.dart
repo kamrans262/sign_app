@@ -22,6 +22,7 @@ import '../widgets/sign2digital_document_history.dart';
 
 typedef DocumentDetailsLoader = Future<DocumentRecord?> Function(String id);
 typedef DocumentPdfLoader = Future<Uint8List?> Function(DocumentRecord record);
+typedef DocumentPdfPreviewBuilder = Widget Function(Uint8List bytes);
 
 /// Document details and its four tabs. No global bottom navigation.
 class DocumentDetailsScreen extends StatefulWidget {
@@ -31,6 +32,7 @@ class DocumentDetailsScreen extends StatefulWidget {
     this.document,
     this.loadDocument,
     this.loadSignedPdf,
+    this.pdfPreviewBuilder,
     this.onViewSignatures,
     this.requestAddendumSignature,
     this.initialTab = 0,
@@ -40,6 +42,8 @@ class DocumentDetailsScreen extends StatefulWidget {
   final DocumentRecord? document;
   final DocumentDetailsLoader? loadDocument;
   final DocumentPdfLoader? loadSignedPdf;
+  /// Optional renderer for isolated widget tests; normal UI uses PdfPreview.
+  final DocumentPdfPreviewBuilder? pdfPreviewBuilder;
   final ValueChanged<DocumentHistoryEvent>? onViewSignatures;
   final AddendumSignatureRequestService? requestAddendumSignature;
   final int initialTab;
@@ -457,7 +461,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
               ),
             SizedBox(
               height: 480,
-              child: PdfPreview(
+              child: widget.pdfPreviewBuilder?.call(bytes) ?? PdfPreview(
                 key: const Key('document-pdf-preview'),
                 build: (_) async => bytes,
                 allowPrinting: false,

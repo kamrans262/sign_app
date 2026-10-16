@@ -119,7 +119,10 @@ void main() {
     await tester.ensureVisible(review);
     await tester.tap(review);
     await tester.pumpAndSettle();
-    expect(find.text('Review Addendum'), findsOneWidget);
+    expect(find.descendant(
+      of: find.byType(BottomSheet),
+      matching: find.text('Review Addendum'),
+    ), findsOneWidget);
     expect(find.text('Original: Q-500'), findsOneWidget);
     expect(find.textContaining('CHF 324.30'), findsWidgets);
     expect(tester.takeException(), isNull);
@@ -144,10 +147,23 @@ void main() {
     );
     await tester.pumpWidget(MaterialApp(home: DocumentDetailsScreen(
       documentId: created.id, document: created,
+      // The native printing plugin is integration-tested separately. Here we
+      // verify that the generated addendum PDF reaches the preview widget.
+      pdfPreviewBuilder: (bytes) => SizedBox(
+        key: const Key('document-pdf-preview'),
+        child: Text('Unsigned addendum PDF: ${bytes.length} bytes'),
+      ),
     )));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('details-tab-1')));
-    await tester.pumpAndSettle();
+    // A PDF viewer can schedule frames indefinitely. Bounded pumping keeps
+    // this test independent of platform viewer animations and timeouts.
+    for (var attempt = 0;
+        attempt < 20 &&
+            find.byKey(const Key('document-pdf-preview')).evaluate().isEmpty;
+        attempt++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
     expect(find.byKey(const Key('document-signed-pdf-unavailable')), findsNothing);
     expect(find.byKey(const Key('document-pdf-preview')), findsOneWidget);
     expect(tester.takeException(), isNull);

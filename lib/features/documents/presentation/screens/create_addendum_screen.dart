@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
@@ -403,11 +405,13 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
         related: [original],
       );
       _notice('Addendum created locally for UI testing; not sent or signed.');
-      await Navigator.of(context).pushReplacement<void, void>(
+      // Navigation completes only when the details route is later popped;
+      // creating the addendum must not await that future.
+      unawaited(Navigator.of(context).pushReplacement<void, void>(
         MaterialPageRoute(builder: (_) => DocumentDetailsScreen(
           documentId: record.id, document: record,
           requestAddendumSignature: widget.requestAddendumSignature)),
-      );
+      ));
     } catch (error) {
       _notice('Unable to create addendum: $error');
     } finally {
