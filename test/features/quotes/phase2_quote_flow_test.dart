@@ -8,10 +8,24 @@ import 'package:sign2digital/features/jobs/presentation/screens/job_details_scre
 import 'package:sign2digital/features/quotes/domain/quote_draft_input.dart';
 import 'package:sign2digital/features/quotes/domain/quote_extraction_models.dart';
 import 'package:sign2digital/features/quotes/domain/quote_review_models.dart';
+import 'package:sign2digital/features/quotes/domain/quote_preparation_service.dart';
+import 'package:sign2digital/features/quotes/presentation/screens/quote_ai_processing_screen.dart';
 import 'package:sign2digital/features/quotes/presentation/screens/create_quote_screen.dart';
 import 'package:sign2digital/features/quotes/presentation/screens/quote_preview_screen.dart';
 import 'package:sign2digital/features/quotes/presentation/screens/review_quote_screen.dart';
 import 'package:sign2digital/features/quotes/presentation/screens/send_quote_screen.dart';
+
+class _CompletedQuoteService implements QuotePreparationService {
+  @override
+  Stream<QuotePreparationSnapshot> prepare(QuoteDraftInput input) async* {
+    yield const QuotePreparationSnapshot(
+      stage: QuotePreparationStage.completed,
+      items: [QuotePreparedWorkItem(
+        title: 'Replace windows', description: 'Remove old frames', quantity: 3,
+      )],
+    );
+  }
+}
 
 void main() {
   testWidgets('Job Details Quotes opens existing Create Quote with IDs',
@@ -28,8 +42,14 @@ void main() {
       dueDate: DateTime(2026, 11, 12),
       stage: JobStage.planning, category: JobCategory.active,
     );
+    const linkedClient = ClientProfile(
+      id: 'client-42', companyName: 'Alpine Builds',
+      companyType: 'Business', email: 'alpine@example.com',
+      phone: '+41 44 111 22 33', address: 'Swiss Street 4', jobCount: 1,
+    );
     await tester.pumpWidget(MaterialApp(
-      home: JobDetailsScreen(job: job, companyId: 'company-7'),
+      home: JobDetailsScreen(
+        job: job, companyId: 'company-7', client: linkedClient),
     ));
     await tester.pumpAndSettle();
     final quotes = find.byKey(const Key('job-section-quotes'));
@@ -44,6 +64,9 @@ void main() {
     expect(create.clientId, job.clientId);
     expect(create.clientName, job.clientName);
     expect(create.companyId, 'company-7');
+    expect(create.clientEmail, 'alpine@example.com');
+    expect(create.clientPhone, '+41 44 111 22 33');
+    expect(create.clientAddress, 'Swiss Street 4');
     expect(tester.takeException(), isNull);
   });
 
@@ -77,6 +100,47 @@ void main() {
     expect(create.clientAddress, client.address);
     expect(create.companyId, 'company-7');
     expect(create.jobId, isNull);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Text quote flows through AI Processing to linked Review',
+      (tester) async {
+    tester.view.physicalSize = const Size(430, 932);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(MaterialApp(home: CreateQuoteScreen(
+      clientId: 'client-22', jobId: 'job-42',
+      companyId: 'company-7', clientName: 'House Builders',
+      clientEmail: 'client@example.com',
+      quotePreparationService: _CompletedQuoteService(),
+    )));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('quote-method-text')));
+    await tester.pump();
+    await tester.enterText(
+      find.byKey(const Key('quote-text-input')),
+      'Replace three windows and remove old frames.',
+    );
+    final generate = find.byKey(const Key('quote-generate-draft'));
+    await tester.ensureVisible(generate);
+    await tester.pumpAndSettle();
+    await tester.tap(generate);
+    await tester.pumpAndSettle();
+    expect(find.byType(QuoteAiProcessingScreen), findsOneWidget);
+    final review = find.byKey(const Key('quote-processing-review'));
+    await tester.ensureVisible(review);
+    await tester.pumpAndSettle();
+    await tester.tap(review);
+    await tester.pumpAndSettle();
+    final screen = tester.widget<ReviewQuoteScreen>(
+      find.byType(ReviewQuoteScreen),
+    );
+    expect(screen.initialDraft.clientId, 'client-22');
+    expect(screen.initialDraft.jobId, 'job-42');
+    expect(screen.initialDraft.companyId, 'company-7');
+    expect(screen.initialDraft.clientName, 'House Builders');
+    expect(screen.initialDraft.items.single.unitPrice, isEmpty);
     expect(tester.takeException(), isNull);
   });
 
