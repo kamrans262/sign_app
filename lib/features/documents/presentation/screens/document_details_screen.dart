@@ -328,6 +328,23 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
     setState(() => _tab = index);
   }
 
+  bool _historyCanPreview(DocumentRecord record) {
+    if (record.category == DocumentCategory.addends &&
+        record.addendumDraftId != null) {
+      return AddendumDraftSession.load(record.addendumDraftId!)
+              ?.isCreatedLocally == true;
+    }
+    if (record.reportKind == ReportKind.workAcceptance) {
+      return !record.demoOnly &&
+          (record.workAcceptance?.verifiedReportPdf?.isNotEmpty ?? false);
+    }
+    if (record.status.toLowerCase() == 'signed' && !record.demoOnly) {
+      return record.verifiedSignedPdfAvailable &&
+          widget.loadSignedPdf != null;
+    }
+    return record.quote != null;
+  }
+
   void _view() {
     setState(() { _action = 0; _tab = 1; });
   }
@@ -543,7 +560,10 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
           else if (_tab == 1) _preview(record)
           else if (_tab == 2) _related(record)
           else Sign2DigitalDocumentHistory(
-            document: record, onViewSignatures: widget.onViewSignatures,
+            document: record,
+            onViewSignatures: widget.onViewSignatures,
+            onOpenDocument: _selectTab,
+            canPreview: _historyCanPreview(record),
             additionalEvents: _extraHistory),
         ],
       ),

@@ -8,7 +8,7 @@ import 'package:sign2digital/features/documents/presentation/screens/document_de
 import 'package:sign2digital/features/documents/presentation/widgets/sign2digital_document_history.dart';
 import 'package:sign2digital/features/quotes/presentation/widgets/sign2digital_signature_action_card.dart';
 import 'package:sign2digital/features/quotes/presentation/widgets/sign2digital_quote_summary_card.dart';
-import 'package:sign2digital/core/widgets/sign2digital_info_banner.dart';
+import 'package:sign2digital/features/clients/presentation/widgets/sign2digital_details_tabs.dart';
 
 void main() {
   late DocumentRecord record;
@@ -63,20 +63,19 @@ void main() {
     expect(find.text('Document Sent'), findsOneWidget);
     expect(find.text('Document Created'), findsOneWidget);
     expect(find.text('View Signatures'), findsOneWidget);
-    expect(find.byKey(const Key('document-history-demo-notice')), findsOneWidget);
+    expect(find.byKey(const Key('document-history-demo-notice')), findsNothing);
+    expect(find.text('Audit Information'), findsNothing);
     final timeline = tester.widget<Sign2DigitalDocumentHistory>(
       find.byType(Sign2DigitalDocumentHistory),
     );
     expect(timeline.document.id, record.id);
-    final audit = tester.widget<Sign2DigitalInfoBanner>(
-      find.byType(Sign2DigitalInfoBanner));
-    expect(audit.title, 'Audit Information');
     final viewedKey = Key('document-history-event-${record.id}-viewed');
     await tester.ensureVisible(find.byKey(viewedKey));
     await tester.pump();
     await tester.tap(find.byKey(viewedKey));
     await tester.pump();
     expect(find.text('View Signatures'), findsNothing);
+    expect(find.text('View Document'), findsOneWidget);
     await tester.ensureVisible(find.byKey(
       Key('document-history-event-${record.id}-signed')));
     await tester.pump();
@@ -84,10 +83,50 @@ void main() {
       Key('document-history-event-${record.id}-signed')));
     await tester.pump();
     expect(find.text('View Signatures'), findsOneWidget);
+    final signatureButton = find.byKey(const Key('document-view-signatures'));
+    final buttonSize = tester.getSize(signatureButton);
+    expect(buttonSize.width, greaterThanOrEqualTo(200));
+    expect(buttonSize.height, 48);
     await tester.ensureVisible(find.text('View Signatures'));
     await tester.tap(find.text('View Signatures'));
     await tester.pump();
     expect(find.textContaining('no verified signature'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('History Sent and Created open their relevant document tabs',
+      (tester) async {
+    await tester.pumpWidget(page(initialTab: 3));
+    final sent = find.byKey(
+      Key('document-history-event-${record.id}-sent'));
+    await tester.ensureVisible(sent);
+    await tester.tap(sent);
+    await tester.pump();
+    final viewDocument = find.byKey(
+      Key('document-history-action-${record.id}-sent'));
+    expect(find.text('View Document'), findsOneWidget);
+    await tester.ensureVisible(viewDocument);
+    await tester.tap(viewDocument);
+    await tester.pump();
+    final tabs = tester.widget<Sign2DigitalDetailsTabs>(
+      find.byType(Sign2DigitalDetailsTabs));
+    expect(tabs.selectedIndex, 1);
+
+    await tester.tap(find.byKey(const Key('details-tab-3')));
+    await tester.pump();
+    final created = find.byKey(
+      Key('document-history-event-${record.id}-created'));
+    await tester.ensureVisible(created);
+    await tester.tap(created);
+    await tester.pump();
+    expect(find.text('View Details'), findsOneWidget);
+    final viewDetails = find.byKey(
+      Key('document-history-action-${record.id}-created'));
+    await tester.ensureVisible(viewDetails);
+    await tester.tap(viewDetails);
+    await tester.pump();
+    expect(tester.widget<Sign2DigitalDetailsTabs>(
+      find.byType(Sign2DigitalDetailsTabs)).selectedIndex, 0);
     expect(tester.takeException(), isNull);
   });
 
@@ -170,8 +209,10 @@ void main() {
       await tester.tap(find.byKey(const Key('details-tab-3')));
       await tester.pump();
       expect(find.byType(Sign2DigitalDocumentHistory), findsOneWidget);
-      await tester.ensureVisible(find.text('Audit Information'));
+      await tester.ensureVisible(
+        find.byKey(Key('document-history-event-${record.id}-signed')));
       await tester.pump();
+      expect(find.text('Audit Information'), findsNothing);
       expect(tester.takeException(), isNull, reason: 'History $size');
     }
   });

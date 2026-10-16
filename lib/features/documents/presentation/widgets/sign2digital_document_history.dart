@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/widgets/sign2digital_info_banner.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../domain/document_record.dart';
 
@@ -75,6 +74,8 @@ class Sign2DigitalTrackingRow extends StatelessWidget {
 class Sign2DigitalDocumentHistory extends StatefulWidget {
   const Sign2DigitalDocumentHistory({
     super.key, required this.document, this.onViewSignatures,
+    this.onOpenDocument,
+    this.canPreview = false,
     this.additionalEvents = const [],
   });
 
@@ -82,6 +83,10 @@ class Sign2DigitalDocumentHistory extends StatefulWidget {
   /// Events completed while this details page remains open.
   final List<DocumentHistoryEvent> additionalEvents;
   final ValueChanged<DocumentHistoryEvent>? onViewSignatures;
+  /// Opens the already-loaded document at the requested details (0) or
+  /// preview (1) tab, without constructing an unrelated document screen.
+  final ValueChanged<int>? onOpenDocument;
+  final bool canPreview;
 
   @override
   State<Sign2DigitalDocumentHistory> createState() =>
@@ -137,6 +142,14 @@ class _Sign2DigitalDocumentHistoryState
     }
   }
 
+  bool _opensPreview(DocumentHistoryType type) => switch (type) {
+    DocumentHistoryType.sent ||
+    DocumentHistoryType.viewed ||
+    DocumentHistoryType.emailOpened ||
+    DocumentHistoryType.downloaded => widget.canPreview,
+    _ => false,
+  };
+
   Widget _event(DocumentHistoryEvent event, bool expanded) => Padding(
     padding: const EdgeInsets.only(bottom: 20),
     child: InkWell(
@@ -177,15 +190,32 @@ class _Sign2DigitalDocumentHistoryState
                     fontWeight: FontWeight.w400,
                     color: AppColors.placeholder)),
               ],
-              if (expanded && event.type == DocumentHistoryType.signed) ...[
+              if (expanded &&
+                  (event.type == DocumentHistoryType.signed ||
+                      widget.onOpenDocument != null)) ...[
                 const SizedBox(height: 15),
-                SizedBox(
-                  width: 148,
-                  child: Sign2DigitalPrimaryButton(
-                    key: const Key('document-view-signatures'),
-                    label: 'View Signatures',
-                    height: 36,
-                    onPressed: () => _showSignatures(event),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 220),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: Sign2DigitalPrimaryButton(
+                        key: event.type == DocumentHistoryType.signed
+                            ? const Key('document-view-signatures')
+                            : Key('document-history-action-${event.id}'),
+                        label: event.type == DocumentHistoryType.signed
+                            ? 'View Signatures'
+                            : _opensPreview(event.type)
+                                ? 'View Document'
+                                : 'View Details',
+                        height: 48,
+                        onPressed: event.type == DocumentHistoryType.signed
+                            ? () => _showSignatures(event)
+                            : () => widget.onOpenDocument!(
+                                  _opensPreview(event.type) ? 1 : 0),
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -217,27 +247,7 @@ class _Sign2DigitalDocumentHistoryState
       key: const Key('document-history'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (widget.document.demoOnly)
-          const Padding(
-            padding: EdgeInsets.only(bottom: 16),
-            child: Text('FIGMA UI DEMO — sample events, not verified audit data.',
-              key: Key('document-history-demo-notice'),
-              style: TextStyle(fontFamily: 'Inter', fontSize: 12,
-                color: AppColors.primary)),
-          ),
         for (final event in events) _event(event, selected == event.id),
-        const Sign2DigitalInfoBanner(
-          title: 'Audit Information',
-          message: 'Document history displays available recorded events. '
-              'Only a connected verified audit service can establish '
-              'record integrity and immutability.',
-          iconAsset: 'assets/icons_2/pdf.svg',
-          verticalPadding: 15,
-          iconGap: 10,
-          iconSize: 24,
-          fontSize: 13,
-          textColor: AppColors.placeholder,
-        ),
       ],
     );
   }
