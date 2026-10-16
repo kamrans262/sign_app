@@ -11,6 +11,7 @@ import '../../domain/job_details_model.dart';
 import 'job_photos_screen.dart';
 import 'job_notes_screen.dart';
 import '../../domain/job_model.dart';
+import '../../../quotes/presentation/screens/create_quote_screen.dart';
 import '../widgets/sign2digital_job_financial_card.dart';
 import '../widgets/sign2digital_job_progress_indicator.dart';
 import '../widgets/sign2digital_job_section_card.dart';
@@ -26,16 +27,30 @@ class JobDetailsScreen extends StatelessWidget {
     this.details,
     this.onSectionTap,
     this.onTabSelected,
+    this.companyId,
   });
 
   final JobModel job;
   final JobDetailsModel? details;
   final ValueChanged<JobSection>? onSectionTap;
   final ValueChanged<int>? onTabSelected;
+  /// Selected issuer from the dashboard; null for independent previews.
+  final String? companyId;
 
   void _openSection(BuildContext context, JobSection section) {
     if (onSectionTap != null) {
       onSectionTap!(section);
+      return;
+    }
+    if (section == JobSection.quotes) {
+      Navigator.of(context).push<void>(MaterialPageRoute<void>(
+        builder: (_) => CreateQuoteScreen(
+          jobId: job.id,
+          clientId: job.clientId,
+          clientName: job.clientName,
+          companyId: companyId,
+        ),
+      ));
       return;
     }
     if (section == JobSection.photos) {
