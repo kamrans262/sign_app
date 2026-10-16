@@ -10,7 +10,7 @@ import '../../domain/quote_document_tracking.dart';
 import '../../domain/quote_tracking_home_session.dart';
 import '../../domain/quote_review_models.dart';
 import '../../domain/quote_signature_draft.dart';
-import 'customer_document_view_screen.dart';
+import '../../domain/quote_signing_context.dart';
 import 'document_signed_success_screen.dart';
 import '../../services/quote_pdf_service.dart';
 import '../widgets/sign2digital_quote_shadow_panel.dart';
