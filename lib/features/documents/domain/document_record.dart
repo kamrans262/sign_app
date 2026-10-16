@@ -3,7 +3,10 @@ import '../../jobs/data/local_job_photo_source.dart';
 import 'work_acceptance_data.dart';
 
 /// Local UI record; status is not evidence that a remote signing service ran.
-enum DocumentCategory { quotes, contacts, reports, addends }
+enum DocumentCategory {
+  quotes, contacts, reports, addends,
+  receipts, invoices, other,
+}
 
 /// Report-specific filtering, stored on the existing document record.
 enum ReportKind {
@@ -48,7 +51,10 @@ class SiteReportDetails {
 
 /// A documented event linked to a particular document. Production callers
 /// must supply only verified source events; UI-only fixtures stay in demo mode.
-enum DocumentHistoryType { created, sent, emailOpened, viewed, signed }
+enum DocumentHistoryType {
+  created, edited, sent, emailOpened, viewed, signed,
+  downloaded, versionChanged,
+}
 
 class DocumentHistoryEvent {
   const DocumentHistoryEvent({
@@ -73,6 +79,9 @@ class DocumentHistoryEvent {
 
   String get title => switch (type) {
     DocumentHistoryType.created => 'Document Created',
+    DocumentHistoryType.edited => 'Document Edited',
+    DocumentHistoryType.downloaded => 'Document Downloaded',
+    DocumentHistoryType.versionChanged => 'Document Version Changed',
     DocumentHistoryType.sent => 'Document Sent',
     DocumentHistoryType.emailOpened => 'E-mail Opened',
     DocumentHistoryType.viewed => 'Viewed by Customers',
@@ -97,6 +106,8 @@ class DocumentRecord {
     this.quote,
     this.demoOnly = false,
     this.verifiedSignedPdfAvailable = false,
+    this.version = 1,
+    this.attachmentNames = const [],
     this.createdBy,
     this.createdAt,
     this.updatedAt,
@@ -120,6 +131,9 @@ class DocumentRecord {
   final QuoteReviewDraft? quote;
   final bool demoOnly;
   final bool verifiedSignedPdfAvailable;
+  /// Local record revision; backend audit versions remain authoritative.
+  final int version;
+  final List<String> attachmentNames;
   final String? createdBy;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -138,6 +152,8 @@ class DocumentRecord {
     return [
       id, number, title, project, customer,
       category.name, status, quote?.jobId ?? '', reportKind?.label ?? '',
+      quote?.clientId ?? '', quote?.clientEmail ?? '',
+      'v$version', ...attachmentNames,
     ].any((field) => field.toLowerCase().contains(needle));
   }
 }
