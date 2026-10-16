@@ -17,9 +17,20 @@ abstract final class DocumentActivitySession {
     quote.terms, quote.currency, quote.billingAddress,
     quote.clientEmail, quote.clientPhone,
     quote.vatBasisPoints, quote.depositBasisPoints,
+    quote.payment?.iban ?? '',
+    quote.payment?.accountHolder ?? '',
+    quote.payment?.street ?? '',
+    quote.payment?.buildingNumber ?? '',
+    quote.payment?.postalCode ?? '',
+    quote.payment?.city ?? '',
+    quote.payment?.country ?? '',
+    quote.payment?.paymentReference ?? '',
     for (final item in quote.items)
       [item.id, item.title, item.description, item.quantity,
-        item.unitPrice, item.dimensions ?? ''].join('\u001f'),
+        item.unitPrice, item.dimensions ?? '',
+        ...item.otherFields.entries.toList()
+          ..sort((a, b) => a.key.compareTo(b.key)),
+      ].join('\u001f'),
   ].join('\u001e');
 
   static void _append(String id, DocumentHistoryType type,
