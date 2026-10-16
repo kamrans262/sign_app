@@ -3,9 +3,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sign2digital/features/quotes/domain/quote_document_tracking.dart';
 import 'package:sign2digital/features/quotes/domain/quote_review_models.dart';
 import 'package:sign2digital/features/quotes/domain/quote_signature_draft.dart';
+import 'package:sign2digital/features/quotes/domain/quote_tracking_home_session.dart';
 import 'package:sign2digital/features/quotes/presentation/screens/add_signature_screen.dart';
 import 'package:sign2digital/features/quotes/presentation/screens/customer_document_view_screen.dart';
 import 'package:sign2digital/features/quotes/presentation/screens/document_signed_success_screen.dart';
+import 'package:sign2digital/features/quotes/presentation/screens/in_person_signature_screen.dart';
+import 'package:sign2digital/features/quotes/presentation/screens/quote_preview_screen.dart';
 import 'package:sign2digital/features/quotes/presentation/screens/signature_request_screen.dart';
 import 'package:sign2digital/features/quotes/presentation/screens/send_quote_screen.dart';
 
@@ -68,8 +71,14 @@ Future<void> _enterTypedSignature(WidgetTester tester) async {
 }
 
 void main() {
-  setUp(QuoteSignatureDraftSession.clearAll);
-  tearDown(QuoteSignatureDraftSession.clearAll);
+  setUp(() {
+    QuoteSignatureDraftSession.clearAll();
+    QuoteTrackingHomeSession.clear();
+  });
+  tearDown(() {
+    QuoteSignatureDraftSession.clearAll();
+    QuoteTrackingHomeSession.clear();
+  });
 
   testWidgets('Send Quote retains real request and authorized signer callback',
       (tester) async {
@@ -154,6 +163,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(SignatureRequestScreen), findsOneWidget);
     expect(find.text('Document Signed'), findsWidgets);
+    expect(QuoteTrackingHomeSession.trackingFor('phase3-quote')?.signed, isTrue);
     expect(tester.takeException(), isNull);
   });
 
@@ -183,4 +193,39 @@ void main() {
     expect(find.textContaining('not submitted'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+  testWidgets('In-Person entry requires supplied signer IDs and trusted callback',
+      (tester) async {
+    tester.view.physicalSize = const Size(430, 932);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(MaterialApp(home: QuotePreviewScreen(
+      quote: _quote(),
+    )));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('quote-preview-in-person-sign')), findsNothing);
+
+    await tester.pumpWidget(MaterialApp(home: QuotePreviewScreen(
+      quote: _quote(),
+      inPersonDocumentId: 'document-12',
+      inPersonCustomerSignerId: 'signer-12',
+      inPersonBusinessSignerId: 'business-signer-12',
+      onSubmitInPersonSignature: (draft) async => null,
+    )));
+    await tester.pumpAndSettle();
+    final open = find.byKey(const Key('quote-preview-in-person-sign'));
+    await tester.ensureVisible(open);
+    await tester.pumpAndSettle();
+    await tester.tap(open);
+    await tester.pumpAndSettle();
+    final screen = tester.widget<InPersonSignatureScreen>(
+      find.byType(InPersonSignatureScreen),
+    );
+    expect(screen.documentId, 'document-12');
+    expect(screen.customerSignerId, 'signer-12');
+    expect(screen.businessSignerId, 'business-signer-12');
+    expect(find.byKey(const Key('in-person-draw-canvas')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
 }
