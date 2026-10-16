@@ -17,12 +17,14 @@ class DocumentsScreen extends StatefulWidget {
     this.repository,
     this.onDocumentTap,
     this.initialCategory,
+    this.refreshRevision = 0,
   });
 
   final DocumentRepository? repository;
   final ValueChanged<DocumentRecord>? onDocumentTap;
   /// Optional deep link from Home; the usual Documents tab starts at All.
   final DocumentCategory? initialCategory;
+  final int refreshRevision;
 
   @override
   State<DocumentsScreen> createState() => _DocumentsScreenState();
@@ -51,6 +53,9 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.initialCategory != widget.initialCategory) {
       setState(() => _category = widget.initialCategory);
+    }
+    if (oldWidget.refreshRevision != widget.refreshRevision) {
+      _load();
     }
   }
 
