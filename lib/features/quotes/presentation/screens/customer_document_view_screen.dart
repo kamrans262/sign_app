@@ -68,7 +68,8 @@ class CustomerDocumentViewScreen extends StatelessWidget {
       }
       // Do not report completion if a service-supplied PDF cannot be
       // safely associated with this exact quote and job.
-      if (result.signedPdfBytes != null) {
+      if (result.signedPdfBytes != null &&
+          draft.jobId?.trim().isNotEmpty == true) {
         await SignedQuoteFileStore.shared.storeVerified(draft, result);
       }
       verifiedResult = result;
