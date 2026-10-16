@@ -58,6 +58,12 @@ class _ClientsScreenState extends State<ClientsScreen> {
   DocumentCategory? _documentsCategory;
   int _homeRevision = 0;
   int _clientsRevision = 0;
+  String? _selectedCompanyId;
+
+  void _selectCompany(String? companyId) {
+    if (!mounted || _selectedCompanyId == companyId) return;
+    setState(() => _selectedCompanyId = companyId);
+  }
   late final ClientRepository _repository;
   final DemoCreatedJobRepository _createdJobs = DemoCreatedJobRepository();
 
@@ -214,7 +220,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
           onNotificationTap: () => _showNotReady('Notifications'),
         ));
       case HomeAction.createQuote:
-        _openHomeRoute(const CreateQuoteScreen());
+        _openHomeRoute(CreateQuoteScreen(companyId: _selectedCompanyId));
       case HomeAction.newJob:
         _createJobFromHome();
       case HomeAction.addClient:
@@ -236,6 +242,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
       MaterialPageRoute<void>(
         builder: (_) => JobDetailsScreen(
           job: job,
+          companyId: _selectedCompanyId,
           onTabSelected: (index) {
             // Nested routes may include Client Details below Job Details.
             // Return to the existing dashboard before switching its tab.
@@ -285,6 +292,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                     selectedQuote: currentQuote,
                     refreshRevision: _homeRevision,
                     additionalActiveJobs: _createdJobs.jobs.length,
+                    onCompanySelected: _selectCompany,
                     onAction: _onHomeAction,
                   ),
                   JobsScreen(
@@ -299,6 +307,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                     createdJobsForClient: _createdJobs.forClient,
                     onJobCreated: _recordCreatedJob,
                     onOpenJob: _openJobDetails,
+                    companyId: _selectedCompanyId,
                     showNotReady: _showNotReady,
                     onTabSelected: (index) =>
                         setState(() => _selectedIndex = index),
@@ -333,6 +342,7 @@ class _ClientsContent extends StatefulWidget {
     required this.createdJobsForClient,
     required this.onJobCreated,
     required this.onOpenJob,
+    this.companyId,
   });
 
   final ClientRepository repository;
@@ -341,6 +351,7 @@ class _ClientsContent extends StatefulWidget {
   final List<JobModel> Function(String clientId) createdJobsForClient;
   final JobModel Function(CreateJobDraft draft) onJobCreated;
   final Future<void> Function(JobModel) onOpenJob;
+  final String? companyId;
 
   @override
   State<_ClientsContent> createState() => _ClientsContentState();
@@ -416,6 +427,7 @@ class _ClientsContentState extends State<_ClientsContent> {
         builder: (_) => ClientDetailsScreen(
           client: client,
           repository: widget.repository,
+          companyId: widget.companyId,
           createdJobsForClient: widget.createdJobsForClient,
           onJobCreated: widget.onJobCreated,
           onOpenJob: widget.onOpenJob,
