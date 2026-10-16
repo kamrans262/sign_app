@@ -203,6 +203,30 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  test('repository connects created addendum to source in both directions',
+      () async {
+    final originalId = 'documents-figma-quote-1';
+    AddendumDraftSession.create(draft().copyWith(
+      linkedDocumentId: originalId,
+      linkedDocumentNumber: 'Q-12800',
+      linkedJobId: 'job-5',
+    ));
+    final records = await const DemoDocumentRepository().listDocuments();
+    final addendum = records.singleWhere((record) =>
+        record.id == 'addendum-5');
+    final original = records.singleWhere((record) =>
+        record.id == originalId);
+    expect(addendum.category, DocumentCategory.addends);
+    expect(addendum.related.single.id, original.id);
+    expect(original.related.any((r) => r.id == addendum.id), isTrue);
+    expect(original.status, 'Signed');
+    expect(addendum.status, 'Draft');
+    expect(addendum.verifiedSignedPdfAvailable, isFalse);
+    expect(addendum.addendumDraftId, 'addendum-5');
+    expect(addendum.history.any((e) =>
+        e.type == DocumentHistoryType.signed), isFalse);
+  });
+
   test('mismatched service receipt cannot be associated with source', () {
     final original = source();
     AddendumDraftSession.create(draft());
