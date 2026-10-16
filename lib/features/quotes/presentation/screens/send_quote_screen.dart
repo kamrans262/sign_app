@@ -9,6 +9,9 @@ import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../domain/quote_document_tracking.dart';
 import '../../domain/quote_tracking_home_session.dart';
 import '../../domain/quote_review_models.dart';
+import '../../domain/quote_signature_draft.dart';
+import 'customer_document_view_screen.dart';
+import 'document_signed_success_screen.dart';
 import '../../services/quote_pdf_service.dart';
 import '../widgets/sign2digital_quote_shadow_panel.dart';
 import '../widgets/sign2digital_sending_method_card.dart';
@@ -50,9 +53,15 @@ typedef QuotePdfGenerator = Future<Uint8List> Function(QuoteReviewDraft quote);
 class SendQuoteScreen extends StatefulWidget {
   const SendQuoteScreen({super.key, required this.quote,
     this.pdfGenerator, this.secureDocumentUrl, this.secureLinkExpiresAt,
-    this.secureLinkDelivery});
+    this.secureLinkDelivery, this.tracking, this.signingContext,
+    this.onSubmitSignature, this.onSubmitVerifiedSignature});
 
   final QuoteReviewDraft quote;
+  final QuoteDocumentTracking? tracking;
+  final QuoteSigningContext? signingContext;
+  final Future<bool> Function(QuoteSignatureDraft)? onSubmitSignature;
+  final Future<QuoteSignedDisplayData?> Function(QuoteSignatureDraft)?
+      onSubmitVerifiedSignature;
   final QuotePdfGenerator? pdfGenerator;
   /// A genuine HTTPS link returned by a trusted backend, if integrated.
   final String? secureDocumentUrl;
@@ -522,7 +531,12 @@ class _SendQuoteScreenState extends State<SendQuoteScreen> {
         onPressed: () => Navigator.of(context).push<void>(
           MaterialPageRoute<void>(builder: (_) => SignatureRequestScreen(
             quote: _quote.copy(),
-            tracking: QuoteDocumentTracking(quoteId: _quote.id),
+            tracking: widget.tracking?.quoteId == _quote.id
+                ? widget.tracking
+                : QuoteDocumentTracking(quoteId: _quote.id),
+            signingContext: widget.signingContext,
+            onSubmitSignature: widget.onSubmitSignature,
+            onSubmitVerifiedSignature: widget.onSubmitVerifiedSignature,
           )),
         ),
         child: const Text('View document status'),
