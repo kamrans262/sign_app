@@ -11,6 +11,8 @@ import '../../../clients/presentation/widgets/sign2digital_status_badge.dart';
 import '../../../quotes/presentation/widgets/sign2digital_quote_summary_card.dart';
 import '../../../quotes/presentation/widgets/sign2digital_signature_action_card.dart';
 import '../../../quotes/services/quote_pdf_service.dart';
+import '../../../quotes/presentation/screens/send_quote_screen.dart';
+import '../../data/document_activity_session.dart';
 import '../../domain/document_record.dart';
 import 'create_addendum_screen.dart';
 import '../widgets/sign2digital_document_history.dart';
@@ -49,6 +51,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
   int _tab = 0;
   int _action = 0;
   Future<Uint8List?>? _pdfFuture;
+  List<DocumentHistoryEvent> _extraHistory = const [];
 
   static const tabs = ['Details', 'Preview', 'Related', 'History'];
 
@@ -126,13 +129,21 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
     try {
       final bytes = await _pdf(record);
       if (bytes == null) { _message('No document PDF is available.'); return; }
-      await FilePicker.saveFile(
+      final savedPath = await FilePicker.saveFile(
         dialogTitle: 'Save document',
         fileName: _filename(record),
         type: FileType.custom,
         allowedExtensions: ['pdf'],
         bytes: bytes,
       );
+      if (savedPath != null && mounted && !record.demoOnly) {
+        DocumentActivitySession.downloaded(record.id);
+        final existingIds = record.history.map((event) => event.id).toSet();
+        setState(() => _extraHistory = DocumentActivitySession
+            .forDocument(record.id)
+            .where((event) => !existingIds.contains(event.id))
+            .toList());
+      }
     } catch (_) { _message('Could not export this document PDF.'); }
   }
 
@@ -155,6 +166,22 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
       context: context,
       builder: (sheet) => SafeArea(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
+          if (record.category == DocumentCategory.quotes &&
+              record.quote?.approvedLocally == true &&
+              record.status.toLowerCase() != 'signed' &&
+              !record.demoOnly)
+            ListTile(
+              key: const Key('document-send-quote'),
+              leading: const Icon(Icons.send_outlined),
+              title: const Text('Send Quote'),
+              onTap: () {
+                Navigator.pop(sheet);
+                Navigator.of(context).push<void>(MaterialPageRoute<void>(
+                  builder: (_) => SendQuoteScreen(
+                    quote: record.quote!.copy()),
+                ));
+              },
+            ),
           if (record.category == DocumentCategory.quotes)
             ListTile(
               key: const Key('document-create-addendum'),
@@ -214,6 +241,9 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
         DocumentCategory.contacts => 'Contact',
         DocumentCategory.reports => 'Report',
         DocumentCategory.addends => 'Addend',
+        DocumentCategory.receipts => 'Receipt',
+        DocumentCategory.invoices => 'Invoice',
+        DocumentCategory.other => 'Other',
       }),
       (switch (record.category) {
         DocumentCategory.addends => 'Addendum Number:',
@@ -225,6 +255,9 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
       ('Created By:', record.createdBy ?? 'Not available'),
       ('Created Date:', _date(record.createdAt ?? record.quote?.date)),
       ('Last Update:', _date(record.updatedAt ?? record.timestamp)),
+      if (!record.demoOnly) ('Version:', 'v${record.version}'),
+      if (!record.demoOnly && record.attachmentNames.isNotEmpty)
+        ('Attachments:', record.attachmentNames.join(', ')),
       ('Valid Until:', _date(record.validUntil ?? record.quote?.validUntil)),
       ('Status:', record.status),
     ];
@@ -387,7 +420,8 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
           else if (_tab == 1) _preview(record)
           else if (_tab == 2) _related(record)
           else Sign2DigitalDocumentHistory(
-            document: record, onViewSignatures: widget.onViewSignatures),
+            document: record, onViewSignatures: widget.onViewSignatures,
+            additionalEvents: _extraHistory),
         ],
       ),
     )),
