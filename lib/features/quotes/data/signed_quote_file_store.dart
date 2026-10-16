@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../domain/quote_review_models.dart';
-import '../presentation/screens/document_signed_success_screen.dart';
+import '../domain/quote_signed_display_data.dart';
 
 /// A local copy of a PDF *returned by a trusted signing service*.
 /// This is not the authoritative remote record or legal audit trail.
