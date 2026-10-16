@@ -100,6 +100,9 @@ class _Sign2DigitalDocumentHistoryState
     DocumentHistoryType.viewed => Icons.visibility_outlined,
     DocumentHistoryType.emailOpened => Icons.chat_bubble_outline_rounded,
     DocumentHistoryType.created => Icons.description_outlined,
+    DocumentHistoryType.edited => Icons.edit_outlined,
+    DocumentHistoryType.downloaded => Icons.download_outlined,
+    DocumentHistoryType.versionChanged => Icons.history_outlined,
   };
 
   String _timestamp(DateTime input) {
