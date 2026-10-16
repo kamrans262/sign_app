@@ -75,6 +75,10 @@ class _ConvertDocumentScreenState extends State<ConvertDocumentScreen> {
       _approved = false;
       _genericDraft = NoteDocumentDraftSession.forNote(
         widget.note.id, _type.name);
+      if (_genericDraft != null) {
+        _stage = QuotePreparationStage.completed;
+        _approved = _genericDraft!.approvedLocally;
+      }
       _error = null;
     });
   }
@@ -323,15 +327,15 @@ class _ConvertDocumentScreenState extends State<ConvertDocumentScreen> {
       ),
       DocumentPreparationStep(
         title: 'Review',
-        description: _approved ? 'Quote reviewed before approval'
-            : _reviewOpened ? 'Review the actual prepared quote'
+        description: _approved ? 'Draft reviewed before local approval'
+            : _reviewOpened ? 'Review the editable prepared draft'
             : 'Choose type of document to generate',
         completed: _approved,
         active: _reviewOpened && !_approved,
       ),
       DocumentPreparationStep(
         title: 'Approve',
-        description: _approved ? 'Approved locally in Quote Review'
+        description: _approved ? 'Approved locally; not sent or signed'
             : 'Choose type of document to generate',
         completed: _approved,
       ),

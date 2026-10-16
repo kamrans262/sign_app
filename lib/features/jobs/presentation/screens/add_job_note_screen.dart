@@ -109,8 +109,7 @@ class _AddJobNoteScreenState extends State<AddJobNoteScreen> {
         title: title,
         body: body,
         createdAt: now,
-        type: _type == JobNoteType.voice && body.isNotEmpty
-            ? JobNoteType.textWithAudio : _type,
+        type: _type,
         visibility: _visibility,
         audioPath: _audioPath,
       ));

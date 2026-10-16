@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sign2digital/features/jobs/data/mock_jobs.dart';
 import 'package:sign2digital/features/jobs/domain/job_note_model.dart';
+import 'package:sign2digital/features/jobs/domain/note_document_draft.dart';
 import 'package:sign2digital/features/jobs/presentation/screens/convert_document_screen.dart';
 import 'package:sign2digital/features/jobs/presentation/screens/job_notes_screen.dart';
 import 'package:sign2digital/features/jobs/presentation/widgets/sign2digital_job_note_card.dart';
@@ -36,11 +37,31 @@ final note = JobNoteModel(
   body: 'Complete renovation of the terrace, including new tiles, '
     'waterproofing and railings',
   createdAt: DateTime(2026, 8, 12, 10, 30),
-  visibility: JobNoteVisibility.customerFacing,
+  visibility: JobNoteVisibility.privateNote,
   type: JobNoteType.text,
 );
 
+class _FakeNotePreparationService implements NoteDocumentPreparationService {
+  JobNoteModel? received;
+  String? receivedType;
+
+  @override
+  Future<NoteDocumentDraft> prepare(
+      JobNoteModel input, String documentType) async {
+    received = input;
+    receivedType = documentType;
+    return NoteDocumentDraft(
+      noteId: input.id,
+      jobId: input.jobId,
+      documentType: documentType,
+      title: 'Generated report',
+      content: 'Based only on: ${input.body}',
+    );
+  }
+}
+
 void main() {
+  setUp(NoteDocumentDraftSession.clear);
   testWidgets('note dialog opens real note conversion; Back preserves Job Notes',
       (tester) async {
     await tester.pumpWidget(MaterialApp(
@@ -91,7 +112,7 @@ void main() {
     expect(find.byType(Sign2DigitalJobNoteCard), findsOneWidget);
     expect(find.text(note.title), findsOneWidget);
     expect(find.text(note.body), findsOneWidget);
-    expect(find.text('Customer-facing'), findsOneWidget);
+    expect(find.text('Private'), findsOneWidget);
     expect(find.text('At 10:30'), findsOneWidget);
     expect(find.text('Document Type'), findsOneWidget);
     expect(find.text('AI Document Preparation'), findsOneWidget);
@@ -110,9 +131,12 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('selecting another type preserves note and unsupported generation is honest',
+  testWidgets('selecting another type prepares editable draft only with user review',
       (tester) async {
-    await tester.pumpWidget(MaterialApp(home: ConvertDocumentScreen(note: note)));
+    final generated = _FakeNotePreparationService();
+    await tester.pumpWidget(MaterialApp(home: ConvertDocumentScreen(
+      note: note, notePreparationService: generated,
+    )));
     await tester.tap(find.byKey(const Key('convert-document-type-1')));
     await tester.pump();
     expect(tester.widget<Sign2DigitalSignatureActionCard>(
@@ -123,8 +147,14 @@ void main() {
     await tester.ensureVisible(find.byKey(const Key('convert-generate-draft')));
     await tester.tap(find.byKey(const Key('convert-generate-draft')));
     await tester.pump();
-    expect(find.textContaining('not yet connected'), findsWidgets);
+    await tester.pumpAndSettle();
+    expect(generated.received?.id, note.id);
+    expect(generated.receivedType, 'report');
+    expect(find.text('Review document draft'), findsOneWidget);
     expect(find.byType(QuoteAiProcessingScreen), findsNothing);
+    await tester.tap(find.byKey(const Key('note-document-approve')));
+    await tester.pumpAndSettle();
+    expect(NoteDocumentDraftSession.forNote(note.id, 'report')?.approvedLocally, isTrue);
     expect(tester.takeException(), isNull);
   });
 
