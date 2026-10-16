@@ -86,6 +86,7 @@ class HomeDashboardScreen extends StatefulWidget {
     this.expenseRepository = const DemoExpenseRepository(),
     this.refreshRevision = 0,
     this.additionalActiveJobs = 0,
+    this.onCompanySelected,
   });
 
   final ValueChanged<HomeAction> onAction;
@@ -97,6 +98,8 @@ class HomeDashboardScreen extends StatefulWidget {
   final ExpenseRepository expenseRepository;
   final int refreshRevision;
   final int additionalActiveJobs;
+  /// Reports the actual selected demo company to the authenticated shell.
+  final ValueChanged<String?>? onCompanySelected;
 
   @override
   State<HomeDashboardScreen> createState() => _HomeDashboardScreenState();
@@ -194,6 +197,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
       );
       _loading = false;
     });
+    widget.onCompanySelected?.call(_companyId);
   }
 
   Future<void> _switchCompany() async {
@@ -213,6 +217,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     final index = names.indexOf(selected);
     if (index < 0) return;
     setState(() => _companyId = companies[index].id);
+    widget.onCompanySelected?.call(_companyId);
   }
 
   String _count(int? value) =>
