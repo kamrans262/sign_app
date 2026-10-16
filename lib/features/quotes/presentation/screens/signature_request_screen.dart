@@ -147,7 +147,7 @@ class _SignatureRequestScreenState extends State<SignatureRequestScreen> {
   void _verifiedSigned(QuoteSignedDisplayData receipt) {
     // This event is recorded only after a connected signing service returned
     // matching audit/document details; local signature capture is insufficient.
-    if (!mounted || receipt.demoOnly && !_quote.isDemo) return;
+    if (!mounted || (receipt.demoOnly && !_quote.isDemo)) return;
     final now = receipt.signedAt;
     setState(() => _tracking = _tracking.withEvent(QuoteDocumentEvent(
       id: 'signed-${_tracking.requestId}-${now.microsecondsSinceEpoch}',
@@ -189,13 +189,21 @@ class _SignatureRequestScreenState extends State<SignatureRequestScreen> {
     style: _type(18, weight: FontWeight.w600));
 
   Widget _statusBox() {
-    final message = _tracking.completed
-        ? 'The document is completed and the signature is confirmed.'
-        : _tracking.viewed
-            ? "The customer has viewed the document. We'll notify you when it's signed."
-            : _tracking.sent
-                ? 'The document has been sent. A customer view is not confirmed yet.'
-                : 'Document delivery has not been confirmed yet.';
+    final status = _tracking.statusAt(DateTime.now());
+    final message = switch (status) {
+      QuoteSignatureStatus.signed =>
+        'The document is signed. Check the signed document in the job.',
+      QuoteSignatureStatus.expired =>
+        'This signing request has expired. A new authorized request is required.',
+      QuoteSignatureStatus.awaitingSignature =>
+        'The document is awaiting the customer signature.',
+      QuoteSignatureStatus.viewed =>
+        "The customer has viewed the document. We'll notify you when it's signed.",
+      QuoteSignatureStatus.sent =>
+        'The document has been sent. A customer view is not confirmed yet.',
+      QuoteSignatureStatus.draft =>
+        'Document delivery has not been confirmed yet.',
+    };
     return Container(
       key: const Key('signature-status-banner'),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -204,9 +212,18 @@ class _SignatureRequestScreenState extends State<SignatureRequestScreen> {
       child: Row(children: [
         const Icon(Icons.mail_outline, color: AppColors.primary, size: 24),
         const SizedBox(width: 10),
-        Expanded(child: Text(message,
-          style: _type(13, color: AppColors.placeholder,
-              weight: FontWeight.w400))),
+        Expanded(child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(status.label,
+              key: const Key('signature-current-status'),
+              style: _type(13, weight: FontWeight.w600)),
+            const SizedBox(height: 4),
+            Text(message,
+              style: _type(13, color: AppColors.placeholder,
+                  weight: FontWeight.w400)),
+          ],
+        )),
         IconButton(
           key: const Key('signature-banner-copy'),
           tooltip: 'Copy secure document link',
