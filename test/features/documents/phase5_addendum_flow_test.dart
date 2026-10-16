@@ -200,6 +200,10 @@ void main() {
     final receipt = AddendumSignatureRequestSession.forAddendum(doc.id);
     expect(receipt?.originalDocumentId, original.id);
     expect(receipt?.addendumId, doc.id);
+    expect(AddendumDraftSession.isLocked(doc.id), isTrue);
+    expect(() => AddendumDraftSession.create(
+      createdDraft.copyWith(description: 'Changed after sending'),
+    ), throwsStateError);
     expect(tester.takeException(), isNull);
   });
 
