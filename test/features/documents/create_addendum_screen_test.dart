@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sign2digital/features/documents/data/demo_document_repository.dart';
 import 'package:sign2digital/features/documents/presentation/screens/document_details_screen.dart';
 import 'package:sign2digital/features/documents/domain/addendum_draft.dart';
 import 'package:sign2digital/features/documents/domain/document_record.dart';
@@ -42,6 +41,32 @@ class _FakeExtractor implements AddendumVoiceExtractionService {
   }
 }
 
+/// A fixed test source avoids signed-quote filesystem access inside fake async.
+/// The production repository is exercised in non-widget tests.
+class _InMemoryDocumentRepository implements DocumentRepository {
+  const _InMemoryDocumentRepository(this.records);
+
+  final List<DocumentRecord> records;
+
+  @override
+  Future<List<DocumentRecord>> listDocuments() async => records;
+}
+
+List<DocumentRecord> _fixtureQuotes() => List<DocumentRecord>.generate(
+  5,
+  (index) => DocumentRecord(
+    id: 'documents-figma-quote-${index + 1}',
+    category: DocumentCategory.quotes,
+    number: 'Q-12800',
+    title: 'Quote Q-12800',
+    project: 'Kitchen renovation',
+    customer: 'Jean dupont',
+    timestamp: DateTime(2026, 8, 23, 22),
+    status: 'Signed',
+    demoOnly: true,
+  ),
+);
+
 void main() {
   setUp(AddendumDraftSession.clear);
 
@@ -74,9 +99,11 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    final quote = (await const DemoDocumentRepository().listDocuments()).first;
+    final repository = _InMemoryDocumentRepository(_fixtureQuotes());
+    final quote = repository.records.first;
     await tester.pumpWidget(MaterialApp(
       home: CreateAddendumScreen(
+        repository: repository,
         draftId: 'ui-draft-1', linkedDocument: quote,
       ),
     ));
@@ -105,8 +132,10 @@ void main() {
 
   testWidgets('invalid creation blocked, valid local create opens unsigned details',
       (tester) async {
-    final quote = (await const DemoDocumentRepository().listDocuments()).first;
+    final repository = _InMemoryDocumentRepository(_fixtureQuotes());
+    final quote = repository.records.first;
     await tester.pumpWidget(MaterialApp(home: CreateAddendumScreen(
+        repository: repository,
       linkedDocument: quote, draftId: 'create-fixture',
     )));
     await tester.ensureVisible(find.text('Create Addendum'));
@@ -123,6 +152,7 @@ void main() {
     ));
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pumpWidget(MaterialApp(home: CreateAddendumScreen(
+        repository: repository,
       linkedDocument: quote, draftId: 'create-fixture',
     )));
     await tester.ensureVisible(find.text('Create Addendum'));
@@ -142,9 +172,11 @@ void main() {
 
   testWidgets('remove and reselect document without deleting underlying quote',
       (tester) async {
-    final quote = (await const DemoDocumentRepository().listDocuments()).first;
+    final repository = _InMemoryDocumentRepository(_fixtureQuotes());
+    final quote = repository.records.first;
     await tester.pumpWidget(MaterialApp(
-      home: CreateAddendumScreen(linkedDocument: quote),
+      home: CreateAddendumScreen(
+        repository: repository,linkedDocument: quote),
     ));
     await tester.tap(find.byKey(const Key('addendum-remove-linked-document')));
     await tester.pump();
@@ -155,15 +187,17 @@ void main() {
       const Key('addendum-document-choice-documents-figma-quote-1')));
     await tester.pumpAndSettle();
     expect(find.text('Quote Q-12800'), findsOneWidget);
-    expect((await const DemoDocumentRepository().listDocuments()).length, 5);
+    expect(repository.records, hasLength(5));
     expect(tester.takeException(), isNull);
   });
 
   testWidgets('shared recorder and AI processing apply suggestions without overwriting',
       (tester) async {
-    final quote = (await const DemoDocumentRepository().listDocuments()).first;
+    final repository = _InMemoryDocumentRepository(_fixtureQuotes());
+    final quote = repository.records.first;
     final extractor = _FakeExtractor();
     await tester.pumpWidget(MaterialApp(home: CreateAddendumScreen(
+        repository: repository,
       linkedDocument: quote,
       voiceRecorderFactory: _FakeRecorder.new,
       voiceExtractionService: extractor,
@@ -192,14 +226,16 @@ void main() {
       (tester) async {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    final quote = (await const DemoDocumentRepository().listDocuments()).first;
+    final repository = _InMemoryDocumentRepository(_fixtureQuotes());
+    final quote = repository.records.first;
     for (final size in [const Size(320, 650), const Size(430, 932),
       const Size(720, 390), const Size(1024, 768)]) {
       tester.view.physicalSize = size;
       tester.view.devicePixelRatio = 1;
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pumpWidget(MaterialApp(
-        home: CreateAddendumScreen(linkedDocument: quote),
+        home: CreateAddendumScreen(
+        repository: repository,linkedDocument: quote),
       ));
       expect(find.byKey(const Key('create-addendum-scroll')), findsOneWidget);
       await tester.ensureVisible(find.text('Create Addendum'));
