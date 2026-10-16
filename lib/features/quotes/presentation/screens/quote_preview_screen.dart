@@ -7,6 +7,7 @@ import '../../../../core/widgets/sign2digital_header.dart';
 import '../../domain/quote_document_tracking.dart';
 import '../../domain/quote_review_models.dart';
 import '../../domain/quote_signature_draft.dart';
+import 'in_person_signature_screen.dart';
 import 'customer_document_view_screen.dart';
 import 'document_signed_success_screen.dart';
 import '../../../clients/presentation/widgets/sign2digital_status_badge.dart';
@@ -29,6 +30,10 @@ class QuotePreviewScreen extends StatefulWidget {
     this.signingContext,
     this.onSubmitSignature,
     this.onSubmitVerifiedSignature,
+    this.inPersonDocumentId,
+    this.inPersonCustomerSignerId,
+    this.inPersonBusinessSignerId,
+    this.onSubmitInPersonSignature,
   });
 
   final QuoteReviewDraft quote;
@@ -48,6 +53,14 @@ class QuotePreviewScreen extends StatefulWidget {
   final Future<bool> Function(QuoteSignatureDraft)? onSubmitSignature;
   final Future<QuoteSignedDisplayData?> Function(QuoteSignatureDraft)?
       onSubmitVerifiedSignature;
+  /// Only a trusted service supplies two authorized signer IDs and accepts
+  /// the resulting signatures. No IDs are manufactured from contact names.
+  final String? inPersonDocumentId;
+  final String? inPersonCustomerSignerId;
+  final String? inPersonBusinessSignerId;
+  final Future<QuoteSignedDisplayData?> Function(
+    QuoteInPersonSignatureSubmission,
+  )? onSubmitInPersonSignature;
 
   @override
   State<QuotePreviewScreen> createState() => _QuotePreviewScreenState();
@@ -168,6 +181,27 @@ class _QuotePreviewScreenState extends State<QuotePreviewScreen> {
     }
   }
 
+  bool get _inPersonReady =>
+      widget.inPersonDocumentId?.trim().isNotEmpty == true &&
+      widget.inPersonCustomerSignerId?.trim().isNotEmpty == true &&
+      widget.inPersonBusinessSignerId?.trim().isNotEmpty == true &&
+      widget.onSubmitInPersonSignature != null;
+
+  void _openVerifiedInPerson() {
+    if (!_inPersonReady) return;
+    Navigator.of(context).push<void>(MaterialPageRoute<void>(
+      builder: (_) => InPersonSignatureScreen(
+        quote: _quote.copy(),
+        projectName: _quote.items.isEmpty
+            ? _quote.quoteNumber : _quote.items.first.title,
+        documentId: widget.inPersonDocumentId!,
+        customerSignerId: widget.inPersonCustomerSignerId!,
+        businessSignerId: widget.inPersonBusinessSignerId!,
+        onSubmit: widget.onSubmitInPersonSignature,
+      ),
+    ));
+  }
+
   void _sendToCustomer() {
     if (_busy) return;
     if (!_quote.approvedLocally || _quote.approvalIssues.isNotEmpty) {
@@ -256,13 +290,14 @@ class _QuotePreviewScreenState extends State<QuotePreviewScreen> {
               _terms(),
               const SizedBox(height: 60),
               if (widget.customerView) _customerAction() else _actions(),
-              if (!widget.customerView && widget.onInPersonSign != null) ...[
+              if (!widget.customerView &&
+                   (widget.onInPersonSign != null || _inPersonReady)) ...[
                 const SizedBox(height: 12),
                 SizedBox(
                   height: 48,
                   child: OutlinedButton.icon(
                     key: const Key('quote-preview-in-person-sign'),
-                    onPressed: widget.onInPersonSign,
+                    onPressed: widget.onInPersonSign ?? _openVerifiedInPerson,
                     icon: const Icon(Icons.draw_outlined),
                     label: const Text('In-Person Signature'),
                   ),
