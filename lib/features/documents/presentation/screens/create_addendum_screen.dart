@@ -13,6 +13,7 @@ import '../../../jobs/presentation/widgets/ai_voice_flow_dialog.dart';
 import '../../../jobs/services/voice_job_extraction_service.dart';
 import '../../../jobs/services/voice_recorder_service.dart';
 import '../../../quotes/presentation/widgets/sign2digital_quote_summary_card.dart';
+import '../../../quotes/domain/quote_review_models.dart' show quoteMoney;
 import '../../data/demo_document_repository.dart';
 import '../../domain/addendum_draft.dart';
 import '../../domain/document_record.dart';
@@ -46,6 +47,10 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
   final _number = TextEditingController();
   final _title = TextEditingController();
   final _description = TextEditingController();
+  final _additionalWork = TextEditingController();
+  final _quantity = TextEditingController();
+  final _unitPrice = TextEditingController();
+  final _vat = TextEditingController(text: '0');
   late final DocumentRepository _repository;
   late final String _id;
   DocumentRecord? _linked;
@@ -63,6 +68,11 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
     _number.text = existing?.number ?? '';
     _title.text = existing?.title ?? '';
     _description.text = existing?.description ?? '';
+    _additionalWork.text = existing?.additionalWork ?? '';
+    _quantity.text = existing?.quantity ?? '';
+    _unitPrice.text = existing?.unitPrice ?? '';
+    _vat.text = existing == null
+        ? '0' : (existing.vatBasisPoints / 100).toStringAsFixed(2);
     _effectiveDate = existing?.effectiveDate;
     _logo = existing?.logo;
     _linked = widget.linkedDocument;
@@ -97,13 +107,84 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
     title: _title.text.trim(), description: _description.text.trim(),
     effectiveDate: _effectiveDate,
     linkedDocumentId: _linked?.id, logo: _logo,
+    additionalWork: _additionalWork.text.trim(),
+    quantity: _quantity.text.trim(),
+    unitPrice: _unitPrice.text.trim(),
+    vatBasisPoints: _vatBasisPoints,
+    linkedDocumentNumber: _linked?.number,
+    linkedJobId: _linked?.quote?.jobId,
+    linkedClientId: _linked?.quote?.clientId,
   );
+
+  int get _vatBasisPoints {
+    final raw = double.tryParse(_vat.text.trim());
+    if (raw == null || !raw.isFinite || raw < 0 || raw > 100 ||
+        (raw * 100 - (raw * 100).round()).abs() > 0.00001) {
+      return -1;
+    }
+    return (raw * 100).round();
+  }
+
+  void _reviewAddendum() {
+    final draft = _draft();
+    if (draft.validationIssues.isNotEmpty) {
+      _notice(draft.validationIssues.first);
+      return;
+    }
+    final source = _linked;
+    if (source == null || source.id != draft.linkedDocumentId) {
+      _notice('Select the original document before reviewing.');
+      return;
+    }
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheet) => SafeArea(child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          const Text('Review Addendum', style: TextStyle(
+            fontSize: 18, fontWeight: FontWeight.w600,
+            fontFamily: 'Inter', color: AppColors.dark)),
+          const SizedBox(height: 12),
+          Text('Original: ${source.number}'),
+          Text('Addendum: ${draft.number}'),
+          Text(draft.title),
+          const SizedBox(height: 10),
+          Text(draft.description),
+          if (draft.hasPricedWork) ...[
+            const SizedBox(height: 10),
+            Text('Additional work: ${draft.additionalWork}'),
+            Text('Quantity: ${draft.quantity}'),
+            Text('Unit price: ${draft.unitPrice} CHF'),
+          ],
+          const SizedBox(height: 10),
+          Text('Subtotal: ${quoteMoney(draft.subtotalMinor, 'CHF')}'),
+          Text('VAT (${(draft.vatBasisPoints / 100).toStringAsFixed(2)}%): '
+            '${quoteMoney(draft.vatMinor, 'CHF')}'),
+          Text('Total: ${quoteMoney(draft.totalMinor, 'CHF')}'),
+          const SizedBox(height: 10),
+          const Text('Unsigned draft — customer approval has not been requested.'),
+          const SizedBox(height: 14),
+          Sign2DigitalPrimaryButton(
+            key: const Key('addendum-review-close'),
+            label: 'Continue Editing',
+            onPressed: () => Navigator.pop(sheet),
+          ),
+        ]),
+      )),
+    );
+  }
 
   @override
   void dispose() {
     _number.dispose();
     _title.dispose();
     _description.dispose();
+    _additionalWork.dispose();
+    _quantity.dispose();
+    _unitPrice.dispose();
+    _vat.dispose();
     super.dispose();
   }
 
@@ -296,17 +377,24 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
         _notice('The selected document is no longer available.');
         return;
       }
-      AddendumDraftSession.create(draft);
+      final original = linked.single;
+      final snapshot = draft.copyWith(
+        linkedDocumentNumber: original.number,
+        linkedJobId: original.quote?.jobId,
+        linkedClientId: original.quote?.clientId,
+      );
+      AddendumDraftSession.create(snapshot);
       if (!mounted) return;
       final record = DocumentRecord(
         id: draft.id,
         category: DocumentCategory.addends,
         number: draft.number, title: 'Addendum ${draft.number}',
-        project: draft.title,
-        customer: linked.single.customer,
+        project: original.project,
+        customer: original.customer,
         timestamp: DateTime.now(),
         status: 'Draft',
-        demoOnly: true,
+        demoOnly: original.demoOnly,
+        addendumDraftId: draft.id,
         createdAt: DateTime.now(),
         validUntil: draft.effectiveDate,
         related: [linked.single],
@@ -404,6 +492,41 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
               _field('Description',
                 'Complete renovation of the terrace, including new tiles, waterproofing and railings',
                 'assets/icons/description.svg', _description, maxLines: 4),
+              const SizedBox(height: 20),
+              _field('Additional Work (optional for non-financial changes)',
+                'Describe the additional work',
+                'assets/icons/description.svg', _additionalWork),
+              const SizedBox(height: 20),
+              _field('Quantity', 'e.g, 2',
+                'assets/icons/hashtag.svg', _quantity),
+              const SizedBox(height: 20),
+              _field('Unit Price (CHF)', 'e.g, 250.00',
+                'assets/icons/hashtag.svg', _unitPrice),
+              const SizedBox(height: 20),
+              _field('VAT (%)', 'e.g, 8.10',
+                'assets/icons/hashtag.svg', _vat),
+              const SizedBox(height: 20),
+              ListenableBuilder(
+                listenable: Listenable.merge([_additionalWork, _quantity,
+                  _unitPrice, _vat]),
+                builder: (context, child) {
+                  final draft = _draft();
+                  return Text(
+                    'Addendum Total: ${quoteMoney(draft.totalMinor, 'CHF')}',
+                    key: const Key('addendum-total'),
+                    style: const TextStyle(fontFamily: 'Inter',
+                      fontSize: 16, fontWeight: FontWeight.w600,
+                      color: AppColors.dark),
+                  );
+                },
+              ),
+              const SizedBox(height: 20),
+              Sign2DigitalOutlinedButton(
+                key: const Key('addendum-review'),
+                label: 'Review Addendum',
+                onPressed: _reviewAddendum,
+                primaryOutline: true,
+              ),
               const SizedBox(height: 20),
               Sign2DigitalSelectionField(
                 key: const Key('addendum-effective-date'),
