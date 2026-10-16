@@ -18,7 +18,7 @@ class DemoDocumentRepository implements DocumentRepository {
     } catch (_) {
       // The existing demo records remain usable without local filesystem access.
     }
-    return [
+    final originals = <DocumentRecord>[
       ...phase4DocumentRecords(
         savedQuotes: QuoteReviewSessionStore.savedDrafts,
         signedFiles: signed,
@@ -99,13 +99,24 @@ class DemoDocumentRepository implements DocumentRepository {
           ],
         );
       }),
+    ];
+    DocumentRecord? sourceFor(String? id) {
+      for (final original in originals) {
+        if (original.id == id) return original;
+      }
+      return null;
+    }
+    return [
+      ...originals,
       ...AddendumDraftSession.savedDrafts.map((draft) => DocumentRecord(
         id: draft.id,
         category: DocumentCategory.addends,
         number: draft.number.isEmpty ? 'Unnumbered draft' : draft.number,
         title: draft.title.isEmpty ? 'Addendum draft' : 'Addendum ${draft.number}',
-        project: draft.title.isEmpty ? 'Incomplete addendum' : draft.title,
-        customer: '',
+        project: sourceFor(draft.linkedDocumentId)?.project ??
+            (draft.title.isEmpty ? 'Incomplete addendum' : draft.title),
+        customer: sourceFor(draft.linkedDocumentId)?.customer ?? '',
+        related: [if (sourceFor(draft.linkedDocumentId) case final source?) source],
         timestamp: DateTime.now(),
         status: 'Draft',
         demoOnly: true,
@@ -116,12 +127,22 @@ class DemoDocumentRepository implements DocumentRepository {
         category: DocumentCategory.addends,
         number: draft.number,
         title: 'Addendum ${draft.number}',
-        project: draft.title,
-        customer: '',
+        project: sourceFor(draft.linkedDocumentId)?.project ??
+            draft.linkedJobId ?? draft.title,
+        customer: sourceFor(draft.linkedDocumentId)?.customer ?? '',
         timestamp: DateTime.now(),
         status: 'Draft',
-        demoOnly: true,
+        demoOnly: sourceFor(draft.linkedDocumentId)?.demoOnly ?? false,
+        addendumDraftId: draft.id,
         validUntil: draft.effectiveDate,
+        related: [if (sourceFor(draft.linkedDocumentId) case final source?) source],
+        history: [DocumentHistoryEvent(
+          id: 'local-create-${draft.id}',
+          documentId: draft.id,
+          type: DocumentHistoryType.created,
+          occurredAt: DateTime.now(),
+          description: 'Addendum created in this app session; not sent or signed',
+        )],
       )),
     ];
   }
