@@ -26,7 +26,7 @@ String? get _guestSigningToken {
   if (!kIsWeb) return null;
   final parts = Uri.base.pathSegments.where((part) => part.isNotEmpty).toList();
   if (parts.length != 2 || parts.first != 'sign' ||
-      parts.last.length < 16 || parts.last.length > 4096) {
+      parts.last.isEmpty || parts.last.length > 4096) {
     return null;
   }
   return parts.last;
