@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../documents/data/document_activity_session.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
@@ -225,6 +226,7 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
 
   void _saveDraft() {
     QuoteReviewSessionStore.save(_draft);
+    DocumentActivitySession.saved(_draft);
     widget.onSaved?.call(_draft.copy());
     _notice(_draft.isDemo
         ? 'Demo draft kept in this app session (not saved to a server).'
@@ -243,6 +245,7 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
     }
     _draft.approvedLocally = true;
     QuoteReviewSessionStore.save(_draft);
+    DocumentActivitySession.approved(_draft);
     final approvedSnapshot = _draft.copy();
     widget.onApproved?.call(approvedSnapshot);
     Navigator.of(context).push<void>(MaterialPageRoute<void>(
