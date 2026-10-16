@@ -3,25 +3,11 @@ import 'package:flutter/material.dart';
 import '../../domain/quote_document_tracking.dart';
 import '../../domain/quote_review_models.dart';
 import '../../domain/quote_signature_draft.dart';
+import '../../domain/quote_signing_context.dart';
+export '../../domain/quote_signing_context.dart' show QuoteSigningContext;
 import 'add_signature_screen.dart';
 import 'document_signed_success_screen.dart';
 import 'quote_preview_screen.dart';
-
-/// Context obtained from a trusted, authorized signing-request service.
-/// The Flutter application does not establish authorization by itself.
-class QuoteSigningContext {
-  const QuoteSigningContext({
-    required this.documentId,
-    required this.signerId,
-    required this.documentVersion,
-    required this.consentReference,
-  });
-
-  final String documentId;
-  final String signerId;
-  final String documentVersion;
-  final String consentReference;
-}
 
 /// Reuses the Quote Preview document in read-only customer mode.
 /// The signing screen opens for a valid active request, but it cannot submit
