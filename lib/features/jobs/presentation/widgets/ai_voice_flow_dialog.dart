@@ -32,11 +32,13 @@ class AiVoiceFlowDialog extends StatefulWidget {
     this.recordingTitle = 'Record Deposit Details',
     this.onQuoteAudioSaved,
     this.onAudioProcessed,
+    this.rawAudioMode = false,
   });
 
   final VoiceRecorderService recorder;
   final VoiceJobExtractionService extraction;
   final String recordingTitle;
+  final bool rawAudioMode;
   final ValueChanged<String>? onQuoteAudioSaved;
   /// Optional domain-specific processing using the existing recorder/dialog.
   /// The processing screen remains visible until this Future completes.
@@ -430,7 +432,9 @@ class _AiVoiceFlowDialogState extends State<AiVoiceFlowDialog>
         _label('Speak clearly and naturally', _support),
         const SizedBox(height: 5),
         _label(
-          'AI will extract the information and fill the form for you',
+          widget.rawAudioMode
+            ? 'Save this recording as a local job-note attachment'
+            : 'AI will extract the information and fill the form for you',
           _support,
         ),
         const SizedBox(height: 15),

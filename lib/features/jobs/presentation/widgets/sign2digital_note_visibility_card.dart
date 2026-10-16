@@ -21,10 +21,10 @@ class Sign2DigitalNoteVisibilityCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isPrivate = visibility == JobNoteVisibility.privateNote;
-    final label = isPrivate ? 'Private Note' : 'Costumer Facing';
+    final label = isPrivate ? 'Private Note' : 'Customer Facing';
     final description = isPrivate
         ? 'Only visible to your team'
-        : 'Visible to your costumers';
+        : 'Marked for customer-facing use';
     return Semantics(
       button: true,
       selected: selected,

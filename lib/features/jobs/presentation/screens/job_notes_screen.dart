@@ -5,13 +5,15 @@ import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
-import '../../data/demo_job_notes.dart';
+import '../../data/job_note_local_store.dart';
+import '../../services/voice_recorder_service.dart';
 import '../../domain/job_model.dart';
 import '../../domain/job_note_model.dart';
 import '../widgets/sign2digital_job_info_banner.dart';
 import '../widgets/sign2digital_job_note_card.dart';
 import '../widgets/sign2digital_note_visibility_card.dart';
 import 'convert_document_screen.dart';
+import 'add_job_note_screen.dart';
 
 /// Handoff for a future Add Notes editor. Selection is user preference,
 /// not a replacement for server-side permissions.
@@ -29,6 +31,8 @@ class JobNotesScreen extends StatefulWidget {
     this.onNoteTap,
     this.onAddNotes,
     this.onTabSelected,
+    this.store,
+    this.voiceRecorderFactory,
   });
 
   final JobModel job;
@@ -36,6 +40,8 @@ class JobNotesScreen extends StatefulWidget {
   final ValueChanged<JobNoteModel>? onNoteTap;
   final AddJobNoteCallback? onAddNotes;
   final ValueChanged<int>? onTabSelected;
+  final JobNoteLocalStore? store;
+  final VoiceRecorderService Function()? voiceRecorderFactory;
 
   @override
   State<JobNotesScreen> createState() => _JobNotesScreenState();
@@ -45,9 +51,16 @@ class _JobNotesScreenState extends State<JobNotesScreen> {
   int _selectedTab = 0;
   JobNoteVisibility _visibility = JobNoteVisibility.privateNote;
   bool _showBanner = true;
+  late final JobNoteLocalStore _store;
+
+  @override
+  void initState() {
+    super.initState();
+    _store = widget.store ?? JobNoteLocalStore.shared;
+  }
 
   List<JobNoteModel> get _filteredNotes {
-    final source = widget.notes ?? DemoJobNotes.forJob(widget.job.id);
+    final source = widget.notes ?? _store.notesFor(widget.job.id);
     return source
         .where((note) {
           if (note.jobId != widget.job.id) {
@@ -83,6 +96,10 @@ class _JobNotesScreenState extends State<JobNotesScreen> {
                 note.timestampLabel(DateTime.now()),
                 style: const TextStyle(color: AppColors.placeholder),
               ),
+              if (note.audioPath != null) ...[
+                const SizedBox(height: 12),
+                const Text('Voice recording saved on this device.'),
+              ],
               if (note.type != JobNoteType.text && note.audioPath == null) ...[
                 const SizedBox(height: 12),
                 const Text('No playable audio is attached to this demo note.'),
@@ -91,8 +108,9 @@ class _JobNotesScreenState extends State<JobNotesScreen> {
           ),
         ),
         actions: [
-          TextButton(
-            key: const Key('job-note-convert'),
+          if (note.visibility == JobNoteVisibility.privateNote)
+            TextButton(
+              key: const Key('job-note-convert'),
             onPressed: () {
               Navigator.of(dialogContext).pop();
               Navigator.of(context).push<void>(MaterialPageRoute<void>(
@@ -112,7 +130,7 @@ class _JobNotesScreenState extends State<JobNotesScreen> {
     );
   }
 
-  void _addNotes() {
+  Future<void> _addNotes() async {
     final callback = widget.onAddNotes;
     if (callback != null) {
       callback(
@@ -121,9 +139,16 @@ class _JobNotesScreenState extends State<JobNotesScreen> {
         _selectedTab == 0 ? JobNoteType.text : JobNoteType.voice,
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Add Notes editor is not connected yet.')),
+      final saved = await Navigator.of(context).push<bool>(
+        MaterialPageRoute(builder: (_) => AddJobNoteScreen(
+          job: widget.job,
+          store: _store,
+          initialType: _selectedTab == 0 ? JobNoteType.text : JobNoteType.voice,
+          initialVisibility: _visibility,
+          voiceRecorderFactory: widget.voiceRecorderFactory,
+        )),
       );
+      if (mounted && saved == true) setState(() {});
     }
   }
 

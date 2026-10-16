@@ -38,6 +38,7 @@ class _PendingPhoto {
 
   final LocalJobPhotoSelection value;
   JobPhotoCategory category = JobPhotoCategory.during;
+  String caption = '';
 }
 
 class _JobPhotosScreenState extends State<JobPhotosScreen> {
@@ -135,7 +136,8 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
         JobPhotoModel(
           id: 'local-${widget.job.id}-${time.microsecondsSinceEpoch}-${_nextId++}',
           jobId: widget.job.id,
-          title: 'Front View',
+          title: pending.caption.trim().isEmpty ? 'Front View' : pending.caption.trim(),
+          caption: pending.caption.trim(),
           createdAt: time,
           category: pending.category,
           bytes: pending.value.bytes,
@@ -381,6 +383,20 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
                   icon: const Icon(Icons.close, color: AppColors.dark),
                 ),
               ],
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: TextFormField(
+                key: Key('pending-caption-$i'),
+                initialValue: _pending[i].caption,
+                maxLength: 187,
+                decoration: const InputDecoration(
+                  labelText: 'Caption (optional)',
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                ),
+                onChanged: (value) => _pending[i].caption = value,
+              ),
             ),
           ],
         ],
