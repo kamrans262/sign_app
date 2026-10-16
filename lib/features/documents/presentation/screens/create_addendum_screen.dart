@@ -16,6 +16,7 @@ import '../../../quotes/presentation/widgets/sign2digital_quote_summary_card.dar
 import '../../../quotes/domain/quote_review_models.dart' show quoteMoney;
 import '../../data/demo_document_repository.dart';
 import '../../domain/addendum_draft.dart';
+import '../../domain/addendum_signature_request.dart';
 import '../../domain/document_record.dart';
 import '../../services/addendum_voice_extraction_service.dart';
 import 'document_details_screen.dart';
@@ -30,6 +31,7 @@ class CreateAddendumScreen extends StatefulWidget {
     this.voiceRecorderFactory,
     this.voiceExtractionService,
     this.requestTemporaryApiKey,
+    this.requestAddendumSignature,
   });
 
   final DocumentRecord? linkedDocument;
@@ -38,6 +40,7 @@ class CreateAddendumScreen extends StatefulWidget {
   final VoiceRecorderService Function()? voiceRecorderFactory;
   final AddendumVoiceExtractionService? voiceExtractionService;
   final Future<String?> Function(BuildContext)? requestTemporaryApiKey;
+  final AddendumSignatureRequestService? requestAddendumSignature;
 
   @override
   State<CreateAddendumScreen> createState() => _CreateAddendumScreenState();
@@ -397,12 +400,13 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
         addendumDraftId: draft.id,
         createdAt: DateTime.now(),
         validUntil: draft.effectiveDate,
-        related: [linked.single],
+        related: [original],
       );
       _notice('Addendum created locally for UI testing; not sent or signed.');
       await Navigator.of(context).pushReplacement<void, void>(
         MaterialPageRoute(builder: (_) => DocumentDetailsScreen(
-          documentId: record.id, document: record)),
+          documentId: record.id, document: record,
+          requestAddendumSignature: widget.requestAddendumSignature)),
       );
     } catch (error) {
       _notice('Unable to create addendum: $error');
