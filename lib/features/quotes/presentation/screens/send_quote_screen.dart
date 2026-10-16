@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../documents/data/document_activity_session.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:printing/printing.dart';
@@ -311,6 +312,9 @@ class _SendQuoteScreenState extends State<SendQuoteScreen> {
       setState(() => _busy = true);
       try {
         final delivered = await widget.secureLinkDelivery!(link, _sendDraft.copy());
+        if (delivered) {
+          DocumentActivitySession.deliveryConfirmed(_quote.id);
+        }
         _notify(delivered ? 'Secure link delivery confirmed by the service.' :
           'Secure link delivery was not confirmed.');
       } catch (error) { _notify('Could not send secure link: $error'); }
