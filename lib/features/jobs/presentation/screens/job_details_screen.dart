@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:printing/printing.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -12,6 +13,7 @@ import 'job_photos_screen.dart';
 import 'job_notes_screen.dart';
 import '../../domain/job_model.dart';
 import '../../../quotes/presentation/screens/create_quote_screen.dart';
+import '../../../quotes/data/signed_quote_file_store.dart';
 import '../../../clients/domain/client_profile.dart';
 import '../widgets/sign2digital_job_financial_card.dart';
 import '../widgets/sign2digital_job_progress_indicator.dart';
@@ -41,7 +43,7 @@ class JobDetailsScreen extends StatelessWidget {
   /// Resolved from the real local client ID, never a name-only match.
   final ClientProfile? client;
 
-  void _openSection(BuildContext context, JobSection section) {
+  Future<void> _openSection(BuildContext context, JobSection section) async {
     if (onSectionTap != null) {
       onSectionTap!(section);
       return;
@@ -60,6 +62,61 @@ class JobDetailsScreen extends StatelessWidget {
         ),
       ));
       return;
+    }
+    if (section == JobSection.documents) {
+      // Preserve the existing card layout; only show signed PDFs when a
+      // verified document has actually been indexed under this job ID.
+      try {
+        final signed = await SignedQuoteFileStore.shared.forJob(job.id);
+        if (!context.mounted) return;
+        if (signed.isNotEmpty) {
+          await showModalBottomSheet<void>(
+            context: context,
+            isScrollControlled: true,
+            builder: (sheetContext) => SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Signed Job Documents',
+                      style: TextStyle(fontSize: 18,
+                          fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 12),
+                    for (final file in signed)
+                      ListTile(
+                        key: Key('signed-job-document-${file.documentId}'),
+                        leading: const Icon(Icons.picture_as_pdf_outlined),
+                        title: Text(file.quoteNumber),
+                        subtitle: Text('Signed ${file.signedAt.toLocal()}'),
+                        onTap: () async {
+                          try {
+                            final bytes = await SignedQuoteFileStore.shared.read(file);
+                            await Printing.sharePdf(
+                              bytes: bytes,
+                              filename: 'Signed_${file.fileName}',
+                            );
+                          } catch (_) {
+                            if (!sheetContext.mounted) return;
+                            ScaffoldMessenger.of(sheetContext).showSnackBar(
+                              const SnackBar(content: Text(
+                                'Could not open this signed PDF.')),
+                            );
+                          }
+                        },
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          );
+          return;
+        }
+      } catch (_) {
+        // Leave the original placeholder intact if local storage is unavailable.
+      }
+      if (!context.mounted) return;
     }
     if (section == JobSection.photos) {
       Navigator.of(context).push<void>(
