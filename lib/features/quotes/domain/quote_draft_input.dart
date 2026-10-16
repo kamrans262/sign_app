@@ -8,6 +8,11 @@ class QuoteDraftInput {
     required this.createdAt,
     this.clientId,
     this.jobId,
+    this.companyId,
+    this.clientName,
+    this.clientEmail,
+    this.clientPhone,
+    this.clientAddress,
     this.sourceNoteId,
     this.description,
     this.audioPath,
@@ -18,6 +23,12 @@ class QuoteDraftInput {
   final DateTime createdAt;
   final String? clientId;
   final String? jobId;
+  /// The currently selected issuing company, when known.
+  final String? companyId;
+  final String? clientName;
+  final String? clientEmail;
+  final String? clientPhone;
+  final String? clientAddress;
   final String? sourceNoteId;
   final String? description;
   final String? audioPath;
