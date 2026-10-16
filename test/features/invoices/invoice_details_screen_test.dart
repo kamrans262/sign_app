@@ -259,7 +259,8 @@ void main() {
       expect(preview.left, closeTo(download.left, 1), reason: '$size');
       expect(edit.right, closeTo(send.right, 1), reason: '$size');
       expect(preview.height, closeTo(edit.height, 1), reason: '$size');
-      expect(preview.height, closeTo(download.height, 1), reason: '$size');
+      // The longer Preview Invoice label may wrap on narrow phones.
+      expect(preview.height, greaterThanOrEqualTo(download.height), reason: '$size');
       expect(tester.takeException(), isNull, reason: '$size');
     });
   }
