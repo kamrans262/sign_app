@@ -6,6 +6,9 @@ import '../widgets/sign2digital_financial_document_sections.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
 import '../../domain/quote_document_tracking.dart';
 import '../../domain/quote_review_models.dart';
+import '../../domain/quote_signature_draft.dart';
+import 'customer_document_view_screen.dart';
+import 'document_signed_success_screen.dart';
 import '../../../clients/presentation/widgets/sign2digital_status_badge.dart';
 import '../../services/quote_pdf_service.dart';
 import 'send_quote_screen.dart';
@@ -23,6 +26,9 @@ class QuotePreviewScreen extends StatefulWidget {
     this.onReviewAndSign,
     this.demoReviewEnabled = false,
     this.onInPersonSign,
+    this.signingContext,
+    this.onSubmitSignature,
+    this.onSubmitVerifiedSignature,
   });
 
   final QuoteReviewDraft quote;
@@ -38,6 +44,10 @@ class QuotePreviewScreen extends StatefulWidget {
   final bool demoReviewEnabled;
   /// Optional owner-initiated flow; supplied only by a connected signing route.
   final VoidCallback? onInPersonSign;
+  final QuoteSigningContext? signingContext;
+  final Future<bool> Function(QuoteSignatureDraft)? onSubmitSignature;
+  final Future<QuoteSignedDisplayData?> Function(QuoteSignatureDraft)?
+      onSubmitVerifiedSignature;
 
   @override
   State<QuotePreviewScreen> createState() => _QuotePreviewScreenState();
@@ -165,7 +175,13 @@ class _QuotePreviewScreenState extends State<QuotePreviewScreen> {
       return;
     }
     Navigator.of(context).push<void>(MaterialPageRoute<void>(
-      builder: (_) => SendQuoteScreen(quote: _quote.copy()),
+      builder: (_) => SendQuoteScreen(
+        quote: _quote.copy(),
+        tracking: _matchingTracking,
+        signingContext: widget.signingContext,
+        onSubmitSignature: widget.onSubmitSignature,
+        onSubmitVerifiedSignature: widget.onSubmitVerifiedSignature,
+      ),
     ));
   }
 
