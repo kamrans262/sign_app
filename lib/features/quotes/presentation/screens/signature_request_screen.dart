@@ -7,6 +7,7 @@ import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
 import '../../domain/quote_document_tracking.dart';
 import '../../domain/quote_review_models.dart';
+import '../../domain/quote_tracking_home_session.dart';
 import '../../domain/quote_signature_draft.dart';
 import 'document_signed_success_screen.dart';
 import '../widgets/sign2digital_document_status_timeline.dart';
@@ -153,6 +154,7 @@ class _SignatureRequestScreenState extends State<SignatureRequestScreen> {
       type: QuoteDocumentEventType.documentSigned,
       occurredAt: now,
     )));
+    QuoteTrackingHomeSession.rememberVerifiedTracking(_tracking);
   }
 
   void _viewDocument() {
