@@ -198,6 +198,10 @@ void main() {
     await tester.tap(find.byKey(const Key('document-action-3')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('document-send-quote')), findsOneWidget);
+    // Dispose the previous route and bottom sheet before inspecting a
+    // different document, so no state from the first detail page is reused.
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
     await tester.pumpWidget(MaterialApp(home: DocumentDetailsScreen(
       documentId: 'quote-phase4',
       document: _record('quote-phase4', 'Quote', DateTime(2026, 10, 16),
