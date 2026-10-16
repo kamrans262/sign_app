@@ -185,6 +185,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
     if (quote == null) return;
     await _openHomeRoute(SignatureRequestScreen(
       quote: quote,
+      tracking: QuoteTrackingHomeSession.trackingFor(quote.id),
       selectedTab: 0,
       onNavigationSelected: (index) {
         Navigator.of(context).pop();
