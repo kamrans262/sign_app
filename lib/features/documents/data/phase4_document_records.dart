@@ -17,6 +17,23 @@ List<DocumentRecord> phase4DocumentRecords({
     for (final file in signedFiles) file.quoteId: file,
   };
 
+  final builder = _Phase4RecordBuilder(quoteById, signedByQuote);
+
+  return [
+    for (final file in signedFiles) builder.signedRecord(file, linkOriginal: true),
+    for (final quote in liveQuotes) builder.quoteRecord(quote, linkSigned: true),
+  ];
+}
+
+/// Named methods are visible throughout this class, allowing the original
+/// quote and signed-PDF builders to reference each other in either order.
+/// The link flags stop recursion after one related-document level.
+class _Phase4RecordBuilder {
+  _Phase4RecordBuilder(this.quoteById, this.signedByQuote);
+
+  final Map<String, QuoteReviewDraft> quoteById;
+  final Map<String, SavedSignedQuoteFile> signedByQuote;
+
   List<DocumentHistoryEvent> history(String quoteId, String recordId,
       {bool includeSigned = true}) {
     final result = <DocumentHistoryEvent>[
@@ -134,8 +151,4 @@ List<DocumentRecord> phase4DocumentRecords({
     );
   }
 
-  return [
-    for (final file in signedFiles) signedRecord(file, linkOriginal: true),
-    for (final quote in liveQuotes) quoteRecord(quote, linkSigned: true),
-  ];
 }
