@@ -4,6 +4,7 @@ import 'phase4_document_records.dart';
 import '../../quotes/data/signed_quote_file_store.dart';
 import '../domain/document_record.dart';
 import '../domain/addendum_draft.dart';
+import '../domain/addendum_signature_request.dart';
 
 /// Five independent fictional records for the Documents layout preview.
 /// "Signed" is a visual fixture only: no verified PDF or audit record exists.
@@ -131,7 +132,8 @@ class DemoDocumentRepository implements DocumentRepository {
             draft.linkedJobId ?? draft.title,
         customer: sourceFor(draft.linkedDocumentId)?.customer ?? '',
         timestamp: DateTime.now(),
-        status: 'Draft',
+        status: AddendumSignatureRequestSession.forAddendum(draft.id)
+            ?.status ?? 'Draft',
         demoOnly: sourceFor(draft.linkedDocumentId)?.demoOnly ?? false,
         addendumDraftId: draft.id,
         validUntil: draft.effectiveDate,
@@ -142,7 +144,18 @@ class DemoDocumentRepository implements DocumentRepository {
           type: DocumentHistoryType.created,
           occurredAt: DateTime.now(),
           description: 'Addendum created in this app session; not sent or signed',
-        )],
+        ),
+          if (AddendumSignatureRequestSession.forAddendum(draft.id)
+              ?.confirmedSentAt case final sentAt?)
+            DocumentHistoryEvent(
+              id: 'verified-request-sent-${draft.id}',
+              documentId: draft.id,
+              type: DocumentHistoryType.sent,
+              occurredAt: sentAt,
+              description: 'Addendum signature request delivery '
+                  'confirmed by connected service',
+            ),
+        ],
       )),
     ];
   }
