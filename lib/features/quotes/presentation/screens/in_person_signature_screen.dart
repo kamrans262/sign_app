@@ -5,6 +5,7 @@ import '../../../../core/widgets/sign2digital_header.dart';
 import '../../../../core/widgets/sign2digital_info_banner.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../domain/quote_review_models.dart';
+import '../../data/signed_quote_file_store.dart';
 import '../../domain/quote_signature_draft.dart';
 import '../widgets/sign2digital_quote_summary_card.dart';
 import '../widgets/sign2digital_signature_consent.dart';
@@ -169,9 +170,17 @@ class _InPersonSignatureScreenState extends State<InPersonSignatureScreen> {
       if (!mounted) return;
       if (result == null || result.documentId != widget.documentId ||
           result.quoteNumber != widget.quote.quoteNumber ||
+          (result.quoteId != null && result.quoteId != widget.quote.id) ||
+          (result.jobId != null && result.jobId != widget.quote.jobId) ||
           (result.demoOnly && !widget.quote.isDemo)) {
         _notice('Signing was not confirmed. Your drafts were preserved.');
         return;
+      }
+      if (result.signedPdfBytes != null) {
+        // The trusted service owns the finalized PDF; only cache its returned
+        // bytes if they can be associated with the correct job.
+        await SignedQuoteFileStore.shared.storeVerified(widget.quote, result);
+        if (!mounted) return;
       }
       _completed = true;
       QuoteSignatureDraftSession.clear(_customerKey);
