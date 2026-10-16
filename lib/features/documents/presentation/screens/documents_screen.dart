@@ -10,6 +10,8 @@ import '../../../quotes/data/signed_quote_file_store.dart';
 import '../../data/demo_document_repository.dart';
 import '../../domain/document_record.dart';
 import '../../domain/document_browse_options.dart';
+import '../../domain/addendum_signature_request.dart';
+import '../../domain/addendum_draft.dart';
 
 /// Documents tab content inside the existing dashboard header/navigation shell.
 class DocumentsScreen extends StatefulWidget {
@@ -19,6 +21,8 @@ class DocumentsScreen extends StatefulWidget {
     this.onDocumentTap,
     this.initialCategory,
     this.refreshRevision = 0,
+    this.requestAddendumSignature,
+    this.jobId,
   });
 
   final DocumentRepository? repository;
@@ -26,6 +30,9 @@ class DocumentsScreen extends StatefulWidget {
   /// Optional deep link from Home; the usual Documents tab starts at All.
   final DocumentCategory? initialCategory;
   final int refreshRevision;
+  final AddendumSignatureRequestService? requestAddendumSignature;
+  /// Optional job-scoped route opened from Job Details.
+  final String? jobId;
 
   @override
   State<DocumentsScreen> createState() => _DocumentsScreenState();
@@ -165,11 +172,14 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
       return;
     }
     // Keep this route above the dashboard. Back restores search and category.
-    if (record.addendumDraftId != null) {
+    if (record.addendumDraftId != null &&
+        AddendumDraftSession.load(record.addendumDraftId!)?.isCreatedLocally !=
+            true) {
       await Navigator.of(context).push<void>(MaterialPageRoute<void>(
         builder: (_) => CreateAddendumScreen(
           draftId: record.addendumDraftId,
           repository: _repository,
+          requestAddendumSignature: widget.requestAddendumSignature,
         ),
       ));
     } else {
@@ -177,6 +187,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
         builder: (_) => DocumentDetailsScreen(
           documentId: record.id,
           document: record,
+          requestAddendumSignature: widget.requestAddendumSignature,
           loadSignedPdf: (signedRecord) async {
             final files = await SignedQuoteFileStore.shared.list();
             final exact = files.where(
@@ -218,7 +229,14 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
       type: _advancedType,
       order: _sort,
       query: _search.text,
-    );
+    ).where((record) {
+      final jobId = widget.jobId;
+      if (jobId == null) return true;
+      if (record.quote?.jobId == jobId) return true;
+      final draftId = record.addendumDraftId;
+      return draftId != null &&
+          AddendumDraftSession.load(draftId)?.linkedJobId == jobId;
+    }).toList();
 
     return Center(
       child: ConstrainedBox(
