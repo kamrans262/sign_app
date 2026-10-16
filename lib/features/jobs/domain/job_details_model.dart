@@ -55,27 +55,27 @@ class JobDetailsModel {
     }
     // Screenshot reference amounts are intentionally not an accounting ledger.
     return JobDetailsModel(
-    job: job,
-    quoteAmountChf: 24500,
-    expensesChf: 24500,
-    labourCostChf: 24500,
-    depositsChf: 24500,
-    invoicedChf: 24500,
-    receivedChf: 24500,
-    remainingBalanceChf: 4500,
-    sections: const [
-      JobSectionDetails(JobSection.quotes, '5 quotes'),
-      JobSectionDetails(JobSection.addenda, '5 addenda'),
-      JobSectionDetails(JobSection.documents, '12 files'),
-      JobSectionDetails(JobSection.photos, '28 photos'),
-      JobSectionDetails(JobSection.notes, '6 notes'),
-      JobSectionDetails(JobSection.purchases, '8 items'),
-      JobSectionDetails(JobSection.time, '42 hours'),
-      JobSectionDetails(JobSection.deposits, '2 deposits'),
-      JobSectionDetails(JobSection.siteReports, '4 reports'),
-      JobSectionDetails(JobSection.acceptance, 'pending'),
-      JobSectionDetails(JobSection.invoices, '5 invoices'),
-    ],
+      job: job,
+      quoteAmountChf: 24500,
+      expensesChf: 24500,
+      labourCostChf: 24500,
+      depositsChf: 24500,
+      invoicedChf: 24500,
+      receivedChf: 24500,
+      remainingBalanceChf: 4500,
+      sections: const [
+        JobSectionDetails(JobSection.quotes, '5 quotes'),
+        JobSectionDetails(JobSection.addenda, '5 addenda'),
+        JobSectionDetails(JobSection.documents, '12 files'),
+        JobSectionDetails(JobSection.photos, '28 photos'),
+        JobSectionDetails(JobSection.notes, '6 notes'),
+        JobSectionDetails(JobSection.purchases, '8 items'),
+        JobSectionDetails(JobSection.time, '42 hours'),
+        JobSectionDetails(JobSection.deposits, '2 deposits'),
+        JobSectionDetails(JobSection.siteReports, '4 reports'),
+        JobSectionDetails(JobSection.acceptance, 'pending'),
+        JobSectionDetails(JobSection.invoices, '5 invoices'),
+      ],
     );
   }
 
