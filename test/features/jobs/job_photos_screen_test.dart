@@ -170,12 +170,16 @@ void main() {
     await tester.pumpAndSettle();
     expect(fake.uploadCount, 1);
     expect(find.byKey(const Key('job-photo-pending-panel')), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const Key('pending-caption-0')));
+    await tester.enterText(find.byKey(const Key('pending-caption-0')),
+        'Kitchen before work');
     await tester.ensureVisible(
       find.byKey(const Key('job-photos-confirm-pending')),
     );
     await tester.tap(find.byKey(const Key('job-photos-confirm-pending')));
     await tester.pumpAndSettle();
     expect(store.photosFor(job.id), hasLength(5));
+    expect(store.photosFor(job.id).last.caption, 'Kitchen before work');
     expect(find.byKey(const Key('job-photo-pending-panel')), findsNothing);
     await tester.ensureVisible(find.byKey(const Key('job-photos-upload')));
     await tester.tap(find.byKey(const Key('job-photos-upload')));
