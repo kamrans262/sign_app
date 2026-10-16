@@ -116,7 +116,8 @@ class DemoDocumentRepository implements DocumentRepository {
         project: sourceFor(draft.linkedDocumentId)?.project ??
             (draft.title.isEmpty ? 'Incomplete addendum' : draft.title),
         customer: sourceFor(draft.linkedDocumentId)?.customer ?? '',
-        related: [if (sourceFor(draft.linkedDocumentId) case final source?) source],
+        related: [if (sourceFor(draft.linkedDocumentId) != null)
+          sourceFor(draft.linkedDocumentId)!],
         timestamp: DateTime.now(),
         status: 'Draft',
         demoOnly: true,
@@ -136,7 +137,8 @@ class DemoDocumentRepository implements DocumentRepository {
         demoOnly: sourceFor(draft.linkedDocumentId)?.demoOnly ?? false,
         addendumDraftId: draft.id,
         validUntil: draft.effectiveDate,
-        related: [if (sourceFor(draft.linkedDocumentId) case final source?) source],
+        related: [if (sourceFor(draft.linkedDocumentId) != null)
+          sourceFor(draft.linkedDocumentId)!],
         history: [DocumentHistoryEvent(
           id: 'local-create-${draft.id}',
           documentId: draft.id,
@@ -145,12 +147,13 @@ class DemoDocumentRepository implements DocumentRepository {
           description: 'Addendum created in this app session; not sent or signed',
         ),
           if (AddendumSignatureRequestSession.forAddendum(draft.id)
-              ?.confirmedSentAt case final sentAt?)
+              ?.confirmedSentAt != null)
             DocumentHistoryEvent(
               id: 'verified-request-sent-${draft.id}',
               documentId: draft.id,
               type: DocumentHistoryType.sent,
-              occurredAt: sentAt,
+              occurredAt: AddendumSignatureRequestSession.forAddendum(draft.id)!
+                  .confirmedSentAt!,
               description: 'Addendum signature request delivery '
                   'confirmed by connected service',
             ),
