@@ -58,6 +58,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
   DocumentCategory? _documentsCategory;
   int _homeRevision = 0;
   int _clientsRevision = 0;
+  int _documentsRevision = 0;
   String? _selectedCompanyId;
 
   void _selectCompany(String? companyId) {
@@ -93,7 +94,10 @@ class _ClientsScreenState extends State<ClientsScreen> {
     FocusManager.instance.primaryFocus?.unfocus();
     setState(() {
       _selectedIndex = index;
-      if (index == 3) _documentsCategory = category;
+      if (index == 3) {
+        _documentsCategory = category;
+        _documentsRevision++;
+      }
       if (index == 0) _homeRevision++;
     });
   }
@@ -327,7 +331,10 @@ class _ClientsScreenState extends State<ClientsScreen> {
                     onTabSelected: (index) =>
                         setState(() => _selectedIndex = index),
                   ),
-                  DocumentsScreen(initialCategory: _documentsCategory),
+                  DocumentsScreen(
+                    initialCategory: _documentsCategory,
+                    refreshRevision: _documentsRevision,
+                  ),
                   MoreScreen(
                     onTabSelected: (index) {
                       if (mounted) setState(() => _selectedIndex = index);
