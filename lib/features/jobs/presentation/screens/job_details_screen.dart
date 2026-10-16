@@ -13,6 +13,8 @@ import 'job_photos_screen.dart';
 import 'job_notes_screen.dart';
 import '../../domain/job_model.dart';
 import '../../../quotes/presentation/screens/create_quote_screen.dart';
+import '../../../documents/presentation/screens/documents_screen.dart';
+import '../../../documents/domain/document_record.dart';
 import '../../../quotes/data/signed_quote_file_store.dart';
 import '../../../clients/domain/client_profile.dart';
 import '../widgets/sign2digital_job_financial_card.dart';
@@ -59,6 +61,24 @@ class JobDetailsScreen extends StatelessWidget {
           clientPhone: client?.id == job.clientId ? client!.phone : null,
           clientAddress: client?.id == job.clientId ? client!.address : null,
           companyId: companyId,
+        ),
+      ));
+      return;
+    }
+    if (section == JobSection.addenda) {
+      await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+        builder: (_) => Scaffold(
+          backgroundColor: Colors.white,
+          body: SafeArea(child: Column(children: [
+            Sign2DigitalHeader(
+              title: 'Addenda',
+              onBack: () => Navigator.of(context).maybePop(),
+            ),
+            Expanded(child: DocumentsScreen(
+              initialCategory: DocumentCategory.addends,
+              jobId: job.id,
+            )),
+          ])),
         ),
       ));
       return;
