@@ -38,6 +38,7 @@ class ClientDetailsScreen extends StatefulWidget {
     this.onJobCreated,
     this.onOpenJob,
     this.createdJobsForClient,
+    this.companyId,
   });
 
   final ClientProfile client;
@@ -48,6 +49,7 @@ class ClientDetailsScreen extends StatefulWidget {
   final JobModel Function(CreateJobDraft)? onJobCreated;
   final Future<void> Function(JobModel)? onOpenJob;
   final List<JobModel> Function(String clientId)? createdJobsForClient;
+  final String? companyId;
 
   @override
   State<ClientDetailsScreen> createState() => _ClientDetailsScreenState();
@@ -287,7 +289,14 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
                 ? widget.onNewQuote!(_client)
                 : Navigator.of(context).push<void>(
                     MaterialPageRoute<void>(
-                      builder: (_) => CreateQuoteScreen(clientId: _client.id),
+                      builder: (_) => CreateQuoteScreen(
+                        clientId: _client.id,
+                        clientName: _client.companyName,
+                        clientEmail: _client.email,
+                        clientPhone: _client.phone,
+                        clientAddress: _client.address,
+                        companyId: widget.companyId,
+                      ),
                     ),
                   ),
           ),
