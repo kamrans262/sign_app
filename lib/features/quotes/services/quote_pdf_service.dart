@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -31,7 +29,7 @@ class Sign2DigitalQuotePdfBuilder {
     final ink = PdfColor.fromHex('#122536');
     final grey = PdfColor.fromHex('#8A9AA8');
     final rule = PdfColor.fromHex('#E4EAF0');
-    final formatDate = (DateTime? value) => value == null
+    String formatDate(DateTime? value) => value == null
         ? 'Not specified'
         : '${value.day.toString().padLeft(2, '0')}/${value.month.toString().padLeft(2, '0')}/${value.year}';
     pw.TextStyle style(double size, {PdfColor? color, bool bold = false}) =>
@@ -116,7 +114,7 @@ class Sign2DigitalQuotePdfBuilder {
             ]),
         ),
         pw.SizedBox(height: 12),
-        pw.Table.fromTextArray(
+        pw.TableHelper.fromTextArray(
                 headers: const ['Description', 'Qty', 'Unit Price', 'Total'],
                 data: quote.items.map((item) => <String>[
                   item.title.isEmpty ? '(Unspecified item)' : item.title,
