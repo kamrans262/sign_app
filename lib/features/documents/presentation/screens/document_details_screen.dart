@@ -248,7 +248,11 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
       (switch (record.category) {
         DocumentCategory.addends => 'Addendum Number:',
         DocumentCategory.reports => 'Report Number:',
-        _ => 'Quote Number:',
+        DocumentCategory.receipts => 'Receipt Number:',
+        DocumentCategory.invoices => 'Invoice Number:',
+        DocumentCategory.other || DocumentCategory.contacts =>
+          'Document Number:',
+        DocumentCategory.quotes => 'Quote Number:',
       }, record.number),
       ('Job', record.project),
       ('Client:', record.customer),
