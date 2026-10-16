@@ -74,7 +74,9 @@ class SignedQuoteFileStore {
 
   Future<List<SavedSignedQuoteFile>> _listIn(Directory folder) async {
     final manifest = File('${folder.path}${Platform.pathSeparator}index.json');
-    if (!await manifest.exists()) return const [];
+    // The first signed document is appended before index.json exists.
+    // Return a growable list, not the immutable const empty-list fixture.
+    if (!await manifest.exists()) return <SavedSignedQuoteFile>[];
     final decoded = jsonDecode(await manifest.readAsString()) as List<dynamic>;
     return [
       for (final entry in decoded)
