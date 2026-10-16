@@ -146,6 +146,34 @@ class DocumentRecord {
   final SiteReportDetails? siteReportDetails;
   final WorkAcceptanceEvidence? workAcceptance;
 
+  /// Return a view with linked records while preserving the source document's
+  /// identity, status, PDF authenticity and all immutable metadata.
+  DocumentRecord withRelated(List<DocumentRecord> documents) => DocumentRecord(
+    id: id,
+    category: category,
+    number: number,
+    title: title,
+    project: project,
+    customer: customer,
+    timestamp: timestamp,
+    status: status,
+    quote: quote,
+    demoOnly: demoOnly,
+    verifiedSignedPdfAvailable: verifiedSignedPdfAvailable,
+    version: version,
+    attachmentNames: attachmentNames,
+    createdBy: createdBy,
+    createdAt: createdAt,
+    updatedAt: updatedAt,
+    validUntil: validUntil,
+    history: history,
+    related: List.unmodifiable(documents),
+    addendumDraftId: addendumDraftId,
+    reportKind: reportKind,
+    siteReportDetails: siteReportDetails,
+    workAcceptance: workAcceptance,
+  );
+
   bool matches(String query) {
     final needle = query.trim().toLowerCase();
     if (needle.isEmpty) return true;
