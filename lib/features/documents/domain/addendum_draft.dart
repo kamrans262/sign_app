@@ -117,20 +117,36 @@ class AddendumDraftSession {
 
   static final Map<String, AddendumDraft> _drafts = {};
   static final Map<String, AddendumDraft> _created = {};
+  static final Set<String> _locked = <String>{};
 
   static AddendumDraft? load(String id) => _drafts[id] ?? _created[id];
   static Iterable<AddendumDraft> get created => _created.values;
   static Iterable<AddendumDraft> get savedDrafts => _drafts.values;
 
   static void save(AddendumDraft draft) {
+    if (_locked.contains(draft.id)) {
+      throw StateError('An addendum with an issued signing link cannot be edited.');
+    }
     _drafts[draft.id] = draft;
   }
+
+  static void lockForSignature(String id) {
+    if (!_created.containsKey(id)) {
+      throw StateError('Create the addendum before requesting a signature.');
+    }
+    _locked.add(id);
+  }
+
+  static bool isLocked(String id) => _locked.contains(id);
 
   static bool isNumberUsed(String number, {String? exceptId}) =>
       _created.values.any((item) => item.id != exceptId &&
           item.number.toLowerCase() == number.trim().toLowerCase());
 
   static void create(AddendumDraft draft) {
+    if (_locked.contains(draft.id)) {
+      throw StateError('This addendum was already issued for signature.');
+    }
     if (draft.validationIssues.isNotEmpty) {
       throw StateError(draft.validationIssues.first);
     }
@@ -141,5 +157,7 @@ class AddendumDraftSession {
     _drafts.remove(draft.id);
   }
 
-  static void clear() { _drafts.clear(); _created.clear(); }
+  static void clear() {
+    _drafts.clear(); _created.clear(); _locked.clear();
+  }
 }
