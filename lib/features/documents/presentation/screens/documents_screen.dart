@@ -178,11 +178,25 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
           documentId: record.id,
           document: record,
           loadSignedPdf: (signedRecord) async {
-            final matches = (await SignedQuoteFileStore.shared.list())
-                .where((file) => file.documentId == signedRecord.id)
-                .toList();
-            if (matches.length != 1) return null;
-            return SignedQuoteFileStore.shared.read(matches.single);
+            final files = await SignedQuoteFileStore.shared.list();
+            final exact = files.where(
+              (file) => file.documentId == signedRecord.id,
+            ).toList();
+            if (exact.length == 1) {
+              return SignedQuoteFileStore.shared.read(exact.single);
+            }
+            // A verified signed quote and its original draft have different
+            // document IDs. Never match a signed PDF by customer/name alone.
+            final quote = signedRecord.quote;
+            if (quote == null || quote.jobId == null ||
+                !signedRecord.verifiedSignedPdfAvailable) {
+              return null;
+            }
+            final linked = files.where((file) =>
+                file.quoteId == quote.id && file.jobId == quote.jobId).toList()
+              ..sort((a, b) => b.signedAt.compareTo(a.signedAt));
+            if (linked.isEmpty) return null;
+            return SignedQuoteFileStore.shared.read(linked.first);
           },
         ),
       ));
