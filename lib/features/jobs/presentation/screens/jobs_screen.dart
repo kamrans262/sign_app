@@ -84,7 +84,9 @@ class _JobsScreenState extends State<JobsScreen> {
           JobCategory.active => 'Active',
           JobCategory.completed => 'Completed',
           JobCategory.archived => 'Archived',
-        }} (${MockJobsData.count(category) + widget.createdJobs.where((job) => job.category == category).length})',
+        }} (${MockJobsData.count(category) + widget.createdJobs.where(
+          (job) => job.category == category,
+        ).length})',
     ];
     return Center(
       child: ConstrainedBox(
