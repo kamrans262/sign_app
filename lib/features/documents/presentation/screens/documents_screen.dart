@@ -9,6 +9,7 @@ import '../../../quotes/presentation/widgets/sign2digital_quote_summary_card.dar
 import '../../../quotes/data/signed_quote_file_store.dart';
 import '../../data/demo_document_repository.dart';
 import '../../domain/document_record.dart';
+import '../../domain/document_browse_options.dart';
 
 /// Documents tab content inside the existing dashboard header/navigation shell.
 class DocumentsScreen extends StatefulWidget {
@@ -35,6 +36,8 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
   late final DocumentRepository _repository;
   List<DocumentRecord> _documents = const [];
   DocumentCategory? _category;
+  DocumentBrowseType _advancedType = DocumentBrowseType.all;
+  DocumentSortOrder _sort = DocumentSortOrder.asListed;
   bool _loading = true;
   String? _error;
 
@@ -84,7 +87,74 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     FocusManager.instance.primaryFocus?.unfocus();
     setState(() {
       _category = index == 0 ? null : DocumentCategory.values[index - 1];
+      _advancedType = DocumentBrowseType.all;
     });
+  }
+
+  void _openDocumentFilters() {
+    FocusManager.instance.primaryFocus?.unfocus();
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) => SafeArea(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(sheetContext).height * .8,
+          ),
+          child: ListView(
+            key: const Key('documents-filter-sheet'),
+            shrinkWrap: true,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            children: [
+              const Padding(
+                padding: EdgeInsets.fromLTRB(20, 8, 20, 8),
+                child: Text('Filter documents', style: TextStyle(
+                  fontFamily: 'Inter', fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.dark,
+                )),
+              ),
+              for (final type in DocumentBrowseType.values)
+                ListTile(
+                  key: Key('documents-filter-${type.name}'),
+                  title: Text(type.label),
+                  trailing: type == _advancedType
+                      ? const Icon(Icons.check, color: AppColors.primary)
+                      : null,
+                  onTap: () {
+                    setState(() {
+                      _advancedType = type;
+                      _category = null;
+                    });
+                    Navigator.pop(sheetContext);
+                  },
+                ),
+              const Divider(),
+              const Padding(
+                padding: EdgeInsets.fromLTRB(20, 8, 20, 8),
+                child: Text('Sort documents', style: TextStyle(
+                  fontFamily: 'Inter', fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.dark,
+                )),
+              ),
+              for (final option in DocumentSortOrder.values)
+                ListTile(
+                  key: Key('documents-sort-${option.name}'),
+                  title: Text(option.label),
+                  trailing: option == _sort
+                      ? const Icon(Icons.check, color: AppColors.primary)
+                      : null,
+                  onTap: () {
+                    setState(() => _sort = option);
+                    Navigator.pop(sheetContext);
+                  },
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _openDocument(DocumentRecord record) async {
@@ -128,9 +198,13 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final visible = _documents.where((record) =>
-        (_category == null || record.category == _category) &&
-        record.matches(_search.text)).toList(growable: false);
+    final visible = browseDocuments(
+      _documents,
+      mainTab: _category,
+      type: _advancedType,
+      order: _sort,
+      query: _search.text,
+    );
 
     return Center(
       child: ConstrainedBox(
@@ -149,8 +223,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                       controller: _search,
                       hintText: 'Search documents',
                       onChanged: (_) => setState(() {}),
-                      onTrailingTap: () =>
-                          FocusManager.instance.primaryFocus?.unfocus(),
+                      onTrailingTap: _openDocumentFilters,
                     ),
                     const SizedBox(height: 20),
                     Stack(
@@ -201,7 +274,8 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                     child: Text(
                       _search.text.trim().isNotEmpty
                           ? 'No documents match your search'
-                          : _category == null
+                          : _category == null &&
+                              _advancedType == DocumentBrowseType.all
                               ? 'No documents yet'
                               : 'No documents in this category',
                       key: const Key('documents-empty'),
