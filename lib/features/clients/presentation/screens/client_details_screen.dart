@@ -71,7 +71,11 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
       await open(job);
     } else {
       await Navigator.of(context).push<void>(
-        MaterialPageRoute<void>(builder: (_) => JobDetailsScreen(job: job)),
+        MaterialPageRoute<void>(builder: (_) => JobDetailsScreen(
+          job: job,
+          client: _client,
+          companyId: widget.companyId,
+        )),
       );
     }
   }
