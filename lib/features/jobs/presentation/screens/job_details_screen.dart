@@ -12,6 +12,7 @@ import 'job_photos_screen.dart';
 import 'job_notes_screen.dart';
 import '../../domain/job_model.dart';
 import '../../../quotes/presentation/screens/create_quote_screen.dart';
+import '../../../clients/domain/client_profile.dart';
 import '../widgets/sign2digital_job_financial_card.dart';
 import '../widgets/sign2digital_job_progress_indicator.dart';
 import '../widgets/sign2digital_job_section_card.dart';
@@ -28,6 +29,7 @@ class JobDetailsScreen extends StatelessWidget {
     this.onSectionTap,
     this.onTabSelected,
     this.companyId,
+    this.client,
   });
 
   final JobModel job;
@@ -36,6 +38,8 @@ class JobDetailsScreen extends StatelessWidget {
   final ValueChanged<int>? onTabSelected;
   /// Selected issuer from the dashboard; null for independent previews.
   final String? companyId;
+  /// Resolved from the real local client ID, never a name-only match.
+  final ClientProfile? client;
 
   void _openSection(BuildContext context, JobSection section) {
     if (onSectionTap != null) {
@@ -47,7 +51,11 @@ class JobDetailsScreen extends StatelessWidget {
         builder: (_) => CreateQuoteScreen(
           jobId: job.id,
           clientId: job.clientId,
-          clientName: job.clientName,
+          clientName: client?.id == job.clientId
+              ? client!.companyName : job.clientName,
+          clientEmail: client?.id == job.clientId ? client!.email : null,
+          clientPhone: client?.id == job.clientId ? client!.phone : null,
+          clientAddress: client?.id == job.clientId ? client!.address : null,
           companyId: companyId,
         ),
       ));
