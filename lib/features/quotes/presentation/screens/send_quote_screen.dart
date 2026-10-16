@@ -100,6 +100,10 @@ class _SendQuoteScreenState extends State<SendQuoteScreen> {
     // Keep the currently selected quote accessible from the Home tab.
     // Do not invent a delivered or signed event.
     QuoteTrackingHomeSession.remember(_quote);
+    final trustedTracking = widget.tracking;
+    if (trustedTracking != null && trustedTracking.quoteId == _quote.id) {
+      QuoteTrackingHomeSession.rememberVerifiedTracking(trustedTracking);
+    }
     _messageController = TextEditingController(text: _sendDraft.message);
     _messageEdited = _sendDraft.message != _templateText('professional');
     if (_sendDraft.pdfAttached) { _preparePdf(); }
