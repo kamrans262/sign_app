@@ -1,5 +1,6 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import '../../../documents/data/document_activity_session.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../widgets/sign2digital_financial_document_sections.dart';
@@ -173,7 +174,11 @@ class _QuotePreviewScreenState extends State<QuotePreviewScreen> {
         dialogTitle: 'Save Quote PDF', fileName: _filename,
         type: FileType.custom, allowedExtensions: ['pdf'], bytes: bytes,
       );
-      if (path != null) _message('PDF saved to the selected location.');
+      if (path != null) {
+        DocumentActivitySession.downloaded(
+          _quote.id, demoOnly: _quote.isDemo);
+        _message('PDF saved to the selected location.');
+      }
     } catch (error) {
       _message('Could not save PDF: $error');
     } finally {
