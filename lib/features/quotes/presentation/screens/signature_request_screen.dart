@@ -7,6 +7,8 @@ import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
 import '../../domain/quote_document_tracking.dart';
 import '../../domain/quote_review_models.dart';
+import '../../domain/quote_signature_draft.dart';
+import 'document_signed_success_screen.dart';
 import '../widgets/sign2digital_document_status_timeline.dart';
 import '../widgets/sign2digital_signature_action_card.dart';
 import 'customer_document_view_screen.dart';
@@ -19,6 +21,9 @@ class SignatureRequestScreen extends StatefulWidget {
     required this.quote,
     this.tracking,
     this.onResend,
+    this.signingContext,
+    this.onSubmitSignature,
+    this.onSubmitVerifiedSignature,
     this.onNavigationSelected,
     this.selectedTab = 0,
   });
@@ -26,6 +31,10 @@ class SignatureRequestScreen extends StatefulWidget {
   final QuoteReviewDraft quote;
   final QuoteDocumentTracking? tracking;
   final Future<bool> Function(QuoteDocumentTracking)? onResend;
+  final QuoteSigningContext? signingContext;
+  final Future<bool> Function(QuoteSignatureDraft)? onSubmitSignature;
+  final Future<QuoteSignedDisplayData?> Function(QuoteSignatureDraft)?
+      onSubmitVerifiedSignature;
   final ValueChanged<int>? onNavigationSelected;
   final int selectedTab;
 
@@ -134,10 +143,29 @@ class _SignatureRequestScreenState extends State<SignatureRequestScreen> {
     }
   }
 
+  void _verifiedSigned(QuoteSignedDisplayData receipt) {
+    // This event is recorded only after a connected signing service returned
+    // matching audit/document details; local signature capture is insufficient.
+    if (!mounted || receipt.demoOnly && !_quote.isDemo) return;
+    final now = receipt.signedAt;
+    setState(() => _tracking = _tracking.withEvent(QuoteDocumentEvent(
+      id: 'signed-${_tracking.requestId}-${now.microsecondsSinceEpoch}',
+      type: QuoteDocumentEventType.documentSigned,
+      occurredAt: now,
+    )));
+  }
+
   void _viewDocument() {
     Navigator.of(context).push<void>(MaterialPageRoute<void>(
       builder: (_) => CustomerDocumentViewScreen(
-        quote: _quote.copy(), tracking: _tracking),
+        quote: _quote.copy(),
+        documentTitle: 'Quote',
+        tracking: _tracking,
+        signingContext: widget.signingContext,
+        onSubmitSignature: widget.onSubmitSignature,
+        onSubmitVerifiedSignature: widget.onSubmitVerifiedSignature,
+        onVerifiedSignature: _verifiedSigned,
+      ),
     ));
   }
 
