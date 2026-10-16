@@ -176,9 +176,10 @@ class _InPersonSignatureScreenState extends State<InPersonSignatureScreen> {
         _notice('Signing was not confirmed. Your drafts were preserved.');
         return;
       }
-      if (result.signedPdfBytes != null) {
-        // The trusted service owns the finalized PDF; only cache its returned
-        // bytes if they can be associated with the correct job.
+      if (result.signedPdfBytes != null &&
+          widget.quote.jobId?.trim().isNotEmpty == true) {
+        // The trusted service owns the finalized PDF; cache only when there
+        // is a real job ID. Standalone quotes still show verified confirmation.
         await SignedQuoteFileStore.shared.storeVerified(widget.quote, result);
         if (!mounted) return;
       }
