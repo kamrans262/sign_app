@@ -409,20 +409,19 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
           enabled: !_busy, onPressed: () => _pdf(share: true))),
       ]),
       const SizedBox(height: 15),
-      FractionallySizedBox(
-        widthFactor: .5,
-        child: Sign2DigitalOutlinedButton(
-          key: const Key('invoice-details-preview'),
-          label: 'Preview Invoice', primaryOutline: true,
-          enabled: !_busy, onPressed: _preview),
-      ),
-      const SizedBox(height: 15),
-      FractionallySizedBox(
-        widthFactor: .5,
-        child: Sign2DigitalPrimaryButton(
-          key: const Key('invoice-details-edit'),
-          label: 'Edit', enabled: !_busy,
-          onPressed: _edit),
+      Row(
+        key: const Key('invoice-details-second-action-row'),
+        children: [
+          Expanded(child: Sign2DigitalOutlinedButton(
+            key: const Key('invoice-details-preview'),
+            label: 'Preview Invoice', primaryOutline: true,
+            enabled: !_busy, onPressed: _preview)),
+          const SizedBox(width: 10),
+          Expanded(child: Sign2DigitalPrimaryButton(
+            key: const Key('invoice-details-edit'),
+            label: 'Edit', height: 52, enabled: !_busy,
+            onPressed: _edit)),
+        ],
       ),
       if (_record.status.canMarkPaid) ...[
         const SizedBox(height: 15),
