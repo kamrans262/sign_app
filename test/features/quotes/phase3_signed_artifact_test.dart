@@ -16,7 +16,8 @@ QuoteReviewDraft quote({String? jobId = 'job-77'}) => QuoteReviewDraft(
   date: DateTime(2026, 9, 1),
   terms: 'Terms', items: [
     QuoteReviewWorkItem(
-      id: 'item', title: 'Work', quantity: '1', unitPrice: '50.00',
+      id: 'item', title: 'Work', description: 'Verified signed job document',
+      quantity: '1', unitPrice: '50.00',
     ),
   ],
   approvedLocally: true,
