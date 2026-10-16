@@ -102,8 +102,15 @@ void main() {
     await tester.tap(find.byKey(const Key('job-note-save')));
     await tester.pump();
     expect(store.notesFor(job.id), isEmpty);
-    await tester.ensureVisible(find.byKey(const Key('job-note-record')));
-    await tester.tap(find.byKey(const Key('job-note-record')));
+    // Invalid save shows a snackbar while the text field still has focus.
+    // Close the test keyboard and complete scrolling before hit testing.
+    tester.testTextInput.hide();
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
+    final record = find.byKey(const Key('job-note-record'));
+    await tester.ensureVisible(record);
+    await tester.pumpAndSettle();
+    await tester.tap(record);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     expect(recorder.started, isTrue);
@@ -162,7 +169,7 @@ void main() {
       'Edited after checking the site',
     );
     await tester.tap(find.byKey(const Key('note-document-approve')));
-    await tester.pump();
+    await tester.pumpAndSettle();
     final saved = NoteDocumentDraftSession.forNote(note.id, 'report')!;
     expect(saved.content, 'Edited after checking the site');
     expect(saved.approvedLocally, isTrue);

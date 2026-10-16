@@ -93,11 +93,12 @@ class _ConvertDocumentScreenState extends State<ConvertDocumentScreen> {
   Future<void> _reviewGeneric() async {
     final current = _genericDraft;
     if (current == null || !mounted) return;
-    final title = TextEditingController(text: current.title);
-    final content = TextEditingController(text: current.content);
+    // TextFormField owns its controller until the dialog's exit animation
+    // finishes. Disposing a parent-owned controller on pop is too early.
+    var editedTitle = current.title;
+    var editedContent = current.content;
     setState(() => _reviewOpened = true);
-    try {
-      await showDialog<void>(
+    await showDialog<void>(
         context: context,
         builder: (dialog) => AlertDialog(
           title: const Text('Review document draft'),
@@ -107,17 +108,19 @@ class _ConvertDocumentScreenState extends State<ConvertDocumentScreen> {
               child: Column(mainAxisSize: MainAxisSize.min, children: [
                 const Text('Review every detail. Nothing is sent or signed.'),
                 const SizedBox(height: 14),
-                TextField(
+                TextFormField(
                   key: const Key('note-document-title'),
-                  controller: title,
+                  initialValue: editedTitle,
+                  onChanged: (value) => editedTitle = value,
                   maxLength: 300,
                   decoration: const InputDecoration(
                     labelText: 'Title', border: OutlineInputBorder()),
                 ),
                 const SizedBox(height: 10),
-                TextField(
+                TextFormField(
                   key: const Key('note-document-content'),
-                  controller: content,
+                  initialValue: editedContent,
+                  onChanged: (value) => editedContent = value,
                   minLines: 5, maxLines: 12, maxLength: 20000,
                   decoration: const InputDecoration(
                     labelText: 'Document text', border: OutlineInputBorder()),
@@ -127,20 +130,24 @@ class _ConvertDocumentScreenState extends State<ConvertDocumentScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(dialog),
+              onPressed: () {
+                FocusManager.instance.primaryFocus?.unfocus();
+                Navigator.pop(dialog);
+              },
               child: const Text('Keep editing later'),
             ),
             TextButton(
               key: const Key('note-document-save-draft'),
               onPressed: () {
                 final next = current.copyWith(
-                  title: title.text.trim(),
-                  content: content.text.trim(),
+                  title: editedTitle.trim(),
+                  content: editedContent.trim(),
                   approvedLocally: false,
                 );
                 try {
                   NoteDocumentDraftSession.save(next);
                   setState(() { _genericDraft = next; _approved = false; });
+                  FocusManager.instance.primaryFocus?.unfocus();
                   Navigator.pop(dialog);
                 } on FormatException {
                   _notify('Enter a document title and content.');
@@ -152,13 +159,14 @@ class _ConvertDocumentScreenState extends State<ConvertDocumentScreen> {
               key: const Key('note-document-approve'),
               onPressed: () {
                 final next = current.copyWith(
-                  title: title.text.trim(),
-                  content: content.text.trim(),
+                  title: editedTitle.trim(),
+                  content: editedContent.trim(),
                   approvedLocally: true,
                 );
                 try {
                   NoteDocumentDraftSession.save(next);
                   setState(() { _genericDraft = next; _approved = true; });
+                  FocusManager.instance.primaryFocus?.unfocus();
                   Navigator.pop(dialog);
                   _notify('Approved locally. No document was sent or signed.');
                 } on FormatException {
@@ -169,11 +177,7 @@ class _ConvertDocumentScreenState extends State<ConvertDocumentScreen> {
             ),
           ],
         ),
-      );
-    } finally {
-      title.dispose();
-      content.dispose();
-    }
+    );
   }
 
   Future<void> _generate() async {
