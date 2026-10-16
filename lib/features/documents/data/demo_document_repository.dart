@@ -107,8 +107,7 @@ class DemoDocumentRepository implements DocumentRepository {
       }
       return null;
     }
-    return [
-      ...originals,
+    final addenda = <DocumentRecord>[
       ...AddendumDraftSession.savedDrafts.map((draft) => DocumentRecord(
         id: draft.id,
         category: DocumentCategory.addends,
@@ -157,6 +156,22 @@ class DemoDocumentRepository implements DocumentRepository {
             ),
         ],
       )),
+    ];
+    // Preserve original signed documents byte-for-byte and expose addenda
+    // through their existing Related tab. The addendum itself references an
+    // unmodified original; no recursive object graph is created.
+    return [
+      for (final original in originals)
+        if (addenda.any((addendum) => addendum.related.any(
+            (parent) => parent.id == original.id)))
+          original.withRelated([
+            ...original.related,
+            ...addenda.where((addendum) => addendum.related.any(
+                (parent) => parent.id == original.id)),
+          ])
+        else
+          original,
+      ...addenda,
     ];
   }
 }
