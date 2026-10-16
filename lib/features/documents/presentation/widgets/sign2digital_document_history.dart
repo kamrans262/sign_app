@@ -75,9 +75,12 @@ class Sign2DigitalTrackingRow extends StatelessWidget {
 class Sign2DigitalDocumentHistory extends StatefulWidget {
   const Sign2DigitalDocumentHistory({
     super.key, required this.document, this.onViewSignatures,
+    this.additionalEvents = const [],
   });
 
   final DocumentRecord document;
+  /// Events completed while this details page remains open.
+  final List<DocumentHistoryEvent> additionalEvents;
   final ValueChanged<DocumentHistoryEvent>? onViewSignatures;
 
   @override
@@ -89,8 +92,10 @@ class _Sign2DigitalDocumentHistoryState
     extends State<Sign2DigitalDocumentHistory> {
   String? _selectedId;
 
-  List<DocumentHistoryEvent> get _events => widget.document.history
-      .where((event) => event.documentId == widget.document.id)
+  List<DocumentHistoryEvent> get _events => [
+        ...widget.document.history,
+        ...widget.additionalEvents,
+      ].where((event) => event.documentId == widget.document.id)
       .toList()
     ..sort((a, b) => b.occurredAt.compareTo(a.occurredAt));
 
