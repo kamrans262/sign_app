@@ -1,4 +1,17 @@
 /// Verified document activity only. A native share sheet is not a send receipt.
+/// Status is derived from authenticated events and request expiration, not UI taps.
+enum QuoteSignatureStatus {
+  draft('Draft'),
+  sent('Sent'),
+  viewed('Viewed'),
+  awaitingSignature('Awaiting Signature'),
+  signed('Signed'),
+  expired('Expired');
+
+  const QuoteSignatureStatus(this.label);
+  final String label;
+}
+
 enum QuoteDocumentEventType {
   quoteCreated,
   documentSent,
@@ -57,7 +70,22 @@ class QuoteDocumentTracking {
   bool get signed => timeOf(QuoteDocumentEventType.documentSigned) != null;
   bool get completed => timeOf(QuoteDocumentEventType.documentCompleted) != null;
 
-  bool get requestIsActive => requestId != null && sent && !signed && !completed;
+  QuoteSignatureStatus statusAt(DateTime now) {
+    if (signed || completed) return QuoteSignatureStatus.signed;
+    if (requestId != null && expiresAt != null && !now.isBefore(expiresAt!)) {
+      return QuoteSignatureStatus.expired;
+    }
+    if (requestId != null &&
+        timeOf(QuoteDocumentEventType.signatureRequested) != null && sent) {
+      return QuoteSignatureStatus.awaitingSignature;
+    }
+    if (viewed) return QuoteSignatureStatus.viewed;
+    if (sent) return QuoteSignatureStatus.sent;
+    return QuoteSignatureStatus.draft;
+  }
+
+  bool get requestIsActive => requestId != null && sent && !signed && !completed &&
+      (expiresAt == null || DateTime.now().isBefore(expiresAt!));
 
   Uri? usableUrl(DateTime now) {
     final url = secureUrl;
