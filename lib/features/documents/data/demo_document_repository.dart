@@ -1,5 +1,6 @@
 import '../../quotes/data/quote_ui_demo_data.dart';
 import '../../quotes/domain/quote_review_models.dart';
+import '../../quotes/data/signed_quote_file_store.dart';
 import '../domain/document_record.dart';
 import '../domain/addendum_draft.dart';
 
@@ -9,7 +10,34 @@ class DemoDocumentRepository implements DocumentRepository {
   const DemoDocumentRepository();
 
   @override
-  Future<List<DocumentRecord>> listDocuments() async => [
+  Future<List<DocumentRecord>> listDocuments() async {
+    List<SavedSignedQuoteFile> signed = const [];
+    try {
+      signed = await SignedQuoteFileStore.shared.list();
+    } catch (_) {
+      // The existing demo records remain usable without local filesystem access.
+    }
+    return [
+      for (final file in signed)
+        DocumentRecord(
+          id: file.documentId,
+          category: DocumentCategory.quotes,
+          number: file.quoteNumber,
+          title: 'Signed Quote ${file.quoteNumber}',
+          project: file.jobId,
+          customer: '',
+          timestamp: file.signedAt,
+          status: 'Signed',
+          verifiedSignedPdfAvailable: true,
+          updatedAt: file.signedAt,
+          history: [DocumentHistoryEvent(
+            id: 'signed-${file.documentId}',
+            documentId: file.documentId,
+            type: DocumentHistoryType.signed,
+            occurredAt: file.signedAt,
+            signatureReference: file.documentId,
+          )],
+        ),
       ...List<DocumentRecord>.generate(5, (index) {
         final source = QuoteUiDemoData.quote();
         final id = 'documents-figma-quote-${index + 1}';
@@ -111,4 +139,5 @@ class DemoDocumentRepository implements DocumentRepository {
         validUntil: draft.effectiveDate,
       )),
     ];
+  }
 }
