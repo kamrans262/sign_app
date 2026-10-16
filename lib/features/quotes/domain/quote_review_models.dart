@@ -358,5 +358,10 @@ abstract final class QuoteReviewSessionStore {
 
   static void save(QuoteReviewDraft draft) { _drafts[draft.id] = draft.copy(); }
   static QuoteReviewDraft? load(String id) => _drafts[id]?.copy();
+  /// Session-local saved quote snapshots. No server or disk persistence.
+  static List<QuoteReviewDraft> get savedDrafts =>
+      List<QuoteReviewDraft>.unmodifiable(
+        _drafts.values.map((draft) => draft.copy()),
+      );
   static void clear() => _drafts.clear();
 }
