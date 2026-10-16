@@ -46,7 +46,6 @@ class QuotePreviewScreen extends StatefulWidget {
 class _QuotePreviewScreenState extends State<QuotePreviewScreen> {
   bool _busy = false;
   late final QuoteReviewDraft _quote = widget.quote.copy();
-  static const _border = AppColors.lightBorder;
 
   void _message(String message) {
     if (!mounted) return;
