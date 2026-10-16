@@ -14,6 +14,8 @@ import '../../../quotes/services/quote_pdf_service.dart';
 import '../../../quotes/presentation/screens/send_quote_screen.dart';
 import '../../data/document_activity_session.dart';
 import '../../domain/document_record.dart';
+import '../../domain/addendum_draft.dart';
+import '../../services/addendum_pdf_service.dart';
 import 'create_addendum_screen.dart';
 import '../widgets/sign2digital_document_history.dart';
 
@@ -97,6 +99,21 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
   bool get _signed => _record?.status.toLowerCase() == 'signed';
 
   Future<Uint8List?> _makePdf(DocumentRecord record) async {
+    if (record.category == DocumentCategory.addends &&
+        record.addendumDraftId != null) {
+      final draft = AddendumDraftSession.load(record.addendumDraftId!);
+      if (draft == null || !draft.isCreatedLocally) {
+        return null;
+      }
+      final originals = record.related.where(
+        (source) => source.id == draft.linkedDocumentId &&
+            source.category != DocumentCategory.addends,
+      ).toList();
+      if (originals.length != 1) {
+        throw const FormatException('Original addendum reference is missing.');
+      }
+      return const AddendumPdfService().build(draft, originals.single);
+    }
     if (record.reportKind == ReportKind.workAcceptance) {
       if (record.demoOnly) return null;
       return record.workAcceptance?.verifiedReportPdf;
@@ -311,9 +328,13 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
         record.reportKind == ReportKind.workAcceptance &&
         !record.demoOnly &&
         (record.workAcceptance?.verifiedReportPdf?.isNotEmpty ?? false);
+    final addendumReady = record.category == DocumentCategory.addends &&
+        record.addendumDraftId != null &&
+        AddendumDraftSession.load(record.addendumDraftId!)?.isCreatedLocally ==
+            true;
     if (record.quote == null &&
         !record.verifiedSignedPdfAvailable &&
-        !hasWorkAcceptancePdf) {
+        !hasWorkAcceptancePdf && !addendumReady) {
       return const Text('No document preview is available.', style: _label);
     }
     return FutureBuilder<Uint8List?>(
