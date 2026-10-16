@@ -80,7 +80,13 @@ List<DocumentRecord> phase4DocumentRecords({
       customer: quote.clientName,
       timestamp: firstCreated.isEmpty ? quote.date : firstCreated.last,
       status: signed != null || tracking?.signed == true
-          ? 'Signed' : quote.approvedLocally ? 'Approved' : 'Draft',
+          ? 'Signed'
+          : tracking?.viewed == true
+              ? 'Viewed'
+              : tracking?.sent == true ||
+                  events.any((e) => e.type == DocumentHistoryType.sent)
+                  ? 'Sent'
+                  : quote.approvedLocally ? 'Approved' : 'Draft',
       quote: quote.copy(),
       verifiedSignedPdfAvailable: signed != null,
       createdAt: firstCreated.isEmpty ? null : firstCreated.last,
