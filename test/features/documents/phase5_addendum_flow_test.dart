@@ -147,7 +147,7 @@ void main() {
     )));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('details-tab-1')));
-    await tester.pump();
+    await tester.pumpAndSettle();
     expect(find.byKey(const Key('document-signed-pdf-unavailable')), findsNothing);
     expect(find.byKey(const Key('document-pdf-preview')), findsOneWidget);
     expect(tester.takeException(), isNull);
