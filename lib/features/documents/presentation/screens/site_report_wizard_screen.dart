@@ -1,3 +1,4 @@
+import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -175,8 +176,14 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
     required String title,
     required void Function(String) onSelected,
     required String keyPrefix,
+    String? selected,
   }) async {
-    final option = await showModalBottomSheet<String>(
+    final option = await Sign2DigitalSelectionSheet.showCustom<String>(
+      title: 'Select $title',
+      icon: title == 'Weather Condition' ? Icons.cloud_outlined
+          : title == 'Issues & Risks' ? Icons.warning_amber_outlined
+          : Icons.description_outlined,
+      subtitle: 'Choose a $title option',
       context: context,
       isScrollControlled: true,
       builder: (sheet) => SafeArea(child: ConstrainedBox(
@@ -186,10 +193,13 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
         child: ListView(
           shrinkWrap: true,
           children: [
-            ListTile(title: Text(title)),
             for (var i = 0; i < options.length; i++)
               ListTile(
                 key: Key('$keyPrefix-$i'),
+                selected: options[i] == selected,
+                trailing: options[i] == selected
+                    ? const Icon(Icons.check_circle_rounded,
+                        color: AppColors.primary) : null,
                 title: Text(options[i]),
                 onTap: () => Navigator.of(sheet).pop(options[i]),
               ),
@@ -304,6 +314,7 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
       options: _riskOptions,
       title: 'Issues & Risks',
       keyPrefix: 'site-report-risk-option',
+      selected: prior,
       onSelected: (selection) =>
           _contents[SiteReportSection.issues]!.text = selection,
     );
@@ -369,7 +380,10 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
   }
 
   Future<void> _chooseJob() async {
-    final selected = await showModalBottomSheet<JobModel>(
+    final selected = await Sign2DigitalSelectionSheet.showCustom<JobModel>(
+      title: 'Select Job / Project',
+      icon: Icons.work_outline_rounded,
+      subtitle: 'Choose a job for the site report',
       context: context,
       isScrollControlled: true,
       builder: (sheet) => SafeArea(child: ConstrainedBox(
@@ -379,10 +393,13 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
         child: ListView(
           shrinkWrap: true,
           children: [
-            const ListTile(title: Text('Select a job')),
             for (final job in MockJobsData.jobs)
               ListTile(
                 key: Key('review-report-job-${job.id}'),
+                selected: _selectedJob?.id == job.id,
+                trailing: _selectedJob?.id == job.id
+                    ? const Icon(Icons.check_circle_rounded,
+                        color: AppColors.primary) : null,
                 title: Text(job.title),
                 subtitle: Text('${job.referenceNumber} • ${job.clientName}'),
                 onTap: () => Navigator.of(sheet).pop(job),
@@ -511,6 +528,7 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
         onTap: () => _pickOption(
           options: _reportTitles, title: 'Report Title',
           keyPrefix: 'site-report-title-option',
+          selected: _title,
           onSelected: (value) => _title = value,
         ),
       ),
@@ -555,6 +573,7 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
         onTap: () => _pickOption(
           options: _weatherOptions, title: 'Weather Condition',
           keyPrefix: 'site-report-weather-option',
+          selected: _weather,
           onSelected: (value) => _weather = value,
         ),
       ),

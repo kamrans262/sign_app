@@ -1,3 +1,4 @@
+import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -133,7 +134,10 @@ class _GenerateAiDocumentScreenState extends State<GenerateAiDocumentScreen> {
 
   Future<void> _chooseJob() async {
     if (_generating) { return; }
-    final chosen = await showModalBottomSheet<JobModel>(
+    final chosen = await Sign2DigitalSelectionSheet.showCustom<JobModel>(
+      title: 'Select Job / Project',
+      icon: Icons.work_outline_rounded,
+      subtitle: 'Choose the job for your document',
       context: context,
       isScrollControlled: true,
       builder: (sheet) => SafeArea(
@@ -141,12 +145,6 @@ class _GenerateAiDocumentScreenState extends State<GenerateAiDocumentScreen> {
           constraints: BoxConstraints(
             maxHeight: MediaQuery.sizeOf(sheet).height * .7),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: Text('Select Job / Project',
-                style: TextStyle(fontFamily: 'Inter', fontSize: 16,
-                  fontWeight: FontWeight.w600)),
-            ),
             Flexible(child: ListView.builder(
               shrinkWrap: true,
               itemCount: _jobs.length,
@@ -154,6 +152,10 @@ class _GenerateAiDocumentScreenState extends State<GenerateAiDocumentScreen> {
                 final job = _jobs[index];
                 return ListTile(
                   key: Key('generate-ai-job-${job.id}'),
+                  selected: _job?.id == job.id,
+                  trailing: _job?.id == job.id
+                      ? const Icon(Icons.check_circle_rounded,
+                          color: AppColors.primary) : null,
                   title: Text(job.title, maxLines: 2),
                   subtitle: Text('${job.referenceNumber} • ${job.clientName}'),
                   onTap: () => Navigator.of(sheet).pop(job),

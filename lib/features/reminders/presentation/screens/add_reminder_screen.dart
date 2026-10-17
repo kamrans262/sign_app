@@ -1,3 +1,4 @@
+import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -83,17 +84,23 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
 
   Future<void> _selectTitle() async {
     if (_busy) return;
-    final suggestion = await showModalBottomSheet<String>(
+    final suggestion = await Sign2DigitalSelectionSheet.showCustom<String>(
+      title: 'Reminder Title',
+      icon: Icons.notifications_active_outlined,
+      subtitle: 'Choose a suggested reminder title',
       context: context,
       builder: (sheet) => SafeArea(child: Column(
         mainAxisSize: MainAxisSize.min, children: [
-          const ListTile(title: Text('Suggested reminder titles')),
           for (final value in [
             'Client Meeting', 'Send Invoice', 'Follow Up',
             'Site Inspection', 'Review Document',
           ])
             ListTile(
               key: Key('reminder-title-template-${value.replaceAll(' ', '-')}'),
+              selected: _title.text == value,
+              trailing: _title.text == value
+                  ? const Icon(Icons.check_circle_rounded,
+                      color: AppColors.primary) : null,
               title: Text(value),
               onTap: () => Navigator.pop(sheet, value)),
         ],
@@ -106,14 +113,20 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
 
   Future<void> _selectType() async {
     if (_busy) return;
-    final choice = await showModalBottomSheet<ReminderType>(
+    final choice = await Sign2DigitalSelectionSheet.showCustom<ReminderType>(
+      title: 'Select Reminder Type',
+      icon: Icons.category_outlined,
+      subtitle: 'Choose the kind of reminder',
       context: context,
       builder: (sheet) => SafeArea(child: Column(
         mainAxisSize: MainAxisSize.min, children: [
-          const ListTile(title: Text('Reminder Type')),
           for (final option in ReminderType.values)
             ListTile(
               key: Key('reminder-type-${option.name}'),
+              selected: _type == option,
+              trailing: _type == option
+                  ? const Icon(Icons.check_circle_rounded,
+                      color: AppColors.primary) : null,
               title: Text(option.label),
               onTap: () => Navigator.pop(sheet, option)),
         ])),
@@ -145,19 +158,22 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
       _notice('No related ${_type!.label.toLowerCase()} records are available.');
       return;
     }
-    final result = await showModalBottomSheet<ReminderRelatedItem>(
+    final result = await Sign2DigitalSelectionSheet.showCustom<ReminderRelatedItem>(
+      title: 'Select Related Item',
+      icon: Icons.account_tree_outlined,
+      subtitle: 'Link this reminder to an existing item',
       context: context, isScrollControlled: true,
       builder: (sheet) => SafeArea(child: SizedBox(
         height: MediaQuery.sizeOf(sheet).height * .55,
         child: Column(children: [
-          const Padding(padding: EdgeInsets.all(16),
-            child: Text('Select Related Item', style: TextStyle(
-              fontFamily: 'Inter', fontWeight: FontWeight.w600,
-              fontSize: 16))),
           Expanded(child: ListView.builder(
             itemCount: options.length,
             itemBuilder: (context, i) => ListTile(
               key: Key('reminder-related-${options[i].id}'),
+              selected: _related?.id == options[i].id,
+              trailing: _related?.id == options[i].id
+                  ? const Icon(Icons.check_circle_rounded,
+                      color: AppColors.primary) : null,
               title: Text(options[i].title, maxLines: 2),
               subtitle: options[i].project.isNotEmpty
                   ? Text(options[i].project) : null,

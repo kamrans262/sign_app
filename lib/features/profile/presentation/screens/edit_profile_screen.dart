@@ -123,6 +123,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final choice = await Sign2DigitalSelectionSheet.show(
       context,
       title: 'Job Title',
+      subtitle: 'Choose your job title or enter another',
       options: [...options, '__other__'],
       selected: _title,
       icon: Icons.description_outlined,

@@ -1,3 +1,4 @@
+import 'sign2digital_selection_sheet.dart';
 // Sign2Digital: reusable, frontend-only phone country picker.
 import 'package:flutter/material.dart';
 
@@ -223,12 +224,12 @@ class Sign2DigitalCountrySelector extends StatelessWidget {
 
   Future<void> _openSelector(BuildContext context) async {
     FocusManager.instance.primaryFocus?.unfocus();
-    final country = await showModalBottomSheet<Sign2DigitalCountry>(
+    final country = await Sign2DigitalSelectionSheet.showCustom<Sign2DigitalCountry>(
       context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: AppColors.white,
-      builder: (_) => const _CountrySelectionSheet(),
+      title: 'Select Country',
+      icon: Icons.public_outlined,
+      subtitle: 'Search or select a country calling code',
+      builder: (_) => _CountrySelectionSheet(selected: selected),
     );
     if (country != null) onChanged(country);
   }
@@ -259,7 +260,9 @@ class Sign2DigitalCountrySelector extends StatelessWidget {
 }
 
 class _CountrySelectionSheet extends StatefulWidget {
-  const _CountrySelectionSheet();
+  const _CountrySelectionSheet({required this.selected});
+
+  final Sign2DigitalCountry selected;
 
   @override
   State<_CountrySelectionSheet> createState() => _CountrySelectionSheetState();
@@ -281,8 +284,6 @@ class _CountrySelectionSheetState extends State<_CountrySelectionSheet> {
       height: availableHeight,
       child: Column(
         children: [
-          const SizedBox(height: 16),
-          Text('Select country', style: AppTextStyles.heading),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
             child: TextField(
@@ -306,15 +307,20 @@ class _CountrySelectionSheetState extends State<_CountrySelectionSheet> {
                 final country = filtered[index];
                 return ListTile(
                   key: Key('country-${country.isoCode}'),
+                  selected: country.isoCode == widget.selected.isoCode,
                   leading: Text(
                     country.flag,
                     style: const TextStyle(fontSize: 24),
                   ),
                   title: Text(country.name, style: AppTextStyles.fieldInput),
-                  trailing: Text(
-                    country.dialCode,
-                    style: AppTextStyles.fieldInput,
-                  ),
+                  trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+                    Text(country.dialCode, style: AppTextStyles.fieldInput),
+                    if (country.isoCode == widget.selected.isoCode) ...[
+                      const SizedBox(width: 8),
+                      const Icon(Icons.check_circle_rounded,
+                          size: 20, color: AppColors.primary),
+                    ],
+                  ]),
                   onTap: () => Navigator.of(context).pop(country),
                 );
               },

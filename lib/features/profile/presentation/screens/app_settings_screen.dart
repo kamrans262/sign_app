@@ -120,6 +120,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
     final choice = await Sign2DigitalSelectionSheet.show(
       context,
       title: label,
+      subtitle: 'Choose a ${label.toLowerCase()} option',
       options: values,
       selected: current,
       icon: icon,

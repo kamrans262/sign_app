@@ -1,3 +1,4 @@
+import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -114,7 +115,10 @@ class _AddDepositScreenState extends State<AddDepositScreen> {
   Future<void> _selectJob() async {
     final search = TextEditingController();
     try {
-      final chosen = await showModalBottomSheet<JobModel>(
+      final chosen = await Sign2DigitalSelectionSheet.showCustom<JobModel>(
+        title: 'Select Job / Project',
+        icon: Icons.work_outline_rounded,
+        subtitle: 'Search jobs to link this deposit',
         context: context,
         isScrollControlled: true,
         builder: (sheet) => StatefulBuilder(
@@ -122,7 +126,6 @@ class _AddDepositScreenState extends State<AddDepositScreen> {
             child: SizedBox(
               height: MediaQuery.sizeOf(sheet).height * 0.65,
               child: Column(children: [
-                const ListTile(title: Text('Select Job / Project')),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: TextField(
@@ -137,6 +140,10 @@ class _AddDepositScreenState extends State<AddDepositScreen> {
                     (item) => item.matches(search.text)))
                     ListTile(
                       key: Key('deposit-select-job-${job.id}'),
+                      selected: _job?.id == job.id,
+                      trailing: _job?.id == job.id
+                          ? const Icon(Icons.check_circle_rounded,
+                              color: AppColors.primary) : null,
                       title: Text(job.title),
                       subtitle: Text(job.referenceNumber),
                       onTap: () => Navigator.of(sheet).pop(job),

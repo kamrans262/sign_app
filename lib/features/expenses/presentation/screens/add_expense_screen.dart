@@ -1,3 +1,4 @@
+import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -134,13 +135,15 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   Future<void> _chooseJob() async {
     final search = TextEditingController();
     try {
-      final chosen = await showModalBottomSheet<JobModel>(
+      final chosen = await Sign2DigitalSelectionSheet.showCustom<JobModel>(
+        title: 'Select Job / Project',
+        icon: Icons.work_outline_rounded,
+        subtitle: 'Search jobs for this expense',
         context: context, isScrollControlled: true,
         builder: (sheet) => StatefulBuilder(
           builder: (sheet, update) => SafeArea(child: SizedBox(
             height: MediaQuery.sizeOf(sheet).height * 0.65,
             child: Column(children: [
-              const ListTile(title: Text('Select Job')),
               Padding(padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: TextField(key: const Key('expense-job-search'),
                   controller: search,
@@ -153,6 +156,10 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     item.matches(search.text)))
                   ListTile(
                     key: Key('expense-job-${job.id}'),
+                    selected: _job?.id == job.id,
+                    trailing: _job?.id == job.id
+                        ? const Icon(Icons.check_circle_rounded,
+                            color: AppColors.primary) : null,
                     title: Text(job.title),
                     subtitle: Text('${job.referenceNumber} • ${job.clientName}'),
                     onTap: () => Navigator.of(sheet).pop(job),
@@ -167,13 +174,19 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   }
 
   Future<void> _chooseCategory() async {
-    final chosen = await showModalBottomSheet<ExpenseCategory>(
+    final chosen = await Sign2DigitalSelectionSheet.showCustom<ExpenseCategory>(
+      title: 'Select Expense Type',
+      icon: Icons.account_balance_wallet_outlined,
+      subtitle: 'Choose the expense category',
       context: context,
       builder: (sheet) => SafeArea(child: ListView(
         shrinkWrap: true, children: [
-          const ListTile(title: Text('Expense Type')),
           for (final type in ExpenseCategory.values)
             ListTile(key: Key('expense-type-${type.name}'), title: Text(type.label),
+              selected: _category == type,
+              trailing: _category == type
+                  ? const Icon(Icons.check_circle_rounded,
+                      color: AppColors.primary) : null,
               onTap: () => Navigator.of(sheet).pop(type)),
         ])),
     );

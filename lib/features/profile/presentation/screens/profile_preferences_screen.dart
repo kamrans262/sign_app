@@ -79,6 +79,7 @@ class _ProfilePreferencesScreenState extends State<ProfilePreferencesScreen> {
     final value = await Sign2DigitalSelectionSheet.show(
       context,
       title: title,
+      subtitle: 'Choose a ${title.toLowerCase()} option',
       options: options,
       selected: current,
       icon: icon,

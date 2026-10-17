@@ -1,3 +1,4 @@
+import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -121,13 +122,19 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
   Future<void> _chooseName() async {
     if (_saving) return;
     final options = {...?widget.availableNames, ?_name};
-    final chosen = await showModalBottomSheet<String>(
+    final chosen = await Sign2DigitalSelectionSheet.showCustom<String>(
       context: context,
+      title: 'Select Equipment Name',
+      icon: Icons.handyman_outlined,
+      subtitle: 'Choose a name or enter a custom one',
       builder: (sheet) => SafeArea(child: Column(
         mainAxisSize: MainAxisSize.min, children: [
-          const ListTile(title: Text('Choose equipment name')),
           for (final name in options)
-            ListTile(title: Text(name), onTap: () => Navigator.pop(sheet, name)),
+            ListTile(title: Text(name), selected: _name == name,
+              trailing: _name == name
+                  ? const Icon(Icons.check_circle_rounded,
+                      color: AppColors.primary) : null,
+              onTap: () => Navigator.pop(sheet, name)),
           ListTile(
             key: const Key('equipment-custom-name'),
             leading: const Icon(Icons.edit_outlined),
@@ -144,16 +151,22 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
   Future<void> _chooseCategory() async {
     if (_saving) return;
     final choices = {..._categories, ?_category};
-    final chosen = await showModalBottomSheet<String>(
+    final chosen = await Sign2DigitalSelectionSheet.showCustom<String>(
       context: context,
+      title: 'Select Category',
+      icon: Icons.category_outlined,
+      subtitle: 'Choose the equipment category',
       builder: (sheet) => SafeArea(child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const ListTile(title: Text('Select Category')),
           for (final category in choices)
             ListTile(
               key: Key('equipment-category-${category.toLowerCase()}'),
               title: Text(category),
+              selected: _category == category,
+              trailing: _category == category
+                  ? const Icon(Icons.check_circle_rounded,
+                      color: AppColors.primary) : null,
               onTap: () => Navigator.pop(sheet, category)),
         ])),
     );
@@ -178,16 +191,22 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
   }
 
   Future<void> _pickStatus() async {
-    final choice = await showModalBottomSheet<EquipmentStatus>(
+    final choice = await Sign2DigitalSelectionSheet.showCustom<EquipmentStatus>(
       context: context,
+      title: 'Select Equipment Status',
+      icon: Icons.check_circle_outline_rounded,
+      subtitle: 'Choose the equipment availability',
       builder: (sheet) => SafeArea(child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const ListTile(title: Text('Equipment Status')),
           for (final status in EquipmentStatus.values)
             ListTile(
               key: Key('equipment-status-${status.name}'),
               title: Text(status.label),
+              selected: _status == status,
+              trailing: _status == status
+                  ? const Icon(Icons.check_circle_rounded,
+                      color: AppColors.primary) : null,
               onTap: () => Navigator.pop(sheet, status)),
         ])),
     );

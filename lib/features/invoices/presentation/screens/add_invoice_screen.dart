@@ -1,3 +1,4 @@
+import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -140,13 +141,15 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
   Future<void> _chooseJob() async {
     final search = TextEditingController();
     try {
-      final job = await showModalBottomSheet<JobModel>(
+      final job = await Sign2DigitalSelectionSheet.showCustom<JobModel>(
+        title: 'Select Job / Project',
+        icon: Icons.work_outline_rounded,
+        subtitle: 'Search jobs for your invoice',
         context: context, isScrollControlled: true,
         builder: (sheet) => StatefulBuilder(
           builder: (sheet, update) => SafeArea(child: SizedBox(
             height: MediaQuery.sizeOf(sheet).height * .65,
             child: Column(children: [
-              const ListTile(title: Text('Select Job / Project')),
               Padding(padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: TextField(
                   key: const Key('invoice-job-search'),
@@ -158,6 +161,10 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
                 for (final item in _jobs.where((j) => j.matches(search.text)))
                   ListTile(
                     key: Key('invoice-pick-job-${item.id}'),
+                    selected: _job?.id == item.id,
+                    trailing: _job?.id == item.id
+                        ? const Icon(Icons.check_circle_rounded,
+                            color: AppColors.primary) : null,
                     title: Text(item.title), subtitle: Text(item.referenceNumber),
                     onTap: () => Navigator.of(sheet).pop(item),
                   ),

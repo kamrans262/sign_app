@@ -1,3 +1,4 @@
+import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -122,10 +123,12 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
     if (!mounted) {
       return;
     }
-    final result = await showModalBottomSheet<ClientProfile>(
+    final result = await Sign2DigitalSelectionSheet.showCustom<ClientProfile>(
+      title: 'Select Client',
+      icon: Icons.person_outline_rounded,
+      subtitle: 'Choose the client for this job',
       context: context,
       isScrollControlled: true,
-      showDragHandle: true,
       builder: (sheet) => SafeArea(
         top: false,
         child: ConstrainedBox(
@@ -135,10 +138,6 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Padding(
-                padding: EdgeInsets.all(16),
-                child: Text('Select client', style: AppTextStyles.heading),
-              ),
               Flexible(
                 child: clients.isEmpty
                     ? const Center(child: Text('No clients available'))
@@ -149,13 +148,12 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
                           final item = clients[index];
                           return ListTile(
                             key: ValueKey('select-${item.id}'),
+                            selected: _client?.id == item.id,
                             title: Text(item.companyName),
                             subtitle: Text(item.email),
                             trailing: _client?.id == item.id
-                                ? const Icon(
-                                    Icons.check,
-                                    color: AppColors.primary,
-                                  )
+                                ? const Icon(Icons.check_circle_rounded,
+                                    color: AppColors.primary)
                                 : null,
                             onTap: () => Navigator.of(sheet).pop(item),
                           );
@@ -208,10 +206,12 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
   Future<void> _selectTeam() async {
     FocusManager.instance.primaryFocus?.unfocus();
     final working = Set<String>.from(_memberIds);
-    final selected = await showModalBottomSheet<Set<String>>(
+    final selected = await Sign2DigitalSelectionSheet.showCustom<Set<String>>(
+      title: 'Select Team Members',
+      icon: Icons.groups_outlined,
+      subtitle: 'Choose one or more team members',
       context: context,
       isScrollControlled: true,
-      showDragHandle: true,
       builder: (sheet) => StatefulBuilder(
         builder: (context, setSheetState) => SafeArea(
           top: false,
@@ -220,23 +220,28 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Select team members', style: AppTextStyles.heading),
-                const SizedBox(height: 12),
-                for (final member in _members)
-                  CheckboxListTile(
-                    key: ValueKey('member-${member.id}'),
-                    value: working.contains(member.id),
-                    activeColor: AppColors.primary,
-                    controlAffinity: ListTileControlAffinity.leading,
-                    title: Text(member.name),
-                    onChanged: (value) => setSheetState(() {
-                      if (value == true) {
-                        working.add(member.id);
-                      } else {
-                        working.remove(member.id);
-                      }
-                    }),
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: Column(mainAxisSize: MainAxisSize.min, children: [
+                      for (final member in _members)
+                        CheckboxListTile(
+                          key: ValueKey('member-${member.id}'),
+                          value: working.contains(member.id),
+                          selected: working.contains(member.id),
+                          activeColor: AppColors.primary,
+                          controlAffinity: ListTileControlAffinity.leading,
+                          title: Text(member.name),
+                          onChanged: (value) => setSheetState(() {
+                            if (value == true) {
+                              working.add(member.id);
+                            } else {
+                              working.remove(member.id);
+                            }
+                          }),
+                        ),
+                    ]),
                   ),
+                ),
                 Sign2DigitalPrimaryButton(
                   label: 'Done',
                   onPressed: () => Navigator.of(sheet).pop(working),

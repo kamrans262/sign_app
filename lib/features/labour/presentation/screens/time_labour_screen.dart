@@ -1,3 +1,4 @@
+import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -122,13 +123,15 @@ class _TimeLabourScreenState extends State<TimeLabourScreen> {
   Future<void> _chooseJob() async {
     final search = TextEditingController();
     try {
-      final selected = await showModalBottomSheet<String>(
+      final selected = await Sign2DigitalSelectionSheet.showCustom<String>(
+        title: 'Filter by Job',
+        icon: Icons.work_outline_rounded,
+        subtitle: 'Search or select the job to display',
         context: context, isScrollControlled: true,
         builder: (sheet) => StatefulBuilder(
           builder: (sheet, update) => SafeArea(child: SizedBox(
             height: MediaQuery.sizeOf(sheet).height * 0.65,
             child: Column(children: [
-              const ListTile(title: Text('Filter by Job')),
               Padding(padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: TextField(
                   key: const Key('labour-job-filter-search'),
@@ -140,11 +143,16 @@ class _TimeLabourScreenState extends State<TimeLabourScreen> {
               Expanded(child: ListView(children: [
                 ListTile(key: const Key('labour-job-all'),
                   title: const Text('All Jobs'),
+                  selected: _jobId == null,
                   onTap: () => Navigator.of(sheet).pop('')),
                 for (final job in _jobs.where((item) =>
                     item.matches(search.text)))
                   ListTile(
                     key: Key('labour-job-option-${job.id}'),
+                    selected: _jobId == job.id,
+                    trailing: _jobId == job.id
+                        ? const Icon(Icons.check_circle_rounded,
+                            color: AppColors.primary) : null,
                     title: Text(job.title),
                     subtitle: Text(job.referenceNumber),
                     onTap: () => Navigator.of(sheet).pop(job.id),
