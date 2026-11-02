@@ -8,7 +8,8 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'core/theme/app_theme.dart';
 import 'features/profile/data/app_settings_repository.dart';
-import 'features/auth/presentation/screens/login_screen.dart';
+import 'features/auth/data/mobile_auth_repository.dart';
+import 'features/auth/presentation/screens/mobile_auth_gateway.dart';
 import 'features/splash/presentation/splash_screen.dart';
 import 'features/quotes/presentation/screens/public_customer_signing_screen.dart';
 
@@ -80,19 +81,25 @@ class _AppEntryState extends State<_AppEntry> {
   }
 
   void _showLogin() {
+    _openAuthenticatedEntry();
+  }
+
+  Future<void> _openAuthenticatedEntry() async {
+    if (!mounted || _navigated) return;
+    var signedIn = false;
+    try {
+      signedIn = await MobileAuthRepository.shared.restoreRememberedSession();
+    } catch (_) {
+      // Network or secure-storage errors must not bypass authentication.
+      signedIn = false;
+    }
     if (!mounted || _navigated) return;
     _navigated = true;
     Navigator.of(context).pushReplacement<void, void>(
       MaterialPageRoute<void>(
-        builder: (loginContext) => LoginScreen(
-          onSubmit: (email, password, rememberMe) {
-            // UI-only demo route; real authentication will be added with the API.
-            Navigator.of(loginContext).pushReplacement<void, void>(
-              MaterialPageRoute<void>(
-                builder: (_) => const ClientsScreen(initialTab: 0)),
-            );
-          },
-        ),
+        builder: (_) => signedIn
+            ? const ClientsScreen(initialTab: 0)
+            : const MobileAuthGateway(),
       ),
     );
   }
