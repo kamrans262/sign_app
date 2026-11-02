@@ -12,9 +12,9 @@ class MemoryAuthStorage implements AuthTokenStorage {
   @override
   Future<String?> read() async => value;
   @override
-  Future<void> write(String token) async => value = token;
+  Future<void> write(String token) async { value = token; }
   @override
-  Future<void> delete() async => value = null;
+  Future<void> delete() async { value = null; }
 }
 
 void main() {
