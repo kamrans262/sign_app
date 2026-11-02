@@ -14,6 +14,7 @@ on:
       - 'lib/features/auth/presentation/screens/mobile_auth_gateway.dart'
       - 'lib/features/auth/presentation/screens/reset_password_screen.dart'
       - 'test/features/auth/mobile_auth_repository_test.dart'
+      - 'test/features/auth/reset_password_screen_test.dart'
       - 'test/core/sign_api_client_test.dart'
       - 'pubspec.yaml'
   workflow_dispatch:
@@ -38,6 +39,6 @@ jobs:
       - name: Resolve packages
         run: flutter pub get
       - name: Analyze M2 files
-        run: timeout 150s flutter analyze --no-pub lib/main.dart lib/core/services/sign_api_client.dart lib/features/auth/data/mobile_auth_repository.dart lib/features/auth/data/remote_account_repository.dart lib/features/profile/presentation/screens/profile_settings_screen.dart lib/features/auth/presentation/screens/mobile_auth_gateway.dart lib/features/auth/presentation/screens/reset_password_screen.dart test/features/auth/mobile_auth_repository_test.dart
+        run: timeout 150s flutter analyze --no-pub lib/main.dart lib/core/services/sign_api_client.dart lib/features/auth/data/mobile_auth_repository.dart lib/features/auth/data/remote_account_repository.dart lib/features/profile/presentation/screens/profile_settings_screen.dart lib/features/auth/presentation/screens/mobile_auth_gateway.dart lib/features/auth/presentation/screens/reset_password_screen.dart test/features/auth/mobile_auth_repository_test.dart test/features/auth/reset_password_screen_test.dart
       - name: Run only M2 API and existing auth screen tests
-        run: timeout 240s flutter test --no-pub --concurrency=1 test/core/sign_api_client_test.dart test/features/auth/mobile_auth_repository_test.dart test/features/auth/otp_verification_screen_test.dart
+        run: timeout 240s flutter test --no-pub --concurrency=1 test/core/sign_api_client_test.dart test/features/auth/mobile_auth_repository_test.dart test/features/auth/otp_verification_screen_test.dart test/features/auth/reset_password_screen_test.dart test/features/auth/login_screen_test.dart test/features/auth/create_account_screen_test.dart test/features/auth/forgot_password_refinement_test.dart
