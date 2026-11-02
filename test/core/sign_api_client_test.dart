@@ -83,4 +83,21 @@ void main() {
       throwsArgumentError,
     );
   });
+
+  test('JSON writes use the configured company and bearer authorization', () async {
+    final client = SignApiClient(
+      baseUrl: base,
+      tokenProvider: () async => 'test-token',
+      activeCompanyId: () => 8,
+      httpClient: MockClient((request) async {
+        expect(request.method, 'POST');
+        expect(request.headers['X-Company-Id'], '8');
+        expect(request.headers['Authorization'], 'Bearer test-token');
+        expect(request.headers['Content-Type'], contains('application/json'));
+        expect(jsonDecode(request.body)['title'], 'Job');
+        return http.Response(jsonEncode({'data': {'id': 2}}), 201);
+      }),
+    );
+    expect((await client.post('/api/v1/jobs', data: {'title': 'Job'}, companyScoped: true))['data']['id'], 2);
+  });
 }

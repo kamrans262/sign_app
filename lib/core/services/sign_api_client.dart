@@ -60,8 +60,10 @@ class SignApiClient {
     );
   }
 
-  Future<Map<String, dynamic>> get(
+  Future<Map<String, dynamic>> request(
+    String method,
     String endpoint, {
+    Map<String, dynamic>? data,
     bool authenticated = true,
     bool companyScoped = false,
   }) async {
@@ -69,9 +71,18 @@ class SignApiClient {
       authenticated: authenticated,
       companyScoped: companyScoped,
     );
+    if (data != null) headers['Content-Type'] = 'application/json';
+
+    final request = http.Request(method, _uri(endpoint));
+    request.headers.addAll(headers);
+    if (data != null) request.body = jsonEncode(data);
+
     try {
-      final response = await _http
-          .get(_uri(endpoint), headers: headers)
+      final streamed = await _http
+          .send(request)
+          .timeout(const Duration(seconds: 20));
+      final response = await http.Response
+          .fromStream(streamed)
           .timeout(const Duration(seconds: 20));
       return _decode(response);
     } on SignApiException {
@@ -80,6 +91,46 @@ class SignApiClient {
       throw const SignApiException('Unable to connect to Sign2Digital.');
     }
   }
+
+  Future<Map<String, dynamic>> get(
+    String endpoint, {
+    bool authenticated = true,
+    bool companyScoped = false,
+  }) => request(
+    'GET',
+    endpoint,
+    authenticated: authenticated,
+    companyScoped: companyScoped,
+  );
+
+  Future<Map<String, dynamic>> post(
+    String endpoint, {
+    Map<String, dynamic>? data,
+    bool authenticated = true,
+    bool companyScoped = false,
+  }) => request(
+    'POST',
+    endpoint,
+    data: data,
+    authenticated: authenticated,
+    companyScoped: companyScoped,
+  );
+
+  Future<Map<String, dynamic>> put(
+    String endpoint, {
+    Map<String, dynamic>? data,
+    bool companyScoped = false,
+  }) => request(
+    'PUT',
+    endpoint,
+    data: data,
+    companyScoped: companyScoped,
+  );
+
+  Future<Map<String, dynamic>> delete(
+    String endpoint, {
+    bool companyScoped = false,
+  }) => request('DELETE', endpoint, companyScoped: companyScoped);
 
   Future<Map<String, String>> _headers({
     required bool authenticated,
