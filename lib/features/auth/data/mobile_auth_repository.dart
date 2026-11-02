@@ -172,6 +172,12 @@ class MobileAuthRepository {
     return EmailOtpVerification(purpose: purpose, accessToken: token);
   }
 
+  Future<Map<String, dynamic>> currentProfile() => _api.currentAccount();
+
+  Future<void> updateProfile(Map<String, dynamic> changes) async {
+    await _api.request('PATCH', '/api/v1/me', data: changes);
+  }
+
   Future<void> resetPassword({
     required String email,
     required String resetToken,

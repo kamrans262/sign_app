@@ -8,6 +8,9 @@ import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
 import '../../../../core/widgets/sign2digital_dashboard_header.dart';
 import '../../../auth/data/account_repository.dart';
 import '../../../auth/data/demo_account_repository.dart';
+import '../../../auth/data/mobile_auth_repository.dart';
+import '../../../auth/data/remote_account_repository.dart';
+import '../../../auth/presentation/screens/mobile_auth_gateway.dart';
 import '../../../auth/domain/account_profile.dart';
 import '../../../quotes/presentation/widgets/sign2digital_quote_shadow_panel.dart';
 import '../widgets/profile_settings_action_card.dart';
@@ -63,7 +66,10 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
   @override
   void initState() {
     super.initState();
-    _repository = widget.accountRepository ?? DemoAccountRepository.shared;
+    _repository = widget.accountRepository ??
+        (MobileAuthRepository.shared.isSignedIn
+            ? RemoteAccountRepository()
+            : DemoAccountRepository.shared);
     _load();
   }
 
@@ -78,6 +84,19 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
       if (!mounted) return;
       setState(() { _error = 'Unable to load profile.'; _loading = false; });
     }
+  }
+
+  Future<void> _signOut() async {
+    try {
+      await MobileAuthRepository.shared.logout();
+    } catch (_) {
+      // Local secure session is cleared even if remote revocation fails.
+    }
+    if (!mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute<void>(builder: (_) => const MobileAuthGateway()),
+      (_) => false,
+    );
   }
 
   Future<void> _edit() async {
@@ -230,6 +249,16 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                       }
                     },
                   ),
+                  if (MobileAuthRepository.shared.isSignedIn) ...[
+                    const SizedBox(height: 20),
+                    ProfileSettingsActionCard(
+                      key: const Key('profile-action-sign-out'),
+                      icon: Icons.logout_outlined,
+                      title: 'Sign Out',
+                      subtitle: 'Securely close this device session',
+                      onTap: _signOut,
+                    ),
+                  ],
                 ],
               ],
             ),
