@@ -52,13 +52,19 @@ class SignApiClient {
   final Future<String?> Function()? _tokenProvider;
   final int? Function()? _activeCompanyId;
 
-  Uri _uri(String endpoint) {
-    if (!endpoint.startsWith('/') || endpoint.contains('..')) {
-      throw ArgumentError('API endpoints must be absolute paths.');
+  Uri _uri(String endpoint, {Map<String, String>? queryParameters}) {
+    if (!endpoint.startsWith('/') ||
+        endpoint.startsWith('//') ||
+        endpoint.contains('..') ||
+        endpoint.contains('?') ||
+        endpoint.contains('#')) {
+      throw ArgumentError('API endpoints must be absolute paths without query strings.');
     }
     return _base.replace(
       path: _base.path.replaceAll(RegExp(r"/+$"), "") + endpoint,
-      query: null,
+      queryParameters: queryParameters == null || queryParameters.isEmpty
+          ? null
+          : queryParameters,
       fragment: null,
     );
   }
@@ -67,6 +73,7 @@ class SignApiClient {
     String method,
     String endpoint, {
     Map<String, dynamic>? data,
+    Map<String, String>? queryParameters,
     bool authenticated = true,
     bool companyScoped = false,
   }) async {
@@ -76,7 +83,10 @@ class SignApiClient {
     );
     if (data != null) headers['Content-Type'] = 'application/json';
 
-    final request = http.Request(method, _uri(endpoint));
+    final request = http.Request(
+      method,
+      _uri(endpoint, queryParameters: queryParameters),
+    )..followRedirects = false;
     request.headers.addAll(headers);
     if (data != null) request.body = jsonEncode(data);
 
@@ -97,11 +107,13 @@ class SignApiClient {
 
   Future<Map<String, dynamic>> get(
     String endpoint, {
+    Map<String, String>? queryParameters,
     bool authenticated = true,
     bool companyScoped = false,
   }) => request(
     'GET',
     endpoint,
+    queryParameters: queryParameters,
     authenticated: authenticated,
     companyScoped: companyScoped,
   );
@@ -163,6 +175,8 @@ class SignApiClient {
   }
 
   static Map<String, dynamic> _decode(http.Response response) {
+    // Laravel DELETE endpoints may correctly return an empty 204 response.
+    if (response.statusCode == 204) return <String, dynamic>{};
     Map<String, dynamic> json;
     try {
       final parsed = jsonDecode(response.body);

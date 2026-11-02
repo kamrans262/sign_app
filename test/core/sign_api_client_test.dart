@@ -100,4 +100,44 @@ void main() {
     );
     expect((await client.post('/api/v1/jobs', data: {'title': 'Job'}, companyScoped: true))['data']['id'], 2);
   });
+
+  test('empty HTTP 204 after deleting a record is treated as success', () async {
+    final client = SignApiClient(
+      baseUrl: base,
+      tokenProvider: () async => 'token',
+      activeCompanyId: () => 18,
+      httpClient: MockClient((request) async {
+        expect(request.method, 'DELETE');
+        expect(request.headers['X-Company-Id'], '18');
+        return http.Response('', 204);
+      }),
+    );
+    expect(await client.delete('/api/v1/example/7', companyScoped: true), isEmpty);
+  });
+
+  test('filters are encoded as query parameters without changing the host', () async {
+    final client = SignApiClient(
+      baseUrl: base,
+      tokenProvider: () async => 'token',
+      httpClient: MockClient((request) async {
+        expect(request.url.host, base.host);
+        expect(request.url.path, '/api/v1/me');
+        expect(request.url.queryParameters['q'], 'A & B');
+        return http.Response(jsonEncode({'data': []}), 200);
+      }),
+    );
+    await client.get('/api/v1/me', queryParameters: {'q': 'A & B'});
+  });
+
+  test('redirects are not followed with an authorization token', () async {
+    final client = SignApiClient(
+      baseUrl: base,
+      tokenProvider: () async => 'token',
+      httpClient: MockClient((request) async {
+        expect(request.followRedirects, false);
+        return http.Response(jsonEncode({'message': 'Unexpected redirect'}), 302);
+      }),
+    );
+    await expectLater(client.currentAccount(), throwsA(isA<SignApiException>()));
+  });
 }
