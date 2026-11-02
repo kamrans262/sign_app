@@ -1,0 +1,32 @@
+name: M1 Flutter API foundation focused verification
+
+on:
+  push:
+    branches:
+      - feature/m1-api-foundation-2026-11-03
+    paths:
+      - '.github/workflows/m1-api-client-focused.yml'
+      - 'lib/core/services/sign_api_client.dart'
+      - 'test/core/sign_api_client_test.dart'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  api-client-focused:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install stable Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Resolve dependencies
+        run: flutter pub get
+      - name: Analyze only M1 API source and tests
+        run: flutter analyze --no-pub lib/core/services/sign_api_client.dart test/core/sign_api_client_test.dart
+      - name: Run only M1 API client tests
+        run: flutter test --no-pub --concurrency=1 test/core/sign_api_client_test.dart
