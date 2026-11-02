@@ -19,6 +19,30 @@ class MemoryAuthStorage implements AuthTokenStorage {
   Future<void> delete() async { value = null; }
 }
 
+class FaultyAuthStorage extends MemoryAuthStorage {
+  bool failRead = false;
+  bool failWrite = false;
+  bool failDelete = false;
+
+  @override
+  Future<String?> read() async {
+    if (failRead) throw StateError('Secure storage unavailable');
+    return super.read();
+  }
+
+  @override
+  Future<void> write(String token) async {
+    if (failWrite) throw StateError('Secure storage unavailable');
+    await super.write(token);
+  }
+
+  @override
+  Future<void> delete() async {
+    if (failDelete) throw StateError('Secure storage unavailable');
+    await super.delete();
+  }
+}
+
 void main() {
   final base = Uri.parse('https://forestgreen-pigeon-673192.hostingersite.com');
 
@@ -227,5 +251,132 @@ void main() {
     await auth.logout();
     expect(auth.isSignedIn, false);
     expect(storage.value, isNull);
+  });
+
+  test('temporary server outage never reopens app but retains remembered bearer', () async {
+    final storage = MemoryAuthStorage()..value = 'valid-token-before-outage';
+    final api = SignApiClient(
+      baseUrl: base,
+      tokenProvider: () async => storage.value,
+      httpClient: MockClient((request) async => http.Response(
+        jsonEncode({'message': 'Service temporarily unavailable'}),
+        503,
+      )),
+    );
+    final repo = MobileAuthRepository(api: api, tokenStorage: storage);
+    expect(await repo.restoreRememberedSession(), false);
+    expect(repo.isSignedIn, false);
+    expect(storage.value, 'valid-token-before-outage');
+  });
+
+  test('server-rejected remembered bearer is deleted and cannot reopen app', () async {
+    final storage = MemoryAuthStorage()..value = 'revoked-token';
+    final api = SignApiClient(
+      baseUrl: base,
+      tokenProvider: () async => storage.value,
+      httpClient: MockClient((request) async => http.Response(
+        jsonEncode({'message': 'Unauthorized'}),
+        401,
+      )),
+    );
+    final repo = MobileAuthRepository(api: api, tokenStorage: storage);
+    expect(await repo.restoreRememberedSession(), false);
+    expect(repo.isSignedIn, false);
+    expect(storage.value, isNull);
+  });
+
+  test('unavailable secure storage blocks OTP consumption before verification request', () async {
+    final storage = FaultyAuthStorage()..failDelete = true;
+    var sentRequests = 0;
+    final api = SignApiClient(
+      baseUrl: base,
+      httpClient: MockClient((request) async {
+        sentRequests++;
+        return http.Response(jsonEncode({'data': {
+          'purpose': 'login', 'access_token': 'should-not-be-used',
+        }}), 200);
+      }),
+    );
+    final repo = MobileAuthRepository(api: api, tokenStorage: storage);
+    await expectLater(
+      repo.verify(
+        const EmailOtpChallenge(
+          id: '11111111-1111-4111-8111-111111111111', purpose: 'login',
+        ),
+        '123456',
+        rememberMe: false,
+      ),
+      throwsA(isA<StateError>()),
+    );
+    expect(sentRequests, 0);
+    expect(repo.isSignedIn, false);
+  });
+
+  test('secure storage write failure keeps OTP-authenticated memory-only session', () async {
+    final storage = FaultyAuthStorage()..failWrite = true;
+    final api = SignApiClient(
+      baseUrl: base,
+      httpClient: MockClient((request) async => http.Response(
+        jsonEncode({'data': {
+          'purpose': 'login', 'access_token': 'verified-memory-token',
+        }}), 200),
+      ),
+    );
+    final repo = MobileAuthRepository(api: api, tokenStorage: storage);
+    final result = await repo.verify(
+      const EmailOtpChallenge(
+        id: '11111111-1111-4111-8111-111111111111', purpose: 'login',
+      ),
+      '123456',
+      rememberMe: true,
+    );
+    expect(result.accessToken, 'verified-memory-token');
+    expect(repo.isSignedIn, true);
+    expect(storage.value, isNull);
+  });
+
+  test('wrong verification purpose cannot issue or save a bearer', () async {
+    final storage = MemoryAuthStorage();
+    final api = SignApiClient(
+      baseUrl: base,
+      httpClient: MockClient((request) async => http.Response(
+        jsonEncode({'data': {
+          'purpose': 'reset', 'access_token': 'untrusted-token',
+        }}), 200),
+      ),
+    );
+    final repo = MobileAuthRepository(api: api, tokenStorage: storage);
+    await expectLater(
+      repo.verify(
+        const EmailOtpChallenge(
+          id: '11111111-1111-4111-8111-111111111111', purpose: 'login',
+        ),
+        '123456',
+        rememberMe: true,
+      ),
+      throwsA(isA<SignApiException>()),
+    );
+    expect(repo.isSignedIn, false);
+    expect(storage.value, isNull);
+  });
+
+  test('resend must preserve original purpose', () async {
+    final api = SignApiClient(
+      baseUrl: base,
+      httpClient: MockClient((request) async => http.Response(
+        jsonEncode({'data': {
+          'challenge_id': '22222222-2222-4222-8222-222222222222',
+          'purpose': 'register',
+        }}), 200),
+      ),
+    );
+    final repo = MobileAuthRepository(api: api, tokenStorage: MemoryAuthStorage());
+    await expectLater(
+      repo.resend(const EmailOtpChallenge(
+        id: '11111111-1111-4111-8111-111111111111', purpose: 'login',
+      )),
+      throwsA(isA<SignApiException>()),
+    );
+    expect(repo.isSignedIn, false);
   });
 }
