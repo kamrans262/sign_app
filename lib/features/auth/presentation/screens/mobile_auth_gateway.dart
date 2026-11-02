@@ -96,7 +96,7 @@ class _MobileAuthGatewayState extends State<MobileAuthGateway> {
               code,
               rememberMe: rememberMe,
             );
-            if (!mounted) return;
+            if (!mounted || !otpContext.mounted) return;
             if (outcome.purpose == 'reset') {
               final proof = outcome.resetToken;
               if (proof == null) throw const SignApiException('Reset verification failed.');
