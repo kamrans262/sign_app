@@ -80,9 +80,14 @@ class MobileAuthRepository {
     try {
       await _api.currentAccount();
       return true;
-    } catch (_) {
+    } catch (error) {
       _sessionToken = null;
-      await _tokenStorage.delete();
+      // Only permanently discard a token if the backend explicitly rejects it.
+      // A network outage must not delete a still-valid remembered session.
+      if (error is SignApiException &&
+          (error.statusCode == 401 || error.statusCode == 403)) {
+        await _tokenStorage.delete();
+      }
       return false;
     }
   }
@@ -128,7 +133,11 @@ class MobileAuthRepository {
       authenticated: false,
       data: {'challenge_id': challenge.id},
     );
-    return EmailOtpChallenge.fromData(_data(response));
+    final next = EmailOtpChallenge.fromData(_data(response));
+    if (next.purpose != challenge.purpose) {
+      throw const SignApiException('Resent verification type does not match.');
+    }
+    return next;
   }
 
   Future<EmailOtpVerification> verify(
@@ -136,6 +145,9 @@ class MobileAuthRepository {
     String code, {
     required bool rememberMe,
   }) async {
+    // Remove any bearer from an older account *before* consuming this code.
+    // If secure storage is inaccessible, leave OTP unused so it can be retried.
+    await _tokenStorage.delete();
     final response = await _api.post(
       '/api/v1/auth/otp/verify',
       authenticated: false,
@@ -147,8 +159,8 @@ class MobileAuthRepository {
     );
     final data = _data(response);
     final purpose = data['purpose'];
-    if (purpose is! String) {
-      throw const SignApiException('Invalid verification response.');
+    if (purpose is! String || purpose != challenge.purpose) {
+      throw const SignApiException('Verification response does not match this request.');
     }
 
     if (purpose == 'reset') {
@@ -165,9 +177,12 @@ class MobileAuthRepository {
     }
     _sessionToken = token;
     if (rememberMe) {
-      await _tokenStorage.write(token);
-    } else {
-      await _tokenStorage.delete();
+      try {
+        await _tokenStorage.write(token);
+      } catch (_) {
+        // OTP has already been consumed. Keep a valid memory-only session;
+        // never fall back to plain preferences or unencrypted storage.
+      }
     }
     return EmailOtpVerification(purpose: purpose, accessToken: token);
   }
