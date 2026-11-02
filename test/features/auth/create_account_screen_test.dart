@@ -66,7 +66,7 @@ void main() {
     await tester.ensureVisible(find.byKey(const Key('country-selector')));
     await tester.tap(find.byKey(const Key('country-selector')));
     await tester.pumpAndSettle();
-    expect(find.text('Select country'), findsOneWidget);
+    expect(find.text('Select Country'), findsOneWidget);
     await tester.enterText(find.byKey(const Key('country-search')), 'Canada');
     await tester.pump();
     await tester.tap(find.byKey(const Key('country-CA')));

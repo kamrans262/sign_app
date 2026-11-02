@@ -15,6 +15,10 @@ on:
       - 'lib/features/auth/presentation/screens/reset_password_screen.dart'
       - 'test/features/auth/mobile_auth_repository_test.dart'
       - 'test/features/auth/reset_password_screen_test.dart'
+      - 'test/features/auth/create_account_screen_test.dart'
+      - 'test/features/auth/login_screen_test.dart'
+      - 'test/features/auth/forgot_password_refinement_test.dart'
+      - 'test/features/auth/otp_verification_screen_test.dart'
       - 'test/core/sign_api_client_test.dart'
       - 'pubspec.yaml'
   workflow_dispatch:
