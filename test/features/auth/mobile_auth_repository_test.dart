@@ -6,6 +6,8 @@ import 'package:http/testing.dart';
 
 import 'package:sign2digital/core/services/sign_api_client.dart';
 import 'package:sign2digital/features/auth/data/mobile_auth_repository.dart';
+import 'package:sign2digital/features/auth/data/remote_account_repository.dart';
+import 'package:sign2digital/features/auth/domain/account_profile.dart';
 
 class MemoryAuthStorage implements AuthTokenStorage {
   String? value;
@@ -150,5 +152,80 @@ void main() {
       const EmailOtpChallenge(id: '11111111-1111-4111-8111-111111111111', purpose: 'login'),
     );
     expect(resent.id, '22222222-2222-4222-8222-222222222222');
+  });
+
+  test('profile uses authenticated user API, not a hardcoded demo identity', () async {
+    final storage = MemoryAuthStorage();
+    final api = SignApiClient(
+      baseUrl: base,
+      tokenProvider: () async => 'injected-test-token',
+      httpClient: MockClient((request) async {
+        if (request.url.path == '/api/v1/auth/otp/verify') {
+          return http.Response(jsonEncode({'data': {'purpose': 'login', 'access_token': 'session-token'}}), 200);
+        }
+        if (request.method == 'GET' && request.url.path == '/api/v1/me') {
+          return http.Response(jsonEncode({'data': {'user': {
+            'id': 42,
+            'name': 'Verified Customer',
+            'email': 'verified@example.test',
+            'phone_number': '0712345678',
+            'country_iso_code': 'CH',
+            'dialing_code': '+41',
+          }}}), 200);
+        }
+        if (request.method == 'PATCH' && request.url.path == '/api/v1/me') {
+          final data = jsonDecode(request.body) as Map<String, dynamic>;
+          expect(data['name'], 'Updated Customer');
+          return http.Response(jsonEncode({'data': {'user': data}}), 200);
+        }
+        return http.Response(jsonEncode({'message': 'Not found'}), 404);
+      }),
+    );
+    final mobile = MobileAuthRepository(api: api, tokenStorage: storage);
+    await mobile.verify(
+      const EmailOtpChallenge(id: '11111111-1111-4111-8111-111111111111', purpose: 'login'),
+      '123456',
+      rememberMe: true,
+    );
+    final profiles = RemoteAccountRepository(auth: mobile);
+    final account = await profiles.currentAccount();
+    expect(account?.fullName, 'Verified Customer');
+    expect(account?.email, 'verified@example.test');
+    expect(account?.id, '42');
+    await profiles.saveDraft(
+      AccountProfile(
+        id: '42',
+        fullName: 'Updated Customer',
+        email: 'verified@example.test',
+        countryIsoCode: 'CH',
+        dialingCode: '+41',
+        phoneNumber: '0712345678',
+      ),
+    );
+  });
+
+  test('logout clears stored token after verified sign-in', () async {
+    final storage = MemoryAuthStorage();
+    final api = SignApiClient(
+      baseUrl: base,
+      tokenProvider: () async => 'session-token',
+      httpClient: MockClient((request) async {
+        if (request.url.path.endsWith('/otp/verify')) {
+          return http.Response(jsonEncode({'data': {'purpose': 'login', 'access_token': 'session-token'}}), 200);
+        }
+        expect(request.url.path, '/api/v1/auth/logout');
+        return http.Response(jsonEncode({'message': 'Signed out.'}), 200);
+      }),
+    );
+    final auth = MobileAuthRepository(api: api, tokenStorage: storage);
+    await auth.verify(
+      const EmailOtpChallenge(id: '11111111-1111-4111-8111-111111111111', purpose: 'login'),
+      '123456',
+      rememberMe: true,
+    );
+    expect(storage.value, 'session-token');
+    await auth.logout();
+    expect(auth.isSignedIn, false);
+    expect(storage.value, isNull);
   });
 }
