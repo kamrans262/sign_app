@@ -36,7 +36,10 @@ class SignApiClient {
   }) : _base = baseUrl ?? SignApiConfig.baseUrl,
        _http = httpClient ?? http.Client(),
        _ownsHttp = httpClient == null,
+       // The public named configuration stays stable; internal callbacks stay private.
+       // ignore: prefer_initializing_formals
        _tokenProvider = tokenProvider,
+       // ignore: prefer_initializing_formals
        _activeCompanyId = activeCompanyId {
     if (_base.scheme != 'https' || _base.host.isEmpty) {
       throw ArgumentError('Sign2Digital API requires an HTTPS base URL.');

@@ -30,5 +30,7 @@ jobs:
           cache: true
       - name: Resolve dependencies
         run: flutter pub get
+      - name: Analyze only M1 API source and tests
+        run: timeout 120s flutter analyze --no-pub lib/core/services/sign_api_client.dart test/core/sign_api_client_test.dart
       - name: Run only M1 API client tests
         run: timeout 180s flutter test --no-pub --concurrency=1 test/core/sign_api_client_test.dart
