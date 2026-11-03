@@ -68,7 +68,7 @@ class RemoteInPersonSigningRepository {
     }
     final company=_company();
     final result=await _api.post(
-      '/api/v1/quotes/' + quote.serverId.toString() + '/in-person-signing',
+      '/api/v1/quotes/${quote.serverId}/in-person-signing',
       data:const {},companyScoped:true,
     );
     if(company!=ActiveCompanySession.companyId) {
@@ -121,7 +121,7 @@ class RemoteInPersonSigningRepository {
       ],
     ];
     final response=await _api.post(
-      '/api/v1/signature-requests/' + session.id.toString() + '/complete-in-person',
+      '/api/v1/signature-requests/${session.id}/complete-in-person',
       data:{
         'quoteId':session.quoteId,
         'documentId':session.documentId,
