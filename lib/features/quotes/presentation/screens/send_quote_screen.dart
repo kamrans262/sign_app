@@ -12,6 +12,7 @@ import '../../domain/quote_tracking_home_session.dart';
 import '../../domain/quote_review_models.dart';
 import '../../data/remote_quote_repository.dart';
 import '../../../../core/services/active_company_session.dart';
+import '../../../../core/services/sign_api_client.dart';
 import '../../../auth/data/mobile_auth_repository.dart';
 import '../../domain/quote_signature_draft.dart';
 import '../../domain/quote_signing_context.dart';
@@ -164,10 +165,26 @@ class _SendQuoteScreenState extends State<SendQuoteScreen> {
     if (_preparing) { return; }
     setState(() { _preparing = true; _pdfError = null; _pdfBytes = null; });
     try {
-      final data = await (widget.pdfGenerator?.call(_quote) ??
-          (_quote.serverId != null && _quote.approvedLocally && !_quote.isDemo
-              ? RemoteQuoteRepository.shared.fetchApprovedPdf(_quote)
-              : const Sign2DigitalQuotePdfBuilder().build(_quote)));
+      final data = await (() async {
+        if (widget.pdfGenerator != null) {
+          return widget.pdfGenerator!(_quote);
+        }
+        if (_quote.serverId != null && _quote.approvedLocally && !_quote.isDemo) {
+          try {
+            return await RemoteQuoteRepository.shared.fetchApprovedPdf(_quote);
+          } on SignApiException catch (error) {
+            // Historical M6 quotes can still use the OS share sheet with
+            // an explicitly unverified local copy; never backend email it.
+            if (_sendDraft.method != QuoteSendingMethod.other ||
+                error.statusCode != 409 ||
+                !error.message.contains('no verified approved PDF')) {
+              rethrow;
+            }
+            _notify('Legacy PDF copy is not approval-verified. Sharing is manual.');
+          }
+        }
+        return const Sign2DigitalQuotePdfBuilder().build(_quote);
+      })();
       if (data.isEmpty) { throw StateError('The PDF is empty.'); }
       if (mounted) { setState(() => _pdfBytes = data); }
     } catch (error) {
