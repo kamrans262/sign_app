@@ -7,11 +7,16 @@ import '../services/quote_pdf_service.dart';
 
 /// Real M6 quote persistence. Server verifies tenant, RBAC, money and approval.
 class RemoteQuoteRepository {
-  RemoteQuoteRepository({SignApiClient? api})
-      : _api = api ?? MobileAuthRepository.shared.api;
+  RemoteQuoteRepository({
+    SignApiClient? api,
+    Future<Uint8List> Function(QuoteReviewDraft)? approvedPdfBuilder,
+  }) : _api = api ?? MobileAuthRepository.shared.api,
+       _approvedPdfBuilder = approvedPdfBuilder ??
+           ((quote) => const Sign2DigitalQuotePdfBuilder().build(quote));
 
   static final RemoteQuoteRepository shared = RemoteQuoteRepository();
   final SignApiClient _api;
+  final Future<Uint8List> Function(QuoteReviewDraft) _approvedPdfBuilder;
 
   int _company() {
     final id = ActiveCompanySession.companyId;
@@ -134,7 +139,7 @@ class RemoteQuoteRepository {
     // Generate the customer document from the server-numbered, reviewed
     // draft *at approval time*. Laravel freezes these exact bytes privately
     // and can later email only that approved, revision-bound artifact.
-    final approvedPdf=await const Sign2DigitalQuotePdfBuilder().build(saved);
+    final approvedPdf=await _approvedPdfBuilder(saved);
     _check(company);
     final response=await _api.postMultipart(
       '/api/v1/quotes/${saved.serverId}/approve',
