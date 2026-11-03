@@ -85,7 +85,7 @@ class RemoteSignedDocumentRepository {
   Future<Uint8List> download(SignedJobDocument document) async {
     final company=_company();
     final bytes=await _api.getPdf(
-      '/api/v1/signed-documents/' + document.id.toString() + '/pdf',
+      '/api/v1/signed-documents/${document.id}/pdf',
       companyScoped:true,maxBytes:12*1024*1024,
     );
     if(company!=ActiveCompanySession.companyId) {
