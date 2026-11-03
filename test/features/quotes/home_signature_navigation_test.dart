@@ -42,7 +42,7 @@ void main() {
   ) async {
     await tester.pumpWidget(const MaterialApp(home: ClientsScreen()));
     await _pumpUi(tester);
-    await tester.tap(find.byKey(const Key('dashboard-tab-0')));
+    await tester.tap(find.byKey(const Key('dashboard-tab-0')).last);
     await _pumpUi(tester);
     expect(find.byKey(const Key('home-dashboard-scroll')), findsOneWidget);
     expect(find.byKey(const Key('home-demo-disclaimer')), findsNothing);
@@ -64,7 +64,7 @@ void main() {
     QuoteTrackingHomeSession.remember(_quote());
     await tester.pumpWidget(const MaterialApp(home: ClientsScreen()));
     await _pumpUi(tester);
-    await tester.tap(find.byKey(const Key('dashboard-tab-0')));
+    await tester.tap(find.byKey(const Key('dashboard-tab-0')).last);
     await _pumpUi(tester);
     expect(find.byKey(const Key('home-dashboard-scroll')), findsOneWidget);
     final track = find.byKey(const Key('home-open-signature-tracking'));
@@ -85,10 +85,10 @@ void main() {
       find.text('Document delivery has not been confirmed yet.'),
       findsOneWidget,
     );
-    await tester.tap(find.byKey(const Key('dashboard-tab-1')));
+    await tester.tap(find.byKey(const Key('dashboard-tab-1')).last);
     await _pumpUi(tester);
     expect(find.text('Active (12)'), findsOneWidget);
-    await tester.tap(find.byKey(const Key('dashboard-tab-0')));
+    await tester.tap(find.byKey(const Key('dashboard-tab-0')).last);
     await _pumpUi(tester);
     expect(find.byKey(const Key('home-dashboard-scroll')), findsOneWidget);
     expect(tester.takeException(), isNull);
