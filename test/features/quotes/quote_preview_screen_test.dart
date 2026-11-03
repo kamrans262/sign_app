@@ -57,6 +57,51 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('M7 mobile quote preview includes deposit, balance and all reviewed fields',
+      (tester) async {
+    tester.view.physicalSize = const Size(416, 940);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final quote = QuoteReviewDraft(
+      id: 'm7-parity', clientName: 'Flutter Db',
+      quoteNumber: 'M6-TEST-003',
+      date: DateTime(2026, 11, 3),
+      validUntil: DateTime(2026, 11, 28),
+      currency: 'CHF', vatBasisPoints: 2000,
+      depositBasisPoints: 3000,
+      terms: 'Verified terms',
+      items: [
+        QuoteReviewWorkItem(id: 'bricks', title: 'Bricks',
+          description: 'Exterior repair',
+          dimensions: '3 m x 4 m',
+          quantity: '4', unitPrice: '150.00'),
+      ],
+    );
+    await tester.pumpWidget(MaterialApp(home: QuotePreviewScreen(quote: quote)));
+    expect(find.text('Deposit due (30%)'), findsOneWidget);
+    expect(find.text('CHF 216.00'), findsOneWidget);
+    expect(find.text('Remaining after deposit'), findsOneWidget);
+    expect(find.text('CHF 504.00'), findsOneWidget);
+    expect(find.textContaining('Exterior repair'), findsOneWidget);
+    expect(find.textContaining('Dimensions: 3 m x 4 m'), findsOneWidget);
+    expect(find.text('Payable amount'), findsOneWidget);
+    expect(find.text('Currency'), findsOneWidget);
+    // Unlike the previous fixed 76px labels, both dates start just after
+    // their individual labels; maintain the web/PDF date layout separately.
+    final dateLabel = find.text('Date:');
+    final dateValue = find.text('3 November 2026');
+    final validLabel = find.text('Valid Until:');
+    final validValue = find.text('28 November 2026');
+    final dateGap = tester.getTopLeft(dateValue).dx -
+        tester.getTopRight(dateLabel).dx;
+    final validGap = tester.getTopLeft(validValue).dx -
+        tester.getTopRight(validLabel).dx;
+    expect(dateGap, lessThanOrEqualTo(10));
+    expect(validGap, lessThanOrEqualTo(10));
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('landscape quote preview scrolls without Flex overflow',
       (tester) async {
     tester.view.physicalSize = const Size(720, 390);
