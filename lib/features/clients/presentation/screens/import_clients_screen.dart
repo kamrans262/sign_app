@@ -113,7 +113,9 @@ class _ImportClientsScreenState extends State<ImportClientsScreen> {
         fullName: item.fullName.trim(),
         companyName: '',
         address: '',
-        countryIsoCode: 'CH',
+        // Phone address-book data does not establish an ISO country.
+        // Preserve unknown country rather than silently assigning Switzerland.
+        countryIsoCode: '',
         dialingCode: '',
         phoneNumber: item.phoneNumber.trim(),
         email: item.email.trim(),
