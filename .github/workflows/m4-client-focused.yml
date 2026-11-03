@@ -13,6 +13,8 @@ on:
       - 'android/app/src/main/AndroidManifest.xml'
       - 'ios/Runner/Info.plist'
       - 'test/features/clients/**'
+      - 'test/features/company/**'
+      - 'test/features/auth/mobile_auth_repository_test.dart'
   workflow_dispatch:
 
 permissions:
@@ -35,6 +37,6 @@ jobs:
       - name: Resolve Flutter packages
         run: flutter pub get
       - name: Analyze M4 touched client files only
-        run: flutter analyze --no-pub lib/features/clients/data/remote_client_repository.dart lib/features/clients/data/device_phone_contact_source.dart lib/features/clients/presentation/screens/clients_screen.dart lib/features/clients/presentation/screens/add_client_screen.dart lib/features/clients/presentation/screens/client_details_screen.dart lib/features/clients/presentation/screens/import_clients_screen.dart test/features/clients/remote_client_repository_test.dart
-      - name: Focused M4 UI/API regressions
-        run: flutter test --no-pub --concurrency=1 test/features/clients/remote_client_repository_test.dart test/features/clients/import_clients_screen_test.dart test/features/clients/add_client_screen_test.dart test/features/clients/clients_screen_test.dart test/features/clients/client_details_screen_test.dart
+        run: flutter analyze --no-pub lib/features/clients/data/remote_client_repository.dart lib/features/clients/data/device_phone_contact_source.dart lib/features/clients/presentation/screens/clients_screen.dart lib/features/clients/presentation/screens/add_client_screen.dart lib/features/clients/presentation/screens/client_details_screen.dart lib/features/clients/presentation/screens/import_clients_screen.dart test/features/clients/remote_client_repository_test.dart test/features/clients/m4_stage2_import_review_test.dart
+      - name: Focused M3 + M4 mobile auth, tenant and client UI regressions
+        run: flutter test --no-pub --concurrency=1 test/features/clients/remote_client_repository_test.dart test/features/clients/import_clients_screen_test.dart test/features/clients/add_client_screen_test.dart test/features/clients/clients_screen_test.dart test/features/clients/client_details_screen_test.dart test/features/clients/m4_stage2_import_review_test.dart test/features/company/remote_company_repository_test.dart test/features/company/m3_landscape_layout_test.dart test/features/auth/mobile_auth_repository_test.dart test/core/sign_api_client_test.dart
