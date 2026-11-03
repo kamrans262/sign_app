@@ -83,4 +83,36 @@ void main() {
     expect(draft.approvalIssues, isNotEmpty);
   });
 
+  test('VAT and deposit use exact percent units and VAT-inclusive total', () {
+    final draft = QuoteReviewDraft(
+      id: 'percentage-m6', date: DateTime(2026, 11, 4),
+      clientName: 'M6 Test Customer', quoteNumber: 'M6-TEST-002',
+      currency: 'CHF', vatBasisPoints: 1300, depositBasisPoints: 3000,
+      items: [QuoteReviewWorkItem(
+        id: 'bricks', title: 'Bricks', description: 'Test only',
+        quantity: '4', unitPrice: '150.00',
+      )],
+      terms: 'Test payment terms',
+    );
+    expect(quotePercentLabel(1300), '13');
+    expect(quotePercentLabel(3000), '30');
+    expect(quotePercentLabel(810), '8.1');
+    expect(quotePercentLabel(1250), '12.5');
+    expect(quotePercentLabel(0), '0');
+    expect(quotePercentLabel(10000), '100');
+    expect(draft.subtotalMinor, 60000);
+    expect(draft.vatMinor, 7800);
+    expect(draft.totalMinor, 67800);
+    expect(draft.depositMinor, 20340);
+    expect(draft.totalMinor! - draft.depositMinor!, 47460);
+
+    draft.vatBasisPoints = 810;
+    draft.depositBasisPoints = 1250;
+    expect(draft.vatMinor, 4860);
+    expect(draft.totalMinor, 64860);
+    expect(draft.depositMinor, 8108); // Half-up cent rounding.
+    expect(draft.totalMinor! - draft.depositMinor!, 56752);
+  });
+
+
 }
