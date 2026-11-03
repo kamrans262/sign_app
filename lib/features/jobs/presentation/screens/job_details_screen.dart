@@ -20,6 +20,7 @@ import '../../../quotes/presentation/screens/quote_preview_screen.dart';
 import '../../../documents/presentation/screens/documents_screen.dart';
 import '../../../documents/domain/document_record.dart';
 import '../../../quotes/data/signed_quote_file_store.dart';
+import '../../../documents/data/remote_signed_document_repository.dart';
 import '../../../clients/domain/client_profile.dart';
 import '../widgets/sign2digital_job_financial_card.dart';
 import '../widgets/sign2digital_job_progress_indicator.dart';
@@ -169,13 +170,68 @@ class JobDetailsScreen extends StatelessWidget {
       return;
     }
     if (section == JobSection.documents) {
-      // Client-side signed PDF metadata has no company authorization;
-      // never expose it to authenticated jobs until M7 document persistence.
+      // Authenticated jobs always use server-verified signed PDF metadata,
+      // never client-side demo files or inferred signing status.
       if (onManageJob != null) {
-        if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Documents will be connected to this job soon.'),
-        ));
+        try {
+          final signed = await RemoteSignedDocumentRepository.shared.list(
+            jobId: job.id,
+          );
+          if (!context.mounted) return;
+          if (signed.isEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text('No signed documents for this job yet.'),
+            ));
+            return;
+          }
+          await showModalBottomSheet<void>(
+            context: context,
+            isScrollControlled: true,
+            builder: (sheetContext) => SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Signed Job Documents',
+                      style: TextStyle(fontSize: 18,
+                          fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 12),
+                    for (final file in signed)
+                      ListTile(
+                        key: Key('signed-job-document-' + file.documentId),
+                        leading: const Icon(Icons.picture_as_pdf_outlined),
+                        title: Text(file.quoteNumber),
+                        subtitle: Text('Signed ' + file.signedAt.toLocal().toString()),
+                        onTap: () async {
+                          try {
+                            final bytes=await RemoteSignedDocumentRepository.shared
+                                .download(file);
+                            await Printing.sharePdf(
+                              bytes:bytes,
+                              filename:'Signed_' + file.documentId + '.pdf',
+                            );
+                          } catch (_) {
+                            if (!sheetContext.mounted) return;
+                            ScaffoldMessenger.of(sheetContext).showSnackBar(
+                              const SnackBar(content:Text(
+                                'Could not open this signed PDF.')),
+                            );
+                          }
+                        },
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        } catch (_) {
+          if (!context.mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Could not load signed job documents.'),
+          ));
+        }
         return;
       }
       // Preserve the existing card layout; only show signed PDFs when a
