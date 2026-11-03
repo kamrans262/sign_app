@@ -102,6 +102,35 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('M7 date block matches Quote right margin and both dates align',
+      (tester) async {
+    tester.view.physicalSize = const Size(430, 960);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final quote = QuoteReviewDraft(
+      id: 'aligned-dates', clientName: 'Flutter Db',
+      quoteNumber: 'M6-TEST-003',
+      date: DateTime(2026, 11, 3),
+      validUntil: DateTime(2026, 11, 28),
+      terms: 'Quote terms',
+      items: [QuoteReviewWorkItem(
+        id: 'bricks', title: 'Bricks', description: '',
+        quantity: '4', unitPrice: '150.00')],
+    );
+    await tester.pumpWidget(MaterialApp(home: QuotePreviewScreen(quote: quote)));
+    final block = find.byKey(const Key('quote-preview-date-block'));
+    final quoteTitle = find.byKey(const Key('quote-preview-document-title'));
+    final date = find.text('3 November 2026');
+    final valid = find.text('28 November 2026');
+    expect(block, findsOneWidget);
+    expect((tester.getTopLeft(date).dx - tester.getTopLeft(valid).dx).abs(),
+      lessThan(1));
+    expect((tester.getTopRight(block).dx -
+            tester.getTopRight(quoteTitle).dx).abs(), lessThan(2));
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('landscape quote preview scrolls without Flex overflow',
       (tester) async {
     tester.view.physicalSize = const Size(720, 390);
