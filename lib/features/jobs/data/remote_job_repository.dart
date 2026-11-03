@@ -195,7 +195,12 @@ class RemoteJobRepository {
         financials.values.any((value) => value != null)) {
       throw const SignApiException('Unexpected job financial data.');
     }
-    return JobDetailsModel.liveUnconnected(saved);
+    // M6 links only verified quote records; other downstream modules remain
+    // intentionally unavailable until their own persistence is implemented.
+    final sections = data['sections'];
+    final visibleQuotes = sections is Map ? sections['quotes'] : null;
+    return JobDetailsModel.liveUnconnected(saved,
+      quoteCount: visibleQuotes is List ? visibleQuotes.length : null);
   }
 
   Future<JobModel> updateDraft(JobModel job, CreateJobDraft draft) async {

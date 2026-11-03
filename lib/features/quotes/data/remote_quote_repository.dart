@@ -88,6 +88,7 @@ class RemoteQuoteRepository {
     final copy=draft.copy();
     copy.serverId=_id(raw['id']);
     copy.quoteNumber=(raw['reference_number'] ?? '').toString();
+    copy.serverStatus=(raw['status'] ?? 'draft').toString();
     copy.approvedLocally=
         raw['status']=='approved' || raw['status']=='sent';
     return copy;
@@ -200,7 +201,18 @@ class RemoteQuoteRepository {
           depositBasisPoints:_id(item['deposit_basis_points']),
           terms:(item['terms'] ?? '').toString(),
           sourceMethod:(item['source_method'] ?? 'manual').toString(),
+          payment:item['payment_details'] is Map ? QuotePaymentDetails(
+            iban: (item['payment_details']['iban'] ?? '').toString(),
+            accountHolder: (item['payment_details']['accountHolder'] ?? '').toString(),
+            street: (item['payment_details']['street'] ?? '').toString(),
+            buildingNumber: (item['payment_details']['buildingNumber'] ?? '').toString(),
+            postalCode: (item['payment_details']['postalCode'] ?? '').toString(),
+            city: (item['payment_details']['city'] ?? '').toString(),
+            country: (item['payment_details']['country'] ?? 'CH').toString(),
+            paymentReference: (item['payment_details']['paymentReference'] ?? '').toString(),
+          ) : null,
           approvedLocally:item['status']=='approved' || item['status']=='sent',
+          serverStatus:(item['status'] ?? 'draft').toString(),
           items:[
             for (final line in lines)
               if(line is Map<String,dynamic>)

@@ -172,6 +172,7 @@ class QuoteReviewDraft {
     this.approvedLocally = false,
     this.serverId,
     this.sourceMethod = 'manual',
+    this.serverStatus = 'draft',
   });
 
   final String id;
@@ -197,6 +198,7 @@ class QuoteReviewDraft {
   /// Server persistence ID, independent of existing Figma route ID.
   int? serverId;
   String sourceMethod;
+  String serverStatus;
 
   /// This fixture is explicitly UI-only; its prices/tax are not AI results.
   factory QuoteReviewDraft.figmaDemo() => QuoteReviewDraft(
@@ -357,6 +359,7 @@ class QuoteReviewDraft {
     clientPhone: clientPhone, validUntil: validUntil, payment: payment?.copy(),
     isDemo: isDemo, approvedLocally: approvedLocally,
     serverId: serverId, sourceMethod: sourceMethod,
+    serverStatus: serverStatus,
   );
 }
 
