@@ -1,0 +1,37 @@
+name: M6 AI Quote Creation focused Flutter verification
+
+on:
+  push:
+    branches:
+      - feature/m6-ai-quote-creation-2026-11-03
+    paths:
+      - '.github/workflows/m6-quote-focused.yml'
+      - 'lib/features/quotes/**'
+      - 'lib/core/services/sign_api_client.dart'
+      - 'lib/features/jobs/presentation/screens/job_details_screen.dart'
+      - 'test/features/quotes/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sign2digital-m6-flutter
+  cancel-in-progress: true
+
+jobs:
+  m6-focused:
+    runs-on: ubuntu-latest
+    timeout-minutes: 17
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Resolve locked Flutter dependencies
+        run: flutter pub get
+      - name: Analyze M6 changed source and repository tests
+        run: flutter analyze --no-pub lib/core/services/sign_api_client.dart lib/features/quotes/data/remote_quote_repository.dart lib/features/quotes/domain/quote_review_models.dart lib/features/quotes/services/remote_quote_preparation_service.dart lib/features/quotes/presentation/screens/create_quote_screen.dart lib/features/quotes/presentation/screens/review_quote_screen.dart lib/features/quotes/presentation/screens/send_quote_screen.dart test/features/quotes/m6_remote_quote_repository_test.dart
+      - name: M6 quote API and old UI regression tests
+        run: flutter test --no-pub --concurrency=1 test/features/quotes/m6_remote_quote_repository_test.dart test/features/quotes/quote_review_models_test.dart test/features/quotes/create_quote_screen_test.dart test/features/quotes/quote_ai_processing_screen_test.dart test/features/quotes/review_quote_screen_test.dart test/features/quotes/send_quote_screen_test.dart test/features/quotes/quote_preview_screen_test.dart test/features/quotes/phase2_quote_flow_test.dart
