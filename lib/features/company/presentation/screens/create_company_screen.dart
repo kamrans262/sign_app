@@ -185,7 +185,7 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
       final company = await repository.save(_buildProfile(draft));
       if (real) {
         _savedCompanyId = company.id;
-        final remote = repository as RemoteCompanyRepository;
+        final remote = repository;
         if (draft.logo != null) await remote.uploadFile(company.id, 'logo', draft.logo!);
         if (draft.terms != null) await remote.uploadFile(company.id, 'terms', draft.terms!);
       }
