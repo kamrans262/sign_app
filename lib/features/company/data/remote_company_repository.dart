@@ -51,6 +51,7 @@ class RemoteCompanyRepository implements CompanyRepository {
 
   static CompanyProfile _parse(Map<String, dynamic> m) => CompanyProfile(
     id: _asInt(m['id']).toString(),
+    role: (m['role'] ?? 'member').toString(),
     companyName: (m['name'] ?? '').toString(),
     address: (m['address'] ?? '').toString(),
     countryIsoCode: (m['country_iso_code'] ?? 'CH').toString(),

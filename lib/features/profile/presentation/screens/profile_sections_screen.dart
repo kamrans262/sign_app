@@ -16,7 +16,7 @@ import '../../../quotes/presentation/widgets/sign2digital_quote_shadow_panel.dar
 class ProfileBusinessInformationScreen extends StatelessWidget {
   const ProfileBusinessInformationScreen({super.key});
 
-  String _roleFor(CompanyProfile company) => 'owner';
+  String _roleFor(CompanyProfile company) => company.role;
 
   Future<CompanyProfile?> _realCompany() async {
     final companies = await RemoteCompanyRepository.shared.list();
@@ -78,6 +78,7 @@ class ProfileBusinessInformationScreen extends StatelessWidget {
               ),
               const SizedBox(height: 15),
               if (MobileAuthRepository.shared.isSignedIn) ...[
+                if (company.role == 'owner' || company.role == 'admin')
                 FilledButton(
                   key: const Key('edit-company-details'),
                   onPressed: () => Navigator.of(context).push<void>(
@@ -93,8 +94,7 @@ class ProfileBusinessInformationScreen extends StatelessWidget {
                     MaterialPageRoute<void>(builder: (_) => CompanyTeamScreen(
                       companyId: company.id,
                       companyName: company.companyName,
-                      role: ActiveCompanySession.companyId == null
-                          ? 'member' : _roleFor(company),
+                      role: _roleFor(company),
                     )),
                   ),
                   child: const Text('Team Members & Permissions'),

@@ -14,10 +14,12 @@ class CompanyProfile {
     required this.iban,
     required this.qrIban,
     required this.documentNumbering,
+    this.role = 'member',
     this.logoFileName,
     this.termsFileName,
   });
 
+  final String role;
   final String id;
   final String companyName;
   final String address;
