@@ -13,6 +13,7 @@ on:
       - 'lib/features/home/presentation/screens/home_dashboard_screen.dart'
       - 'lib/features/profile/presentation/screens/profile_sections_screen.dart'
       - 'test/features/company/**'
+      - 'test/features/auth/mobile_auth_repository_test.dart'
   workflow_dispatch:
 
 permissions:
@@ -37,4 +38,4 @@ jobs:
       - name: Analyze M3 touched files
         run: timeout 160s flutter analyze --no-pub lib/core/services/sign_api_client.dart lib/core/services/active_company_session.dart lib/features/auth/data/mobile_auth_repository.dart lib/features/company lib/features/home/presentation/screens/home_dashboard_screen.dart lib/features/profile/presentation/screens/profile_sections_screen.dart test/features/company/remote_company_repository_test.dart
       - name: Focused M3 API and existing company screen checks
-        run: timeout 240s flutter test --no-pub --concurrency=1 test/features/company/remote_company_repository_test.dart test/features/company/create_company_screen_test.dart test/core/sign_api_client_test.dart
+        run: timeout 240s flutter test --no-pub --concurrency=1 test/features/company/remote_company_repository_test.dart test/features/company/create_company_screen_test.dart test/core/sign_api_client_test.dart test/features/auth/mobile_auth_repository_test.dart
