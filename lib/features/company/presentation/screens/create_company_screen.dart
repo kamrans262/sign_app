@@ -90,6 +90,8 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
   PlatformFile? _logo;
   PlatformFile? _terms;
   String? _savedCompanyId;
+  bool _hasSavedLogo = false;
+  bool _hasSavedTerms = false;
 
   @override
   void initState() {
@@ -97,6 +99,8 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
     final initial = widget.initialCompany;
     if (initial != null) {
       _savedCompanyId = initial.id;
+      _hasSavedLogo = initial.logoFileName?.isNotEmpty == true;
+      _hasSavedTerms = initial.termsFileName?.isNotEmpty == true;
       _company.text = initial.companyName;
       _address.text = initial.address;
       _phone.text = initial.phoneNumber;
@@ -204,6 +208,32 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
       final message = error is SignApiException
           ? error.message : 'Unable to save company information.';
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _removeExistingFile(String kind) async {
+    final id = _savedCompanyId;
+    if (_saving || id == null || int.tryParse(id) == null ||
+        !MobileAuthRepository.shared.isSignedIn) return;
+    setState(() => _saving = true);
+    try {
+      await RemoteCompanyRepository.shared.deleteFile(id, kind);
+      if (!mounted) return;
+      setState(() {
+        if (kind == 'logo') _hasSavedLogo = false;
+        if (kind == 'terms') _hasSavedTerms = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(kind == 'logo' ? 'Saved logo removed.' : 'Saved terms removed.')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error is SignApiException
+            ? error.message : 'Unable to remove saved file.')),
+      );
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -327,6 +357,16 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
                                 Sign2DigitalImageUpload(
                                   onChanged: (file) => _logo = file,
                                 ),
+                                if (_hasSavedLogo) ...[
+                                  const SizedBox(height: 8),
+                                  Text('Saved logo: ' + (widget.initialCompany?.logoFileName ?? 'Company logo'),
+                                    style: AppTextStyles.small),
+                                  Align(alignment: Alignment.centerRight,
+                                    child: TextButton(
+                                      onPressed: _saving ? null : () => _removeExistingFile('logo'),
+                                      child: const Text('Remove saved logo'),
+                                    )),
+                                ],
                                 const SizedBox(height: 16),
                                 _field(
                                   label: 'Address',
@@ -408,6 +448,16 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
                                 Sign2DigitalDocumentUpload(
                                   onChanged: (file) => _terms = file,
                                 ),
+                                if (_hasSavedTerms) ...[
+                                  const SizedBox(height: 8),
+                                  Text('Saved terms: ' + (widget.initialCompany?.termsFileName ?? 'Terms & Conditions'),
+                                    style: AppTextStyles.small),
+                                  Align(alignment: Alignment.centerRight,
+                                    child: TextButton(
+                                      onPressed: _saving ? null : () => _removeExistingFile('terms'),
+                                      child: const Text('Remove saved PDF'),
+                                    )),
+                                ],
                                 const SizedBox(height: 25),
                                 Sign2DigitalPrimaryButton(
                                   key: const Key('save-company-button'),

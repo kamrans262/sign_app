@@ -92,10 +92,18 @@ class ProfileBusinessInformationScreen extends StatelessWidget {
                 if (company.role == 'owner' || company.role == 'admin')
                 FilledButton(
                   key: const Key('edit-company-details'),
-                  onPressed: () => Navigator.of(context).push<void>(
-                    MaterialPageRoute<void>(builder: (_) =>
-                        CreateCompanyScreen(initialCompany: company)),
-                  ),
+                  onPressed: () async {
+                    final changed = await Navigator.of(context).push<bool>(
+                      MaterialPageRoute<bool>(builder: (_) =>
+                          CreateCompanyScreen(initialCompany: company)),
+                    );
+                    if (!context.mounted || changed != true) return;
+                    Navigator.of(context).pushReplacement<void, void>(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const ProfileBusinessInformationScreen(),
+                      ),
+                    );
+                  },
                   child: const Text('Edit Business Information'),
                 ),
                 const SizedBox(height: 10),
