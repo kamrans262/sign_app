@@ -25,6 +25,14 @@ QuoteReviewDraft _quote() => QuoteReviewDraft(
   date: DateTime(2026, 8, 23),
 );
 
+// Dashboard has intentional continually active animations/async widgets.
+// Bounded frames test stable navigation without waiting for all animation
+// futures to quiesce, which pumpAndSettle cannot guarantee.
+Future<void> _pumpUi(WidgetTester tester) async {
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 320));
+}
+
 void main() {
   setUp(QuoteTrackingHomeSession.clear);
   tearDown(QuoteTrackingHomeSession.clear);
@@ -33,9 +41,9 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(const MaterialApp(home: ClientsScreen()));
-    await tester.pumpAndSettle();
+    await _pumpUi(tester);
     await tester.tap(find.byKey(const Key('dashboard-tab-0')));
-    await tester.pumpAndSettle();
+    await _pumpUi(tester);
     expect(find.byKey(const Key('home-dashboard-scroll')), findsOneWidget);
     expect(find.byKey(const Key('home-demo-disclaimer')), findsNothing);
     expect(find.text('Overview'), findsOneWidget);
@@ -43,9 +51,9 @@ void main() {
     expect(find.byKey(const Key('home-open-signature-tracking')), findsNothing);
     await tester.ensureVisible(
       find.byKey(const Key('home-card-documents')));
-    await tester.pumpAndSettle();
+    await _pumpUi(tester);
     await tester.tap(find.byKey(const Key('home-card-documents')));
-    await tester.pumpAndSettle();
+    await _pumpUi(tester);
     expect(find.byKey(const Key('documents-scroll')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
@@ -55,9 +63,9 @@ void main() {
   ) async {
     QuoteTrackingHomeSession.remember(_quote());
     await tester.pumpWidget(const MaterialApp(home: ClientsScreen()));
-    await tester.pumpAndSettle();
+    await _pumpUi(tester);
     await tester.tap(find.byKey(const Key('dashboard-tab-0')));
-    await tester.pumpAndSettle();
+    await _pumpUi(tester);
     expect(find.byKey(const Key('home-dashboard-scroll')), findsOneWidget);
     final track = find.byKey(const Key('home-open-signature-tracking'));
     await tester.scrollUntilVisible(
@@ -68,9 +76,9 @@ void main() {
       ).first,
       maxScrolls: 20,
     );
-    await tester.pumpAndSettle();
+    await _pumpUi(tester);
     await tester.tap(track);
-    await tester.pumpAndSettle();
+    await _pumpUi(tester);
     expect(find.text('Viewed by Customer'), findsOneWidget);
     expect(find.text('Jean Dupont'), findsOneWidget);
     expect(
@@ -78,10 +86,10 @@ void main() {
       findsOneWidget,
     );
     await tester.tap(find.byKey(const Key('dashboard-tab-1')));
-    await tester.pumpAndSettle();
+    await _pumpUi(tester);
     expect(find.text('Active (12)'), findsOneWidget);
     await tester.tap(find.byKey(const Key('dashboard-tab-0')));
-    await tester.pumpAndSettle();
+    await _pumpUi(tester);
     expect(find.byKey(const Key('home-dashboard-scroll')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
