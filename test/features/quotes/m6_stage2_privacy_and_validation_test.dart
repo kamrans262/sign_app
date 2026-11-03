@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -127,6 +128,57 @@ void main() {
       repo.saveDraft(demo),
       throwsA(isA<SignApiException>()),
     );
+  });
+
+  test('approved email with Attach PDF sends the real PDF multipart',
+      () async {
+    var requests=0;
+    final repository=RemoteQuoteRepository(
+      api:fakeClient(MockClient((request) async {
+        requests++;
+        expect(request.method,'POST');
+        expect(request.url.path,'/api/v1/quotes/91/share-email-pdf');
+        expect(request.headers['Authorization'],'Bearer test-token');
+        expect(request.headers['X-Company-Id'],'5');
+        expect(request.headers['content-type']?.contains('multipart/form-data'),
+            isTrue);
+        return http.Response(jsonEncode({'data':{
+          'delivered':true,'pdf_attached':true,
+        }}),200);
+      })),
+    );
+    final approved=sampleQuote();
+    approved.serverId=91;
+    approved.approvedLocally=true;
+    approved.serverStatus='approved';
+    final pdf=Uint8List.fromList(utf8.encode(
+      '%PDF-1.7\n1 0 obj\n<</Type/Catalog>>\nendobj\n%%EOF\n'));
+    final result=await repository.shareEmailWithPdf(approved,
+      email:'customer@example.test',
+      message:'Please check the attached quote',
+      pdfBytes:pdf,
+    );
+    expect(result['delivered'],true);
+    expect(result['pdf_attached'],true);
+    expect(requests,1);
+  });
+
+  test('invalid or oversized PDF is rejected before the email network call',
+      () async {
+    final repo=RemoteQuoteRepository(api:fakeClient(MockClient((_) async {
+      throw StateError('Must not send invalid PDF to server');
+    })));
+    final quote=sampleQuote();
+    quote.serverId=91;
+    quote.approvedLocally=true;
+    await expectLater(repo.shareEmailWithPdf(quote,
+      email:'customer@example.test',message:'',
+      pdfBytes:Uint8List.fromList([1,2,3,4,5,6,7,8,9]),
+    ),throwsA(isA<SignApiException>()));
+    await expectLater(repo.shareEmailWithPdf(quote,
+      email:'customer@example.test',message:'',
+      pdfBytes:Uint8List(5*1024*1024+1),
+    ),throwsA(isA<SignApiException>()));
   });
 
   test('company switch stops save before presenting foreign quote response',
