@@ -78,12 +78,12 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
   Future<List<DocumentRecord>> _liveDocuments() async {
     final signed=await RemoteSignedDocumentRepository.shared.list(jobId:widget.jobId);
     _signedByServerId={for(final item in signed)item.id:item};
-    final originalQuotes=phase4DocumentRecords(
+    final quotes=phase4DocumentRecords(
       savedQuotes:QuoteReviewSessionStore.savedDrafts,
       signedFiles:const [],
     );
     return [
-      ...originalQuotes,
+      ...quotes,
       for(final file in signed)
         DocumentRecord(
           id:'m8-signed-${file.id}',
@@ -235,177 +235,9 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
           document: record,
           requestAddendumSignature: widget.requestAddendumSignature,
           loadSignedPdf: (signedRecord) async {
-            final match=RegExp(r'^m8-signed-(\d+)
-            final exact = files.where(
-              (file) => file.documentId == signedRecord.id,
-            ).toList();
-            if (exact.length == 1) {
-              return SignedQuoteFileStore.shared.read(exact.single);
-            }
-            // A verified signed quote and its original draft have different
-            // document IDs. Never match a signed PDF by customer/name alone.
-            final quote = signedRecord.quote;
-            if (quote == null || quote.jobId == null ||
-                !signedRecord.verifiedSignedPdfAvailable) {
-              return null;
-            }
-            final linked = files.where((file) =>
-                file.quoteId == quote.id && file.jobId == quote.jobId).toList()
-              ..sort((a, b) => b.signedAt.compareTo(a.signedAt));
-            if (linked.isEmpty) return null;
-            return SignedQuoteFileStore.shared.read(linked.first);
-          },
-        ),
-      ));
-    }
-    if (mounted) { await _load(); }
-  }
-
-  @override
-  void dispose() {
-    _search.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final visible = browseDocuments(
-      _documents,
-      mainTab: _category,
-      type: _advancedType,
-      order: _sort,
-      query: _search.text,
-    ).where((record) {
-      final jobId = widget.jobId;
-      if (jobId == null) return true;
-      if (record.quote?.jobId == jobId) return true;
-      if (record.id.startsWith('m8-signed-') && record.project == jobId) {
-        return true;
-      }
-      final draftId = record.addendumDraftId;
-      return draftId != null &&
-          AddendumDraftSession.load(draftId)?.linkedJobId == jobId;
-    }).toList();
-
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 720),
-        child: CustomScrollView(
-          key: const Key('documents-scroll'),
-          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          slivers: [
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-              sliver: SliverToBoxAdapter(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Sign2DigitalSearchField(
-                      controller: _search,
-                      hintText: 'Search documents',
-                      onChanged: (_) => setState(() {}),
-                      onTrailingTap: _openDocumentFilters,
-                    ),
-                    const SizedBox(height: 20),
-                    Stack(
-                      children: [
-                        const Positioned(
-                          left: 0, right: 0, bottom: 0,
-                          child: Divider(height: 1, thickness: 1,
-                            color: AppColors.lightBorder),
-                        ),
-                        Sign2DigitalDetailsTabs(
-                          labels: _tabs,
-                          selectedIndex: _category == null
-                              ? 0 : _category!.index + 1,
-                          onSelected: _selectCategory,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            if (_loading)
-              const SliverFillRemaining(
-                hasScrollBody: false,
-                child: Center(
-                  child: CircularProgressIndicator(
-                    key: Key('documents-loading'),
-                  ),
-                ),
-              )
-            else if (_error != null)
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: Center(
-                  child: TextButton(
-                    key: const Key('documents-retry'),
-                    onPressed: _load,
-                    child: Text('$_error. Tap to retry.'),
-                  ),
-                ),
-              )
-            else if (visible.isEmpty)
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Text(
-                      _search.text.trim().isNotEmpty
-                          ? 'No documents match your search'
-                          : _category == null &&
-                              _advancedType == DocumentBrowseType.all
-                              ? 'No documents yet'
-                              : 'No documents in this category',
-                      key: const Key('documents-empty'),
-                      style: const TextStyle(
-                        fontFamily: 'Inter', fontSize: 14,
-                        color: AppColors.secondaryText,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              )
-            else
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                sliver: SliverList.builder(
-                  itemCount: visible.length,
-                  itemBuilder: (context, index) {
-                    final record = visible[index];
-                    return Padding(
-                      key: ValueKey(record.id),
-                      padding: EdgeInsets.only(
-                        bottom: index == visible.length - 1 ? 0 : 20,
-                      ),
-                      child: Sign2DigitalQuoteSummaryCard(
-                        key: Key('document-card-${record.id}'),
-                        quoteNumber: record.number,
-                        titleOverride: record.title,
-                        projectName: record.project,
-                        customerName: record.customer,
-                        documentDate: record.timestamp,
-                        status: record.status,
-                        subtitleGap: 5,
-                        listStyle: true,
-                        onTap: () => _openDocument(record),
-                      ),
-                    );
-                  },
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-).firstMatch(signedRecord.id);
-            if(match!=null) {
-              final id=int.tryParse(match.group(1) ?? '');
+            if (signedRecord.id.startsWith('m8-signed-')) {
+              final id=int.tryParse(
+                signedRecord.id.substring('m8-signed-'.length));
               final verified=id==null ? null : _signedByServerId[id];
               if(verified==null) return null;
               return RemoteSignedDocumentRepository.shared.download(verified);
@@ -454,6 +286,9 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
       final jobId = widget.jobId;
       if (jobId == null) return true;
       if (record.quote?.jobId == jobId) return true;
+      if (record.id.startsWith('m8-signed-') && record.project == jobId) {
+        return true;
+      }
       final draftId = record.addendumDraftId;
       return draftId != null &&
           AddendumDraftSession.load(draftId)?.linkedJobId == jobId;
