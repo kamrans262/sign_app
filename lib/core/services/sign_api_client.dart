@@ -108,7 +108,10 @@ class SignApiClient {
 
   /// Fetch authenticated, private PDF bytes without treating them as JSON.
   /// Used for approved quotes so Download/Send uses the frozen document.
-  Future<Uint8List> getPdf(String endpoint, {bool companyScoped = false}) async {
+  Future<Uint8List> getPdf(String endpoint, {
+    bool companyScoped = false,
+    int maxBytes = 5 * 1024 * 1024,
+  }) async {
     final request = http.Request('GET', _uri(endpoint))
       ..followRedirects = false;
     request.headers.addAll(await _headers(
@@ -127,7 +130,7 @@ class SignApiClient {
       final data = response.bodyBytes;
       if (!(response.headers['content-type'] ?? '')
               .toLowerCase().startsWith('application/pdf') ||
-          data.length < 12 || data.length > 5 * 1024 * 1024 ||
+          data.length < 12 || data.length > maxBytes ||
           data[0] != 37 || data[1] != 80 || data[2] != 68 ||
           data[3] != 70 || data[4] != 45 ||
           !latin1.decode(data.sublist(data.length > 4096
