@@ -94,8 +94,8 @@ class _SignatureRequestScreenState extends State<SignatureRequestScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Request customer signature?'),
-        content: Text('Create a secure signing link for ' + _quote.clientName +
-            '? You can copy it and share it with the customer.'),
+        content: Text('Create a secure signing link for ${_quote.clientName}? '
+            'You can copy it and share it with the customer.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false),
               child: const Text('Cancel')),
@@ -188,8 +188,8 @@ class _SignatureRequestScreenState extends State<SignatureRequestScreen> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Resend signature request?'),
-        content: Text('Email another signing request to ' + _quote.clientName +
-            '? The previous link will stop working.'),
+        content: Text('Email another signing request to ${_quote.clientName}? '
+            'The previous link will stop working.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(dialogContext, false),
               child: const Text('Cancel')),
