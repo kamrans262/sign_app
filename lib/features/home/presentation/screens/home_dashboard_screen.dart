@@ -124,6 +124,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   List<CompanyProfile> _companies = const [];
   String? _companyId;
   bool _loading = true;
+  int _reloadVersion = 0;
 
   CompanyRepository get _companyRepo => widget.companyRepository ??
       (MobileAuthRepository.shared.isSignedIn
@@ -156,11 +157,25 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   }
 
   Future<void> _reload() async {
+    final version = ++_reloadVersion;
     if (mounted) setState(() => _loading = true);
-    List<CompanyProfile> companies = const [];
+    // A temporary network failure must never discard the last verified
+    // company list or silently select an unrelated tenant.
+    List<CompanyProfile> companies = _companies;
+    bool loadedCompanies = false;
     int? quotes, invoices, documents, reminders;
     double? expenses;
-    try { companies = await _companyRepo.list(); } catch (_) {}
+    try {
+      companies = await _companyRepo.list();
+      loadedCompanies = true;
+    } catch (_) {
+      if (mounted && MobileAuthRepository.shared.isSignedIn &&
+          widget.companyRepository == null) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Unable to refresh companies. Check your connection and retry.'),
+        ));
+      }
+    }
     try {
       final records = await widget.documentRepository.listDocuments();
       quotes = HomeOverview.countPendingQuotes(records);
@@ -179,22 +194,24 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
         await widget.expenseRepository.listExpenses());
     } catch (_) {}
     if (MobileAuthRepository.shared.isSignedIn &&
-        widget.companyRepository == null && companies.isNotEmpty &&
-        ActiveCompanySession.companyId == null) {
+        widget.companyRepository == null && loadedCompanies &&
+        companies.isNotEmpty && ActiveCompanySession.companyId == null) {
       try {
         await RemoteCompanyRepository.shared.switchTo(companies.first.id);
       } catch (_) {
         // Company-scoped APIs still require server-approved context.
       }
     }
-    if (!mounted) return;
+    if (!mounted || version != _reloadVersion) return;
     setState(() {
       _companies = companies;
       if (MobileAuthRepository.shared.isSignedIn &&
           widget.companyRepository == null) {
         final active = ActiveCompanySession.companyId?.toString();
+        // Do not display a "selected" tenant without a successful server
+        // switch. A server-side revocation makes the old selection invalid.
         _companyId = companies.any((item) => item.id == active)
-            ? active : (companies.isEmpty ? null : companies.first.id);
+            ? active : null;
       } else if (!companies.any((item) => item.id == _companyId)) {
         _companyId = null;
         for (final item in companies) {
@@ -215,7 +232,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
       );
       _loading = false;
     });
-    widget.onCompanySelected?.call(_companyId);
+    if (loadedCompanies) widget.onCompanySelected?.call(_companyId);
   }
 
   Future<void> _switchCompany() async {
@@ -255,7 +272,12 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
       }
     }
     if (!mounted) return;
-    setState(() => _companyId = next);
+    // An earlier in-flight refresh must not undo this verified switch.
+    ++_reloadVersion;
+    setState(() {
+      _companyId = next;
+      _loading = false;
+    });
     widget.onCompanySelected?.call(next);
   }
 
