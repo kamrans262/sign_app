@@ -224,7 +224,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     final names = [
       for (final company in companies)
         companies.where((item) => item.companyName == company.companyName).length > 1
-            ? company.companyName + ' (#' + company.id + ')'
+            ? '${company.companyName} (#${company.id})'
             : company.companyName,
     ];
     final selectedIndex = companies.indexWhere((item) => item.id == _companyId);

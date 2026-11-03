@@ -112,7 +112,7 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
             children: [
               for (final permission in permissionOptions)
                 CheckboxListTile(
-                  key: Key('team-permission-' + permission),
+                  key: Key('team-permission-$permission'),
                   title: Text(permission.replaceAll('.', ' · '),
                     style: const TextStyle(fontFamily: 'Inter', fontSize: 14,
                       color: AppColors.dark)),
@@ -162,6 +162,18 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
     } finally {
       if (mounted) setState(() => _saving = false);
     }
+  }
+
+  Future<void> _memberActions(CompanyMember member) async {
+    final choice = await Sign2DigitalSelectionSheet.show(
+      context,
+      title: 'Member actions',
+      options: const ['Change Role', 'Remove'],
+      icon: Icons.manage_accounts_outlined,
+    );
+    if (!mounted) return;
+    if (choice == 'Change Role') await _changeRole(member);
+    if (choice == 'Remove') await _remove(member);
   }
 
   Future<void> _changeRole(CompanyMember member) async {
@@ -263,11 +275,11 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
                   const SizedBox(height: 12),
                   OutlinedButton.icon(
                     onPressed: _chooseRole, icon: const Icon(Icons.people_outline),
-                    label: Text('Role: ' + _role)),
+                    label: Text('Role: $_role')),
                   OutlinedButton.icon(
                     onPressed: _choosePermissions,
                     icon: const Icon(Icons.shield_outlined),
-                    label: Text('Permissions (' + _permissions.length.toString() + ')')),
+                    label: Text('Permissions (${_permissions.length})')),
                   const SizedBox(height: 15),
                   FilledButton(
                     key: const Key('company-send-invite'),
@@ -291,19 +303,13 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
                   ListTile(
                     contentPadding: EdgeInsets.zero,
                     title: Text(member.name),
-                    subtitle: Text(member.email + ' · ' + member.role),
+                    subtitle: Text('${member.email} · ${member.role}'),
                     trailing: _canEdit && member.role != 'owner' &&
                         (_isOwner || member.role == 'member')
-                        ? PopupMenuButton<String>(
-                            key: Key('member-actions-' + member.id.toString()),
-                            onSelected: (action) {
-                              if (action == 'role') _changeRole(member);
-                              if (action == 'remove') _remove(member);
-                            },
-                            itemBuilder: (context) => const [
-                              PopupMenuItem(value: 'role', child: Text('Change Role')),
-                              PopupMenuItem(value: 'remove', child: Text('Remove')),
-                            ],
+                        ? IconButton(
+                            key: Key('member-actions-${member.id}'),
+                            icon: const Icon(Icons.more_vert_rounded),
+                            onPressed: () => _memberActions(member),
                           )
                         : null,
                   ),
@@ -325,7 +331,7 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
                     ListTile(
                       contentPadding: EdgeInsets.zero,
                       title: Text(invitation.email),
-                      subtitle: Text(invitation.role + ' · ' + invitation.status),
+                      subtitle: Text('${invitation.role} · ${invitation.status}'),
                       trailing: invitation.status == 'pending'
                           ? IconButton(
                               icon: const Icon(Icons.cancel_outlined,
