@@ -108,7 +108,9 @@ class _ClientsScreenState extends State<ClientsScreen> {
     try {
       final jobs = await RemoteJobRepository.shared.listJobs();
       if (!mounted || version != _jobFetchVersion ||
-          ActiveCompanySession.companyId != companyId) return;
+          ActiveCompanySession.companyId != companyId) {
+        return;
+      }
       setState(() {
         _remoteJobs = jobs;
         _jobsLoading = false;
@@ -118,7 +120,9 @@ class _ClientsScreenState extends State<ClientsScreen> {
       });
     } catch (error) {
       if (!mounted || version != _jobFetchVersion ||
-          ActiveCompanySession.companyId != companyId) return;
+          ActiveCompanySession.companyId != companyId) {
+        return;
+      }
       setState(() {
         // Never keep another company's jobs on a failed tenant refresh.
         _remoteJobs = const [];
