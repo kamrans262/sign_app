@@ -36,6 +36,16 @@ String quoteMoney(int? minorUnits, String currency) {
   return '$symbol${buffer.toString()}.${(minorUnits % 100).toString().padLeft(2, '0')}';
 }
 
+/// Format percentages stored as basis points without rounding away
+/// fractional VAT/deposit rates (e.g. 810 => "8.1", 825 => "8.25").
+String quotePercentText(int basisPoints) {
+  final whole = basisPoints ~/ 100;
+  final fraction = (basisPoints % 100).toString().padLeft(2, '0');
+  if (basisPoints % 100 == 0) return '$whole';
+  if (basisPoints % 10 == 0) return '$whole.${fraction[0]}';
+  return '$whole.$fraction';
+}
+
 int percentOfMinor(int minorUnits, int basisPoints) =>
     (minorUnits * basisPoints + 5000) ~/ 10000;
 
