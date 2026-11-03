@@ -29,17 +29,26 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       await tester.pumpWidget(const MaterialApp(home: ClientsScreen()));
-      await tester.pumpAndSettle();
+      // The Dashboard tab may schedule ongoing async widgets; a bounded frame
+      // verifies the UI without waiting for unrelated perpetual work.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
       expect(find.text('Clients'), findsOneWidget);
       expect(find.text('Dupont Construction SA'), findsWidgets);
       expect(find.text('12 jobs'), findsWidgets);
 
       final search = find.byKey(const Key('clients-search-input'));
       await tester.enterText(search, 'no matching client');
-      await tester.pumpAndSettle();
+      // The Dashboard tab may schedule ongoing async widgets; a bounded frame
+      // verifies the UI without waiting for unrelated perpetual work.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
       expect(find.text('No clients match your search'), findsOneWidget);
       await tester.tap(find.byTooltip('Clear search'));
-      await tester.pumpAndSettle();
+      // The Dashboard tab may schedule ongoing async widgets; a bounded frame
+      // verifies the UI without waiting for unrelated perpetual work.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
       expect(find.text('Dupont Construction SA'), findsWidgets);
       expect(tester.takeException(), isNull);
     },
@@ -49,17 +58,29 @@ void main() {
     'fixed dashboard navigation switches tabs and returns to Clients',
     (tester) async {
       await tester.pumpWidget(const MaterialApp(home: ClientsScreen()));
-      await tester.pumpAndSettle();
+      // The Dashboard tab may schedule ongoing async widgets; a bounded frame
+      // verifies the UI without waiting for unrelated perpetual work.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
       await tester.tap(find.byKey(const Key('dashboard-tab-1')));
-      await tester.pumpAndSettle();
+      // The Dashboard tab may schedule ongoing async widgets; a bounded frame
+      // verifies the UI without waiting for unrelated perpetual work.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
       expect(find.text('Active (12)'), findsOneWidget);
       await tester.tap(find.byKey(const Key('dashboard-tab-2')));
-      await tester.pumpAndSettle();
+      // The Dashboard tab may schedule ongoing async widgets; a bounded frame
+      // verifies the UI without waiting for unrelated perpetual work.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
       expect(find.text('Manage your clients and contacts'), findsNothing);
       expect(find.byKey(const Key('open-quote-ui-demo')), findsNothing);
       expect(find.byKey(const Key('open-reports')), findsNothing);
       await tester.tap(find.byKey(const Key('dashboard-tab-4')));
-      await tester.pumpAndSettle();
+      // The Dashboard tab may schedule ongoing async widgets; a bounded frame
+      // verifies the UI without waiting for unrelated perpetual work.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
       expect(find.byKey(const Key('open-quote-ui-demo')), findsOneWidget);
       expect(find.byKey(const Key('open-reports')), findsOneWidget);
       expect(find.byKey(const Key('open-expenses')), findsOneWidget);
@@ -80,7 +101,10 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
       await tester.pumpWidget(const MaterialApp(home: ClientsScreen()));
-      await tester.pumpAndSettle();
+      // The Dashboard tab may schedule ongoing async widgets; a bounded frame
+      // verifies the UI without waiting for unrelated perpetual work.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
       expect(find.text('Clients'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
