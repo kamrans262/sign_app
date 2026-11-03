@@ -172,6 +172,7 @@ class QuoteReviewDraft {
     this.isDemo = false,
     this.approvedLocally = false,
     this.serverId,
+    this.serverRevision,
     this.sourceMethod = 'manual',
     this.serverStatus = 'draft',
   });
@@ -198,6 +199,7 @@ class QuoteReviewDraft {
   bool approvedLocally;
   /// Server persistence ID, independent of existing Figma route ID.
   int? serverId;
+  int? serverRevision;
   String sourceMethod;
   String serverStatus;
 
@@ -359,7 +361,8 @@ class QuoteReviewDraft {
     billingAddress: billingAddress, clientEmail: clientEmail,
     clientPhone: clientPhone, validUntil: validUntil, payment: payment?.copy(),
     isDemo: isDemo, approvedLocally: approvedLocally,
-    serverId: serverId, sourceMethod: sourceMethod,
+    serverId: serverId, serverRevision: serverRevision,
+    sourceMethod: sourceMethod,
     serverStatus: serverStatus,
   );
 }

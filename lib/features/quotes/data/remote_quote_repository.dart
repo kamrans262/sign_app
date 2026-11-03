@@ -54,6 +54,8 @@ class RemoteQuoteRepository {
     'deposit_basis_points':q.depositBasisPoints,
     'terms':q.terms,
     'source_method':q.sourceMethod,
+    if(q.serverId != null && q.serverRevision != null)
+      'expected_revision':q.serverRevision,
     'payment_details':q.payment == null ? null : {
       'iban':q.payment!.iban,
       'accountHolder':q.payment!.accountHolder,
@@ -89,6 +91,9 @@ class RemoteQuoteRepository {
     }
     final copy=draft.copy();
     copy.serverId=_id(raw['id']);
+    if (_id(raw['revision']) > 0) {
+      copy.serverRevision=_id(raw['revision']);
+    }
     copy.quoteNumber=(raw['quote_number'] ?? raw['reference_number'] ?? '').toString();
     copy.serverStatus=(raw['status'] ?? 'draft').toString();
     copy.approvedLocally=
@@ -188,6 +193,8 @@ class RemoteQuoteRepository {
         records.add(QuoteReviewDraft(
           id:'server-quote-${item['id']}',
           serverId:_id(item['id']),
+          serverRevision:_id(item['revision']) > 0
+              ? _id(item['revision']) : null,
           clientId:item['client_id']?.toString(),
           jobId:item['job_id']?.toString(),
           companyId:'$company',
