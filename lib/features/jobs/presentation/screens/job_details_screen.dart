@@ -123,6 +123,15 @@ class JobDetailsScreen extends StatelessWidget {
       return;
     }
     if (section == JobSection.documents) {
+      // Client-side signed PDF metadata has no company authorization;
+      // never expose it to authenticated jobs until M7 document persistence.
+      if (onManageJob != null) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Documents will be connected to this job soon.'),
+        ));
+        return;
+      }
       // Preserve the existing card layout; only show signed PDFs when a
       // verified document has actually been indexed under this job ID.
       try {

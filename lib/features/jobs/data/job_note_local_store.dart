@@ -1,3 +1,4 @@
+import '../../../core/services/active_company_session.dart';
 import '../domain/job_note_model.dart';
 import 'demo_job_notes.dart';
 
@@ -8,9 +9,16 @@ class JobNoteLocalStore {
   final bool includeDemoNotes;
   final Map<String, List<JobNoteModel>> _byJob = {};
 
+  String _key(String jobId) {
+    final company = ActiveCompanySession.companyId;
+    return company != null && int.tryParse(jobId) != null
+        ? 'company:$company/job:$jobId' : jobId;
+  }
+
   List<JobNoteModel> notesFor(String jobId) => List.unmodifiable(
-    _byJob.putIfAbsent(jobId, () => [
-      if (includeDemoNotes) ...DemoJobNotes.forJob(jobId),
+    _byJob.putIfAbsent(_key(jobId), () => [
+      if (includeDemoNotes && int.tryParse(jobId) == null)
+        ...DemoJobNotes.forJob(jobId),
     ]),
   );
 
