@@ -39,6 +39,16 @@ String quoteMoney(int? minorUnits, String currency) {
 int percentOfMinor(int minorUnits, int basisPoints) =>
     (minorUnits * basisPoints + 5000) ~/ 10000;
 
+/// Display integer basis points as a human-readable percentage without
+/// rounding away fractional VAT or deposit rates.
+String quotePercentLabel(int basisPoints) {
+  final value = (basisPoints / 100).toStringAsFixed(2);
+  if (value.endsWith('00')) return value.substring(0, value.length - 3);
+  if (value.endsWith('0')) return value.substring(0, value.length - 1);
+  return value;
+}
+
+
 class QuoteReviewWorkItem {
   QuoteReviewWorkItem({
     required this.id,
