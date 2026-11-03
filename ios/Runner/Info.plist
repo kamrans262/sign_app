@@ -71,6 +71,8 @@
 
 	<key>NSCameraUsageDescription</key>
 	<string>Capture job progress photos using the camera.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>Read the contacts you select for review before importing them into your Sign2Digital company.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Choose job photos from your photo library.</string>
 </dict>
