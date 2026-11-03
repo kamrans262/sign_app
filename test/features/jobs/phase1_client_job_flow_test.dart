@@ -30,18 +30,25 @@ Future<void> _completeJobForm(WidgetTester tester) async {
   for (final key in ['job-start-date', 'job-end-date']) {
     final field = find.byKey(Key(key));
     await tester.ensureVisible(field);
-    await tester.pumpAndSettle();
+    await pumpUi(tester);
     await tester.tap(field);
-    await tester.pumpAndSettle();
+    await pumpUi(tester);
     expect(find.byType(DatePickerDialog), findsOneWidget);
     await tester.tap(find.text('OK').last);
-    await tester.pumpAndSettle();
+    await pumpUi(tester);
   }
   final create = find.byKey(const Key('create-new-job-button'));
   await tester.ensureVisible(create);
-  await tester.pumpAndSettle();
+  await pumpUi(tester);
   await tester.tap(create);
-  await tester.pumpAndSettle();
+  await pumpUi(tester);
+}
+
+// The existing Home dashboard has unrelated ongoing asynchronous widgets.
+ // Use bounded frames, as the M4 client tests do, instead of pumpAndSettle.
+Future<void> pumpUi(WidgetTester tester) async {
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 300));
 }
 
 void main() {
@@ -81,7 +88,7 @@ void main() {
         onJobTap: (value) => selected = value,
       ),
     )));
-    await tester.pumpAndSettle();
+    await pumpUi(tester);
     expect(find.text('Active (13)'), findsOneWidget);
     expect(find.text('New Roof Repair'), findsOneWidget);
     expect(find.byType(Sign2DigitalJobCard), findsWidgets);
@@ -100,29 +107,29 @@ void main() {
     await tester.pumpWidget(const MaterialApp(
       home: ClientsScreen(initialTab: 2),
     ));
-    await tester.pumpAndSettle();
+    await pumpUi(tester);
     await tester.tap(find.byType(Sign2DigitalClientCard).first);
-    await tester.pumpAndSettle();
+    await pumpUi(tester);
     expect(find.byType(ClientDetailsScreen), findsOneWidget);
     await tester.ensureVisible(find.text('New Job'));
-    await tester.pumpAndSettle();
+    await pumpUi(tester);
     await tester.tap(find.text('New Job'));
-    await tester.pumpAndSettle();
+    await pumpUi(tester);
     expect(find.byKey(const Key('create-job-scroll')), findsOneWidget);
     await _completeJobForm(tester);
 
     expect(find.byType(JobDetailsScreen), findsOneWidget);
     expect(find.text('New Roof Repair'), findsWidgets);
     await tester.pageBack();
-    await tester.pumpAndSettle();
+    await pumpUi(tester);
     expect(find.byType(ClientDetailsScreen), findsOneWidget);
     expect(find.text('Jobs (5)'), findsOneWidget);
     expect(find.text('New Roof Repair'), findsOneWidget);
 
     await tester.pageBack();
-    await tester.pumpAndSettle();
+    await pumpUi(tester);
     await tester.tap(find.byKey(const Key('dashboard-tab-1')));
-    await tester.pumpAndSettle();
+    await pumpUi(tester);
     expect(find.text('Active (13)'), findsOneWidget);
     expect(find.text('New Roof Repair'), findsOneWidget);
     expect(tester.takeException(), isNull);

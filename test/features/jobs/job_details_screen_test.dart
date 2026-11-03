@@ -5,6 +5,13 @@ import 'package:sign2digital/features/jobs/data/mock_jobs.dart';
 import 'package:sign2digital/features/jobs/domain/job_details_model.dart';
 import 'package:sign2digital/features/jobs/presentation/screens/job_details_screen.dart';
 
+// The existing Home dashboard has unrelated ongoing asynchronous widgets.
+ // Use bounded frames, as the M4 client tests do, instead of pumpAndSettle.
+Future<void> pumpUi(WidgetTester tester) async {
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 300));
+}
+
 void main() {
   final job = MockJobsData.jobs.first;
 
@@ -27,13 +34,13 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(const MaterialApp(home: ClientsScreen()));
-    await tester.pumpAndSettle();
+    await pumpUi(tester);
     await tester.tap(find.byKey(const Key('dashboard-tab-1')));
-    await tester.pumpAndSettle();
+    await pumpUi(tester);
     await tester.tap(find.byKey(const Key('details-tab-1')));
-    await tester.pumpAndSettle();
+    await pumpUi(tester);
     await tester.tap(find.byKey(const Key('job-image-demo-completed-1')));
-    await tester.pumpAndSettle();
+    await pumpUi(tester);
     expect(find.byType(JobDetailsScreen), findsOneWidget);
     expect(find.text('Completed'), findsWidgets);
     expect(find.byKey(const Key('dashboard-tab-1')), findsOneWidget);
@@ -42,7 +49,7 @@ void main() {
     // This route owns its own bar; there are no two stacked dashboard bars.
     expect(find.byKey(const Key('dashboard-tab-0')), findsOneWidget);
     await tester.tap(find.byIcon(Icons.arrow_back_ios_new_rounded));
-    await tester.pumpAndSettle();
+    await pumpUi(tester);
     expect(find.byType(JobDetailsScreen), findsNothing);
     expect(find.text('Completed (8)'), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -76,7 +83,7 @@ void main() {
             )
             .first,
       );
-      await tester.pumpAndSettle();
+      await pumpUi(tester);
       await tester.tap(target);
       expect(tapped, section);
     }
@@ -98,7 +105,7 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
       await tester.pumpWidget(MaterialApp(home: JobDetailsScreen(job: job)));
-      await tester.pumpAndSettle();
+      await pumpUi(tester);
       expect(find.text('Job Progress'), findsOneWidget);
       expect(find.byKey(const Key('dashboard-tab-1')), findsOneWidget);
       expect(tester.takeException(), isNull);
@@ -106,7 +113,7 @@ void main() {
         find.byKey(const Key('job-details-scroll')),
         const Offset(0, -2000),
       );
-      await tester.pumpAndSettle();
+      await pumpUi(tester);
       expect(find.byKey(const Key('job-section-invoices')), findsOneWidget);
       expect(find.byKey(const Key('dashboard-tab-1')), findsOneWidget);
       expect(tester.takeException(), isNull);

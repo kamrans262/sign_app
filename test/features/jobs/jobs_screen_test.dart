@@ -7,6 +7,13 @@ import 'package:sign2digital/core/widgets/sign2digital_search_field.dart';
 import 'package:sign2digital/features/jobs/presentation/widgets/sign2digital_job_card.dart';
 import 'package:sign2digital/features/jobs/presentation/widgets/sign2digital_job_progress_indicator.dart';
 
+// The existing Home dashboard has unrelated ongoing asynchronous widgets.
+ // Use bounded frames, as the M4 client tests do, instead of pumpAndSettle.
+Future<void> pumpUi(WidgetTester tester) async {
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 300));
+}
+
 void main() {
   test('demo category counts and combined search are coherent', () {
     expect(MockJobsData.count(JobCategory.active), 12);
@@ -36,9 +43,9 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     await tester.pumpWidget(const MaterialApp(home: ClientsScreen()));
-    await tester.pumpAndSettle();
+    await pumpUi(tester);
     await tester.tap(find.byKey(const Key('dashboard-tab-1')));
-    await tester.pumpAndSettle();
+    await pumpUi(tester);
     // The bottom navigation retains the Jobs label, but the content no
     // longer repeats its heading or descriptive text above the search field.
     final jobsContent = find.byKey(const Key('jobs-scroll'));
@@ -62,7 +69,7 @@ void main() {
     expect(find.byKey(const Key('create-job-button')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('details-tab-1')));
-    await tester.pumpAndSettle();
+    await pumpUi(tester);
     final completed = tester.widgetList<Sign2DigitalJobCard>(
       find.byType(Sign2DigitalJobCard),
     );
@@ -73,12 +80,12 @@ void main() {
     );
 
     await tester.enterText(find.byType(TextField), 'not-a-matching-job');
-    await tester.pumpAndSettle();
+    await pumpUi(tester);
     expect(find.text('No jobs found'), findsOneWidget);
     expect(find.byKey(const Key('create-job-button')), findsOneWidget);
 
     await tester.enterText(find.byType(TextField), 'Terrace');
-    await tester.pumpAndSettle();
+    await pumpUi(tester);
     expect(find.byType(Sign2DigitalJobCard), findsWidgets);
     expect(tester.takeException(), isNull);
   });
@@ -131,9 +138,9 @@ void main() {
         addTearDown(tester.view.resetPhysicalSize);
         addTearDown(tester.view.resetDevicePixelRatio);
         await tester.pumpWidget(const MaterialApp(home: ClientsScreen()));
-        await tester.pumpAndSettle();
+        await pumpUi(tester);
         await tester.tap(find.byKey(const Key('dashboard-tab-1')));
-        await tester.pumpAndSettle();
+        await pumpUi(tester);
         expect(find.byKey(const Key('dashboard-tab-1')), findsOneWidget);
         expect(find.text('Jobs'), findsWidgets);
         expect(tester.takeException(), isNull);
