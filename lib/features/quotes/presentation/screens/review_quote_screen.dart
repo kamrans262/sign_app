@@ -5,6 +5,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../domain/quote_review_models.dart';
+import '../../data/remote_quote_repository.dart';
+import '../../../auth/data/mobile_auth_repository.dart';
 import '../widgets/sign2digital_quote_shadow_panel.dart';
 import '../widgets/sign2digital_quote_work_item_card.dart';
 import 'quote_preview_screen.dart';
@@ -27,6 +29,9 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
   late QuoteReviewDraft _draft;
   bool _termsExpanded = false;
   int _nextItemNumber = 0;
+  bool _savingToServer = false;
+
+  bool get _remoteMode => MobileAuthRepository.shared.isSignedIn && !_draft.isDemo;
 
   @override
   void initState() {
@@ -224,7 +229,25 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
     _updated();
   }
 
-  void _saveDraft() {
+  Future<void> _saveDraft() async {
+    if (_savingToServer) return;
+    if (_remoteMode) {
+      setState(() => _savingToServer = true);
+      try {
+        final saved = await RemoteQuoteRepository.shared.saveDraft(_draft);
+        if (!mounted) return;
+        setState(() => _draft = saved);
+        QuoteReviewSessionStore.save(_draft);
+        DocumentActivitySession.saved(_draft);
+        widget.onSaved?.call(_draft.copy());
+        _notice('Quote draft saved to your company account.');
+      } catch (error) {
+        if (mounted) _notice('Could not save quote: $error');
+      } finally {
+        if (mounted) setState(() => _savingToServer = false);
+      }
+      return;
+    }
     QuoteReviewSessionStore.save(_draft);
     DocumentActivitySession.saved(_draft);
     widget.onSaved?.call(_draft.copy());
@@ -233,7 +256,8 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
         : 'Draft saved in this app session only (not uploaded).');
   }
 
-  void _approve() {
+  Future<void> _approve() async {
+    if (_savingToServer) return;
     final issues = _draft.approvalIssues;
     if (issues.isNotEmpty) {
       _notice('Cannot approve: ${issues.first}');
@@ -243,11 +267,26 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
       _notice('Enter the applicable Terms & Conditions before approval.');
       return;
     }
-    _draft.approvedLocally = true;
+    if (_remoteMode) {
+      setState(() => _savingToServer = true);
+      try {
+        final approved = await RemoteQuoteRepository.shared.approve(_draft);
+        if (!mounted) return;
+        setState(() => _draft = approved);
+      } catch (error) {
+        if (mounted) _notice('Server approval failed: $error');
+        return;
+      } finally {
+        if (mounted) setState(() => _savingToServer = false);
+      }
+    } else {
+      _draft.approvedLocally = true;
+    }
     QuoteReviewSessionStore.save(_draft);
     DocumentActivitySession.approved(_draft);
     final approvedSnapshot = _draft.copy();
     widget.onApproved?.call(approvedSnapshot);
+    if (!mounted) return;
     Navigator.of(context).push<void>(MaterialPageRoute<void>(
       builder: (_) => QuotePreviewScreen(quote: approvedSnapshot),
     ));
