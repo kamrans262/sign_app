@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/services/sign_api_client.dart';
-import '../../../clients/presentation/screens/clients_screen.dart';
-import '../../../company/presentation/screens/create_company_screen.dart';
+import '../../../company/data/remote_company_repository.dart';
+import 'company_entry_gate.dart';
 import '../../data/mobile_auth_repository.dart';
 import 'create_account_screen.dart';
 import 'forgot_password_screen.dart';
@@ -111,12 +111,13 @@ class _MobileAuthGatewayState extends State<MobileAuthGateway> {
               ));
               return;
             }
-            // Preserve the original account onboarding destination after signup.
+            // Both fresh registrations and later logins must pass the same
+            // server-verified company gate before the Home dashboard.
             Navigator.of(context).pushAndRemoveUntil(
               MaterialPageRoute<void>(
-                builder: (_) => outcome.purpose == 'register'
-                    ? CreateCompanyScreen()
-                    : const ClientsScreen(initialTab: 0),
+                builder: (_) => CompanyEntryGate(
+                  repository: RemoteCompanyRepository(api: _auth.api),
+                ),
               ),
               (_) => false,
             );
