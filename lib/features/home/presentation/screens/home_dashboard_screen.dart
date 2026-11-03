@@ -90,6 +90,7 @@ class HomeDashboardScreen extends StatefulWidget {
     this.expenseRepository = const DemoExpenseRepository(),
     this.refreshRevision = 0,
     this.additionalActiveJobs = 0,
+    this.includeDemoJobs = true,
     this.onCompanySelected,
   });
 
@@ -102,6 +103,7 @@ class HomeDashboardScreen extends StatefulWidget {
   final ExpenseRepository expenseRepository;
   final int refreshRevision;
   final int additionalActiveJobs;
+  final bool includeDemoJobs;
   /// Reports the actual selected demo company to the authenticated shell.
   final ValueChanged<String?>? onCompanySelected;
 
@@ -223,7 +225,8 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
         _companyId ??= companies.isEmpty ? null : companies.first.id;
       }
       _overview = HomeOverview(
-        activeJobs: MockJobsData.count(JobCategory.active),
+        activeJobs: widget.includeDemoJobs
+          ? MockJobsData.count(JobCategory.active) : 0,
         pendingQuotes: quotes,
         outstandingInvoices: invoices,
         recentDocuments: documents,

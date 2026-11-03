@@ -5,6 +5,8 @@ import '../../../jobs/presentation/screens/job_details_screen.dart';
 import '../../../jobs/domain/job_model.dart';
 import '../../../jobs/domain/create_job_draft.dart';
 import '../../../jobs/data/demo_created_job_repository.dart';
+import '../../../jobs/data/remote_job_repository.dart';
+import '../../../jobs/domain/job_details_model.dart';
 import '../../../jobs/presentation/screens/create_job_screen.dart';
 import '../../../home/presentation/screens/home_dashboard_screen.dart';
 import '../../../documents/domain/document_record.dart';
@@ -34,6 +36,7 @@ import '../../data/demo_client_repository.dart';
 import '../../data/remote_client_repository.dart';
 import '../../../auth/data/mobile_auth_repository.dart';
 import '../../../../core/services/active_company_session.dart';
+import '../../../../core/services/sign_api_client.dart';
 import '../../domain/client_profile.dart';
 import '../../domain/client_draft.dart';
 import 'add_client_screen.dart';
@@ -71,14 +74,70 @@ class _ClientsScreenState extends State<ClientsScreen> {
       // The selected company is the client-data isolation boundary.
       // Discard old list state and reload from the newly selected tenant.
       _clientsRevision++;
+      _remoteJobs = const [];
+      _jobsError = null;
+      _jobsLoading = _usesRemoteJobs;
     });
+    _loadJobs();
   }
   late final ClientRepository _repository;
   final DemoCreatedJobRepository _createdJobs = DemoCreatedJobRepository();
 
-  JobModel _recordCreatedJob(CreateJobDraft draft) {
+  List<JobModel> _remoteJobs = const [];
+  String? _jobsError;
+  bool _jobsLoading = false;
+  int _jobFetchVersion = 0;
+
+  bool get _usesRemoteJobs => _repository is RemoteClientRepository;
+  List<JobModel> get _dashboardJobs =>
+      _usesRemoteJobs ? _remoteJobs : _createdJobs.jobs;
+
+  List<JobModel> _jobsForClient(String clientId) =>
+      List<JobModel>.unmodifiable(
+        _dashboardJobs.where((job) => job.clientId == clientId),
+      );
+
+  Future<void> _loadJobs() async {
+    if (!_usesRemoteJobs || !mounted) return;
+    final version = ++_jobFetchVersion;
+    final companyId = ActiveCompanySession.companyId;
+    setState(() {
+      _jobsLoading = true;
+      _jobsError = null;
+    });
+    try {
+      final jobs = await RemoteJobRepository.shared.listJobs();
+      if (!mounted || version != _jobFetchVersion ||
+          ActiveCompanySession.companyId != companyId) return;
+      setState(() {
+        _remoteJobs = jobs;
+        _jobsLoading = false;
+        _jobsError = null;
+        _homeRevision++;
+        _clientsRevision++;
+      });
+    } catch (error) {
+      if (!mounted || version != _jobFetchVersion ||
+          ActiveCompanySession.companyId != companyId) return;
+      setState(() {
+        // Never keep another company's jobs on a failed tenant refresh.
+        _remoteJobs = const [];
+        _jobsLoading = false;
+        _jobsError = error is SignApiException
+            ? error.message : 'Unable to load your jobs.';
+      });
+    }
+  }
+
+  Future<JobModel> _recordCreatedJob(CreateJobDraft draft) async {
+    if (_usesRemoteJobs) {
+      final job = await RemoteJobRepository.shared.createJob(draft);
+      await _loadJobs();
+      if (mounted) setState(() => _homeRevision++);
+      return job;
+    }
     final job = _createdJobs.create(draft);
-    setState(() => _homeRevision++);
+    if (mounted) setState(() => _homeRevision++);
     return job;
   }
 
@@ -91,6 +150,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
         (MobileAuthRepository.shared.isSignedIn
           ? RemoteClientRepository.shared
           : DemoClientRepository());
+    if (_usesRemoteJobs) _loadJobs();
   }
 
   void _showNotReady(String action) {
@@ -135,10 +195,11 @@ class _ClientsScreenState extends State<ClientsScreen> {
     );
     if (!mounted || draft == null) return;
     try {
-      final job = _recordCreatedJob(draft);
+      final job = await _recordCreatedJob(draft);
       await _openJobDetails(job);
-    } catch (_) {
-      _notifyHome('Unable to create the local job.');
+    } catch (error) {
+      _notifyHome(error is SignApiException
+          ? error.message : 'Unable to create the job.');
     }
   }
 
@@ -269,10 +330,22 @@ class _ClientsScreenState extends State<ClientsScreen> {
       // A missing contact must not prevent access to the job itself.
     }
     if (!mounted) return;
+    JobDetailsModel? realDetails;
+    if (_usesRemoteJobs) {
+      try {
+        realDetails = await RemoteJobRepository.shared.loadDetails(job);
+      } catch (error) {
+        _notifyHome(error is SignApiException
+            ? error.message : 'Unable to open the job.');
+        return;
+      }
+      if (!mounted) return;
+    }
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
         builder: (_) => JobDetailsScreen(
-          job: job,
+          job: realDetails?.job ?? job,
+          details: realDetails,
           companyId: _selectedCompanyId,
           client: linkedClient,
           onTabSelected: (index) {
@@ -291,6 +364,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
         ),
       ),
     );
+    if (mounted && _usesRemoteJobs) await _loadJobs();
   }
 
   @override
@@ -323,12 +397,19 @@ class _ClientsScreenState extends State<ClientsScreen> {
                   HomeDashboardScreen(
                     selectedQuote: currentQuote,
                     refreshRevision: _homeRevision,
-                    additionalActiveJobs: _createdJobs.jobs.length,
+                    includeDemoJobs: !_usesRemoteJobs,
+                    additionalActiveJobs: _dashboardJobs.where(
+                      (job) => job.category == JobCategory.active,
+                    ).length,
                     onCompanySelected: _selectCompany,
                     onAction: _onHomeAction,
                   ),
                   JobsScreen(
-                    createdJobs: _createdJobs.jobs,
+                    createdJobs: _dashboardJobs,
+                    includeDemoJobs: !_usesRemoteJobs,
+                    loading: _usesRemoteJobs && _jobsLoading,
+                    errorMessage: _usesRemoteJobs ? _jobsError : null,
+                    onRetry: _loadJobs,
                     onCreateJob: _createJobFromHome,
                     onNotReady: _showNotReady,
                     onJobTap: _openJobDetails,
@@ -336,7 +417,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                   _ClientsContent(
                     key: ValueKey('clients-content-$_clientsRevision'),
                     repository: _repository,
-                    createdJobsForClient: _createdJobs.forClient,
+                    createdJobsForClient: _jobsForClient,
                     onJobCreated: _recordCreatedJob,
                     onOpenJob: _openJobDetails,
                     companyId: _selectedCompanyId,
@@ -384,7 +465,7 @@ class _ClientsContent extends StatefulWidget {
   final ValueChanged<String> showNotReady;
   final ValueChanged<int> onTabSelected;
   final List<JobModel> Function(String clientId) createdJobsForClient;
-  final JobModel Function(CreateJobDraft draft) onJobCreated;
+  final Future<JobModel> Function(CreateJobDraft draft) onJobCreated;
   final Future<void> Function(JobModel) onOpenJob;
   final String? companyId;
 
