@@ -173,6 +173,39 @@ class RemoteSignatureRequestRepository {
     );
   }
 
+  Future<RemoteSigningRequest> rotateLink(
+    QuoteReviewDraft quote, int id,
+  ) async {
+    final company=_company();
+    final data=_data(await _api.post(
+      '/api/v1/signature-requests/' + id.toString() + '/rotate-link',
+      data:const {},companyScoped:true,
+    ));
+    if(company!=ActiveCompanySession.companyId) {
+      throw const SignApiException('Company changed while rotating the link.');
+    }
+    final record=_map(data['request']);
+    if(_int(record['quote_id'])!=quote.serverId || data['delivered']!=false) {
+      throw const SignApiException('Invalid signing link response.');
+    }
+    final link=data['secure_link'];
+    if(link is! String || !link.startsWith('https://')) {
+      throw const SignApiException('The new link was not verified.');
+    }
+    final fresh=await show(quote,id);
+    return RemoteSigningRequest(
+      id:id,
+      status:fresh.status,
+      tracking:QuoteDocumentTracking(
+        quoteId:quote.id,
+        requestId:fresh.tracking.requestId,
+        secureUrl:Uri.parse(link),
+        expiresAt:fresh.tracking.expiresAt,
+        events:fresh.tracking.events,
+      ),
+    );
+  }
+
   Future<RemoteSigningRequest> resend(
     QuoteReviewDraft quote, int id,
   ) async {
