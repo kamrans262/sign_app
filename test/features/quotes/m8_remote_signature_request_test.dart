@@ -15,7 +15,7 @@ QuoteReviewDraft approvedSource() {
     clientName:'Signer Customer',clientEmail:'signer@example.test',
     date:DateTime.utc(2026,11,4),terms:'Approved terms',
     items:[QuoteReviewWorkItem(
-      id:'line',title:'Repair',quantity:'1',unitPrice:'120.00',
+      id:'line',title:'Repair',description:'Work',quantity:'1',unitPrice:'120.00',
     )],
   );
   quote.serverId=22;
