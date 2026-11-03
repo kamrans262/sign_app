@@ -271,7 +271,9 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
     body: SafeArea(child: Column(children: [
       Sign2DigitalHeader(title: 'Team Members'),
       Expanded(child: Center(child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 720),
+        constraints: BoxConstraints(maxWidth:
+            MediaQuery.orientationOf(context) == Orientation.landscape
+                ? double.infinity : 720),
         child: ListView(
           key: const Key('company-team-scroll'),
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 25),
