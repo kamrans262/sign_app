@@ -74,7 +74,10 @@ void main() {
     setViewport(tester, landscape);
     await tester.pumpWidget(
       const MaterialApp(home: ClientsScreen(initialTab: 0)));
-    await tester.pumpAndSettle();
+    // The dashboard can schedule ongoing async UI updates; this test only
+    // checks the bounded landscape frame and must not wait for full quiescence.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
     expect(find.byKey(const Key('home-dashboard-scroll')), findsOneWidget);
     expect(tester.getSize(find.byKey(const Key('home-dashboard-scroll'))).width,
       greaterThan(900));
