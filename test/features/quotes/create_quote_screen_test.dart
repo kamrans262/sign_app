@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
@@ -217,15 +216,16 @@ void main() {
   });
 
   testWidgets('upload image retains the selected file for AI', (tester) async {
-    final directory = await Directory.systemTemp.createTemp('quote_photo_');
-    addTearDown(() => directory.delete(recursive: true));
-    final path = '${directory.path}${Platform.pathSeparator}notes.png';
-    await File(path).writeAsBytes(base64Decode(
-      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6j2EAAAAASUVORK5CYII='
-    ));
+    // Run the image-picker widget fixture entirely in memory.
+    // Awaiting real dart:io file writes/reads inside Flutter's fake-async
+    // widget test zone stalls the CI runner under Linux.
+    const path = '/test/s2d_quote_photo_notes.png';
+    final imageBytes = base64Decode(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6j2EAAAAASUVORK5CYII=',
+    );
     QuoteDraftInput? captured;
     await tester.pumpWidget(MaterialApp(home: CreateQuoteScreen(
-      pickImage: (source) async => XFile(path),
+      pickImage: (source) async => XFile(path, bytes: imageBytes, name: 'notes.png'),
       onInputPrepared: (input) => captured = input,
     )));
     await tester.tap(find.byKey(const Key('quote-method-photo')));
@@ -234,7 +234,9 @@ void main() {
     await tester.tap(find.byKey(const Key('quote-photo-upload')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Choose from Gallery'));
-    await tester.pumpAndSettle();
+    // The injected XFile bytes complete without native file-system I/O.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
     expect(find.byKey(const Key('quote-remove-photo')), findsOneWidget);
     expect(find.text('Change Image'), findsOneWidget);
     await tester.ensureVisible(find.byKey(const Key('quote-generate-draft')));
