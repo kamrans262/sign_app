@@ -100,8 +100,8 @@ class _QuotePreviewScreenState extends State<QuotePreviewScreen> {
     }
     if (!(widget.demoReviewEnabled && _quote.isDemo) &&
         (tracking == null || tracking.requestId == null ||
-        tracking.usableUrl(DateTime.now()) == null || !tracking.sent ||
-        tracking.signed || tracking.completed)) {
+        tracking.usableUrl(DateTime.now()) == null ||
+        !tracking.requestIsActive || tracking.signed || tracking.completed)) {
       _message('A valid, active signature request is required to sign.');
       return;
     }
