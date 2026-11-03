@@ -216,7 +216,9 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
   Future<void> _removeExistingFile(String kind) async {
     final id = _savedCompanyId;
     if (_saving || id == null || int.tryParse(id) == null ||
-        !MobileAuthRepository.shared.isSignedIn) return;
+        !MobileAuthRepository.shared.isSignedIn) {
+      return;
+    }
     setState(() => _saving = true);
     try {
       await RemoteCompanyRepository.shared.deleteFile(id, kind);
