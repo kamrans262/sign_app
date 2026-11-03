@@ -62,7 +62,7 @@ class HttpPublicQuoteSigningGateway implements PublicQuoteSigningGateway {
     return root.replace(pathSegments: [
       ...root.pathSegments.where((part) => part.isNotEmpty),
       token,
-      if (action != null) action,
+      ?action,
     ]);
   }
 
