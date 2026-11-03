@@ -1,0 +1,38 @@
+name: Sign2Digital company onboarding and placeholder checks
+
+on:
+  push:
+    branches:
+      - feature/m4-client-management-2026-11-03
+    paths:
+      - '.github/workflows/company-onboarding-gate-focused.yml'
+      - 'lib/main.dart'
+      - 'lib/features/auth/presentation/screens/company_entry_gate.dart'
+      - 'lib/features/auth/presentation/screens/mobile_auth_gateway.dart'
+      - 'lib/features/company/presentation/screens/create_company_screen.dart'
+      - 'test/features/company/company_entry_gate_test.dart'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: s2d-company-onboarding-gate
+  cancel-in-progress: true
+
+jobs:
+  onboarding-focused:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Resolve locked Flutter dependencies
+        run: flutter pub get
+      - name: Analyze only onboarding entry points, company form and new test
+        run: flutter analyze --no-pub lib/main.dart lib/features/auth/presentation/screens/company_entry_gate.dart lib/features/auth/presentation/screens/mobile_auth_gateway.dart lib/features/company/presentation/screens/create_company_screen.dart test/features/company/company_entry_gate_test.dart
+      - name: Focused onboarding, M2 authentication and M3 company regressions
+        run: flutter test --no-pub --concurrency=1 test/features/company/company_entry_gate_test.dart test/features/company/create_company_screen_test.dart test/features/company/remote_company_repository_test.dart test/features/auth/create_account_screen_test.dart test/features/auth/mobile_auth_repository_test.dart
