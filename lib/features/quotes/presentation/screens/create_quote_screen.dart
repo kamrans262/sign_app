@@ -15,6 +15,8 @@ import '../../../jobs/services/voice_recorder_service.dart';
 import '../../domain/quote_draft_input.dart';
 import '../../domain/quote_preparation_service.dart';
 import '../../services/openai_quote_preparation_service.dart';
+import '../../services/remote_quote_preparation_service.dart';
+import '../../../auth/data/mobile_auth_repository.dart';
 import 'quote_ai_processing_screen.dart';
 import '../widgets/sign2digital_quote_input_method_card.dart';
 import '../widgets/sign2digital_temporary_ai_key_dialog.dart';
@@ -240,6 +242,9 @@ class _CreateQuoteScreenState extends State<CreateQuoteScreen> {
     QuotePreparationService service;
     if (widget.quotePreparationService != null) {
       service = widget.quotePreparationService!;
+    } else if (MobileAuthRepository.shared.isSignedIn) {
+      // Real sessions use the server-only OpenAI key; no key dialog in Flutter.
+      service = RemoteQuotePreparationService();
     } else {
       final key = await _requestTemporaryApiKey();
       if (!mounted || key == null) {
