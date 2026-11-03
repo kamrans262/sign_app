@@ -1,0 +1,53 @@
+name: M8 Stage 2 Flutter-to-FPDI source compatibility
+
+on:
+  push:
+    branches: [feature/m8-digital-signatures-2026-11-04]
+    paths:
+      - '.github/workflows/m8-stage2-pdf-compatibility.yml'
+      - 'lib/features/quotes/services/quote_pdf_service.dart'
+      - 'test/features/quotes/m8_pdf_parser_compatibility_test.dart'
+      - 'tool/m8_stage2_verify_fpdi.php'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sign2digital-m8-stage2-pdf
+  cancel-in-progress: true
+
+jobs:
+  dart-php-interop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, fileinfo, zlib
+          coverage: none
+      - name: Resolve exact Flutter project dependencies
+        run: flutter pub get
+      - name: Generate synthetic source with the actual Sign2Digital PDF builder
+        env:
+          M8_EXPORT_PDF_FIXTURE: '1'
+        run: |
+          flutter test --no-pub --reporter=expanded test/features/quotes/m8_pdf_parser_compatibility_test.dart
+          test -s build/m8-stage2/flutter_approved_quote.pdf
+          sha256sum build/m8-stage2/flutter_approved_quote.pdf
+      - name: Resolve exactly the backend-locked parser versions
+        run: |
+          mkdir -p "$RUNNER_TEMP/m8-fpdi"
+          composer require --working-dir="$RUNNER_TEMP/m8-fpdi" \
+            'setasign/fpdf:1.9.0' 'setasign/fpdi:2.6.9' \
+            --no-interaction --no-progress --prefer-dist --no-scripts
+      - name: Parse actual Flutter PDF in PHP 8.4 and append evidence
+        env:
+          M8_FPDI_VENDOR: ${{ runner.temp }}/m8-fpdi/vendor
+        run: php tool/m8_stage2_verify_fpdi.php build/m8-stage2/flutter_approved_quote.pdf
