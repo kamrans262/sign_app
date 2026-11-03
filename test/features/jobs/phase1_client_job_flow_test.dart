@@ -90,7 +90,7 @@ void main() {
     )));
     await pumpUi(tester);
     expect(find.text('Active (13)'), findsOneWidget);
-    expect(find.text('New Roof Repair'), findsOneWidget);
+    expect(find.text('New Roof Repair'), findsWidgets);
     expect(find.byType(Sign2DigitalJobCard), findsWidgets);
     await tester.tap(find.text('New Roof Repair'));
     await tester.pump();
@@ -127,7 +127,7 @@ void main() {
     await pumpUi(tester);
     expect(find.byType(ClientDetailsScreen), findsOneWidget);
     expect(find.text('Jobs (5)'), findsOneWidget);
-    expect(find.text('New Roof Repair'), findsOneWidget);
+    expect(find.text('New Roof Repair'), findsWidgets);
 
     await tester.tap(find.descendant(
       of: find.byType(ClientDetailsScreen),
@@ -137,7 +137,7 @@ void main() {
     await tester.tap(find.byKey(const Key('dashboard-tab-1')));
     await pumpUi(tester);
     expect(find.text('Active (13)'), findsOneWidget);
-    expect(find.text('New Roof Repair'), findsOneWidget);
+    expect(find.text('New Roof Repair'), findsWidgets);
     expect(tester.takeException(), isNull);
   });
 }

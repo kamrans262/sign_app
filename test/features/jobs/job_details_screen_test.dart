@@ -60,7 +60,11 @@ void main() {
       of: detailsRoute,
       matching: find.byIcon(Icons.arrow_back_ios_new_rounded),
     ));
-    await pumpUi(tester);
+    // Finish the outgoing route animation without waiting for the Home tab's
+    // unrelated ongoing async widgets.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump();
     expect(find.byType(JobDetailsScreen), findsNothing);
     expect(find.text('Completed (8)'), findsOneWidget);
     expect(tester.takeException(), isNull);

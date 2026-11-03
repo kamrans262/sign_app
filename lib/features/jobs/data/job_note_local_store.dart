@@ -30,8 +30,9 @@ class JobNoteLocalStore {
         (note.body.trim().isEmpty && note.audioPath == null)) {
       throw ArgumentError('Enter note text or record audio.');
     }
-    final notes = _byJob.putIfAbsent(note.jobId, () => [
-      if (includeDemoNotes) ...DemoJobNotes.forJob(note.jobId),
+    final notes = _byJob.putIfAbsent(_key(note.jobId), () => [
+      if (includeDemoNotes && int.tryParse(note.jobId) == null)
+        ...DemoJobNotes.forJob(note.jobId),
     ]);
     if (notes.any((item) => item.id == note.id)) {
       throw StateError('Note already exists.');
