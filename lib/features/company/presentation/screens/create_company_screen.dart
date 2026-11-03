@@ -13,6 +13,10 @@ import '../../../../core/widgets/sign2digital_input_field.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../data/company_repository.dart';
 import '../../data/demo_company_repository.dart';
+import '../../data/remote_company_repository.dart';
+import '../../../auth/data/mobile_auth_repository.dart';
+import '../../../clients/presentation/screens/clients_screen.dart';
+import '../../../../core/services/sign_api_client.dart';
 import '../../domain/company_profile.dart';
 
 @immutable
@@ -53,15 +57,19 @@ class CreateCompanyScreen extends StatefulWidget {
     this.onSkipOptionalFields,
     this.onBack,
     this.companyRepository,
+    this.initialCompany,
+    this.onCompleted,
   });
 
-  /// These are integration hooks only; default behavior saves demo data.
+  /// Existing optional hooks remain available to tests and demo previews.
   final ValueChanged<CompanyDraft>? onSave;
   final ValueChanged<CompanyDraft>? onSkipOptionalFields;
   final VoidCallback? onBack;
 
-  /// In UI-preview mode the in-memory repository is used by default.
+  /// In UI-preview mode, the in-memory repository is still used by default.
   final CompanyRepository? companyRepository;
+  final CompanyProfile? initialCompany;
+  final VoidCallback? onCompleted;
 
   @override
   State<CreateCompanyScreen> createState() => _CreateCompanyScreenState();
@@ -81,6 +89,31 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
   Sign2DigitalCountry _country = Sign2DigitalCountries.switzerland;
   PlatformFile? _logo;
   PlatformFile? _terms;
+  String? _savedCompanyId;
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.initialCompany;
+    if (initial != null) {
+      _savedCompanyId = initial.id;
+      _company.text = initial.companyName;
+      _address.text = initial.address;
+      _phone.text = initial.phoneNumber;
+      _email.text = initial.email;
+      _swissId.text = initial.swissCompanyId;
+      _vat.text = initial.vatNumber;
+      _iban.text = initial.iban;
+      _qrIban.text = initial.qrIban;
+      _numbering.text = initial.documentNumbering;
+      for (final c in Sign2DigitalCountries.all) {
+        if (c.isoCode == initial.countryIsoCode) {
+          _country = c;
+          break;
+        }
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -116,7 +149,7 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
   );
 
   CompanyProfile _buildProfile(CompanyDraft draft) => CompanyProfile(
-    id: 'demo-current-company',
+    id: _savedCompanyId ?? 'demo-current-company',
     companyName: draft.companyName,
     address: draft.address,
     countryIsoCode: draft.country.isoCode,
@@ -134,28 +167,43 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
 
   bool _saving = false;
 
-  Future<void> _storeDemo(CompanyDraft draft) async {
+  Future<void> _storeCompany(CompanyDraft draft) async {
     if (_saving) return;
     setState(() => _saving = true);
+    final real = MobileAuthRepository.shared.isSignedIn &&
+        widget.companyRepository == null;
     try {
-      final repository =
-          widget.companyRepository ?? DemoCompanyRepository.shared;
-      await repository.save(_buildProfile(draft));
+      final repository = widget.companyRepository ??
+          (real ? RemoteCompanyRepository.shared : DemoCompanyRepository.shared);
+      final company = await repository.save(_buildProfile(draft));
+      if (real) {
+        _savedCompanyId = company.id;
+        final remote = repository as RemoteCompanyRepository;
+        if (draft.logo != null) await remote.uploadFile(company.id, 'logo', draft.logo!);
+        if (draft.terms != null) await remote.uploadFile(company.id, 'terms', draft.terms!);
+      }
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Saved in the temporary demo session only. No server request was made.',
-          ),
-        ),
-      );
-    } catch (_) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(real ? 'Company information saved successfully.'
+            : 'Saved in the temporary demo session only. No server request was made.'),
+      ));
+      if (real) {
+        if (widget.onCompleted != null) {
+          widget.onCompleted!();
+        } else if (widget.initialCompany != null) {
+          Navigator.of(context).pop(true);
+        } else {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute<void>(builder: (_) => const ClientsScreen(initialTab: 0)),
+            (_) => false,
+          );
+        }
+      }
+    } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Unable to store the demo company profile.'),
-        ),
-      );
+      final message = error is SignApiException
+          ? error.message : 'Unable to save company information.';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -169,7 +217,7 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
       widget.onSave!(draft);
       return;
     }
-    _storeDemo(draft);
+    _storeCompany(draft);
   }
 
   void _skip() {
@@ -179,8 +227,16 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
       widget.onSkipOptionalFields!(draft);
       return;
     }
-    // Skip does not erase any field the user has already entered.
-    _storeDemo(draft);
+    // Skipping optional company fields never discards filled-in values.
+    // A company still requires an actual name before persisting to Laravel.
+    if (MobileAuthRepository.shared.isSignedIn &&
+        widget.companyRepository == null && draft.companyName.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Enter a company name to continue.'),
+      ));
+      return;
+    }
+    _storeCompany(draft);
   }
 
   Widget _field({
@@ -264,6 +320,8 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
                                   icon: 'company.svg',
                                   controller: _company,
                                   capitalization: TextCapitalization.words,
+                                  validator: (value) => (value?.trim().isEmpty ?? true)
+                                      ? 'Enter your company name' : null,
                                 ),
                                 const SizedBox(height: 16),
                                 Sign2DigitalImageUpload(
