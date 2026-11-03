@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
+import 'package:sign2digital/core/services/active_company_session.dart';
 import 'package:sign2digital/core/services/sign_api_client.dart';
 import 'package:sign2digital/features/auth/data/mobile_auth_repository.dart';
 import 'package:sign2digital/features/auth/data/remote_account_repository.dart';
@@ -45,6 +46,7 @@ class FaultyAuthStorage extends MemoryAuthStorage {
 
 void main() {
   final base = Uri.parse('https://forestgreen-pigeon-673192.hostingersite.com');
+  tearDown(ActiveCompanySession.clear);
 
   test('password validation starts OTP but does not sign in', () async {
     final memory = MemoryAuthStorage();
@@ -378,5 +380,26 @@ void main() {
       throwsA(isA<SignApiException>()),
     );
     expect(repo.isSignedIn, false);
+  });
+
+  test('failed OTP verification clears any previous account company selection', () async {
+    ActiveCompanySession.set(88);
+    final storage = MemoryAuthStorage()..value = 'old-account-token';
+    final api = SignApiClient(baseUrl: base,
+      httpClient: MockClient((request) async {
+        expect(request.url.path, '/api/v1/auth/otp/verify');
+        return http.Response(jsonEncode({'message': 'Invalid OTP'}), 422);
+      }),
+    );
+    final repo = MobileAuthRepository(api: api, tokenStorage: storage);
+    await expectLater(repo.verify(
+      const EmailOtpChallenge(
+        id: '11111111-1111-4111-8111-111111111111',
+        purpose: 'login',
+      ), '000000', rememberMe: true,
+    ), throwsA(isA<SignApiException>()));
+    expect(ActiveCompanySession.companyId, isNull);
+    expect(repo.isSignedIn, false);
+    expect(storage.value, isNull);
   });
 }
