@@ -13,6 +13,7 @@ class JobDetailsModel {
     required this.receivedChf,
     required this.remainingBalanceChf,
     required this.sections,
+    this.financialsAvailable = true,
   });
 
   final JobModel job;
@@ -24,6 +25,19 @@ class JobDetailsModel {
   final int receivedChf;
   final int remainingBalanceChf;
   final List<JobSectionDetails> sections;
+  final bool financialsAvailable;
+
+  /// Live jobs do not inherit any fictitious figures from screenshot demos.
+  factory JobDetailsModel.liveUnconnected(JobModel job) => JobDetailsModel(
+    job: job,
+    quoteAmountChf: 0, expensesChf: 0, labourCostChf: 0,
+    depositsChf: 0, invoicedChf: 0, receivedChf: 0,
+    remainingBalanceChf: 0, financialsAvailable: false,
+    sections: [
+      for (final section in JobSection.values)
+        JobSectionDetails(section, 'Not connected yet'),
+    ],
+  );
 
   /// New local jobs must not inherit fictional financial amounts or files.
   /// Existing screenshot sample records retain their original demo details.

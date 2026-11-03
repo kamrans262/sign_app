@@ -5,9 +5,10 @@ import '../../../../core/theme/app_colors.dart';
 import '../../domain/job_details_model.dart';
 
 class Sign2DigitalRemainingBalanceCard extends StatelessWidget {
-  const Sign2DigitalRemainingBalanceCard({super.key, required this.balanceChf});
+  const Sign2DigitalRemainingBalanceCard({super.key, required this.balanceChf, this.showAmount = true});
 
   final int balanceChf;
+  final bool showAmount;
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +42,7 @@ class Sign2DigitalRemainingBalanceCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  JobDetailsModel.formatChf(balanceChf),
+                  showAmount ? JobDetailsModel.formatChf(balanceChf) : 'Not available',
                   style: const TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 14,

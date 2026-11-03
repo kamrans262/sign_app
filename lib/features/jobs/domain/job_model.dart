@@ -13,6 +13,7 @@ class JobModel {
     required this.referenceNumber,
     required this.imageAsset,
     required this.amountChf,
+    this.hasBudget = true,
     required this.progressPercentage,
     required this.dueDate,
     required this.stage,
@@ -27,6 +28,8 @@ class JobModel {
   final String referenceNumber;
   final String imageAsset;
   final int amountChf;
+  /// False when a live job has no budget: do not present CHF 0 as a fact.
+  final bool hasBudget;
   final double progressPercentage;
   final DateTime dueDate;
   final JobStage stage;
@@ -40,6 +43,7 @@ class JobModel {
   };
 
   String get formattedAmount {
+    if (!hasBudget) return 'Budget not set';
     final value = amountChf.toString();
     final grouped = value.replaceAllMapped(
       RegExp(r'\B(?=(\d{3})+(?!\d))'),

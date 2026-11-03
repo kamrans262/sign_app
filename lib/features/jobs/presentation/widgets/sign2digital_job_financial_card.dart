@@ -14,10 +14,12 @@ class Sign2DigitalJobFinancialCard extends StatelessWidget {
     required this.amountChf,
     required this.icon,
     this.iconAsset,
+    this.showAmount = true,
   });
 
   final String label;
   final int amountChf;
+  final bool showAmount;
   final IconData icon;
   final String? iconAsset;
 
@@ -72,7 +74,7 @@ class Sign2DigitalJobFinancialCard extends StatelessWidget {
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    JobDetailsModel.formatChf(amountChf),
+                    showAmount ? JobDetailsModel.formatChf(amountChf) : 'Not available',
                     maxLines: 1,
                     style: const TextStyle(
                       fontFamily: 'Inter',

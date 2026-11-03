@@ -176,7 +176,9 @@ class JobDetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final data = details ?? JobDetailsModel.demoFor(job);
+    final data = details ?? (int.tryParse(job.id) != null
+        ? JobDetailsModel.liveUnconnected(job)
+        : JobDetailsModel.demoFor(job));
     return Scaffold(
       backgroundColor: AppColors.white,
       body: SafeArea(
@@ -219,34 +221,40 @@ class JobDetailsScreen extends StatelessWidget {
                           0 => Sign2DigitalJobFinancialCard(
                             label: 'Quote amount',
                             amountChf: data.quoteAmountChf,
+                            showAmount: data.financialsAvailable,
                             icon: Icons.description_outlined,
                             iconAsset: 'assets/icons/description.svg',
                           ),
                           1 => Sign2DigitalJobFinancialCard(
                             label: 'Expenses',
                             amountChf: data.expensesChf,
+                            showAmount: data.financialsAvailable,
                             icon: Icons.shopping_cart_outlined,
                           ),
                           2 => Sign2DigitalJobFinancialCard(
                             label: 'Labour cost',
                             amountChf: data.labourCostChf,
+                            showAmount: data.financialsAvailable,
                             icon: Icons.groups_outlined,
                             iconAsset: 'assets/icons/team_members.svg',
                           ),
                           3 => Sign2DigitalJobFinancialCard(
                             label: 'Deposits',
                             amountChf: data.depositsChf,
+                            showAmount: data.financialsAvailable,
                             icon: Icons.savings_outlined,
                           ),
                           4 => Sign2DigitalJobFinancialCard(
                             label: 'Invoiced',
                             amountChf: data.invoicedChf,
+                            showAmount: data.financialsAvailable,
                             icon: Icons.description_outlined,
                             iconAsset: 'assets/icons/doc_numbering.svg',
                           ),
                           _ => Sign2DigitalJobFinancialCard(
                             label: 'Received',
                             amountChf: data.receivedChf,
+                            showAmount: data.financialsAvailable,
                             icon: Icons.check_circle,
                           ),
                         },
@@ -254,6 +262,7 @@ class JobDetailsScreen extends StatelessWidget {
                       const SizedBox(height: 20),
                       Sign2DigitalRemainingBalanceCard(
                         balanceChf: data.remainingBalanceChf,
+                        showAmount: data.financialsAvailable,
                       ),
                       const SizedBox(height: 20),
                       _ResponsiveCardGrid(
