@@ -359,7 +359,7 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
                                 ),
                                 if (_hasSavedLogo) ...[
                                   const SizedBox(height: 8),
-                                  Text('Saved logo: ' + (widget.initialCompany?.logoFileName ?? 'Company logo'),
+                                  Text('Saved logo: ${widget.initialCompany?.logoFileName ?? 'Company logo'}',
                                     style: AppTextStyles.small),
                                   Align(alignment: Alignment.centerRight,
                                     child: TextButton(
@@ -450,7 +450,7 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
                                 ),
                                 if (_hasSavedTerms) ...[
                                   const SizedBox(height: 8),
-                                  Text('Saved terms: ' + (widget.initialCompany?.termsFileName ?? 'Terms & Conditions'),
+                                  Text('Saved terms: ${widget.initialCompany?.termsFileName ?? 'Terms & Conditions'}',
                                     style: AppTextStyles.small),
                                   Align(alignment: Alignment.centerRight,
                                     child: TextButton(
