@@ -16,6 +16,10 @@ class JobModel {
     this.hasBudget = true,
     required this.progressPercentage,
     required this.dueDate,
+    this.startDate,
+    this.address = '',
+    this.budgetChfExact,
+    this.teamMemberIds = const [],
     required this.stage,
     required this.category,
   });
@@ -32,6 +36,10 @@ class JobModel {
   final bool hasBudget;
   final double progressPercentage;
   final DateTime dueDate;
+  final DateTime? startDate;
+  final String address;
+  final double? budgetChfExact;
+  final List<String> teamMemberIds;
   final JobStage stage;
   final JobCategory category;
 

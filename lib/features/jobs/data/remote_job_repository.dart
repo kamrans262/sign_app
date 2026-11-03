@@ -77,6 +77,12 @@ class RemoteJobRepository {
       hasBudget: parsedBudget != null,
       progressPercentage: progress.toDouble(),
       dueDate: date,
+      startDate: DateTime.tryParse((raw['start_date'] ?? '').toString()),
+      address: (raw['address'] ?? '').toString(),
+      budgetChfExact: parsedBudget?.toDouble(),
+      teamMemberIds: (raw['team_member_ids'] is List)
+          ? (raw['team_member_ids'] as List).map((item) => '$item').toList()
+          : const [],
       stage: stage,
       category: category,
     );
@@ -190,6 +196,38 @@ class RemoteJobRepository {
       throw const SignApiException('Unexpected job financial data.');
     }
     return JobDetailsModel.liveUnconnected(saved);
+  }
+
+  Future<JobModel> updateDraft(JobModel job, CreateJobDraft draft) async {
+    final id = int.tryParse(job.id);
+    final client = int.tryParse(draft.clientId);
+    if (id == null || id <= 0 || client == null || client <= 0) {
+      throw const SignApiException('Select a saved job and client.');
+    }
+    if (draft.description.trim().isEmpty ||
+        draft.endDate.isBefore(draft.startDate)) {
+      throw const SignApiException('Provide a description and valid dates.');
+    }
+    final members = <int>[];
+    for (final raw in draft.teamMemberIds) {
+      final parsed = int.tryParse(raw);
+      if (parsed == null || parsed <= 0) {
+        throw const SignApiException('Select real company team members.');
+      }
+      members.add(parsed);
+    }
+    final description = draft.description.trim();
+    final firstLine = description.split(RegExp(r'\r?\n')).first.trim();
+    return updateJob(id, {
+      'client_id': client,
+      'title': firstLine.length > 255 ? firstLine.substring(0, 255) : firstLine,
+      'description': description,
+      'address': draft.address.trim(),
+      'start_date': _date(draft.startDate),
+      'due_date': _date(draft.endDate),
+      'budget_chf': draft.budgetChf,
+      'team_member_ids': members,
+    });
   }
 
   Future<JobModel> updateJob(int id, Map<String, dynamic> changes) async {

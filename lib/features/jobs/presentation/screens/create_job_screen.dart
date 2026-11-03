@@ -19,6 +19,7 @@ import '../../../company/data/remote_company_repository.dart';
 import '../../../../core/services/active_company_session.dart';
 import '../../../clients/domain/client_profile.dart';
 import '../../domain/create_job_draft.dart';
+import '../../domain/job_model.dart';
 import '../../models/extracted_job_details.dart';
 import '../../services/voice_job_extraction_service.dart';
 import '../../services/voice_recorder_service.dart';
@@ -29,6 +30,7 @@ class CreateJobScreen extends StatefulWidget {
   const CreateJobScreen({
     super.key,
     this.initialClient,
+    this.initialJob,
     this.clientRepository,
     this.onCreateJob,
     this.onCreateWithAiVoice,
@@ -37,6 +39,8 @@ class CreateJobScreen extends StatefulWidget {
   });
 
   final ClientProfile? initialClient;
+  /// Optional existing job; reuses all original form fields for editing.
+  final JobModel? initialJob;
   final ClientRepository? clientRepository;
   final ValueChanged<CreateJobDraft>? onCreateJob;
   final VoidCallback? onCreateWithAiVoice;
@@ -116,6 +120,17 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
     _voiceExtraction =
         widget.voiceExtractionService ?? OpenAiVoiceJobExtractionService();
     _client = widget.initialClient;
+    final existing = widget.initialJob;
+    if (existing != null) {
+      _address.text = existing.address;
+      _description.text = existing.description;
+      _start = existing.startDate;
+      _end = existing.dueDate;
+      if (existing.budgetChfExact != null) {
+        _budget.text = existing.budgetChfExact.toString();
+      }
+      _memberIds.addAll(existing.teamMemberIds);
+    }
     if (_client != null && _client!.address.trim().isNotEmpty) {
       _address.text = _client!.address;
     }
@@ -505,7 +520,8 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
             children: [
               Icon(Icons.add, size: 24, color: AppColors.white),
               SizedBox(width: 10),
-              Text('Create new job', style: AppTextStyles.primaryButton),
+              Text(widget.initialJob == null ? 'Create new job' : 'Save changes',
+                    style: AppTextStyles.primaryButton),
             ],
           ),
         ),
@@ -545,7 +561,7 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
         child: Column(
           children: [
             Sign2DigitalHeader(
-              title: 'Create Job',
+              title: widget.initialJob == null ? 'Create Job' : 'Edit Job',
               onBack: () => Navigator.of(context).maybePop(),
             ),
             Expanded(
