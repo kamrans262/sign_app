@@ -17,9 +17,9 @@ SignApiClient api(http.Client httpClient) => SignApiClient(
   activeCompanyId:() => ActiveCompanySession.companyId,
 );
 
-QuoteReviewDraft approvedQuote() {
+QuoteReviewDraft approvedQuote({String company = '5'}) {
   final q=QuoteReviewDraft(
-    id:'approved-91', companyId:'5', clientName:'Test Customer',
+    id:'approved-91', companyId:company, clientName:'Test Customer',
     date:DateTime(2026,11,4), terms:'Reviewed terms',
     items:[QuoteReviewWorkItem(
       id:'item1', title:'Repair', description:'Work', quantity:'1',
@@ -71,7 +71,7 @@ void main() {
     })));
     await expectLater(repository.fetchApprovedPdf(approvedQuote()),
         throwsA(isA<SignApiException>()));
-    final wrongCompany=approvedQuote()..companyId='6';
+    final wrongCompany=approvedQuote(company:'6');
     await expectLater(repository.fetchApprovedPdf(wrongCompany),
         throwsA(isA<SignApiException>()));
     final draft=approvedQuote()..approvedLocally=false;
