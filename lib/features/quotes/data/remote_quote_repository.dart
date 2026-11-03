@@ -3,14 +3,20 @@ import '../../../core/services/active_company_session.dart';
 import '../../../core/services/sign_api_client.dart';
 import '../../auth/data/mobile_auth_repository.dart';
 import '../domain/quote_review_models.dart';
+import '../services/quote_pdf_service.dart';
 
 /// Real M6 quote persistence. Server verifies tenant, RBAC, money and approval.
 class RemoteQuoteRepository {
-  RemoteQuoteRepository({SignApiClient? api})
-      : _api = api ?? MobileAuthRepository.shared.api;
+  RemoteQuoteRepository({
+    SignApiClient? api,
+    Future<Uint8List> Function(QuoteReviewDraft)? approvedPdfBuilder,
+  }) : _api = api ?? MobileAuthRepository.shared.api,
+       _approvedPdfBuilder = approvedPdfBuilder ??
+           ((quote) => const Sign2DigitalQuotePdfBuilder().build(quote));
 
   static final RemoteQuoteRepository shared = RemoteQuoteRepository();
   final SignApiClient _api;
+  final Future<Uint8List> Function(QuoteReviewDraft) _approvedPdfBuilder;
 
   int _company() {
     final id = ActiveCompanySession.companyId;
@@ -130,9 +136,22 @@ class RemoteQuoteRepository {
       throw const SignApiException('Resolve all quote fields before approval.');
     }
     final company=_company();
-    final response=await _api.post(
+    // Generate the customer document from the server-numbered, reviewed
+    // draft *at approval time*. Laravel freezes these exact bytes privately
+    // and can later email only that approved, revision-bound artifact.
+    final approvedPdf=await _approvedPdfBuilder(saved);
+    _check(company);
+    final response=await _api.postMultipart(
       '/api/v1/quotes/${saved.serverId}/approve',
-      data:{'confirmed':true},companyScoped:true,
+      filename:'Sign2Digital_Approved_Quote.pdf',
+      bytes:approvedPdf,
+      maxBytes:5*1024*1024,
+      companyScoped:true,
+      fields:{
+        'confirmed':'1',
+        if (saved.serverRevision != null)
+          'expected_revision':'${saved.serverRevision}',
+      },
     );
     _check(company);
     final approved=_applied(saved,response,company);
@@ -163,6 +182,23 @@ class RemoteQuoteRepository {
 
   /// Sends the actual Flutter-generated, reviewed PDF as an email attachment
   /// alongside the server's independently verifiable quote-view link.
+  /// Authoritative file approved by the authenticated company user.
+  /// Never generate a second, potentially different PDF for delivery.
+  Future<Uint8List> fetchApprovedPdf(QuoteReviewDraft quote) async {
+    final company=_company();
+    if (quote.isDemo || quote.serverId == null || !quote.approvedLocally ||
+        int.tryParse(quote.companyId ?? '$company') != company) {
+      throw const SignApiException(
+        'A server-approved quote from the active company is required.');
+    }
+    final bytes=await _api.getPdf(
+      '/api/v1/quotes/${quote.serverId}/approved-pdf',
+      companyScoped:true,
+    );
+    _check(company);
+    return bytes;
+  }
+
   Future<Map<String,dynamic>> shareEmailWithPdf(
     QuoteReviewDraft quote, {
     required String email,

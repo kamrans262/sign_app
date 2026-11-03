@@ -106,6 +106,42 @@ class SignApiClient {
     }
   }
 
+  /// Fetch authenticated, private PDF bytes without treating them as JSON.
+  /// Used for approved quotes so Download/Send uses the frozen document.
+  Future<Uint8List> getPdf(String endpoint, {bool companyScoped = false}) async {
+    final request = http.Request('GET', _uri(endpoint))
+      ..followRedirects = false;
+    request.headers.addAll(await _headers(
+      authenticated: true, companyScoped: companyScoped,
+    ));
+    try {
+      final streamed = await _http.send(request)
+          .timeout(const Duration(seconds: 25));
+      final response = await http.Response.fromStream(streamed)
+          .timeout(const Duration(seconds: 25));
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        _decode(response); // Preserve Laravel's useful 409/403/404 response.
+        throw SignApiException('Unable to download approved PDF.',
+            statusCode: response.statusCode);
+      }
+      final data = response.bodyBytes;
+      if (!(response.headers['content-type'] ?? '')
+              .toLowerCase().startsWith('application/pdf') ||
+          data.length < 12 || data.length > 5 * 1024 * 1024 ||
+          data[0] != 37 || data[1] != 80 || data[2] != 68 ||
+          data[3] != 70 || data[4] != 45 ||
+          !latin1.decode(data.sublist(data.length > 4096
+              ? data.length - 4096 : 0)).contains('%%EOF')) {
+        throw const SignApiException('Invalid approved PDF response.');
+      }
+      return data;
+    } on SignApiException {
+      rethrow;
+    } catch (_) {
+      throw const SignApiException('Unable to download the approved PDF.');
+    }
+  }
+
   Future<Map<String, dynamic>> postMultipart(
     String endpoint, {
     required String filename,

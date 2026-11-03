@@ -36,6 +36,16 @@ String quoteMoney(int? minorUnits, String currency) {
   return '$symbol${buffer.toString()}.${(minorUnits % 100).toString().padLeft(2, '0')}';
 }
 
+/// Format percentages stored as basis points without rounding away
+/// fractional VAT/deposit rates (e.g. 810 => "8.1", 825 => "8.25").
+String quotePercentText(int basisPoints) {
+  final whole = basisPoints ~/ 100;
+  final fraction = (basisPoints % 100).toString().padLeft(2, '0');
+  if (basisPoints % 100 == 0) return '$whole';
+  if (basisPoints % 10 == 0) return '$whole.${fraction[0]}';
+  return '$whole.$fraction';
+}
+
 int percentOfMinor(int minorUnits, int basisPoints) =>
     (minorUnits * basisPoints + 5000) ~/ 10000;
 
@@ -83,6 +93,15 @@ class QuoteReviewWorkItem {
     unresolvedOtherFields: Set<String>.from(unresolvedOtherFields),
   );
 }
+
+/// Keep the reviewed work item description and dimensions visible in
+/// both the mobile preview and exported customer PDF without adding columns.
+String quoteWorkItemDocumentText(QuoteReviewWorkItem item) => [
+  item.title.trim().isEmpty ? 'Unspecified item' : item.title.trim(),
+  if (item.description.trim().isNotEmpty) item.description.trim(),
+  if (item.dimensions?.trim().isNotEmpty ?? false)
+    'Dimensions: ${item.dimensions!.trim()}',
+].join('\n');
 
 /// Structured payment instructions. The QR is withheld unless every required
 /// Swiss QR-bill field is present and valid (no decorative QR codes).
@@ -318,6 +337,9 @@ class QuoteReviewDraft {
   /// Deposit is informational, not subtracted from grand total.
   int? get depositMinor => totalMinor == null ? null :
       percentOfMinor(totalMinor!, depositBasisPoints);
+  /// Remaining balance after the requested deposit; never changes grand total.
+  int? get remainingAfterDepositMinor => totalMinor == null || depositMinor == null
+      ? null : totalMinor! - depositMinor!;
 
   List<String> get approvalIssues {
     final issues = <String>[];

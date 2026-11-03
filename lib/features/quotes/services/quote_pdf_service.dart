@@ -35,6 +35,17 @@ class Sign2DigitalQuotePdfBuilder {
     pw.TextStyle style(double size, {PdfColor? color, bool bold = false}) =>
         pw.TextStyle(fontSize: size, color: color ?? ink,
           fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal);
+    // Align both PDF date values in one column while retaining the same
+    // right margin as the quote number; the Laravel web view is unchanged.
+    pw.Widget quoteDateRow(String label, String value) => pw.Row(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.SizedBox(width: 72, child: pw.Text(label,
+          textAlign: pw.TextAlign.right, style: style(11))),
+        pw.SizedBox(width: 6),
+        pw.Expanded(child: pw.Text(value, style: style(11, color: grey))),
+      ],
+    );
     pw.Widget lineAmount(String label, String amount, {bool total = false}) {
       return pw.Container(
         color: total ? blue : PdfColors.white,
@@ -101,14 +112,14 @@ class Sign2DigitalQuotePdfBuilder {
                     ],
                   )),
                   pw.SizedBox(width: 12),
-                  pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  pw.SizedBox(width: 168, child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.stretch,
                     children: [
-                      pw.Text('Date: ${formatDate(quote.date)}',
-                          style: style(11)),
+                      quoteDateRow('Date:', formatDate(quote.date)),
                       pw.SizedBox(height: 8),
-                      pw.Text('Valid Until: ${formatDate(quote.validUntil)}',
-                          style: style(11)),
-                    ]),
+                      quoteDateRow('Valid Until:', formatDate(quote.validUntil)),
+                    ],
+                  )),
                 ]),
               pw.SizedBox(height: 24),
             ]),
@@ -117,7 +128,7 @@ class Sign2DigitalQuotePdfBuilder {
         pw.TableHelper.fromTextArray(
                 headers: const ['Description', 'Qty', 'Unit Price', 'Total'],
                 data: quote.items.map((item) => <String>[
-                  item.title.isEmpty ? '(Unspecified item)' : item.title,
+                  quoteWorkItemDocumentText(item),
                   item.quantity.isEmpty ? '-' : item.quantity,
                   quoteMoney(item.priceMinor, quote.currency),
                   quoteMoney(item.totalMinor, quote.currency),
@@ -141,9 +152,13 @@ class Sign2DigitalQuotePdfBuilder {
                 pw.Text('Pricing incomplete - unresolved work item prices.',
                   style: style(10, color: PdfColor.fromHex('#E6A23C'))),
               lineAmount('Subtotal', quoteMoney(quote.subtotalMinor, quote.currency)),
-              lineAmount('Tax (${(quote.vatBasisPoints / 100).toStringAsFixed(0)}%)',
+              lineAmount('Tax (${quotePercentText(quote.vatBasisPoints)}%)',
                 quoteMoney(quote.vatMinor, quote.currency)),
               lineAmount('Total', quoteMoney(quote.totalMinor, quote.currency), total: true),
+              lineAmount('Deposit due (${quotePercentText(quote.depositBasisPoints)}%)',
+                quoteMoney(quote.depositMinor, quote.currency)),
+              lineAmount('Remaining after deposit',
+                quoteMoney(quote.remainingAfterDepositMinor, quote.currency)),
         pw.SizedBox(height: 65),
         pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
@@ -192,9 +207,34 @@ class Sign2DigitalQuotePdfBuilder {
                     ]),
                   ),
                 ])
-              else pw.Text('A valid Swiss payment account, address and payable amount '
-                'are required before a payment QR can be displayed.',
-                style: style(10, color: grey)),
+              else pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text('A valid Swiss payment account, address and payable amount '
+                    'are required before a payment QR can be displayed.',
+                    style: style(10, color: grey)),
+                  pw.SizedBox(height: 12),
+                  if (quote.payment != null &&
+                      quote.payment!.iban.trim().isNotEmpty) ...[
+                    pw.Text('Account / payable to', style: style(10, bold: true)),
+                    pw.Text(quote.payment!.iban, style: style(10, color: grey)),
+                    pw.SizedBox(height: 5),
+                  ],
+                  if (quote.payment != null &&
+                      quote.payment!.accountHolder.trim().isNotEmpty) ...[
+                    pw.Text('Company Name', style: style(10, bold: true)),
+                    pw.Text(quote.payment!.accountHolder,
+                      style: style(10, color: grey)),
+                    pw.SizedBox(height: 5),
+                  ],
+                  pw.Text('Payable amount', style: style(10, bold: true)),
+                  pw.Text(quoteMoney(quote.totalMinor, quote.currency),
+                    style: style(10, color: grey)),
+                  pw.SizedBox(height: 5),
+                  pw.Text('Currency', style: style(10, bold: true)),
+                  pw.Text(quote.currency, style: style(10, color: grey)),
+                ],
+              ),
             ]),
         ),
         pw.SizedBox(height: 20),

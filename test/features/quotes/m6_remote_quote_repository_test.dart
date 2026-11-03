@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -15,7 +16,7 @@ import 'package:sign2digital/features/quotes/services/remote_quote_preparation_s
 Map<String,dynamic> serverQuote({int company=5,int id=22,
     String status='draft'}) => {
   'id':id,'company_id':company,'client_id':8,'job_id':11,
-  'reference_number':'Q-2026-000022',
+  'reference_number':'Q-2026-000022','revision':1,
   'client_name':'Marc Dupont',
   'client_email':'marc@example.test','client_phone':'','billing_address':'Lausanne',
   'quote_date':'2026-11-03','valid_until':null,
@@ -54,7 +55,9 @@ void main() {
       calls.add('${request.method} ${request.url.path}');
       expect(request.headers['Authorization'],'Bearer verified-token');
       expect(request.headers['X-Company-Id'],'5');
-      final body=request.body.isEmpty
+      final multipart=(request.headers['content-type'] ?? '')
+          .startsWith('multipart/form-data');
+      final body=multipart ? <String,dynamic>{} : request.body.isEmpty
           ? <String,dynamic>{}
           : jsonDecode(request.body) as Map<String,dynamic>;
       if(request.url.path == '/api/v1/quotes') {
@@ -68,7 +71,13 @@ void main() {
         return http.Response(jsonEncode({'data':{'quote':serverQuote()}}),201);
       }
       if(request.url.path.endsWith('/approve')) {
-        expect(body['confirmed'],isTrue);
+        expect(multipart,isTrue);
+        final multipartBody=latin1.decode(request.bodyBytes);
+        expect(multipartBody,contains('name="confirmed"'));
+        expect(multipartBody,contains('name="expected_revision"'));
+        expect(multipartBody,contains('name="file"'));
+        expect(multipartBody,contains('Sign2Digital_Approved_Quote.pdf'));
+        expect(multipartBody,contains('%PDF-'));
         return http.Response(jsonEncode({'data':{'quote':
           serverQuote(status:'approved')}}),200);
       }
@@ -79,7 +88,13 @@ void main() {
       }
       throw StateError('Unexpected quote endpoint');
     }));
-    final repo=RemoteQuoteRepository(api:api);
+    final repo=RemoteQuoteRepository(
+      api:api,
+      approvedPdfBuilder:(saved) async {
+        expect(saved.quoteNumber,'Q-2026-000022');
+        return Uint8List.fromList(utf8.encode('%PDF-1.7\n%%EOF\n'));
+      },
+    );
     final approved=await repo.approve(draft());
     expect(approved.serverId,22);
     expect(approved.quoteNumber,'Q-2026-000022');
@@ -91,6 +106,32 @@ void main() {
       'POST /api/v1/quotes/22/approve',
       'POST /api/v1/quotes/22/share',
     ]);
+  });
+
+  test('approval sends saved revision and rejects a stale server response',() async {
+    var approvals=0;
+    final api=client(MockClient((request) async {
+      if(request.url.path == '/api/v1/quotes') {
+        return http.Response(jsonEncode({'data':{'quote':serverQuote()}}),201);
+      }
+      if(request.url.path.endsWith('/approve')) {
+        approvals++;
+        expect(request.headers['content-type'],contains('multipart/form-data'));
+        final body=latin1.decode(request.bodyBytes);
+        expect(body,contains('name="confirmed"'));
+        expect(body,contains('name="expected_revision"'));
+        expect(body,contains('name="file"'));
+        return http.Response(jsonEncode({'message':
+          'Quote was updated elsewhere. Reload before approving.'}),409);
+      }
+      throw StateError('Unexpected request');
+    }));
+    await expectLater(RemoteQuoteRepository(
+      api:api,
+      approvedPdfBuilder:(_) async =>
+          Uint8List.fromList(utf8.encode('%PDF-1.7\n%%EOF\n')),
+    ).approve(draft()), throwsA(isA<SignApiException>()));
+    expect(approvals,1);
   });
 
   test('rejects fabricated foreign tenant quote and company switches',() async {

@@ -13,6 +13,8 @@ import 'in_person_signature_screen.dart';
 import 'document_signed_success_screen.dart';
 import '../../../clients/presentation/widgets/sign2digital_status_badge.dart';
 import '../../services/quote_pdf_service.dart';
+import '../../data/remote_quote_repository.dart';
+import '../../../../core/services/sign_api_client.dart';
 import 'send_quote_screen.dart';
 
 /// Mobile representation of the same structured quote sent to the PDF builder.
@@ -169,7 +171,24 @@ class _QuotePreviewScreenState extends State<QuotePreviewScreen> {
     if (_busy) return;
     setState(() => _busy = true);
     try {
-      final bytes = await const Sign2DigitalQuotePdfBuilder().build(_quote);
+      // New M7 quotes must use their immutable, server-approved PDF.
+      // Historical M6 quotes have no stored artifact: allow local download
+      // with a clear warning, but NEVER use that file as a verified attachment.
+      var legacyCopy = false;
+      final bytes = await (() async {
+        if (_quote.serverId != null && _quote.approvedLocally && !_quote.isDemo) {
+          try {
+            return await RemoteQuoteRepository.shared.fetchApprovedPdf(_quote);
+          } on SignApiException catch (error) {
+            if (error.statusCode != 409 ||
+                !error.message.contains('no verified approved PDF')) {
+              rethrow;
+            }
+            legacyCopy = true;
+          }
+        }
+        return const Sign2DigitalQuotePdfBuilder().build(_quote);
+      })();
       final path = await FilePicker.saveFile(
         dialogTitle: 'Save Quote PDF', fileName: _filename,
         type: FileType.custom, allowedExtensions: ['pdf'], bytes: bytes,
@@ -177,7 +196,9 @@ class _QuotePreviewScreenState extends State<QuotePreviewScreen> {
       if (path != null) {
         DocumentActivitySession.downloaded(
           _quote.id, demoOnly: _quote.isDemo);
-        _message('PDF saved to the selected location.');
+        _message(legacyCopy
+            ? 'Legacy quote PDF saved from current details. Not approval-verified.'
+            : 'PDF saved to the selected location.');
       }
     } catch (error) {
       _message('Could not save PDF: $error');

@@ -46,12 +46,15 @@ class Sign2DigitalFinancialDocumentSections {
         child: child,
       );
 
+  // A shared label column keeps both dates in the same vertical value column.
+  // Right-aligned labels preserve a small, identical gap after each label.
   Widget _dateLine(String label, String value) => Row(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      SizedBox(width: 76, child: Text(label,
-        softWrap: false, maxLines: 1, style: _text(12, weight: FontWeight.w600))),
-      const SizedBox(width: 7),
+      SizedBox(width: 72, child: Text(label, textAlign: TextAlign.right,
+        softWrap: false, maxLines: 1,
+        style: _text(12, weight: FontWeight.w600))),
+      const SizedBox(width: 6),
       Expanded(child: Text(value,
         style: _text(12, color: AppColors.placeholder))),
     ],
@@ -85,11 +88,17 @@ class Sign2DigitalFinancialDocumentSections {
         return Column(crossAxisAlignment: CrossAxisAlignment.start,
           children: [billTo, const SizedBox(height: 15), dates]);
       }
+      // Keep the right edge of the dates aligned with the Quote number above.
+      // A compact right-hand column moves the dates right on portrait phones,
+      // while the bill-to details retain the remaining available space.
+      final dateWidth = constraints.maxWidth < 420
+          ? constraints.maxWidth * .46 : 185.0;
       return Row(crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(child: billTo),
-          const SizedBox(width: 16),
-          Expanded(child: dates),
+          const SizedBox(width: 12),
+          SizedBox(key: const Key('quote-preview-date-block'),
+            width: dateWidth, child: dates),
         ]);
     },
   );
@@ -137,8 +146,7 @@ class Sign2DigitalFinancialDocumentSections {
           items: [
             for (final item in document.items)
               Sign2DigitalDocumentTableLine(
-                description: item.title.isEmpty
-                    ? 'Unspecified item' : item.title,
+                description: quoteWorkItemDocumentText(item),
                 quantity: item.quantity.isEmpty ? '—' : item.quantity,
                 unitPrice: quoteMoney(item.priceMinor, document.currency),
                 total: quoteMoney(item.totalMinor, document.currency),
@@ -165,12 +173,19 @@ class Sign2DigitalFinancialDocumentSections {
                     label: 'Subtotal',
                     value: quoteMoney(document.subtotalMinor, document.currency)),
                   Sign2DigitalDocumentAmountRow(
-                    label: 'Tax (${(document.vatBasisPoints / 100).toStringAsFixed(2)}%)',
+                    label: 'Tax (${quotePercentText(document.vatBasisPoints)}%)',
                     value: quoteMoney(document.vatMinor, document.currency)),
                   Sign2DigitalDocumentAmountRow(
                     label: 'Total',
                     value: quoteMoney(document.totalMinor, document.currency),
                     highlight: true),
+                  Sign2DigitalDocumentAmountRow(
+                    label: 'Deposit due (${quotePercentText(document.depositBasisPoints)}%)',
+                    value: quoteMoney(document.depositMinor, document.currency)),
+                  Sign2DigitalDocumentAmountRow(
+                    label: 'Remaining after deposit',
+                    value: quoteMoney(document.remainingAfterDepositMinor,
+                        document.currency)),
                 ],
               ),
             ),
@@ -237,16 +252,14 @@ class Sign2DigitalFinancialDocumentSections {
             Text('A valid Swiss payment account, payee address and payable '
               'amount are needed to display a payment QR.',
               style: _text(12, color: AppColors.placeholder)),
-            if (payment != null) ...[
-              const SizedBox(height: 12),
-              if (payment.iban.trim().isNotEmpty)
-                _paymentField('Account / payable to', payment.iban),
-              if (payment.accountHolder.trim().isNotEmpty)
-                _paymentField('Company Name', payment.accountHolder),
-              _paymentField('Payable amount',
-                quoteMoney(document.totalMinor, document.currency)),
-              _paymentField('Currency', document.currency),
-            ],
+            const SizedBox(height: 12),
+            if (payment != null && payment.iban.trim().isNotEmpty)
+              _paymentField('Account / payable to', payment.iban),
+            if (payment != null && payment.accountHolder.trim().isNotEmpty)
+              _paymentField('Company Name', payment.accountHolder),
+            _paymentField('Payable amount',
+              quoteMoney(document.totalMinor, document.currency)),
+            _paymentField('Currency', document.currency),
           ] else Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
