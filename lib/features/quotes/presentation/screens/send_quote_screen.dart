@@ -187,6 +187,14 @@ class _SendQuoteScreenState extends State<SendQuoteScreen> {
       })();
       if (data.isEmpty) { throw StateError('The PDF is empty.'); }
       if (mounted) { setState(() => _pdfBytes = data); }
+    } on SignApiException catch (error) {
+      if (mounted) {
+        setState(() => _pdfError =
+          error.statusCode == 409 &&
+          error.message.contains('no verified approved PDF')
+              ? 'This older quote has no verified PDF. Send a secure link instead.'
+              : 'Approved PDF unavailable: ${error.message}');
+      }
     } catch (error) {
       if (mounted) {
         setState(() => _pdfError = 'Approved PDF unavailable: $error');
