@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:crypto/crypto.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -142,6 +143,7 @@ void main() {
       final data = jsonDecode(request.body) as Map<String, dynamic>;
       expect(data['signerId'], 'signer-public');
       expect(data['consentAccepted'], isTrue);
+      const signedPdf = '%PDF-1.7\n1 0 obj\nendobj\n%%EOF\n';
       return http.Response(jsonEncode({
         'documentId': 'doc-public',
         'quoteId': 'q-public',
@@ -150,7 +152,8 @@ void main() {
         'projectName': 'Repairs',
         'signerName': 'External Customer',
         'signedAt': DateTime.now().toUtc().toIso8601String(),
-        'signedPdfBase64': base64Encode('%PDF-1.7\n%%EOF'.codeUnits),
+        'signedPdfBase64': base64Encode(signedPdf.codeUnits),
+        'signedPdfSha256': sha256.convert(signedPdf.codeUnits).toString(),
       }), 200);
     });
     final gateway = HttpPublicQuoteSigningGateway(
