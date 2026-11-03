@@ -6,6 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
 import '../../domain/quote_document_tracking.dart';
+import '../../data/remote_signature_request_repository.dart';
 import '../../domain/quote_review_models.dart';
 import '../../domain/quote_tracking_home_session.dart';
 import '../../domain/quote_signature_draft.dart';
@@ -48,6 +49,8 @@ class _SignatureRequestScreenState extends State<SignatureRequestScreen> {
   late QuoteDocumentTracking _tracking;
   late bool _remindersEnabled;
   bool _resending = false;
+  int? _serverRequestId;
+  bool _loadingRequest = false;
 
   static const _border = AppColors.lightBorder;
   static const _info = Color(0xFFE3ECF0);
@@ -57,6 +60,70 @@ class _SignatureRequestScreenState extends State<SignatureRequestScreen> {
     super.initState();
     _tracking = widget.tracking ?? QuoteDocumentTracking(quoteId: _quote.id);
     _remindersEnabled = QuoteReminderPreferences.getEnabled(_quote.id);
+    if (_quote.serverId != null && _quote.approvedLocally && !_quote.isDemo) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _loadRemoteRequest());
+    }
+  }
+
+  /// M8 uses only backend-authoritative signing events and request IDs.
+  Future<void> _loadRemoteRequest() async {
+    if (_loadingRequest || !mounted) return;
+    setState(() => _loadingRequest = true);
+    try {
+      final result = await RemoteSignatureRequestRepository.shared.latest(_quote);
+      if (!mounted) return;
+      setState(() {
+        _serverRequestId = result?.id;
+        _tracking = result?.tracking ?? QuoteDocumentTracking(quoteId: _quote.id);
+      });
+    } catch (_) {
+      if (mounted) _notify('Could not load confirmed signature activity.');
+    } finally {
+      if (mounted) setState(() => _loadingRequest = false);
+    }
+  }
+
+  Future<void> _createRequest() async {
+    if (_resending || _loadingRequest) return;
+    final email = _quote.clientEmail.trim();
+    if (email.isEmpty) {
+      _notify('A customer email address is required for a signing request.');
+      return;
+    }
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Request customer signature?'),
+        content: Text('Create a secure signing link for ' + _quote.clientName +
+            '? You can copy it and share it with the customer.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Create link')),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() => _resending = true);
+    try {
+      final result = await RemoteSignatureRequestRepository.shared.create(
+        _quote,
+        signerName: _quote.clientName,
+        signerEmail: email,
+        delivery: 'link',
+      );
+      if (!mounted) return;
+      setState(() {
+        _serverRequestId = result.id;
+        _tracking = result.tracking;
+      });
+      _notify('Secure signing link created. Copy it to share with the customer.');
+    } catch (error) {
+      if (mounted) _notify('Unable to create signature request: $error');
+    } finally {
+      if (mounted) setState(() => _resending = false);
+    }
   }
 
   void _notify(String text) {
@@ -104,16 +171,25 @@ class _SignatureRequestScreenState extends State<SignatureRequestScreen> {
   }
 
   Future<void> _resend() async {
-    if (_resending) return;
-    if (!_tracking.requestIsActive || widget.onResend == null) {
-      _notify('Resending requires an active request and connected delivery service.');
+    if (_resending || _loadingRequest) return;
+    if (_serverRequestId == null && widget.onResend == null) {
+      if (_quote.serverId != null && _quote.approvedLocally && !_quote.isDemo) {
+        await _createRequest();
+      } else {
+        _notify('A connected signature request is required.');
+      }
+      return;
+    }
+    if (!_tracking.requestIsActive && _serverRequestId == null) {
+      _notify('Resending requires an active signature request.');
       return;
     }
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Resend signature request?'),
-        content: Text('Send another request to ${_quote.clientName}?'),
+        content: Text('Email another signing request to ' + _quote.clientName +
+            '? The previous link will stop working.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(dialogContext, false),
               child: const Text('Cancel')),
@@ -125,20 +201,25 @@ class _SignatureRequestScreenState extends State<SignatureRequestScreen> {
     if (confirmed != true || !mounted) return;
     setState(() => _resending = true);
     try {
-      final delivered = await widget.onResend!(_tracking);
-      if (!mounted) return;
-      if (delivered) {
-        final now = DateTime.now();
-        setState(() => _tracking = _tracking.withEvent(QuoteDocumentEvent(
-          id: 'resend-${now.microsecondsSinceEpoch}',
-          type: QuoteDocumentEventType.documentSent, occurredAt: now,
-        )));
-        _notify('Resend confirmed by the connected service.');
+      if (_serverRequestId != null) {
+        final result = await RemoteSignatureRequestRepository.shared.resend(
+          _quote, _serverRequestId!,
+        );
+        if (!mounted) return;
+        setState(() {
+          _serverRequestId = result.id;
+          _tracking = result.tracking;
+        });
+        _notify('Signature reminder sent and confirmed by the server.');
       } else {
-        _notify('The resend was not confirmed.');
+        final delivered = await widget.onResend!(_tracking);
+        if (!mounted) return;
+        _notify(delivered
+            ? 'Resend confirmed by the connected service.'
+            : 'The resend was not confirmed.');
       }
     } catch (error) {
-      _notify('Could not resend the document: $error');
+      if (mounted) _notify('Could not resend the document: $error');
     } finally {
       if (mounted) setState(() => _resending = false);
     }
@@ -274,7 +355,10 @@ class _SignatureRequestScreenState extends State<SignatureRequestScreen> {
     return Row(children: [
       Expanded(child: Sign2DigitalSignatureActionCard(
         key: const Key('signature-resend'),
-        label: _resending ? 'Resending…' : 'Resend Request',
+        label: _resending ? 'Working…' :
+            (_tracking.requestId == null && _quote.serverId != null &&
+                    _quote.approvedLocally && !_quote.isDemo
+                ? 'Request Signature' : 'Resend Request'),
         icon: Icons.chat_bubble_outline, onTap: _resend)),
       SizedBox(width: gap),
       Expanded(child: Sign2DigitalSignatureActionCard(
