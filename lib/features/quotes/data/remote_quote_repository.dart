@@ -3,6 +3,7 @@ import '../../../core/services/active_company_session.dart';
 import '../../../core/services/sign_api_client.dart';
 import '../../auth/data/mobile_auth_repository.dart';
 import '../domain/quote_review_models.dart';
+import '../services/quote_pdf_service.dart';
 
 /// Real M6 quote persistence. Server verifies tenant, RBAC, money and approval.
 class RemoteQuoteRepository {
@@ -130,9 +131,22 @@ class RemoteQuoteRepository {
       throw const SignApiException('Resolve all quote fields before approval.');
     }
     final company=_company();
-    final response=await _api.post(
+    // Generate the customer document from the server-numbered, reviewed
+    // draft *at approval time*. Laravel freezes these exact bytes privately
+    // and can later email only that approved, revision-bound artifact.
+    final approvedPdf=await const Sign2DigitalQuotePdfBuilder().build(saved);
+    _check(company);
+    final response=await _api.postMultipart(
       '/api/v1/quotes/${saved.serverId}/approve',
-      data:{'confirmed':true, if (saved.serverRevision != null) 'expected_revision':saved.serverRevision},companyScoped:true,
+      filename:'Sign2Digital_Approved_Quote.pdf',
+      bytes:approvedPdf,
+      maxBytes:5*1024*1024,
+      companyScoped:true,
+      fields:{
+        'confirmed':'1',
+        if (saved.serverRevision != null)
+          'expected_revision':'${saved.serverRevision}',
+      },
     );
     _check(company);
     final approved=_applied(saved,response,company);
