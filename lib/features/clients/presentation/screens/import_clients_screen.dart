@@ -122,7 +122,7 @@ class _ImportClientsScreenState extends State<ImportClientsScreen> {
       final count = await (widget.clientRepository ??
           RemoteClientRepository.shared).importReviewed(drafts);
       if (!mounted) return;
-      Navigator.of(sheetContext).pop();
+      if (sheetContext.mounted) Navigator.of(sheetContext).pop();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('$count clients imported to the selected company.')),
       );
