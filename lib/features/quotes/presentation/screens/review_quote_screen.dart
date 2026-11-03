@@ -258,7 +258,10 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
 
   Future<void> _approve() async {
     if (_savingToServer) return;
-    final issues = _draft.approvalIssues;
+    // A live quote obtains its number from the server on first save.
+    final issues = _draft.approvalIssues.where(
+      (issue) => !_remoteMode || issue != 'Quote Number is required.',
+    ).toList();
     if (issues.isNotEmpty) {
       _notice('Cannot approve: ${issues.first}');
       return;

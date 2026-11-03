@@ -109,11 +109,17 @@ class RemoteQuoteRepository {
   }
 
   Future<QuoteReviewDraft> approve(QuoteReviewDraft quote) async {
-    if (quote.isDemo || quote.approvalIssues.isNotEmpty ||
-        quote.terms.trim().isEmpty) {
+    if (quote.isDemo || quote.terms.trim().isEmpty ||
+        quote.approvalIssues.any(
+          (issue) => issue != 'Quote Number is required.',
+        )) {
       throw const SignApiException('Review all fields, pricing and terms first.');
     }
+    // The server allocates the immutable real quote number on first save.
     final saved=await saveDraft(quote);
+    if (saved.approvalIssues.isNotEmpty) {
+      throw const SignApiException('Resolve all quote fields before approval.');
+    }
     final company=_company();
     final response=await _api.post(
       '/api/v1/quotes/${saved.serverId}/approve',
