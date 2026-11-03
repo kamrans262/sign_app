@@ -200,17 +200,17 @@ class JobDetailsScreen extends StatelessWidget {
                     const SizedBox(height: 12),
                     for (final file in signed)
                       ListTile(
-                        key: Key('signed-job-document-' + file.documentId),
+                        key: Key('signed-job-document-${file.documentId}'),
                         leading: const Icon(Icons.picture_as_pdf_outlined),
                         title: Text(file.quoteNumber),
-                        subtitle: Text('Signed ' + file.signedAt.toLocal().toString()),
+                        subtitle: Text('Signed ${file.signedAt.toLocal()}'),
                         onTap: () async {
                           try {
                             final bytes=await RemoteSignedDocumentRepository.shared
                                 .download(file);
                             await Printing.sharePdf(
                               bytes:bytes,
-                              filename:'Signed_' + file.documentId + '.pdf',
+                              filename:'Signed_${file.documentId}.pdf',
                             );
                           } catch (_) {
                             if (!sheetContext.mounted) return;
