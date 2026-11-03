@@ -514,12 +514,12 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
           label: '',
           onPressed: _create,
         ),
-        const IgnorePointer(
+        IgnorePointer(
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.add, size: 24, color: AppColors.white),
-              SizedBox(width: 10),
+              const Icon(Icons.add, size: 24, color: AppColors.white),
+              const SizedBox(width: 10),
               Text(widget.initialJob == null ? 'Create new job' : 'Save changes',
                     style: AppTextStyles.primaryButton),
             ],
