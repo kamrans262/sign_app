@@ -178,7 +178,7 @@ class RemoteSignatureRequestRepository {
   ) async {
     final company=_company();
     final data=_data(await _api.post(
-      '/api/v1/signature-requests/' + id.toString() + '/rotate-link',
+      '/api/v1/signature-requests/${id}/rotate-link',
       data:const {},companyScoped:true,
     ));
     if(company!=ActiveCompanySession.companyId) {
