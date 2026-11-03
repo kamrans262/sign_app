@@ -1,0 +1,52 @@
+name: M8 Stage 2 mobile platform compilation (no publishing)
+
+on:
+  push:
+    branches: [feature/m8-digital-signatures-2026-11-04]
+    paths:
+      - '.github/workflows/m8-stage2-mobile-smoke.yml'
+      - 'lib/features/quotes/**'
+      - 'lib/features/documents/**'
+      - 'lib/features/jobs/presentation/screens/job_details_screen.dart'
+      - 'lib/core/services/sign_api_client.dart'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sign2digital-m8-stage2-mobile
+  cancel-in-progress: true
+
+jobs:
+  android-debug:
+    runs-on: ubuntu-latest
+    timeout-minutes: 24
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Resolve dependencies
+        run: flutter pub get
+      - name: Compile Android debug without signing or distributing
+        run: flutter build apk --debug --no-pub
+      - name: Verify generated APK is nonempty
+        run: test -s build/app/outputs/flutter-apk/app-debug.apk
+
+  ios-simulator:
+    runs-on: macos-latest
+    timeout-minutes: 24
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Resolve dependencies
+        run: flutter pub get
+      - name: Compile iOS Simulator (no signing, no store publishing)
+        run: flutter build ios --simulator --debug --no-codesign --no-pub
