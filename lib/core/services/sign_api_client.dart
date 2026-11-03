@@ -111,9 +111,11 @@ class SignApiClient {
     required String filename,
     required Uint8List bytes,
     bool companyScoped = false,
+    int maxBytes = 2 * 1024 * 1024,
   }) async {
-    if (bytes.length > 2 * 1024 * 1024) {
-      throw const SignApiException('The file exceeds the 2 MB limit.');
+    if (maxBytes <= 0 || maxBytes > 25 * 1024 * 1024 ||
+        bytes.isEmpty || bytes.length > maxBytes) {
+      throw const SignApiException('The selected file exceeds the allowed size.');
     }
     final request = http.MultipartRequest('POST', _uri(endpoint))
       ..followRedirects = false;

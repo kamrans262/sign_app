@@ -170,6 +170,8 @@ class QuoteReviewDraft {
     this.validUntil, this.payment,
     this.isDemo = false,
     this.approvedLocally = false,
+    this.serverId,
+    this.sourceMethod = 'manual',
   });
 
   final String id;
@@ -192,6 +194,9 @@ class QuoteReviewDraft {
   QuotePaymentDetails? payment;
   final bool isDemo;
   bool approvedLocally;
+  /// Server persistence ID, independent of existing Figma route ID.
+  int? serverId;
+  String sourceMethod;
 
   /// This fixture is explicitly UI-only; its prices/tax are not AI results.
   factory QuoteReviewDraft.figmaDemo() => QuoteReviewDraft(
@@ -229,6 +234,7 @@ class QuoteReviewDraft {
         jobId: source?.jobId,
         companyId: source?.companyId,
         sourceNoteId: source?.sourceNoteId,
+        sourceMethod: source?.method.name ?? 'manual',
         clientName: source?.clientName ?? '',
         clientEmail: source?.clientEmail ?? '',
         clientPhone: source?.clientPhone ?? '',
@@ -279,6 +285,7 @@ class QuoteReviewDraft {
       clientId: source?.clientId, jobId: source?.jobId,
       companyId: source?.companyId,
       sourceNoteId: source?.sourceNoteId,
+      sourceMethod: source?.method.name ?? 'manual',
       clientName: source?.clientName ?? '',
       clientEmail: source?.clientEmail ?? '',
       clientPhone: source?.clientPhone ?? '',
@@ -349,6 +356,7 @@ class QuoteReviewDraft {
     billingAddress: billingAddress, clientEmail: clientEmail,
     clientPhone: clientPhone, validUntil: validUntil, payment: payment?.copy(),
     isDemo: isDemo, approvedLocally: approvedLocally,
+    serverId: serverId, sourceMethod: sourceMethod,
   );
 }
 
