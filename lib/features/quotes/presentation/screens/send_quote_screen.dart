@@ -178,6 +178,39 @@ class _SendQuoteScreenState extends State<SendQuoteScreen> {
   void _changeMethod(QuoteSendingMethod method) {
     setState(() => _sendDraft.method = method);
     _saveSession();
+    if (method == QuoteSendingMethod.secureLink && _usableLink == null) {
+      _requestSecureLink();
+    }
+  }
+
+  Future<void> _requestSecureLink() async {
+    if (_busy || _usableLink != null) return;
+    if (!MobileAuthRepository.shared.isSignedIn ||
+        _quote.isDemo || _quote.serverId == null || !_quote.approvedLocally) {
+      _notify('Save and approve this quote to generate a secure link.');
+      return;
+    }
+    setState(() => _busy = true);
+    try {
+      final result = await RemoteQuoteRepository.shared.share(
+        _quote, method: 'secure_link',
+      );
+      final raw = result['secure_link'];
+      final link = raw is String ? Uri.tryParse(raw) : null;
+      if (link == null || link.scheme != 'https' || link.host.isEmpty) {
+        throw const FormatException('The server did not return a valid secure link.');
+      }
+      if (!mounted) return;
+      setState(() {
+        _serverSecureLink = raw as String;
+        _serverLinkExpiresAt =
+            DateTime.tryParse((result['expires_at'] ?? '').toString());
+      });
+    } catch (error) {
+      if (mounted) _notify('Unable to generate secure link: $error');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   Uri? get _usableLink {
@@ -193,13 +226,11 @@ class _SendQuoteScreenState extends State<SendQuoteScreen> {
   }
 
   Future<void> _copyLink() async {
+    if (_usableLink == null) await _requestSecureLink();
     final link = _usableLink;
-    if (link == null) {
-      _notify('No valid secure document link is available yet.');
-      return;
-    }
+    if (link == null || !mounted) return;
     await Clipboard.setData(ClipboardData(text: link.toString()));
-    _notify('Secure link copied.');
+    _notify('Secure link copied. Share it to deliver the quote.');
   }
 
   Future<void> _editCustomer() async {
@@ -600,16 +631,16 @@ class _SendQuoteScreenState extends State<SendQuoteScreen> {
       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(_usableLink != null ? 'Secure document link' :
-              'Secure document link unavailable',
+              'Generate secure document link',
               style: _style(14, weight: FontWeight.w600)),
           const SizedBox(height: 4),
           Text(_usableLink?.toString() ??
-              'A protected, expiring link requires a connected service.',
+              'Tap the copy icon or select Secure Link to generate a protected, expiring link.',
             softWrap: true, style: _style(12, color: _hint)),
         ])),
       IconButton(key: const Key('send-copy-link'),
-        onPressed: _usableLink == null ? null : _copyLink,
-        tooltip: 'Copy secure link',
+        onPressed: _busy ? null : _copyLink,
+        tooltip: _usableLink == null ? 'Generate secure link' : 'Copy secure link',
         icon: _assetIcon('copy', Icons.copy_outlined)),
     ]));
 
