@@ -1,6 +1,7 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../../core/services/sign_api_client.dart';
+import '../../../core/services/active_company_session.dart';
 import '../presentation/screens/create_account_screen.dart';
 
 /// Passwords and OTP codes are never saved in Flutter preferences or logs.
@@ -61,7 +62,8 @@ class EmailOtpVerification {
 class MobileAuthRepository {
   MobileAuthRepository({SignApiClient? api, AuthTokenStorage? tokenStorage})
       : _tokenStorage = tokenStorage ?? const SecureAuthTokenStorage() {
-    _api = api ?? SignApiClient(tokenProvider: () async => _sessionToken);
+    _api = api ?? SignApiClient(tokenProvider: () async => _sessionToken,
+      activeCompanyId: () => ActiveCompanySession.companyId);
   }
 
   static final MobileAuthRepository shared = MobileAuthRepository();
@@ -69,6 +71,8 @@ class MobileAuthRepository {
   late final SignApiClient _api;
   final AuthTokenStorage _tokenStorage;
   String? _sessionToken;
+
+  SignApiClient get api => _api;
 
   bool get isSignedIn => _sessionToken != null && _sessionToken!.isNotEmpty;
 
@@ -82,6 +86,7 @@ class MobileAuthRepository {
       return true;
     } catch (error) {
       _sessionToken = null;
+      ActiveCompanySession.clear();
       // Only permanently discard a token if the backend explicitly rejects it.
       // A network outage must not delete a still-valid remembered session.
       if (error is SignApiException &&
@@ -215,6 +220,7 @@ class MobileAuthRepository {
       if (isSignedIn) await _api.post('/api/v1/auth/logout');
     } finally {
       _sessionToken = null;
+      ActiveCompanySession.clear();
       await _tokenStorage.delete();
     }
   }

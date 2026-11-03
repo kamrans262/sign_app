@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 
@@ -102,6 +103,35 @@ class SignApiClient {
       rethrow;
     } catch (_) {
       throw const SignApiException('Unable to connect to Sign2Digital.');
+    }
+  }
+
+  Future<Map<String, dynamic>> postMultipart(
+    String endpoint, {
+    required String filename,
+    required Uint8List bytes,
+    bool companyScoped = false,
+  }) async {
+    if (bytes.length > 2 * 1024 * 1024) {
+      throw const SignApiException('The file exceeds the 2 MB limit.');
+    }
+    final request = http.MultipartRequest('POST', _uri(endpoint))
+      ..followRedirects = false;
+    request.headers.addAll(await _headers(
+      authenticated: true, companyScoped: companyScoped,
+    ));
+    request.files.add(http.MultipartFile.fromBytes(
+      'file', bytes, filename: filename,
+    ));
+    try {
+      final streamed = await _http.send(request).timeout(const Duration(seconds: 25));
+      final response = await http.Response.fromStream(streamed)
+          .timeout(const Duration(seconds: 25));
+      return _decode(response);
+    } on SignApiException {
+      rethrow;
+    } catch (_) {
+      throw const SignApiException('Unable to upload this company file.');
     }
   }
 
