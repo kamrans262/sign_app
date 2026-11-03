@@ -13,6 +13,7 @@ import 'in_person_signature_screen.dart';
 import 'document_signed_success_screen.dart';
 import '../../../clients/presentation/widgets/sign2digital_status_badge.dart';
 import '../../services/quote_pdf_service.dart';
+import '../../data/remote_quote_repository.dart';
 import 'send_quote_screen.dart';
 
 /// Mobile representation of the same structured quote sent to the PDF builder.
@@ -169,7 +170,12 @@ class _QuotePreviewScreenState extends State<QuotePreviewScreen> {
     if (_busy) return;
     setState(() => _busy = true);
     try {
-      final bytes = await const Sign2DigitalQuotePdfBuilder().build(_quote);
+      // An approved live quote must download the exact document frozen at
+      // approval; a locally re-rendered copy might not match the emailed PDF.
+      final bytes = _quote.serverId != null && _quote.approvedLocally &&
+              !_quote.isDemo
+          ? await RemoteQuoteRepository.shared.fetchApprovedPdf(_quote)
+          : await const Sign2DigitalQuotePdfBuilder().build(_quote);
       final path = await FilePicker.saveFile(
         dialogTitle: 'Save Quote PDF', fileName: _filename,
         type: FileType.custom, allowedExtensions: ['pdf'], bytes: bytes,
