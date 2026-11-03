@@ -6,6 +6,10 @@ import '../../../../core/theme/dashboard_colors.dart';
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import '../../../company/data/company_repository.dart';
 import '../../../company/data/demo_company_repository.dart';
+import '../../../company/data/remote_company_repository.dart';
+import '../../../auth/data/mobile_auth_repository.dart';
+import '../../../../core/services/active_company_session.dart';
+import '../../../../core/services/sign_api_client.dart';
 import '../../../company/domain/company_profile.dart';
 import '../../../documents/data/demo_document_repository.dart';
 import '../../../documents/domain/document_record.dart';
@@ -121,8 +125,9 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   String? _companyId;
   bool _loading = true;
 
-  CompanyRepository get _companyRepo =>
-      widget.companyRepository ?? DemoCompanyRepository.shared;
+  CompanyRepository get _companyRepo => widget.companyRepository ??
+      (MobileAuthRepository.shared.isSignedIn
+          ? RemoteCompanyRepository.shared : DemoCompanyRepository.shared);
 
   CompanyProfile? get _company {
     for (final company in _companies) {
@@ -173,12 +178,25 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
       expenses = HomeOverview.totalExpenses(
         await widget.expenseRepository.listExpenses());
     } catch (_) {}
+    if (MobileAuthRepository.shared.isSignedIn &&
+        widget.companyRepository == null && companies.isNotEmpty &&
+        ActiveCompanySession.companyId == null) {
+      try {
+        await RemoteCompanyRepository.shared.switchTo(companies.first.id);
+      } catch (_) {
+        // Company-scoped APIs still require server-approved context.
+      }
+    }
     if (!mounted) return;
     setState(() {
       _companies = companies;
-      if (!companies.any((item) => item.id == _companyId)) {
+      if (MobileAuthRepository.shared.isSignedIn &&
+          widget.companyRepository == null) {
+        final active = ActiveCompanySession.companyId?.toString();
+        _companyId = companies.any((item) => item.id == active)
+            ? active : (companies.isEmpty ? null : companies.first.id);
+      } else if (!companies.any((item) => item.id == _companyId)) {
         _companyId = null;
-        // Prefer the company actually created in the demo session.
         for (final item in companies) {
           if (item.id == 'demo-current-company') {
             _companyId = item.id;
@@ -201,23 +219,44 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   }
 
   Future<void> _switchCompany() async {
-    // Company names are labels; the repository's ID remains authoritative.
-    // Selecting a demo company cannot claim to switch a backend tenant.
     final companies = _companies;
     if (companies.isEmpty) return;
-    final names = [for (final item in companies) item.companyName];
+    final names = [
+      for (final company in companies)
+        companies.where((item) => item.companyName == company.companyName).length > 1
+            ? company.companyName + ' (#' + company.id + ')'
+            : company.companyName,
+    ];
+    final selectedIndex = companies.indexWhere((item) => item.id == _companyId);
     final selected = await Sign2DigitalSelectionSheet.show(
       context,
       title: 'Switch company',
       options: names,
-      selected: _company?.companyName,
+      selected: selectedIndex < 0 ? null : names[selectedIndex],
       icon: Icons.business_outlined,
     );
     if (selected == null || !mounted) return;
     final index = names.indexOf(selected);
     if (index < 0) return;
-    setState(() => _companyId = companies[index].id);
-    widget.onCompanySelected?.call(_companyId);
+    final next = companies[index].id;
+    if (next == _companyId) return;
+    if (MobileAuthRepository.shared.isSignedIn &&
+        widget.companyRepository == null) {
+      try {
+        await RemoteCompanyRepository.shared.switchTo(next);
+      } catch (error) {
+        if (!mounted) return;
+        final message = error is SignApiException
+            ? error.message : 'Unable to switch companies.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+        return;
+      }
+    }
+    if (!mounted) return;
+    setState(() => _companyId = next);
+    widget.onCompanySelected?.call(next);
   }
 
   String _count(int? value) =>
