@@ -132,7 +132,7 @@ class RemoteQuoteRepository {
     final company=_company();
     final response=await _api.post(
       '/api/v1/quotes/${saved.serverId}/approve',
-      data:{'confirmed':true},companyScoped:true,
+      data:{'confirmed':true, if (saved.serverRevision != null) 'expected_revision':saved.serverRevision},companyScoped:true,
     );
     _check(company);
     final approved=_applied(saved,response,company);
