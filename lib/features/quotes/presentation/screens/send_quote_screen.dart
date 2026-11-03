@@ -176,10 +176,18 @@ class _SendQuoteScreenState extends State<SendQuoteScreen> {
   }
 
   void _changeMethod(QuoteSendingMethod method) {
-    setState(() => _sendDraft.method = method);
+    setState(() {
+      _sendDraft.method = method;
+      if (method == QuoteSendingMethod.other) {
+        // Other uses the native PDF share sheet, not a fictitious delivery API.
+        _sendDraft.pdfAttached = true;
+      }
+    });
     _saveSession();
     if (method == QuoteSendingMethod.secureLink && _usableLink == null) {
       _requestSecureLink();
+    } else if (method == QuoteSendingMethod.other && _pdfBytes == null) {
+      _preparePdf();
     }
   }
 
