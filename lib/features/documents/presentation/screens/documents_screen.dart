@@ -86,10 +86,10 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
       ...originalQuotes,
       for(final file in signed)
         DocumentRecord(
-          id:'m8-signed-' + file.id.toString(),
+          id:'m8-signed-${file.id}',
           category:DocumentCategory.quotes,
           number:file.quoteNumber,
-          title:'Signed Quote ' + file.quoteNumber,
+          title:'Signed Quote ${file.quoteNumber}',
           project:file.jobId ?? 'Not linked to a job',
           customer:file.signerName,
           timestamp:file.signedAt,
@@ -99,7 +99,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
           updatedAt:file.signedAt,
           history:[
             DocumentHistoryEvent(
-              id:'server-signed-' + file.documentId,
+              id:'server-signed-${file.documentId}',
               documentId:file.documentId,
               type:DocumentHistoryType.signed,
               occurredAt:file.signedAt,
