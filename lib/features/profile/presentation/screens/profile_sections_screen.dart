@@ -18,6 +18,22 @@ class ProfileBusinessInformationScreen extends StatelessWidget {
 
   String _roleFor(CompanyProfile company) => company.role;
 
+  Future<void> _openInvitations(BuildContext context) async {
+    final accepted = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) => const CompanyInvitationsScreen(),
+      ),
+    );
+    if (!context.mounted || accepted != true) return;
+    // Reload the verified active company, rather than leaving a stale
+    // "no company" or previous business profile after joining a team.
+    Navigator.of(context).pushReplacement<void, void>(
+      MaterialPageRoute<void>(
+        builder: (_) => const ProfileBusinessInformationScreen(),
+      ),
+    );
+  }
+
   Future<CompanyProfile?> _realCompany() async {
     final companies = await RemoteCompanyRepository.shared.list();
     final selected = ActiveCompanySession.companyId?.toString();
@@ -82,10 +98,7 @@ class ProfileBusinessInformationScreen extends StatelessWidget {
                   const SizedBox(height: 12),
                   OutlinedButton(
                     key: const Key('company-invitations-no-company'),
-                    onPressed: () => Navigator.of(context).push<void>(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const CompanyInvitationsScreen()),
-                    ),
+                    onPressed: () => _openInvitations(context),
                     child: const Text('Accept Company Invitation'),
                   ),
                 ],
@@ -142,10 +155,7 @@ class ProfileBusinessInformationScreen extends StatelessWidget {
                 const SizedBox(height: 10),
                 OutlinedButton(
                   key: const Key('accept-company-invitation'),
-                  onPressed: () => Navigator.of(context).push<void>(
-                    MaterialPageRoute<void>(
-                      builder: (_) => const CompanyInvitationsScreen()),
-                  ),
+                  onPressed: () => _openInvitations(context),
                   child: const Text('Company Invitations'),
                 ),
               ] else
