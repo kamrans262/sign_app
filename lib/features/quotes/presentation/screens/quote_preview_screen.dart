@@ -14,6 +14,7 @@ import 'document_signed_success_screen.dart';
 import '../../../clients/presentation/widgets/sign2digital_status_badge.dart';
 import '../../services/quote_pdf_service.dart';
 import '../../data/remote_quote_repository.dart';
+import '../../data/remote_in_person_signing_repository.dart';
 import '../../../../core/services/sign_api_client.dart';
 import 'send_quote_screen.dart';
 
@@ -208,24 +209,55 @@ class _QuotePreviewScreenState extends State<QuotePreviewScreen> {
   }
 
   bool get _inPersonReady =>
-      widget.inPersonDocumentId?.trim().isNotEmpty == true &&
-      widget.inPersonCustomerSignerId?.trim().isNotEmpty == true &&
-      widget.inPersonBusinessSignerId?.trim().isNotEmpty == true &&
-      widget.onSubmitInPersonSignature != null;
+      (widget.inPersonDocumentId?.trim().isNotEmpty == true &&
+       widget.inPersonCustomerSignerId?.trim().isNotEmpty == true &&
+       widget.inPersonBusinessSignerId?.trim().isNotEmpty == true &&
+       widget.onSubmitInPersonSignature != null) ||
+      (_quote.serverId != null && _quote.approvedLocally && !_quote.isDemo);
 
-  void _openVerifiedInPerson() {
-    if (!_inPersonReady) return;
-    Navigator.of(context).push<void>(MaterialPageRoute<void>(
-      builder: (_) => InPersonSignatureScreen(
-        quote: _quote.copy(),
-        projectName: _quote.items.isEmpty
-            ? _quote.quoteNumber : _quote.items.first.title,
-        documentId: widget.inPersonDocumentId!,
-        customerSignerId: widget.inPersonCustomerSignerId!,
-        businessSignerId: widget.inPersonBusinessSignerId!,
-        onSubmit: widget.onSubmitInPersonSignature,
-      ),
-    ));
+  Future<void> _openVerifiedInPerson() async {
+    if (!_inPersonReady || _busy) return;
+    final configured = widget.inPersonDocumentId?.trim().isNotEmpty == true &&
+        widget.inPersonCustomerSignerId?.trim().isNotEmpty == true &&
+        widget.inPersonBusinessSignerId?.trim().isNotEmpty == true &&
+        widget.onSubmitInPersonSignature != null;
+    if (configured) {
+      Navigator.of(context).push<void>(MaterialPageRoute<void>(
+        builder: (_) => InPersonSignatureScreen(
+          quote: _quote.copy(),
+          projectName: _quote.items.isEmpty
+              ? _quote.quoteNumber : _quote.items.first.title,
+          documentId: widget.inPersonDocumentId!,
+          customerSignerId: widget.inPersonCustomerSignerId!,
+          businessSignerId: widget.inPersonBusinessSignerId!,
+          onSubmit: widget.onSubmitInPersonSignature,
+        ),
+      ));
+      return;
+    }
+    setState(() => _busy = true);
+    try {
+      final session = await RemoteInPersonSigningRepository.shared.start(_quote);
+      if (!mounted) return;
+      final quote = _quote.copy();
+      await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+        builder: (_) => InPersonSignatureScreen(
+          quote: quote,
+          projectName: quote.items.isEmpty
+              ? quote.quoteNumber : quote.items.first.title,
+          documentId: session.documentId,
+          customerSignerId: session.customerSignerId,
+          businessSignerId: session.businessSignerId,
+          onSubmit: (signature) =>
+              RemoteInPersonSigningRepository.shared.complete(
+                quote, session, signature),
+        ),
+      ));
+    } catch (error) {
+      _message('Unable to start in-person signing: $error');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   void _sendToCustomer() {
