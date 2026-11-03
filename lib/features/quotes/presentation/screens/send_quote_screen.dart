@@ -162,14 +162,18 @@ class _SendQuoteScreenState extends State<SendQuoteScreen> {
 
   Future<void> _preparePdf() async {
     if (_preparing) { return; }
-    setState(() { _preparing = true; _pdfError = null; });
+    setState(() { _preparing = true; _pdfError = null; _pdfBytes = null; });
     try {
       final data = await (widget.pdfGenerator?.call(_quote) ??
-          const Sign2DigitalQuotePdfBuilder().build(_quote));
+          (_quote.serverId != null && _quote.approvedLocally && !_quote.isDemo
+              ? RemoteQuoteRepository.shared.fetchApprovedPdf(_quote)
+              : const Sign2DigitalQuotePdfBuilder().build(_quote)));
       if (data.isEmpty) { throw StateError('The PDF is empty.'); }
       if (mounted) { setState(() => _pdfBytes = data); }
     } catch (error) {
-      if (mounted) { setState(() => _pdfError = 'PDF unavailable: $error'); }
+      if (mounted) {
+        setState(() => _pdfError = 'Approved PDF unavailable: $error');
+      }
     } finally {
       if (mounted) { setState(() => _preparing = false); }
     }
