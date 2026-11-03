@@ -35,6 +35,17 @@ class Sign2DigitalQuotePdfBuilder {
     pw.TextStyle style(double size, {PdfColor? color, bool bold = false}) =>
         pw.TextStyle(fontSize: size, color: color ?? ink,
           fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal);
+    // Align both PDF date values in one column while retaining the same
+    // right margin as the quote number; the Laravel web view is unchanged.
+    pw.Widget quoteDateRow(String label, String value) => pw.Row(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.SizedBox(width: 72, child: pw.Text(label,
+          textAlign: pw.TextAlign.right, style: style(11))),
+        pw.SizedBox(width: 6),
+        pw.Expanded(child: pw.Text(value, style: style(11, color: grey))),
+      ],
+    );
     pw.Widget lineAmount(String label, String amount, {bool total = false}) {
       return pw.Container(
         color: total ? blue : PdfColors.white,
@@ -101,14 +112,14 @@ class Sign2DigitalQuotePdfBuilder {
                     ],
                   )),
                   pw.SizedBox(width: 12),
-                  pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  pw.SizedBox(width: 168, child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.stretch,
                     children: [
-                      pw.Text('Date: ${formatDate(quote.date)}',
-                          style: style(11)),
+                      quoteDateRow('Date:', formatDate(quote.date)),
                       pw.SizedBox(height: 8),
-                      pw.Text('Valid Until: ${formatDate(quote.validUntil)}',
-                          style: style(11)),
-                    ]),
+                      quoteDateRow('Valid Until:', formatDate(quote.validUntil)),
+                    ],
+                  )),
                 ]),
               pw.SizedBox(height: 24),
             ]),
