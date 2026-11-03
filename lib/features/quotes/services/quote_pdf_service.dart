@@ -117,7 +117,7 @@ class Sign2DigitalQuotePdfBuilder {
         pw.TableHelper.fromTextArray(
                 headers: const ['Description', 'Qty', 'Unit Price', 'Total'],
                 data: quote.items.map((item) => <String>[
-                  item.title.isEmpty ? '(Unspecified item)' : item.title,
+                  quoteWorkItemDocumentText(item),
                   item.quantity.isEmpty ? '-' : item.quantity,
                   quoteMoney(item.priceMinor, quote.currency),
                   quoteMoney(item.totalMinor, quote.currency),
@@ -144,6 +144,10 @@ class Sign2DigitalQuotePdfBuilder {
               lineAmount('Tax (${quotePercentText(quote.vatBasisPoints)}%)',
                 quoteMoney(quote.vatMinor, quote.currency)),
               lineAmount('Total', quoteMoney(quote.totalMinor, quote.currency), total: true),
+              lineAmount('Deposit due (${quotePercentText(quote.depositBasisPoints)}%)',
+                quoteMoney(quote.depositMinor, quote.currency)),
+              lineAmount('Remaining after deposit',
+                quoteMoney(quote.remainingAfterDepositMinor, quote.currency)),
         pw.SizedBox(height: 65),
         pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
@@ -192,9 +196,34 @@ class Sign2DigitalQuotePdfBuilder {
                     ]),
                   ),
                 ])
-              else pw.Text('A valid Swiss payment account, address and payable amount '
-                'are required before a payment QR can be displayed.',
-                style: style(10, color: grey)),
+              else pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text('A valid Swiss payment account, address and payable amount '
+                    'are required before a payment QR can be displayed.',
+                    style: style(10, color: grey)),
+                  pw.SizedBox(height: 12),
+                  if (quote.payment != null &&
+                      quote.payment!.iban.trim().isNotEmpty) ...[
+                    pw.Text('Account / payable to', style: style(10, bold: true)),
+                    pw.Text(quote.payment!.iban, style: style(10, color: grey)),
+                    pw.SizedBox(height: 5),
+                  ],
+                  if (quote.payment != null &&
+                      quote.payment!.accountHolder.trim().isNotEmpty) ...[
+                    pw.Text('Company Name', style: style(10, bold: true)),
+                    pw.Text(quote.payment!.accountHolder,
+                      style: style(10, color: grey)),
+                    pw.SizedBox(height: 5),
+                  ],
+                  pw.Text('Payable amount', style: style(10, bold: true)),
+                  pw.Text(quoteMoney(quote.totalMinor, quote.currency),
+                    style: style(10, color: grey)),
+                  pw.SizedBox(height: 5),
+                  pw.Text('Currency', style: style(10, bold: true)),
+                  pw.Text(quote.currency, style: style(10, color: grey)),
+                ],
+              ),
             ]),
         ),
         pw.SizedBox(height: 20),
