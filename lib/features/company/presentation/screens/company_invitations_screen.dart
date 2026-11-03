@@ -60,7 +60,9 @@ class _CompanyInvitationsScreenState extends State<CompanyInvitationsScreen> {
     body: SafeArea(child: Column(children: [
       const Sign2DigitalHeader(title: 'Company Invitations'),
       Expanded(child: Center(child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 720),
+        constraints: BoxConstraints(maxWidth:
+            MediaQuery.orientationOf(context) == Orientation.landscape
+                ? double.infinity : 720),
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 25),
           children: [
