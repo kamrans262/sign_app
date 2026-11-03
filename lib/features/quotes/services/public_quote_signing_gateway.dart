@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:crypto/crypto.dart';
 
 import 'package:http/http.dart' as http;
 
@@ -211,15 +212,16 @@ class HttpPublicQuoteSigningGateway implements PublicQuoteSigningGateway {
       throw const FormatException('The server did not return the signed PDF.');
     }
     final bytes = Uint8List.fromList(base64Decode(pdf));
-    if (bytes.length < 5 ||
+    if (bytes.length < 20 || bytes.length > 12 * 1024 * 1024 ||
         bytes[0] != 0x25 || bytes[1] != 0x50 ||
-        bytes[2] != 0x44 || bytes[3] != 0x46 || bytes[4] != 0x2d) {
+        bytes[2] != 0x44 || bytes[3] != 0x46 || bytes[4] != 0x2d ||
+        sha256.convert(bytes).toString() != _string(json, 'signedPdfSha256')) {
       throw const FormatException('Invalid signed PDF from signing service.');
     }
     final receipt = QuoteSignedDisplayData(
       documentId: _string(json, 'documentId'),
       quoteId: _string(json, 'quoteId'),
-      jobId: _string(json, 'jobId'),
+      jobId: json['jobId'] is String ? json['jobId'] as String : null,
       quoteNumber: _string(json, 'quoteNumber'),
       projectName: _string(json, 'projectName'),
       signerName: _string(json, 'signerName'),
