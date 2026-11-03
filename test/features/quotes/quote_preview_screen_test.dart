@@ -69,4 +69,33 @@ void main() {
     await tester.ensureVisible(find.byKey(const Key('quote-preview-share')));
     expect(tester.takeException(), isNull);
   });
+  testWidgets('preview shows correct VAT-inclusive total and deposit balance',
+      (tester) async {
+    tester.view.physicalSize = const Size(430, 1100);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final quote = QuoteReviewDraft(
+      id: 'm6-preview-percentage', date: DateTime(2026, 11, 4),
+      clientName: 'M6 Test Customer', quoteNumber: 'M6-TEST-002',
+      currency: 'CHF', vatBasisPoints: 1300, depositBasisPoints: 3000,
+      items: [QuoteReviewWorkItem(
+        id: 'bricks', title: 'Bricks', description: '',
+        quantity: '4', unitPrice: '150.00',
+      )],
+      terms: 'Payment terms',
+    );
+    await tester.pumpWidget(
+      MaterialApp(home: QuotePreviewScreen(quote: quote)),
+    );
+    expect(find.text('Tax (13%)'), findsOneWidget);
+    expect(find.text('Deposit due (30%)'), findsOneWidget);
+    expect(find.text('CHF 78.00'), findsOneWidget);
+    expect(find.text('CHF 678.00'), findsWidgets);
+    expect(find.text('CHF 203.40'), findsOneWidget);
+    expect(find.text('CHF 474.60'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+
 }
