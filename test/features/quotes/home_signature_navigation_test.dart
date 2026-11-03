@@ -30,7 +30,7 @@ QuoteReviewDraft _quote() => QuoteReviewDraft(
 // futures to quiesce, which pumpAndSettle cannot guarantee.
 Future<void> _pumpUi(WidgetTester tester) async {
   await tester.pump();
-  await tester.pump(const Duration(milliseconds: 320));
+  await tester.pump(const Duration(milliseconds: 450));
 }
 
 void main() {
@@ -88,7 +88,9 @@ void main() {
     await tester.tap(find.byKey(const Key('dashboard-tab-1')).last);
     await _pumpUi(tester);
     expect(find.text('Active (12)'), findsOneWidget);
-    await tester.tap(find.byKey(const Key('dashboard-tab-0')).last);
+    // The outgoing signature route can briefly retain a duplicate tab key.
+    // Tap the dashboard's underlying tab, not the outgoing route's tab.
+    await tester.tap(find.byKey(const Key('dashboard-tab-0')).first);
     await _pumpUi(tester);
     expect(find.byKey(const Key('home-dashboard-scroll')), findsOneWidget);
     expect(tester.takeException(), isNull);
