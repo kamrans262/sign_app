@@ -41,6 +41,25 @@ class ProfileBusinessInformationScreen extends StatelessWidget {
             if (snapshot.connectionState != ConnectionState.done) {
               return const Center(child: CircularProgressIndicator());
             }
+            if (snapshot.hasError) {
+              // An offline response is not evidence that the company was
+              // deleted. Keep the business details untouched and offer retry.
+              return ListView(padding: const EdgeInsets.all(20), children: [
+                const Text('Unable to load company information. Check your connection and retry.',
+                  key: Key('company-load-error'),
+                  style: TextStyle(fontFamily: 'Inter',
+                    fontSize: 14, color: AppColors.placeholder)),
+                const SizedBox(height: 20),
+                FilledButton(
+                  key: const Key('retry-company-load'),
+                  onPressed: () => Navigator.of(context).pushReplacement<void, void>(
+                    MaterialPageRoute<void>(builder: (_) =>
+                      const ProfileBusinessInformationScreen()),
+                  ),
+                  child: const Text('Retry'),
+                ),
+              ]);
+            }
             final company = snapshot.data;
             if (company == null) {
               return ListView(padding: const EdgeInsets.all(20), children: [
