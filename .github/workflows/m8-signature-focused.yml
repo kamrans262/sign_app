@@ -7,6 +7,12 @@ on:
       - '.github/workflows/m8-signature-focused.yml'
       - 'lib/features/quotes/**'
       - 'test/features/quotes/**'
+      - 'lib/features/documents/data/remote_signed_document_repository.dart'
+      - 'lib/features/jobs/presentation/screens/job_details_screen.dart'
+      - 'lib/core/services/sign_api_client.dart'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - 'test/features/documents/m8_signed_document_repository_test.dart'
   workflow_dispatch:
 
 permissions:
@@ -29,6 +35,6 @@ jobs:
       - run: flutter pub get
       - name: Analyze M8 integration and existing signing UI
         run: |
-          flutter analyze --no-pub lib/features/quotes/data/remote_signature_request_repository.dart lib/features/quotes/data/remote_in_person_signing_repository.dart lib/features/quotes/services/public_quote_signing_gateway.dart lib/features/quotes/presentation/screens/signature_request_screen.dart lib/features/quotes/presentation/screens/public_customer_signing_screen.dart lib/features/quotes/presentation/screens/customer_document_view_screen.dart lib/features/quotes/presentation/screens/quote_preview_screen.dart lib/features/quotes/domain/quote_document_tracking.dart
+          flutter analyze --no-pub lib/features/quotes/data/remote_signature_request_repository.dart lib/features/quotes/data/remote_in_person_signing_repository.dart lib/features/quotes/services/public_quote_signing_gateway.dart lib/features/quotes/presentation/screens/signature_request_screen.dart lib/features/quotes/presentation/screens/public_customer_signing_screen.dart lib/features/quotes/presentation/screens/customer_document_view_screen.dart lib/features/quotes/presentation/screens/quote_preview_screen.dart lib/features/quotes/domain/quote_document_tracking.dart lib/features/documents/data/remote_signed_document_repository.dart lib/features/jobs/presentation/screens/job_details_screen.dart lib/core/services/sign_api_client.dart
       - name: Verify original quote and signature screen regression
-        run: flutter test --no-pub --concurrency=4 --timeout=2m --reporter=expanded test/features/quotes
+        run: flutter test --no-pub --concurrency=4 --timeout=2m --reporter=expanded test/features/quotes test/features/documents/m8_signed_document_repository_test.dart
