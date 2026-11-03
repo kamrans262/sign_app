@@ -21,6 +21,10 @@ class JobsScreen extends StatefulWidget {
     this.onJobTap,
     this.onNotReady,
     this.createdJobs = const [],
+    this.includeDemoJobs = true,
+    this.loading = false,
+    this.errorMessage,
+    this.onRetry,
   });
 
   final VoidCallback? onCreateJob;
@@ -28,6 +32,11 @@ class JobsScreen extends StatefulWidget {
   final ValueChanged<String>? onNotReady;
   /// Newly created jobs from the authenticated dashboard session.
   final List<JobModel> createdJobs;
+  /// Demo cards are visible only in standalone UI preview mode.
+  final bool includeDemoJobs;
+  final bool loading;
+  final String? errorMessage;
+  final VoidCallback? onRetry;
 
   @override
   State<JobsScreen> createState() => _JobsScreenState();
@@ -75,7 +84,8 @@ class _JobsScreenState extends State<JobsScreen> {
     final jobs = <JobModel>[
       ...widget.createdJobs.where(
         (job) => job.category == _category && job.matches(_search.text)),
-      ...MockJobsData.search(category: _category, query: _search.text),
+      if (widget.includeDemoJobs)
+        ...MockJobsData.search(category: _category, query: _search.text),
     ];
     final categories = JobCategory.values;
     final labels = [
@@ -84,13 +94,15 @@ class _JobsScreenState extends State<JobsScreen> {
           JobCategory.active => 'Active',
           JobCategory.completed => 'Completed',
           JobCategory.archived => 'Archived',
-        }} (${MockJobsData.count(category) + widget.createdJobs.where(
+        }} (${(widget.includeDemoJobs ? MockJobsData.count(category) : 0) + widget.createdJobs.where(
           (job) => job.category == category,
         ).length})',
     ];
     return Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 560),
+        constraints: BoxConstraints(maxWidth:
+          MediaQuery.orientationOf(context) == Orientation.landscape
+              ? double.infinity : 560),
         child: CustomScrollView(
           key: const Key('jobs-scroll'),
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -161,7 +173,36 @@ class _JobsScreenState extends State<JobsScreen> {
                 ),
               ),
             ),
-            if (jobs.isEmpty)
+            if (widget.loading)
+              const SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(child: CircularProgressIndicator(
+                  color: AppColors.primary,
+                )),
+              )
+            else if (widget.errorMessage != null)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(widget.errorMessage!,
+                          style: AppTextStyles.subtitle,
+                          textAlign: TextAlign.center),
+                        const SizedBox(height: 12),
+                        TextButton(
+                          onPressed: widget.onRetry,
+                          child: const Text('Try Again'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              )
+            else if (jobs.isEmpty)
               SliverFillRemaining(
                 hasScrollBody: false,
                 child: Center(

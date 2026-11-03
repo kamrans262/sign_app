@@ -13,6 +13,10 @@ import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../../../core/widgets/sign2digital_selection_field.dart';
 import '../../../clients/data/client_repository.dart';
 import '../../../clients/data/demo_client_repository.dart';
+import '../../../clients/data/remote_client_repository.dart';
+import '../../../auth/data/mobile_auth_repository.dart';
+import '../../../company/data/remote_company_repository.dart';
+import '../../../../core/services/active_company_session.dart';
 import '../../../clients/domain/client_profile.dart';
 import '../../domain/create_job_draft.dart';
 import '../../models/extracted_job_details.dart';
@@ -69,17 +73,46 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
   String? _endError;
   final Set<String> _memberIds = <String>{};
 
-  static const _members = <_DemoMember>[
+  static const _demoMembers = <_DemoMember>[
     _DemoMember('demo-member-1', 'Marc Dupont'),
     _DemoMember('demo-member-2', 'Jean Martin'),
     _DemoMember('demo-member-3', 'Sophie Bernard'),
     _DemoMember('demo-member-4', 'Claire Laurent'),
   ];
 
+  List<_DemoMember> _members = _demoMembers;
+  bool get _remoteMode => widget.clientRepository is RemoteClientRepository ||
+      (widget.clientRepository == null && MobileAuthRepository.shared.isSignedIn);
+
+  Future<void> _loadCompanyMembers() async {
+    final company = ActiveCompanySession.companyId;
+    if (company == null) return;
+    try {
+      final members = await RemoteCompanyRepository.shared.members('$company');
+      if (!mounted || ActiveCompanySession.companyId != company) return;
+      setState(() {
+        _members = members.where((member) => member.status == 'active')
+            .map((member) => _DemoMember('${member.id}', member.name))
+            .toList(growable: false);
+      });
+    } catch (_) {
+      if (!mounted || ActiveCompanySession.companyId != company) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Unable to load company team members.'),
+      ));
+    }
+  }
+
   @override
   void initState() {
     super.initState();
-    _repository = widget.clientRepository ?? DemoClientRepository();
+    _repository = widget.clientRepository ??
+        (MobileAuthRepository.shared.isSignedIn
+            ? RemoteClientRepository.shared : DemoClientRepository());
+    if (_remoteMode) {
+      _members = const [];
+      _loadCompanyMembers();
+    }
     _voiceExtraction =
         widget.voiceExtractionService ?? OpenAiVoiceJobExtractionService();
     _client = widget.initialClient;
@@ -205,6 +238,10 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
 
   Future<void> _selectTeam() async {
     FocusManager.instance.primaryFocus?.unfocus();
+    if (_remoteMode && _members.isEmpty) {
+      await _loadCompanyMembers();
+      if (!mounted) return;
+    }
     final working = Set<String>.from(_memberIds);
     final selected = await Sign2DigitalSelectionSheet.showCustom<Set<String>>(
       title: 'Select Team Members',
@@ -514,7 +551,9 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
             Expanded(
               child: Center(
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 560),
+                  constraints: BoxConstraints(maxWidth:
+                    MediaQuery.orientationOf(context) == Orientation.landscape
+                        ? double.infinity : 560),
                   child: Form(
                     key: _formKey,
                     child: SingleChildScrollView(

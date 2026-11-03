@@ -5,6 +5,7 @@ import '../../../jobs/presentation/screens/create_job_screen.dart';
 import '../../../jobs/domain/create_job_draft.dart';
 import '../../../jobs/domain/job_model.dart';
 import '../../../jobs/data/demo_created_job_repository.dart';
+import '../../../jobs/data/remote_job_repository.dart';
 import '../../../jobs/presentation/screens/job_details_screen.dart';
 
 import 'package:flutter_svg/flutter_svg.dart';
@@ -47,7 +48,7 @@ class ClientDetailsScreen extends StatefulWidget {
   final ValueChanged<ClientProfile>? onNewQuote;
   final ValueChanged<ClientProfile>? onNewJob;
   final ValueChanged<ClientProfile>? onViewAllJobs;
-  final JobModel Function(CreateJobDraft)? onJobCreated;
+  final Future<JobModel> Function(CreateJobDraft)? onJobCreated;
   final Future<void> Function(JobModel)? onOpenJob;
   final List<JobModel> Function(String clientId)? createdJobsForClient;
   final String? companyId;
@@ -132,15 +133,18 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
       return;
     }
     try {
-      final job = widget.onJobCreated?.call(draft) ??
-          _standaloneJobs.create(draft);
+      final job = widget.onJobCreated != null
+          ? await widget.onJobCreated!(draft)
+          : widget.repository is RemoteClientRepository
+              ? await RemoteJobRepository.shared.createJob(draft)
+              : _standaloneJobs.create(draft);
       if (!mounted) return;
       setState(() => _tabIndex = 0);
       await _openExistingJob(job);
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Unable to create the local job.'),
+        content: Text('Unable to create the job.'),
       ));
     }
   }
@@ -335,7 +339,9 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
             SizedBox(
               width: width,
               child: Sign2DigitalStatisticsCard(
-                count: _client.jobCount + _createdClientJobs.length,
+                count: widget.repository is RemoteClientRepository
+                    ? _createdClientJobs.length
+                    : _client.jobCount + _createdClientJobs.length,
                 label: 'Total jobs',
                 iconAsset: 'assets/icons/jobs.svg',
                 fallbackIcon: Icons.work_outline,
