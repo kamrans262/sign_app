@@ -57,6 +57,17 @@ class ProfileBusinessInformationScreen extends StatelessWidget {
                             ? null : DemoCompanyRepository.shared))),
                   child: const Text('Set Up Business Information'),
                 ),
+                if (MobileAuthRepository.shared.isSignedIn) ...[
+                  const SizedBox(height: 12),
+                  OutlinedButton(
+                    key: const Key('company-invitations-no-company'),
+                    onPressed: () => Navigator.of(context).push<void>(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const CompanyInvitationsScreen()),
+                    ),
+                    child: const Text('Accept Company Invitation'),
+                  ),
+                ],
               ]);
             }
             return ListView(padding: const EdgeInsets.all(20), children: [

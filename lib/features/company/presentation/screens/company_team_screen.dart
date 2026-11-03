@@ -99,8 +99,8 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
     if (selected != null && mounted) setState(() => _role = selected);
   }
 
-  Future<void> _choosePermissions() async {
-    final selected = Set<String>.from(_permissions);
+  Future<List<String>?> _selectPermissions(Set<String> original) async {
+    final selected = Set<String>.from(original);
     final result = await Sign2DigitalSelectionSheet.showCustom<List<String>>(
       context: context,
       title: 'Team permissions',
@@ -135,10 +135,29 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
         ]),
       ),
     );
+    return result;
+  }
+
+  Future<void> _choosePermissions() async {
+    final result = await _selectPermissions(_permissions);
     if (result != null && mounted) {
-      setState(() {
-        _permissions..clear()..addAll(result);
-      });
+      setState(() { _permissions..clear()..addAll(result); });
+    }
+  }
+
+  Future<void> _editPermissions(CompanyMember member) async {
+    if (!_canEdit || member.role == 'owner' ||
+        (!_isOwner && member.role == 'admin')) return;
+    final selected = await _selectPermissions(member.permissions.toSet());
+    if (selected == null || !mounted) return;
+    try {
+      await _repo.updateMember(widget.companyId, member.id, member.role,
+        permissions: selected);
+      await _load();
+      _message('Member permissions updated.');
+    } catch (error) {
+      _message(error is SignApiException
+          ? error.message : 'Unable to update permissions.');
     }
   }
 
@@ -168,11 +187,12 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
     final choice = await Sign2DigitalSelectionSheet.show(
       context,
       title: 'Member actions',
-      options: const ['Change Role', 'Remove'],
+      options: const ['Change Role', 'Edit Permissions', 'Remove'],
       icon: Icons.manage_accounts_outlined,
     );
     if (!mounted) return;
     if (choice == 'Change Role') await _changeRole(member);
+    if (choice == 'Edit Permissions') await _editPermissions(member);
     if (choice == 'Remove') await _remove(member);
   }
 
