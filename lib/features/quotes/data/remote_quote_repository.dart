@@ -41,6 +41,8 @@ class RemoteQuoteRepository {
       'client_id':id,
     if (int.tryParse(q.jobId ?? '') case final int id when id > 0)
       'job_id':id,
+    // Preserve user-edited Quote Number; the server keeps its own immutable reference.
+    'quote_number':q.quoteNumber.trim().isEmpty ? null : q.quoteNumber.trim(),
     'client_name':q.clientName.trim(),
     'client_email':q.clientEmail.trim().isEmpty ? null : q.clientEmail.trim(),
     'client_phone':q.clientPhone.trim().isEmpty ? null : q.clientPhone.trim(),
@@ -87,7 +89,7 @@ class RemoteQuoteRepository {
     }
     final copy=draft.copy();
     copy.serverId=_id(raw['id']);
-    copy.quoteNumber=(raw['reference_number'] ?? '').toString();
+    copy.quoteNumber=(raw['quote_number'] ?? raw['reference_number'] ?? '').toString();
     copy.serverStatus=(raw['status'] ?? 'draft').toString();
     copy.approvedLocally=
         raw['status']=='approved' || raw['status']=='sent';
@@ -193,7 +195,7 @@ class RemoteQuoteRepository {
           clientEmail:(item['client_email'] ?? '').toString(),
           clientPhone:(item['client_phone'] ?? '').toString(),
           billingAddress:(item['billing_address'] ?? '').toString(),
-          quoteNumber:(item['reference_number'] ?? '').toString(),
+          quoteNumber:(item['quote_number'] ?? item['reference_number'] ?? '').toString(),
           date:DateTime.tryParse('${item['quote_date']}') ?? DateTime.now(),
           validUntil:DateTime.tryParse('${item['valid_until']}'),
           currency:(item['currency'] ?? 'CHF').toString(),
