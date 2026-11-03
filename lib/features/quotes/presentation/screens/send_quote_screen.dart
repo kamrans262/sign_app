@@ -11,6 +11,7 @@ import '../../domain/quote_document_tracking.dart';
 import '../../domain/quote_tracking_home_session.dart';
 import '../../domain/quote_review_models.dart';
 import '../../data/remote_quote_repository.dart';
+import '../../../../core/services/active_company_session.dart';
 import '../../../auth/data/mobile_auth_repository.dart';
 import '../../domain/quote_signature_draft.dart';
 import '../../domain/quote_signing_context.dart';
@@ -46,8 +47,20 @@ class QuoteSendDraft {
 class QuoteSendSessionStore {
   QuoteSendSessionStore._();
   static final Map<String, QuoteSendDraft> _drafts = {};
-  static QuoteSendDraft? load(String id) => _drafts[id]?.copy();
-  static void save(String id, QuoteSendDraft draft) => _drafts[id] = draft.copy();
+  static bool _listeningForCompanyChanges = false;
+  static void _ensureCompanyIsolation() {
+    if (_listeningForCompanyChanges) return;
+    _listeningForCompanyChanges = true;
+    ActiveCompanySession.selected.addListener(clear);
+  }
+  static QuoteSendDraft? load(String id) {
+    _ensureCompanyIsolation();
+    return _drafts[id]?.copy();
+  }
+  static void save(String id, QuoteSendDraft draft) {
+    _ensureCompanyIsolation();
+    _drafts[id] = draft.copy();
+  }
   static void clear() => _drafts.clear();
 }
 

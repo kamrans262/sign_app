@@ -1,3 +1,4 @@
+import '../../../core/services/active_company_session.dart';
 import 'quote_draft_input.dart';
 import 'quote_extraction_models.dart';
 
@@ -366,13 +367,30 @@ class QuoteReviewDraft {
 /// Session-only local draft state. No server or disk persistence is claimed.
 abstract final class QuoteReviewSessionStore {
   static final Map<String, QuoteReviewDraft> _drafts = {};
+  static bool _listeningForCompanyChanges = false;
 
-  static void save(QuoteReviewDraft draft) { _drafts[draft.id] = draft.copy(); }
-  static QuoteReviewDraft? load(String id) => _drafts[id]?.copy();
+  static void _ensureCompanyIsolation() {
+    if (_listeningForCompanyChanges) return;
+    _listeningForCompanyChanges = true;
+    // Logout and company switching must invalidate app-session drafts.
+    // A future user who shares this device must never inherit local notes.
+    ActiveCompanySession.selected.addListener(clear);
+  }
+
+  static void save(QuoteReviewDraft draft) {
+    _ensureCompanyIsolation();
+    _drafts[draft.id] = draft.copy();
+  }
+  static QuoteReviewDraft? load(String id) {
+    _ensureCompanyIsolation();
+    return _drafts[id]?.copy();
+  }
   /// Session-local saved quote snapshots. No server or disk persistence.
-  static List<QuoteReviewDraft> get savedDrafts =>
-      List<QuoteReviewDraft>.unmodifiable(
-        _drafts.values.map((draft) => draft.copy()),
-      );
+  static List<QuoteReviewDraft> get savedDrafts {
+    _ensureCompanyIsolation();
+    return List<QuoteReviewDraft>.unmodifiable(
+      _drafts.values.map((draft) => draft.copy()),
+    );
+  }
   static void clear() => _drafts.clear();
 }
