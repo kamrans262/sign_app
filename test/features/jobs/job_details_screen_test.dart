@@ -43,12 +43,23 @@ void main() {
     await pumpUi(tester);
     expect(find.byType(JobDetailsScreen), findsOneWidget);
     expect(find.text('Completed'), findsWidgets);
-    expect(find.byKey(const Key('dashboard-tab-1')), findsOneWidget);
-    expect(find.byKey(const Key('dashboard-tab-2')), findsOneWidget);
+    // The underlying dashboard route remains mounted but offstage.
+    // Assert against the active details route, not the entire Navigator tree.
+    final detailsRoute = find.byType(JobDetailsScreen);
+    expect(find.descendant(
+      of: detailsRoute, matching: find.byKey(const Key('dashboard-tab-1')),
+    ), findsOneWidget);
+    expect(find.descendant(
+      of: detailsRoute, matching: find.byKey(const Key('dashboard-tab-2')),
+    ), findsOneWidget);
     expect(find.byKey(const Key('job-details-scroll')), findsOneWidget);
-    // This route owns its own bar; there are no two stacked dashboard bars.
-    expect(find.byKey(const Key('dashboard-tab-0')), findsOneWidget);
-    await tester.tap(find.byIcon(Icons.arrow_back_ios_new_rounded));
+    expect(find.descendant(
+      of: detailsRoute, matching: find.byKey(const Key('dashboard-tab-0')),
+    ), findsOneWidget);
+    await tester.tap(find.descendant(
+      of: detailsRoute,
+      matching: find.byIcon(Icons.arrow_back_ios_new_rounded),
+    ));
     await pumpUi(tester);
     expect(find.byType(JobDetailsScreen), findsNothing);
     expect(find.text('Completed (8)'), findsOneWidget);

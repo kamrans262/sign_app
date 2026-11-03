@@ -120,13 +120,19 @@ void main() {
 
     expect(find.byType(JobDetailsScreen), findsOneWidget);
     expect(find.text('New Roof Repair'), findsWidgets);
-    await tester.pageBack();
+    await tester.tap(find.descendant(
+      of: find.byType(JobDetailsScreen),
+      matching: find.byIcon(Icons.arrow_back_ios_new_rounded),
+    ));
     await pumpUi(tester);
     expect(find.byType(ClientDetailsScreen), findsOneWidget);
     expect(find.text('Jobs (5)'), findsOneWidget);
     expect(find.text('New Roof Repair'), findsOneWidget);
 
-    await tester.pageBack();
+    await tester.tap(find.descendant(
+      of: find.byType(ClientDetailsScreen),
+      matching: find.byIcon(Icons.arrow_back_ios_new_rounded),
+    ));
     await pumpUi(tester);
     await tester.tap(find.byKey(const Key('dashboard-tab-1')));
     await pumpUi(tester);
