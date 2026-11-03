@@ -176,7 +176,7 @@ class _SignatureRequestScreenState extends State<SignatureRequestScreen> {
       if (_quote.serverId != null && _quote.approvedLocally && !_quote.isDemo) {
         await _createRequest();
       } else {
-        _notify('A connected signature request is required.');
+        _notify('Resending requires an active request and connected delivery service.');
       }
       return;
     }
