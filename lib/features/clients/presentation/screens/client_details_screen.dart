@@ -15,6 +15,7 @@ import '../../../../core/widgets/sign2digital_header.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../data/client_repository.dart';
 import '../../data/demo_client_details.dart';
+import '../../data/remote_client_repository.dart';
 import '../../domain/client_details_model.dart';
 import '../../domain/client_draft.dart';
 import '../../domain/client_profile.dart';
@@ -102,7 +103,8 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
       }
       setState(() => _client = updated);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Client updated in the local demo list')),
+        SnackBar(content: Text(widget.repository is RemoteClientRepository
+            ? 'Client updated.' : 'Client updated in the local demo list')),
       );
     } catch (_) {
       if (!mounted) {
@@ -164,7 +166,9 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
             Expanded(
               child: Center(
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 560),
+                  constraints: BoxConstraints(maxWidth:
+                    MediaQuery.orientationOf(context) == Orientation.landscape
+                        ? double.infinity : 560),
                   child: SingleChildScrollView(
                     key: const Key('client-details-scroll'),
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
