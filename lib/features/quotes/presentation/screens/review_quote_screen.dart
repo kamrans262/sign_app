@@ -11,13 +11,6 @@ import '../widgets/sign2digital_quote_shadow_panel.dart';
 import '../widgets/sign2digital_quote_work_item_card.dart';
 import 'quote_preview_screen.dart';
 
-String _quotePercentLabel(int basisPoints) {
-  final value = (basisPoints / 100).toStringAsFixed(2);
-  if (value.endsWith('00')) return value.substring(0, value.length - 3);
-  if (value.endsWith('0')) return value.substring(0, value.length - 1);
-  return value;
-}
-
 /// UI-only quote review and pricing. No invented AI values or server approval.
 class ReviewQuoteScreen extends StatefulWidget {
   const ReviewQuoteScreen({
@@ -77,8 +70,8 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
     var postalCode = _draft.payment?.postalCode ?? '';
     var city = _draft.payment?.city ?? '';
     var country = _draft.payment?.country ?? 'CH';
-    var vat = _quotePercentLabel(_draft.vatBasisPoints);
-    var deposit = _quotePercentLabel(_draft.depositBasisPoints);
+    var vat = quotePercentLabel(_draft.vatBasisPoints);
+    var deposit = quotePercentLabel(_draft.depositBasisPoints);
     var chosenCurrency = _draft.currency;
     var chosenDate = _draft.date;
     DateTime? validUntil = _draft.validUntil;
@@ -410,10 +403,8 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
           _pricingRow('Subtotal', _draft.subtotalMinor == null
               ? '${quoteMoney(_draft.validSubtotalMinor, _draft.currency)} (partial)'
               : quoteMoney(_draft.subtotalMinor, _draft.currency)),
-          _pricingRow('VAT (${_quotePercentLabel(_draft.vatBasisPoints)}%)',
+          _pricingRow('VAT (${quotePercentLabel(_draft.vatBasisPoints)}%)',
               quoteMoney(_draft.vatMinor, _draft.currency)),
-          _pricingRow('Deposit (${_quotePercentLabel(_draft.depositBasisPoints)}%)',
-              quoteMoney(_draft.depositMinor, _draft.currency)),
           Container(
             key: const Key('quote-grand-total'),
             color: const Color(0xFFEAF4FF),
@@ -429,6 +420,13 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
                   fontWeight: FontWeight.w600, color: AppColors.dark))),
             ]),
           ),
+          _pricingRow('Deposit due (${quotePercentLabel(_draft.depositBasisPoints)}%)',
+              quoteMoney(_draft.depositMinor, _draft.currency)),
+          _pricingRow('Remaining after deposit',
+              quoteMoney(
+                _draft.totalMinor == null || _draft.depositMinor == null
+                    ? null : _draft.totalMinor! - _draft.depositMinor!,
+                _draft.currency)),
           if (!_draft.allItemPricesValid) ...[
             const SizedBox(height: 8),
             const Text('Pricing incomplete — resolve amber fields before approval.',
