@@ -1,4 +1,4 @@
-import 'features/clients/presentation/screens/clients_screen.dart';
+import 'features/auth/presentation/screens/company_entry_gate.dart';
 
 // Sign2Digital Navigation Fix — permanent splash -> login startup.
 import 'dart:async';
@@ -98,7 +98,7 @@ class _AppEntryState extends State<_AppEntry> {
     Navigator.of(context).pushReplacement<void, void>(
       MaterialPageRoute<void>(
         builder: (_) => signedIn
-            ? const ClientsScreen(initialTab: 0)
+            ? const CompanyEntryGate()
             : const MobileAuthGateway(),
       ),
     );
