@@ -165,7 +165,7 @@ class Sign2DigitalFinancialDocumentSections {
                     label: 'Subtotal',
                     value: quoteMoney(document.subtotalMinor, document.currency)),
                   Sign2DigitalDocumentAmountRow(
-                    label: 'Tax (${(document.vatBasisPoints / 100).toStringAsFixed(2)}%)',
+                    label: 'Tax (${quotePercentText(document.vatBasisPoints)}%)',
                     value: quoteMoney(document.vatMinor, document.currency)),
                   Sign2DigitalDocumentAmountRow(
                     label: 'Total',
