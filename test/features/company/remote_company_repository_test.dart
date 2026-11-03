@@ -158,4 +158,68 @@ void main() {
     await RemoteCompanyRepository(api: api).acceptInvite(code);
     expect(ActiveCompanySession.companyId, 19);
   });
+
+  test('offline company refresh does not discard last verified selection', () async {
+    ActiveCompanySession.set(6);
+    final api = SignApiClient(baseUrl: base,
+      tokenProvider: () async => 'token',
+      httpClient: MockClient((request) async => http.Response(
+        jsonEncode({'message': 'Service temporarily unavailable'}), 503)),
+    );
+    await expectLater(RemoteCompanyRepository(api: api).list(),
+      throwsA(isA<SignApiException>()));
+    expect(ActiveCompanySession.companyId, 6);
+  });
+
+  test('malformed company listing cannot overwrite the active tenant', () async {
+    ActiveCompanySession.set(6);
+    final api = SignApiClient(baseUrl: base,
+      tokenProvider: () async => 'token',
+      httpClient: MockClient((request) async => http.Response(jsonEncode({
+        'data': {'active_company_id': 8, 'companies': [serverCompany(6)]},
+      }), 200)),
+    );
+    await expectLater(RemoteCompanyRepository(api: api).list(),
+      throwsA(isA<SignApiException>()));
+    expect(ActiveCompanySession.companyId, 6);
+  });
+
+  test('unverified server switch response cannot change tenant context', () async {
+    ActiveCompanySession.set(6);
+    final api = SignApiClient(baseUrl: base,
+      tokenProvider: () async => 'token',
+      httpClient: MockClient((request) async => http.Response(jsonEncode({
+        'data': {'active_company_id': 7, 'company': serverCompany(9)},
+      }), 200)),
+    );
+    await expectLater(RemoteCompanyRepository(api: api).switchTo('9'),
+      throwsA(isA<SignApiException>()));
+    expect(ActiveCompanySession.companyId, 6);
+  });
+
+  test('invalid invitation response never selects an unrelated company', () async {
+    ActiveCompanySession.set(6);
+    final api = SignApiClient(baseUrl: base,
+      tokenProvider: () async => 'token',
+      httpClient: MockClient((request) async => http.Response(jsonEncode({
+        'data': {'active_company_id': 12, 'company': serverCompany(14)},
+      }), 200)),
+    );
+    await expectLater(RemoteCompanyRepository(api: api).acceptInvite(
+      List.filled(64, 'b').join()), throwsA(isA<SignApiException>()));
+    expect(ActiveCompanySession.companyId, 6);
+  });
+
+  test('valid empty company listing clears a revoked former selection', () async {
+    ActiveCompanySession.set(6);
+    final api = SignApiClient(baseUrl: base,
+      tokenProvider: () async => 'token',
+      httpClient: MockClient((request) async => http.Response(jsonEncode({
+        'data': {'active_company_id': null, 'companies': <dynamic>[]},
+      }), 200)),
+    );
+    final items = await RemoteCompanyRepository(api: api).list();
+    expect(items, isEmpty);
+    expect(ActiveCompanySession.companyId, isNull);
+  });
 }
