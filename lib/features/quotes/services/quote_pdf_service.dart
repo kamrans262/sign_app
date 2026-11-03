@@ -141,9 +141,17 @@ class Sign2DigitalQuotePdfBuilder {
                 pw.Text('Pricing incomplete - unresolved work item prices.',
                   style: style(10, color: PdfColor.fromHex('#E6A23C'))),
               lineAmount('Subtotal', quoteMoney(quote.subtotalMinor, quote.currency)),
-              lineAmount('Tax (${(quote.vatBasisPoints / 100).toStringAsFixed(0)}%)',
+              lineAmount('Tax (${quotePercentLabel(quote.vatBasisPoints)}%)',
                 quoteMoney(quote.vatMinor, quote.currency)),
               lineAmount('Total', quoteMoney(quote.totalMinor, quote.currency), total: true),
+              if (quote.depositBasisPoints > 0) ...[
+                lineAmount('Deposit due (${quotePercentLabel(quote.depositBasisPoints)}%)',
+                    quoteMoney(quote.depositMinor, quote.currency)),
+                lineAmount('Remaining after deposit', quoteMoney(
+                    quote.totalMinor == null || quote.depositMinor == null
+                        ? null : quote.totalMinor! - quote.depositMinor!,
+                    quote.currency)),
+              ],
         pw.SizedBox(height: 65),
         pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
