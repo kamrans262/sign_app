@@ -15,7 +15,7 @@ import 'package:sign2digital/features/quotes/services/remote_quote_preparation_s
 Map<String,dynamic> serverQuote({int company=5,int id=22,
     String status='draft'}) => {
   'id':id,'company_id':company,'client_id':8,'job_id':11,
-  'reference_number':'Q-2026-000022',
+  'reference_number':'Q-2026-000022','revision':1,
   'client_name':'Marc Dupont',
   'client_email':'marc@example.test','client_phone':'','billing_address':'Lausanne',
   'quote_date':'2026-11-03','valid_until':null,
@@ -69,6 +69,7 @@ void main() {
       }
       if(request.url.path.endsWith('/approve')) {
         expect(body['confirmed'],isTrue);
+        expect(body['expected_revision'],1);
         return http.Response(jsonEncode({'data':{'quote':
           serverQuote(status:'approved')}}),200);
       }
@@ -91,6 +92,27 @@ void main() {
       'POST /api/v1/quotes/22/approve',
       'POST /api/v1/quotes/22/share',
     ]);
+  });
+
+  test('approval sends saved revision and rejects a stale server response',() async {
+    var approvals=0;
+    final api=client(MockClient((request) async {
+      if(request.url.path == '/api/v1/quotes') {
+        return http.Response(jsonEncode({'data':{'quote':serverQuote()}}),201);
+      }
+      if(request.url.path.endsWith('/approve')) {
+        approvals++;
+        final body=jsonDecode(request.body) as Map<String,dynamic>;
+        expect(body['confirmed'],true);
+        expect(body['expected_revision'],1);
+        return http.Response(jsonEncode({'message':
+          'Quote was updated elsewhere. Reload before approving.'}),409);
+      }
+      throw StateError('Unexpected request');
+    }));
+    await expectLater(RemoteQuoteRepository(api:api).approve(draft()),
+        throwsA(isA<SignApiException>()));
+    expect(approvals,1);
   });
 
   test('rejects fabricated foreign tenant quote and company switches',() async {
