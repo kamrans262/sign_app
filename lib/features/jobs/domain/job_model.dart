@@ -52,12 +52,16 @@ class JobModel {
 
   String get formattedAmount {
     if (!hasBudget) return 'Budget not set';
-    final value = amountChf.toString();
-    final grouped = value.replaceAllMapped(
+    // M5 jobs store budget in CHF with two decimal places. Never round the
+    // displayed live amount even though older demo cards use whole CHF.
+    final value = budgetChfExact?.toStringAsFixed(2) ?? amountChf.toString();
+    final dot = value.indexOf('.');
+    final whole = dot < 0 ? value : value.substring(0, dot);
+    final grouped = whole.replaceAllMapped(
       RegExp(r'\B(?=(\d{3})+(?!\d))'),
       (match) => ',',
     );
-    return 'CHF $grouped';
+    return 'CHF $grouped${dot < 0 ? '' : value.substring(dot)}';
   }
 
   String get formattedDueDate {

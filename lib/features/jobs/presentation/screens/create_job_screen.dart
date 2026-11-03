@@ -232,7 +232,8 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
       context: context,
       firstDate: DateTime(2020),
       lastDate: DateTime(2100),
-      initialDate: current ?? DateTime(2026, 8, 25),
+      // Do not default new live jobs to a past Figma preview date.
+      initialDate: current ?? (start ? DateTime.now() : (_start ?? DateTime.now())),
     );
     if (!mounted || chosen == null) {
       return;

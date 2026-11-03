@@ -1,0 +1,43 @@
+name: M5 mobile platform build smoke (no deployment)
+
+on:
+  push:
+    branches:
+      - feature/m5-job-management-2026-11-03
+    paths:
+      - '.github/workflows/m5-mobile-build-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  android-debug:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Resolve dependencies
+        run: flutter pub get
+      - name: Compile Android debug app without signing or publishing
+        run: flutter build apk --debug --no-pub
+      - name: Verify Android APK output exists
+        run: test -s build/app/outputs/flutter-apk/app-debug.apk
+
+  ios-simulator:
+    runs-on: macos-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Resolve dependencies
+        run: flutter pub get
+      - name: Compile iOS Simulator without signing or publishing
+        run: flutter build ios --simulator --debug --no-codesign --no-pub
