@@ -147,7 +147,9 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
 
   Future<void> _editPermissions(CompanyMember member) async {
     if (!_canEdit || member.role == 'owner' ||
-        (!_isOwner && member.role == 'admin')) return;
+        (!_isOwner && member.role == 'admin')) {
+      return;
+    }
     final selected = await _selectPermissions(member.permissions.toSet());
     if (selected == null || !mounted) return;
     try {
