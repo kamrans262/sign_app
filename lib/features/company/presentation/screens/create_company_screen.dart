@@ -174,11 +174,14 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
   Future<void> _storeCompany(CompanyDraft draft) async {
     if (_saving) return;
     setState(() => _saving = true);
-    final real = MobileAuthRepository.shared.isSignedIn &&
-        widget.companyRepository == null;
+    // The onboarding gate injects a real backend repository; never treat its
+    // verified company save as an isolated demo merely because auth is injected.
+    final repository = widget.companyRepository ??
+        (MobileAuthRepository.shared.isSignedIn
+            ? RemoteCompanyRepository.shared
+            : DemoCompanyRepository.shared);
+    final real = repository is RemoteCompanyRepository;
     try {
-      final repository = widget.companyRepository ??
-          (real ? RemoteCompanyRepository.shared : DemoCompanyRepository.shared);
       final company = await repository.save(_buildProfile(draft));
       if (real) {
         _savedCompanyId = company.id;
@@ -261,8 +264,9 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
     }
     // Skipping optional company fields never discards filled-in values.
     // A company still requires an actual name before persisting to Laravel.
-    if (MobileAuthRepository.shared.isSignedIn &&
-        widget.companyRepository == null && draft.companyName.isEmpty) {
+    final requiresCompany = widget.companyRepository is RemoteCompanyRepository ||
+        (MobileAuthRepository.shared.isSignedIn && widget.companyRepository == null);
+    if (requiresCompany && draft.companyName.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text('Enter a company name to continue.'),
       ));
@@ -275,7 +279,7 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
     required String label,
     required String icon,
     required TextEditingController controller,
-    String hint = 'e.g, Marc@company.ch',
+    required String hint,
     TextInputType? keyboardType,
     TextCapitalization capitalization = TextCapitalization.none,
     String? Function(String?)? validator,
@@ -355,6 +359,7 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
                                   label: 'Company Name',
                                   icon: 'company.svg',
                                   controller: _company,
+                                  hint: 'e.g. Alpine Construction AG',
                                   capitalization: TextCapitalization.words,
                                   validator: (value) => (value?.trim().isEmpty ?? true)
                                       ? 'Enter your company name' : null,
@@ -378,6 +383,7 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
                                   label: 'Address',
                                   icon: 'address.svg',
                                   controller: _address,
+                                  hint: 'e.g. Bahnhofstrasse 10, 8001 Zürich',
                                   capitalization: TextCapitalization.words,
                                   keyboardType: TextInputType.streetAddress,
                                 ),
@@ -386,6 +392,7 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
                                   label: 'Phone',
                                   icon: 'phone.svg',
                                   controller: _phone,
+                                  hint: 'e.g. 79 123 45 67',
                                   keyboardType: TextInputType.phone,
                                   inputPrefix: Sign2DigitalCountrySelector(
                                     selected: _country,
@@ -398,6 +405,7 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
                                   label: 'E-mail',
                                   icon: 'email.svg',
                                   controller: _email,
+                                  hint: 'e.g. info@alpine.ch',
                                   keyboardType: TextInputType.emailAddress,
                                   validator: (value) {
                                     final email = value?.trim() ?? '';
@@ -414,12 +422,14 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
                                   label: 'Swiss Company ID (IDE)',
                                   icon: 'swiss_company_id.svg',
                                   controller: _swissId,
+                                  hint: 'e.g. CHE-123.456.789',
                                 ),
                                 const SizedBox(height: 16),
                                 _field(
                                   label: 'VAT Number',
                                   icon: 'hashtag.svg',
                                   controller: _vat,
+                                  hint: 'e.g. CHE-123.456.789 MWST',
                                 ),
                                 const SizedBox(height: 16),
                                 _field(
@@ -434,7 +444,7 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
                                   label: 'QR IBAN (optional)',
                                   icon: 'qr_iban.svg',
                                   controller: _qrIban,
-                                  hint: 'e.g. CH93 0076 2011 6238 5295 7',
+                                  hint: 'e.g. your bank-issued Swiss QR-IBAN',
                                   capitalization: TextCapitalization.characters,
                                 ),
                                 const SizedBox(height: 16),
@@ -442,6 +452,7 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
                                   label: 'Document Numbering',
                                   icon: 'doc_numbering.svg',
                                   controller: _numbering,
+                                  hint: 'e.g. INV-2026-001',
                                 ),
                                 const SizedBox(height: 20),
                                 Text(
