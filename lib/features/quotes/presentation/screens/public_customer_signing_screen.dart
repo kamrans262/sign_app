@@ -47,7 +47,7 @@ class _PublicCustomerSigningScreenState
         ? Future<PublicQuoteSigningSession>.error(
             StateError('Public signing is not configured.'),
           )
-        : _gateway!.open(widget.token);
+        : _gateway.open(widget.token);
   }
 
   @override
