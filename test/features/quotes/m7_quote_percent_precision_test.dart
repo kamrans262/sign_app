@@ -19,4 +19,23 @@ void main() {
     expect(percentOfMinor(10000, 825), 825);
     expect(percentOfMinor(1999, 810), 162);
   });
+  test('approved quote deposit and remaining never replace grand total', () {
+    final quote = QuoteReviewDraft(
+      id:'m7-balance', clientName:'Client', date:DateTime(2026,11,3),
+      currency:'CHF', vatBasisPoints:2000, depositBasisPoints:3000,
+      terms:'Terms', items:[
+        QuoteReviewWorkItem(id:'brick',title:'Bricks',description:'Exterior repair',
+          dimensions:'3 m x 4 m',quantity:'4',unitPrice:'150.00'),
+      ],
+    );
+    expect(quote.subtotalMinor,60000);
+    expect(quote.vatMinor,12000);
+    expect(quote.totalMinor,72000);
+    expect(quote.depositMinor,21600);
+    expect(quote.remainingAfterDepositMinor,50400);
+    expect(quote.totalMinor,72000); // Deposit is not removed from total.
+    expect(quoteWorkItemDocumentText(quote.items.single),
+      'Bricks\\nExterior repair\\nDimensions: 3 m x 4 m');
+  });
+
 }
