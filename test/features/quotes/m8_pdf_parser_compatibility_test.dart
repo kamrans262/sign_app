@@ -6,7 +6,7 @@ import 'package:sign2digital/features/quotes/domain/quote_review_models.dart';
 import 'package:sign2digital/features/quotes/services/quote_pdf_service.dart';
 
 void main() {
-  testWidgets('M8 approval PDF is classic xref PDF 1.4 for the FPDI importer',
+  testWidgets('M8 approved quote PDF uses classic xref PDF 1.4 for FPDI',
       (tester) async {
     final quote = QuoteReviewDraft(
       id: 'm8-fpdi-source', jobId: 'job-9',
@@ -30,27 +30,20 @@ void main() {
     );
     final bytes = await const Sign2DigitalQuotePdfBuilder().build(quote);
     expect(bytes.length, inInclusiveRange(1000, 5 * 1024 * 1024));
-    final header = latin1.decode(bytes.take(8).toList());
-    expect(header, '%PDF-1.4');
+    expect(latin1.decode(bytes.take(8).toList()), '%PDF-1.4');
     final body = latin1.decode(bytes);
-    expect(RegExp(r'(?m)^xref\s*\r?).hasMatch(body), isTrue,
+    expect(RegExp(r'(?m)^xref\s*\r?$').hasMatch(body), isTrue,
         reason: 'FPDI free requires a classic cross-reference table.');
     expect(body.contains('/Type /XRef'), isFalse,
         reason: 'Compressed xref streams break the free FPDI parser.');
     expect(body.contains('%%EOF'), isTrue);
-    // A synthetic Flutter-produced file is consumed by the independent
-    // PHP 8.4 + FPDI 2.6.9 acceptance job; no real customer PDFs are exposed.
+
+    // Synthetic fixture only. The independent PHP acceptance job imports the
+    // byte-identical PDF emitted by the actual Flutter quote builder.
     if (Platform.environment['M8_EXPORT_PDF_FIXTURE'] == '1') {
       await Directory('build/m8-stage2').create(recursive: true);
       await File('build/m8-stage2/flutter_approved_quote.pdf')
           .writeAsBytes(bytes, flush: true);
     }
-  });
-}
-).hasMatch(body), isTrue,
-        reason: 'FPDI free requires a classic cross-reference table.');
-    expect(body.contains('/Type /XRef'), isFalse,
-        reason: 'Compressed xref streams break the free FPDI parser.');
-    expect(body.contains('%%EOF'), isTrue);
   });
 }
