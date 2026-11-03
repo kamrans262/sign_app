@@ -216,16 +216,16 @@ void main() {
   });
 
   testWidgets('upload image retains the selected file for AI', (tester) async {
-    // Run the image-picker widget fixture entirely in memory.
-    // Awaiting real dart:io file writes/reads inside Flutter's fake-async
-    // widget test zone stalls the CI runner under Linux.
+    // XFile.fromData injects in-memory bytes into the IO implementation;
+    // XFile(path, bytes: ...) does not reliably honor bytes on native.
+    // No real file I/O can stall the Flutter widget-test zone.
     const path = '/test/s2d_quote_photo_notes.png';
     final imageBytes = base64Decode(
       'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6j2EAAAAASUVORK5CYII=',
     );
     QuoteDraftInput? captured;
     await tester.pumpWidget(MaterialApp(home: CreateQuoteScreen(
-      pickImage: (source) async => XFile(path, bytes: imageBytes, name: 'notes.png'),
+      pickImage: (source) async => XFile.fromData(imageBytes, path: path, name: 'notes.png', mimeType: 'image/png'),
       onInputPrepared: (input) => captured = input,
     )));
     await tester.tap(find.byKey(const Key('quote-method-photo')));
