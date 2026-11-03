@@ -33,7 +33,9 @@ class ProfileBusinessInformationScreen extends StatelessWidget {
     body: SafeArea(child: Column(children: [
       const Sign2DigitalHeader(title: 'Business Information'),
       Expanded(child: Center(child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 720),
+        constraints: BoxConstraints(maxWidth:
+            MediaQuery.orientationOf(context) == Orientation.landscape
+                ? double.infinity : 720),
         child: FutureBuilder<CompanyProfile?>(
           future: MobileAuthRepository.shared.isSignedIn
               ? _realCompany() : DemoCompanyRepository.shared.byId('demo-current-company'),
@@ -187,7 +189,9 @@ class ProfileSectionUnavailableScreen extends StatelessWidget {
     body: SafeArea(child: Column(children: [
       Sign2DigitalHeader(title: title),
       Expanded(child: Center(child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 720),
+        constraints: BoxConstraints(maxWidth:
+            MediaQuery.orientationOf(context) == Orientation.landscape
+                ? double.infinity : 720),
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
