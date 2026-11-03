@@ -14,6 +14,9 @@ import 'job_photos_screen.dart';
 import 'job_notes_screen.dart';
 import '../../domain/job_model.dart';
 import '../../../quotes/presentation/screens/create_quote_screen.dart';
+import '../../../quotes/data/remote_quote_repository.dart';
+import '../../../quotes/presentation/screens/review_quote_screen.dart';
+import '../../../quotes/presentation/screens/quote_preview_screen.dart';
 import '../../../documents/presentation/screens/documents_screen.dart';
 import '../../../documents/domain/document_record.dart';
 import '../../../quotes/data/signed_quote_file_store.dart';
@@ -90,6 +93,49 @@ class JobDetailsScreen extends StatelessWidget {
       return;
     }
     if (section == JobSection.quotes) {
+      // Offer existing real quotes without replacing the original Create Quote
+      // route or introducing a separate, inconsistent UI design.
+      if (onManageJob != null) {
+        try {
+          final saved = await RemoteQuoteRepository.shared.listQuotes(jobId:job.id);
+          if (!context.mounted) return;
+          final visible = saved.where((quote) =>
+              quote.serverStatus != 'archived').toList();
+          if (visible.isNotEmpty) {
+            String optionFor(int index) =>
+                '${visible[index].quoteNumber} — ${visible[index].serverStatus}';
+            final options = [
+              'Create New Quote',
+              for (var i = 0; i < visible.length; i++) optionFor(i),
+            ];
+            final choice = await Sign2DigitalSelectionSheet.show(
+              context,
+              title: 'Job Quotes',
+              subtitle: job.referenceNumber,
+              icon: Icons.description_outlined,
+              options: options,
+            );
+            if (!context.mounted || choice == null) return;
+            if (choice != 'Create New Quote') {
+              final index = options.indexOf(choice) - 1;
+              if (index >= 0 && index < visible.length) {
+                final selected = visible[index];
+                Navigator.of(context).push<void>(MaterialPageRoute<void>(
+                  builder: (_) => selected.approvedLocally
+                      ? QuotePreviewScreen(quote: selected)
+                      : ReviewQuoteScreen(initialDraft: selected),
+                ));
+              }
+              return;
+            }
+          }
+        } catch (error) {
+          if (!context.mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Could not load saved quotes: $error'),
+          ));
+        }
+      }
       Navigator.of(context).push<void>(MaterialPageRoute<void>(
         builder: (_) => CreateQuoteScreen(
           jobId: job.id,
