@@ -182,6 +182,23 @@ class RemoteQuoteRepository {
 
   /// Sends the actual Flutter-generated, reviewed PDF as an email attachment
   /// alongside the server's independently verifiable quote-view link.
+  /// Authoritative file approved by the authenticated company user.
+  /// Never generate a second, potentially different PDF for delivery.
+  Future<Uint8List> fetchApprovedPdf(QuoteReviewDraft quote) async {
+    final company=_company();
+    if (quote.isDemo || quote.serverId == null || !quote.approvedLocally ||
+        int.tryParse(quote.companyId ?? '$company') != company) {
+      throw const SignApiException(
+        'A server-approved quote from the active company is required.');
+    }
+    final bytes=await _api.getPdf(
+      '/api/v1/quotes/${quote.serverId}/approved-pdf',
+      companyScoped:true,
+    );
+    _check(company);
+    return bytes;
+  }
+
   Future<Map<String,dynamic>> shareEmailWithPdf(
     QuoteReviewDraft quote, {
     required String email,
