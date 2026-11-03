@@ -143,7 +143,9 @@ class _AddClientScreenState extends State<AddClientScreen> {
                       ScrollViewKeyboardDismissBehavior.onDrag,
                   child: Center(
                     child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 560),
+                      constraints: BoxConstraints(maxWidth:
+                        MediaQuery.orientationOf(context) == Orientation.landscape
+                            ? double.infinity : 560),
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(
                           AppSpacing.screenHorizontal,
@@ -254,7 +256,9 @@ class _AddClientScreenState extends State<AddClientScreen> {
               ),
               child: Center(
                 child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: 520),
+                  constraints: BoxConstraints(maxWidth:
+                    MediaQuery.orientationOf(context) == Orientation.landscape
+                        ? double.infinity : 520),
                   child: Sign2DigitalPrimaryButton(
                     key: Key('save-client-button'),
                     label: widget.initialClient == null
