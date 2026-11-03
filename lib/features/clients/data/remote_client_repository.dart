@@ -46,7 +46,7 @@ class RemoteClientRepository implements ClientRepository {
           .where((part) => part.trim().isNotEmpty).join(' '),
       jobCount: _id(raw['job_count']),
       notes: (raw['notes'] ?? '').toString(),
-      countryIsoCode: (raw['country_iso_code'] ?? 'CH').toString(),
+      countryIsoCode: (raw['country_iso_code'] ?? '').toString(),
       dialingCode: dial,
       nationalPhoneNumber: number,
     );
