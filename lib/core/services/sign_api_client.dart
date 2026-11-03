@@ -112,6 +112,7 @@ class SignApiClient {
     required Uint8List bytes,
     bool companyScoped = false,
     int maxBytes = 2 * 1024 * 1024,
+    Map<String, String>? fields,
   }) async {
     if (maxBytes <= 0 || maxBytes > 25 * 1024 * 1024 ||
         bytes.isEmpty || bytes.length > maxBytes) {
@@ -125,6 +126,7 @@ class SignApiClient {
     request.files.add(http.MultipartFile.fromBytes(
       'file', bytes, filename: filename,
     ));
+    if (fields != null) request.fields.addAll(fields);
     try {
       final streamed = await _http.send(request).timeout(const Duration(seconds: 25));
       final response = await http.Response.fromStream(streamed)

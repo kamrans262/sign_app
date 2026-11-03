@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import '../../../core/services/active_company_session.dart';
 import '../../../core/services/sign_api_client.dart';
 import '../../auth/data/mobile_auth_repository.dart';
@@ -155,6 +156,35 @@ class RemoteQuoteRepository {
       '/api/v1/quotes/${quote.serverId}/share',
       companyScoped:true,
       data:{'method':method,'recipient_email':email,'message':message},
+    );
+    _check(company);
+    return _data(response);
+  }
+
+  /// Sends the actual Flutter-generated, reviewed PDF as an email attachment
+  /// alongside the server's independently verifiable quote-view link.
+  Future<Map<String,dynamic>> shareEmailWithPdf(
+    QuoteReviewDraft quote, {
+    required String email,
+    required String message,
+    required Uint8List pdfBytes,
+  }) async {
+    final company=_company();
+    if (quote.serverId == null || !quote.approvedLocally || quote.isDemo) {
+      throw const SignApiException('Approve this quote before attaching a PDF.');
+    }
+    if (pdfBytes.length < 8 || pdfBytes.length > 5 * 1024 * 1024 ||
+        pdfBytes[0] != 37 || pdfBytes[1] != 80 ||
+        pdfBytes[2] != 68 || pdfBytes[3] != 70 || pdfBytes[4] != 45) {
+      throw const SignApiException('Generate a valid PDF under 5 MB to send.');
+    }
+    final response=await _api.postMultipart(
+      '/api/v1/quotes/${quote.serverId}/share-email-pdf',
+      filename:'Sign2Digital_Quote.pdf',
+      bytes:pdfBytes,
+      maxBytes:5 * 1024 * 1024,
+      companyScoped:true,
+      fields:{'recipient_email':email.trim(),'message':message.trim()},
     );
     _check(company);
     return _data(response);
