@@ -49,8 +49,8 @@ class Sign2DigitalFinancialDocumentSections {
   Widget _dateLine(String label, String value) => Row(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      SizedBox(width: 76, child: Text(label,
-        softWrap: false, maxLines: 1, style: _text(12, weight: FontWeight.w600))),
+      Text(label, softWrap: false, maxLines: 1,
+        style: _text(12, weight: FontWeight.w600)),
       const SizedBox(width: 7),
       Expanded(child: Text(value,
         style: _text(12, color: AppColors.placeholder))),
@@ -137,8 +137,7 @@ class Sign2DigitalFinancialDocumentSections {
           items: [
             for (final item in document.items)
               Sign2DigitalDocumentTableLine(
-                description: item.title.isEmpty
-                    ? 'Unspecified item' : item.title,
+                description: quoteWorkItemDocumentText(item),
                 quantity: item.quantity.isEmpty ? '—' : item.quantity,
                 unitPrice: quoteMoney(item.priceMinor, document.currency),
                 total: quoteMoney(item.totalMinor, document.currency),
@@ -171,6 +170,13 @@ class Sign2DigitalFinancialDocumentSections {
                     label: 'Total',
                     value: quoteMoney(document.totalMinor, document.currency),
                     highlight: true),
+                  Sign2DigitalDocumentAmountRow(
+                    label: 'Deposit due (${quotePercentText(document.depositBasisPoints)}%)',
+                    value: quoteMoney(document.depositMinor, document.currency)),
+                  Sign2DigitalDocumentAmountRow(
+                    label: 'Remaining after deposit',
+                    value: quoteMoney(document.remainingAfterDepositMinor,
+                        document.currency)),
                 ],
               ),
             ),
@@ -237,16 +243,14 @@ class Sign2DigitalFinancialDocumentSections {
             Text('A valid Swiss payment account, payee address and payable '
               'amount are needed to display a payment QR.',
               style: _text(12, color: AppColors.placeholder)),
-            if (payment != null) ...[
-              const SizedBox(height: 12),
-              if (payment.iban.trim().isNotEmpty)
-                _paymentField('Account / payable to', payment.iban),
-              if (payment.accountHolder.trim().isNotEmpty)
-                _paymentField('Company Name', payment.accountHolder),
-              _paymentField('Payable amount',
-                quoteMoney(document.totalMinor, document.currency)),
-              _paymentField('Currency', document.currency),
-            ],
+            const SizedBox(height: 12),
+            if (payment != null && payment.iban.trim().isNotEmpty)
+              _paymentField('Account / payable to', payment.iban),
+            if (payment != null && payment.accountHolder.trim().isNotEmpty)
+              _paymentField('Company Name', payment.accountHolder),
+            _paymentField('Payable amount',
+              quoteMoney(document.totalMinor, document.currency)),
+            _paymentField('Currency', document.currency),
           ] else Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
