@@ -305,7 +305,9 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
           onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 900),
+              constraints: BoxConstraints(maxWidth:
+            MediaQuery.orientationOf(context) == Orientation.landscape
+                ? double.infinity : 900),
               child: CustomScrollView(
                 key: const Key('create-company-scroll'),
                 keyboardDismissBehavior:
@@ -322,7 +324,9 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
                   SliverToBoxAdapter(
                     child: Center(
                       child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 520),
+                        constraints: BoxConstraints(maxWidth:
+            MediaQuery.orientationOf(context) == Orientation.landscape
+                ? double.infinity : 520),
                         child: Padding(
                           padding: const EdgeInsets.fromLTRB(
                             AppSpacing.screenHorizontal,
