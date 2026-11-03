@@ -153,6 +153,10 @@ class MobileAuthRepository {
     // Remove any bearer from an older account *before* consuming this code.
     // If secure storage is inaccessible, leave OTP unused so it can be retried.
     await _tokenStorage.delete();
+    // A newly verified account must never inherit the former account's
+    // bearer or company context, even when OTP verification later fails.
+    _sessionToken = null;
+    ActiveCompanySession.clear();
     final response = await _api.post(
       '/api/v1/auth/otp/verify',
       authenticated: false,
