@@ -1,0 +1,40 @@
+name: M3 Flutter company screens & API focused verification
+
+on:
+  push:
+    branches:
+      - feature/m3-company-management-2026-11-03
+    paths:
+      - '.github/workflows/m3-company-focused.yml'
+      - 'lib/core/services/active_company_session.dart'
+      - 'lib/core/services/sign_api_client.dart'
+      - 'lib/features/auth/data/mobile_auth_repository.dart'
+      - 'lib/features/company/**'
+      - 'lib/features/home/presentation/screens/home_dashboard_screen.dart'
+      - 'lib/features/profile/presentation/screens/profile_sections_screen.dart'
+      - 'test/features/company/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: s2d-m3-flutter
+  cancel-in-progress: true
+
+jobs:
+  m3-focused:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Resolve Flutter packages
+        run: flutter pub get
+      - name: Analyze M3 touched files
+        run: timeout 160s flutter analyze --no-pub lib/core/services/sign_api_client.dart lib/core/services/active_company_session.dart lib/features/auth/data/mobile_auth_repository.dart lib/features/company lib/features/home/presentation/screens/home_dashboard_screen.dart lib/features/profile/presentation/screens/profile_sections_screen.dart test/features/company/remote_company_repository_test.dart
+      - name: Focused M3 API and existing company screen checks
+        run: timeout 240s flutter test --no-pub --concurrency=1 test/features/company/remote_company_repository_test.dart test/features/company/create_company_screen_test.dart test/core/sign_api_client_test.dart
