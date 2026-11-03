@@ -29,6 +29,6 @@ jobs:
       - run: flutter pub get
       - name: Analyze M8 integration and existing signing UI
         run: |
-          flutter analyze --no-pub lib/features/quotes/data/remote_signature_request_repository.dart lib/features/quotes/presentation/screens/signature_request_screen.dart lib/features/quotes/presentation/screens/public_customer_signing_screen.dart lib/features/quotes/presentation/screens/customer_document_view_screen.dart lib/features/quotes/presentation/screens/quote_preview_screen.dart lib/features/quotes/domain/quote_document_tracking.dart
+          flutter analyze --no-pub lib/features/quotes/data/remote_signature_request_repository.dart lib/features/quotes/data/remote_in_person_signing_repository.dart lib/features/quotes/services/public_quote_signing_gateway.dart lib/features/quotes/presentation/screens/signature_request_screen.dart lib/features/quotes/presentation/screens/public_customer_signing_screen.dart lib/features/quotes/presentation/screens/customer_document_view_screen.dart lib/features/quotes/presentation/screens/quote_preview_screen.dart lib/features/quotes/domain/quote_document_tracking.dart
       - name: Verify original quote and signature screen regression
         run: flutter test --no-pub --concurrency=4 --timeout=2m --reporter=expanded test/features/quotes
