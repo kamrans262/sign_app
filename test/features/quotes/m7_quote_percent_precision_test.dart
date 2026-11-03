@@ -35,7 +35,7 @@ void main() {
     expect(quote.remainingAfterDepositMinor,50400);
     expect(quote.totalMinor,72000); // Deposit is not removed from total.
     expect(quoteWorkItemDocumentText(quote.items.single),
-      'Bricks\\nExterior repair\\nDimensions: 3 m x 4 m');
+      'Bricks\nExterior repair\nDimensions: 3 m x 4 m');
   });
 
 }
