@@ -37,7 +37,9 @@ class MoreScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Center(
     child: ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 560),
+      constraints: BoxConstraints(maxWidth:
+            MediaQuery.orientationOf(context) == Orientation.landscape
+                ? double.infinity : 560),
       child: ListView(
         key: const Key('more-menu-scroll'),
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 25),
