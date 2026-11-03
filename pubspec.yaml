@@ -38,6 +38,7 @@ dependencies:
   record: ^5.2.1
   file_picker: ^11.0.3
   flutter_svg: ^2.0.10
+  flutter_contacts: ^2.6.0
   flutter:
     sdk: flutter
 
