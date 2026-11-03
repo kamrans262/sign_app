@@ -307,13 +307,118 @@ class _SendQuoteScreenState extends State<SendQuoteScreen> {
       _notify('Please validate your quote in Review Quote before sharing.');
       return;
     }
-    // Backend-authorized delivery for real M6 quotes. The server confirms
-    // email dispatch; merely opening a local share sheet does not.
+    // Genuine backend quote delivery. Customer sharing must be explicit.
     if (MobileAuthRepository.shared.isSignedIn &&
         !_quote.isDemo && _quote.serverId != null &&
         _sendDraft.method != QuoteSendingMethod.other) {
-      if (_sendDraft.method == QuoteSendingMethod.email &&
-          !RegExp(r'^[^\\s@]+@[^\\s@]+\\.[^\\s@]+
+      if (_sendDraft.method == QuoteSendingMethod.email) {
+        if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+
+      if (link == null || widget.secureLinkDelivery == null) {
+        _notify('Secure link delivery requires a real connected service.');
+        return;
+      }
+      setState(() => _busy = true);
+      try {
+        final delivered = await widget.secureLinkDelivery!(link, _sendDraft.copy());
+        if (delivered) {
+          DocumentActivitySession.deliveryConfirmed(_quote.id);
+        }
+        _notify(delivered ? 'Secure link delivery confirmed by the service.' :
+          'Secure link delivery was not confirmed.');
+      } catch (error) { _notify('Could not send secure link: $error'); }
+      finally { if (mounted) { setState(() => _busy = false); } }
+      return;
+    }
+    if (_sendDraft.method == QuoteSendingMethod.email) {
+      if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(_sendDraft.email)) {
+        _notify('Enter a valid recipient email address.');
+        return;
+      }
+      if (_messageController.text.trim().isEmpty) {
+        _notify('Write a message before sending.');
+        return;
+      }
+    }
+    if (!_sendDraft.pdfAttached) {
+      _notify('Reattach the quote PDF before sharing.');
+      return;
+    }
+    if (_pdfBytes == null) {
+      await _preparePdf();
+      if (!mounted) { return; }
+      if (_pdfBytes == null) { _notify('PDF generation failed. Please retry.'); return; }
+    }
+    setState(() => _busy = true);
+    try {
+      if (_sendDraft.method == QuoteSendingMethod.email) {
+        // Printing shares a real PDF. It cannot pre-fill the body/recipient of
+        // every email app; copy them for manual pasting rather than pretend.
+        await Clipboard.setData(ClipboardData(
+          text: 'To: ${_sendDraft.email}\n\n${_messageController.text}',
+        ));
+      }
+      await Printing.sharePdf(bytes: _pdfBytes!, filename: _pdfFilename);
+      if (_sendDraft.method == QuoteSendingMethod.email) {
+        _notify('Choose your email app; recipient and message copied for pasting. Delivery is not confirmed.');
+      } else {
+        _notify('The device share sheet was opened. Delivery is not confirmed.');
+      }
+    } catch (error) {
+      _notify('Could not open the share workflow: $error');
+    } finally { if (mounted) { setState(() => _busy = false); } }
+  }
+
+)
+            .hasMatch(_sendDraft.email.trim())) {
+          _notify('Enter a valid recipient email address.');
+          return;
+        }
+        if (_messageController.text.trim().isEmpty) {
+          _notify('Write a message before sending.');
+          return;
+        }
+      }
+      setState(() => _busy = true);
+      try {
+        final response = await RemoteQuoteRepository.shared.share(
+          _quote,
+          method: _sendDraft.method == QuoteSendingMethod.email
+              ? 'email' : 'secure_link',
+          email: _sendDraft.method == QuoteSendingMethod.email
+              ? _sendDraft.email.trim() : null,
+          message: _messageController.text.trim(),
+        );
+        if (!mounted) return;
+        if (_sendDraft.method == QuoteSendingMethod.email) {
+          if (response['delivered'] == true) {
+            DocumentActivitySession.deliveryConfirmed(_quote.id);
+            _notify('Quote email with secure link sent successfully.');
+          } else {
+            _notify('Quote email delivery was not confirmed.');
+          }
+        } else {
+          final link = response['secure_link'];
+          if (link is! String || !link.startsWith('https://')) {
+            throw const FormatException('No verified secure link returned.');
+          }
+          _serverSecureLink = link;
+          _serverLinkExpiresAt =
+              DateTime.tryParse((response['expires_at'] ?? '').toString());
+          await Clipboard.setData(ClipboardData(text:link));
+          if (mounted) {
+            setState(() {});
+            _notify('Secure link copied. Send it to the customer to deliver.');
+          }
+        }
+      } catch (error) {
+        if (mounted) _notify('Could not share quote: $error');
+      } finally {
+        if (mounted) setState(() => _busy = false);
+      }
+      return;
+    }
+    if (_sendDraft.method == QuoteSendingMethod.secureLink) {
+      final link = _usableLink;
       if (link == null || widget.secureLinkDelivery == null) {
         _notify('Secure link delivery requires a real connected service.');
         return;
