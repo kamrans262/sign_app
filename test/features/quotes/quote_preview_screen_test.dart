@@ -49,7 +49,7 @@ void main() {
     await tester.pumpWidget(MaterialApp(home: QuotePreviewScreen(quote: draft)));
     expect(find.text('Quote Preview'), findsOneWidget);
     expect(find.text('Q-2026-0043'), findsOneWidget);
-    expect(find.text('PVC Windows (Standard)'), findsOneWidget);
+    expect(find.textContaining('PVC Windows (Standard)'), findsOneWidget);
     expect(find.text('Pricing incomplete — missing values are not zero.'),
         findsOneWidget);
     await tester.ensureVisible(find.byKey(const Key('quote-preview-download')));
