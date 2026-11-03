@@ -84,7 +84,9 @@ class QuoteDocumentTracking {
     return QuoteSignatureStatus.draft;
   }
 
-  bool get requestIsActive => requestId != null && sent && !signed && !completed &&
+  // A verified customer view is sufficient after an owner shares a secure
+  // link manually; a native share-sheet is not evidence of delivery.
+  bool get requestIsActive => requestId != null && (sent || viewed) && !signed && !completed &&
       (expiresAt == null || DateTime.now().isBefore(expiresAt!));
 
   Uri? usableUrl(DateTime now) {
