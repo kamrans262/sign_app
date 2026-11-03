@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/services/sign_api_client.dart';
+
 import '../../services/public_quote_signing_gateway.dart';
 import 'customer_document_view_screen.dart';
 
@@ -36,7 +38,8 @@ class _PublicCustomerSigningScreenState
     if (widget.gateway != null) {
       _gateway = widget.gateway;
     } else {
-      final endpoint = Uri.tryParse(_api);
+      final endpoint = _api.trim().isEmpty
+          ? SignApiConfig.baseUrl : Uri.tryParse(_api);
       _gateway = endpoint != null &&
               endpoint.scheme == 'https' &&
               endpoint.host.isNotEmpty
