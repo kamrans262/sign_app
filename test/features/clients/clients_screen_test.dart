@@ -82,7 +82,23 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
       expect(find.byKey(const Key('open-quote-ui-demo')), findsOneWidget);
+      // The unchanged More menu is a lazy ListView: verify offscreen items
+      // by scrolling to them instead of assuming they are eagerly built.
+      final moreScroll = find.descendant(
+        of: find.byKey(const Key('more-menu-scroll')),
+        matching: find.byType(Scrollable),
+      ).first;
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('open-reports')), 130,
+        scrollable: moreScroll, maxScrolls: 20,
+      );
+      await tester.pump();
       expect(find.byKey(const Key('open-reports')), findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('open-expenses')), 130,
+        scrollable: moreScroll, maxScrolls: 20,
+      );
+      await tester.pump();
       expect(find.byKey(const Key('open-expenses')), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
