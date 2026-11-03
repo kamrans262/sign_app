@@ -31,6 +31,9 @@ import '../../../../core/widgets/sign2digital_dashboard_header.dart';
 import '../../../../core/widgets/sign2digital_search_field.dart';
 import '../../data/client_repository.dart';
 import '../../data/demo_client_repository.dart';
+import '../../data/remote_client_repository.dart';
+import '../../../auth/data/mobile_auth_repository.dart';
+import '../../../../core/services/active_company_session.dart';
 import '../../domain/client_profile.dart';
 import '../../domain/client_draft.dart';
 import 'add_client_screen.dart';
@@ -63,7 +66,12 @@ class _ClientsScreenState extends State<ClientsScreen> {
 
   void _selectCompany(String? companyId) {
     if (!mounted || _selectedCompanyId == companyId) return;
-    setState(() => _selectedCompanyId = companyId);
+    setState(() {
+      _selectedCompanyId = companyId;
+      // The selected company is the client-data isolation boundary.
+      // Discard old list state and reload from the newly selected tenant.
+      _clientsRevision++;
+    });
   }
   late final ClientRepository _repository;
   final DemoCreatedJobRepository _createdJobs = DemoCreatedJobRepository();
@@ -78,7 +86,11 @@ class _ClientsScreenState extends State<ClientsScreen> {
   void initState() {
     super.initState();
     _selectedIndex = widget.initialTab;
-    _repository = widget.repository ?? DemoClientRepository();
+    _selectedCompanyId = ActiveCompanySession.companyId?.toString();
+    _repository = widget.repository ??
+        (MobileAuthRepository.shared.isSignedIn
+          ? RemoteClientRepository.shared
+          : DemoClientRepository());
   }
 
   void _showNotReady(String action) {
@@ -140,7 +152,8 @@ class _ClientsScreenState extends State<ClientsScreen> {
     try {
       await _repository.createClient(draft);
       if (mounted) setState(() => _clientsRevision++);
-      _notifyHome('Client added to the local demo list.');
+      _notifyHome(_repository is RemoteClientRepository
+          ? 'Client saved to your company.' : 'Client added to the local demo list.');
     } catch (_) {
       _notifyHome('Unable to save the client.');
     }
@@ -414,9 +427,11 @@ class _ClientsContentState extends State<_ClientsContent> {
     final tabIndex = await Navigator.of(
       context,
     ).push<int>(MaterialPageRoute<int>(builder: (_) => ImportClientsScreen()));
-    if (tabIndex != null && mounted) {
-      widget.onTabSelected(tabIndex);
-    }
+    if (!mounted) return;
+    // Reload after returning from reviewed phone import so saved clients
+    // appear immediately in the current company list.
+    await _loadClients();
+    if (tabIndex != null && mounted) widget.onTabSelected(tabIndex);
   }
 
   Future<void> _openAddClient() async {
@@ -432,12 +447,13 @@ class _ClientsContentState extends State<_ClientsContent> {
       await _loadClients();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Client added to the local demo list')),
+        SnackBar(content: Text(widget.repository is RemoteClientRepository
+            ? 'Client saved to your company.' : 'Client added to the local demo list')),
       );
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Unable to add the client to the demo list')),
+        const SnackBar(content: Text('Unable to save the client.')),
       );
     }
   }
@@ -480,7 +496,9 @@ class _ClientsContentState extends State<_ClientsContent> {
         .toList();
     return Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 560),
+        constraints: BoxConstraints(maxWidth:
+            MediaQuery.orientationOf(context) == Orientation.landscape
+                ? double.infinity : 560),
         child: CustomScrollView(
           key: const Key('clients-scroll'),
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
