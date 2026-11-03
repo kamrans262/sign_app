@@ -3,6 +3,11 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
 import '../../../company/data/demo_company_repository.dart';
+import '../../../company/data/remote_company_repository.dart';
+import '../../../company/presentation/screens/company_team_screen.dart';
+import '../../../company/presentation/screens/company_invitations_screen.dart';
+import '../../../auth/data/mobile_auth_repository.dart';
+import '../../../../core/services/active_company_session.dart';
 import '../../../company/domain/company_profile.dart';
 import '../../../company/presentation/screens/create_company_screen.dart';
 import '../../../quotes/presentation/widgets/sign2digital_quote_shadow_panel.dart';
@@ -10,6 +15,17 @@ import '../../../quotes/presentation/widgets/sign2digital_quote_shadow_panel.dar
 /// Displays the existing current company without overwriting it.
 class ProfileBusinessInformationScreen extends StatelessWidget {
   const ProfileBusinessInformationScreen({super.key});
+
+  String _roleFor(CompanyProfile company) => 'owner';
+
+  Future<CompanyProfile?> _realCompany() async {
+    final companies = await RemoteCompanyRepository.shared.list();
+    final selected = ActiveCompanySession.companyId?.toString();
+    for (final company in companies) {
+      if (company.id == selected) return company;
+    }
+    return companies.isNotEmpty ? companies.first : null;
+  }
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -19,7 +35,8 @@ class ProfileBusinessInformationScreen extends StatelessWidget {
       Expanded(child: Center(child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 720),
         child: FutureBuilder<CompanyProfile?>(
-          future: DemoCompanyRepository.shared.byId('demo-current-company'),
+          future: MobileAuthRepository.shared.isSignedIn
+              ? _realCompany() : DemoCompanyRepository.shared.byId('demo-current-company'),
           builder: (context, snapshot) {
             if (snapshot.connectionState != ConnectionState.done) {
               return const Center(child: CircularProgressIndicator());
@@ -36,7 +53,8 @@ class ProfileBusinessInformationScreen extends StatelessWidget {
                   onPressed: () => Navigator.of(context).push<void>(
                     MaterialPageRoute<void>(builder: (_) =>
                       CreateCompanyScreen(
-                        companyRepository: DemoCompanyRepository.shared))),
+                        companyRepository: MobileAuthRepository.shared.isSignedIn
+                            ? null : DemoCompanyRepository.shared))),
                   child: const Text('Set Up Business Information'),
                 ),
               ]);
@@ -59,11 +77,43 @@ class ProfileBusinessInformationScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 15),
-              const Text(
-                'Business details are read-only here. Existing data is '
-                'preserved; an editing integration is not connected yet.',
-                style: TextStyle(fontFamily: 'Inter', fontSize: 12,
-                  color: AppColors.placeholder)),
+              if (MobileAuthRepository.shared.isSignedIn) ...[
+                FilledButton(
+                  key: const Key('edit-company-details'),
+                  onPressed: () => Navigator.of(context).push<void>(
+                    MaterialPageRoute<void>(builder: (_) =>
+                        CreateCompanyScreen(initialCompany: company)),
+                  ),
+                  child: const Text('Edit Business Information'),
+                ),
+                const SizedBox(height: 10),
+                OutlinedButton(
+                  key: const Key('manage-company-team'),
+                  onPressed: () => Navigator.of(context).push<void>(
+                    MaterialPageRoute<void>(builder: (_) => CompanyTeamScreen(
+                      companyId: company.id,
+                      companyName: company.companyName,
+                      role: ActiveCompanySession.companyId == null
+                          ? 'member' : _roleFor(company),
+                    )),
+                  ),
+                  child: const Text('Team Members & Permissions'),
+                ),
+                const SizedBox(height: 10),
+                OutlinedButton(
+                  key: const Key('accept-company-invitation'),
+                  onPressed: () => Navigator.of(context).push<void>(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const CompanyInvitationsScreen()),
+                  ),
+                  child: const Text('Company Invitations'),
+                ),
+              ] else
+                const Text(
+                  'Business details are read-only here. Existing data is '
+                  'preserved; an editing integration is not connected yet.',
+                  style: TextStyle(fontFamily: 'Inter', fontSize: 12,
+                    color: AppColors.placeholder)),
             ]);
           },
         ),
