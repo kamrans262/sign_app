@@ -171,6 +171,17 @@ class Sign2DigitalFinancialDocumentSections {
                     label: 'Total',
                     value: quoteMoney(document.totalMinor, document.currency),
                     highlight: true),
+                  if (document.depositBasisPoints > 0) ...[
+                    Sign2DigitalDocumentAmountRow(
+                      label: 'Deposit due (${(document.depositBasisPoints / 100).toStringAsFixed(2)}%)',
+                      value: quoteMoney(document.depositMinor, document.currency)),
+                    Sign2DigitalDocumentAmountRow(
+                      label: 'Remaining after deposit',
+                      value: quoteMoney(
+                        document.totalMinor == null || document.depositMinor == null
+                            ? null : document.totalMinor! - document.depositMinor!,
+                        document.currency)),
+                  ],
                 ],
               ),
             ),
