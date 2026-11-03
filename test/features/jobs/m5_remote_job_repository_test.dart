@@ -12,6 +12,8 @@ import 'package:sign2digital/features/jobs/domain/create_job_draft.dart';
 import 'package:sign2digital/features/jobs/domain/job_details_model.dart';
 import 'package:sign2digital/features/jobs/domain/job_model.dart';
 import 'package:sign2digital/features/jobs/presentation/screens/jobs_screen.dart';
+import 'package:sign2digital/features/clients/presentation/screens/clients_screen.dart';
+import 'package:sign2digital/features/auth/data/mobile_auth_repository.dart';
 
 Map<String, dynamic> serverJob({int company = 5, int id = 12,
     Object? budget = '4500.50'}) => {
@@ -136,6 +138,18 @@ void main() {
     expect(details.sections.length, JobSection.values.length);
     expect(details.sections.every((item) => item.subtitle == 'Not connected yet'),
         isTrue);
+  });
+
+  testWidgets('M5 diagnostic - dashboard initial render', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: ClientsScreen()));
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 200));
+      // ignore: avoid_print
+      print('M5_DIAGNOSTIC tick=$i signedIn=${MobileAuthRepository.shared.isSignedIn} '
+          'activeCompany=${ActiveCompanySession.companyId} '
+          'spinners=${find.byType(CircularProgressIndicator).evaluate().length} '
+          'scheduled=${tester.binding.hasScheduledFrame}');
+    }
   });
 
   testWidgets('signed-in jobs view keeps tabs but hides demo cards',
