@@ -165,7 +165,7 @@ class Sign2DigitalFinancialDocumentSections {
                     label: 'Subtotal',
                     value: quoteMoney(document.subtotalMinor, document.currency)),
                   Sign2DigitalDocumentAmountRow(
-                    label: 'Tax (${(document.vatBasisPoints / 100).toStringAsFixed(2)}%)',
+                    label: 'Tax (${quotePercentLabel(document.vatBasisPoints)}%)',
                     value: quoteMoney(document.vatMinor, document.currency)),
                   Sign2DigitalDocumentAmountRow(
                     label: 'Total',
@@ -173,7 +173,7 @@ class Sign2DigitalFinancialDocumentSections {
                     highlight: true),
                   if (document.depositBasisPoints > 0) ...[
                     Sign2DigitalDocumentAmountRow(
-                      label: 'Deposit due (${(document.depositBasisPoints / 100).toStringAsFixed(2)}%)',
+                      label: 'Deposit due (${quotePercentLabel(document.depositBasisPoints)}%)',
                       value: quoteMoney(document.depositMinor, document.currency)),
                     Sign2DigitalDocumentAmountRow(
                       label: 'Remaining after deposit',
