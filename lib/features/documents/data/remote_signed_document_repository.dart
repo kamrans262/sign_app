@@ -10,6 +10,7 @@ class SignedJobDocument {
     required this.id,
     required this.documentId,
     required this.quoteNumber,
+    this.signerName = '',
     required this.jobId,
     required this.signedAt,
     required this.signedPdfSha256,
@@ -17,6 +18,7 @@ class SignedJobDocument {
   final int id;
   final String documentId;
   final String quoteNumber;
+  final String signerName;
   final String? jobId;
   final DateTime signedAt;
   final String signedPdfSha256;
@@ -71,6 +73,7 @@ class RemoteSignedDocumentRepository {
         id:id,
         documentId:ref,
         quoteNumber:(raw['quote_number'] ?? '').toString(),
+        signerName:(raw['signer_name'] ?? '').toString(),
         jobId:actualJobId,
         signedAt:date,
         signedPdfSha256:sha,
