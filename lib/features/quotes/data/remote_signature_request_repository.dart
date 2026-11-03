@@ -153,19 +153,23 @@ class RemoteSignatureRequestRepository {
     final link = data['secure_link'] as String?;
     final id = _int(record['id']);
     if (id <= 0) throw const SignApiException('Signing request has no server ID.');
-    // A genuinely delivered email is recorded by the server. Creating a
-    // copyable link is not itself evidence of customer delivery or viewing.
-    final sent = data['delivered'] == true;
-    final events = <Map<String, String>>[
-      {'id': 'created-$id','type': 'signatureRequested',
-       'occurredAt': DateTime.now().toUtc().toIso8601String()},
-      if (sent) {'id': 'sent-$id','type': 'documentSent',
-       'occurredAt': DateTime.now().toUtc().toIso8601String()},
-    ];
+    // Use only server-recorded events and timestamps, never fabricate them.
+    final fresh = await show(quote, id);
+    final parsedLink = link == null ? null : Uri.tryParse(link);
+    if (parsedLink != null &&
+        (parsedLink.scheme != 'https' || parsedLink.host.isEmpty)) {
+      throw const SignApiException('The server returned an unsafe signing link.');
+    }
     return RemoteSigningRequest(
       id: id,
-      status: (record['status'] ?? 'ready').toString(),
-      tracking: _tracking(quote, record, events, secureLink: link),
+      status: fresh.status,
+      tracking: QuoteDocumentTracking(
+        quoteId: quote.id,
+        requestId: fresh.tracking.requestId,
+        secureUrl: parsedLink,
+        expiresAt: fresh.tracking.expiresAt,
+        events: fresh.tracking.events,
+      ),
     );
   }
 
