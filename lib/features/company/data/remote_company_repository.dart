@@ -86,10 +86,17 @@ class RemoteCompanyRepository implements CompanyRepository {
     if (raw is! Map<String, dynamic>) {
       throw const SignApiException('Company was not saved.');
     }
-    if (id == null && data['active_company_id'] != null) {
-      ActiveCompanySession.set(_asInt(data['active_company_id']));
+    final saved = _parse(raw);
+    if (_asInt(saved.id) <= 0 || (id != null && saved.id != company.id)) {
+      throw const SignApiException('Invalid saved company response.');
     }
-    return _parse(raw);
+    if (id == null) {
+      if (_asInt(data['active_company_id']) != _asInt(saved.id)) {
+        throw const SignApiException('Invalid active company response.');
+      }
+      ActiveCompanySession.set(_asInt(saved.id));
+    }
+    return saved;
   }
 
   @override
@@ -106,10 +113,22 @@ class RemoteCompanyRepository implements CompanyRepository {
   @override
   Future<List<CompanyProfile>> list() async {
     final data = _data(await _api.get('/api/v1/companies'));
-    ActiveCompanySession.set(_asInt(data['active_company_id']));
     final records = data['companies'];
-    if (records is! List) throw const SignApiException('Invalid company listing.');
-    return records.whereType<Map<String, dynamic>>().map(_parse).toList();
+    if (records is! List || records.any((item) => item is! Map<String, dynamic>)) {
+      throw const SignApiException('Invalid company listing.');
+    }
+    final companies = records.cast<Map<String, dynamic>>().map(_parse).toList();
+    final ids = companies.map((company) => _asInt(company.id)).toList();
+    if (ids.any((id) => id <= 0) || ids.toSet().length != ids.length) {
+      throw const SignApiException('Invalid company identifiers.');
+    }
+    final active = _asInt(data['active_company_id']);
+    if (active != 0 && !ids.contains(active)) {
+      throw const SignApiException('Active company is not in the company listing.');
+    }
+    // Only replace the current tenant after validating the complete response.
+    ActiveCompanySession.set(active);
+    return companies;
   }
 
   Future<CompanyProfile> switchTo(String id) async {
@@ -120,8 +139,12 @@ class RemoteCompanyRepository implements CompanyRepository {
     if (raw is! Map<String, dynamic>) {
       throw const SignApiException('Unable to switch companies.');
     }
-    ActiveCompanySession.set(_asInt(data['active_company_id']));
-    return _parse(raw);
+    final selected = _parse(raw);
+    if (_asInt(data['active_company_id']) != n || _asInt(selected.id) != n) {
+      throw const SignApiException('Invalid company switch response.');
+    }
+    ActiveCompanySession.set(n);
+    return selected;
   }
 
   Future<List<CompanyMember>> members(String id) async {
@@ -158,7 +181,16 @@ class RemoteCompanyRepository implements CompanyRepository {
   Future<void> acceptInvite(String code) async {
     final result = _data(await _api.post('/api/v1/companies/invitations/accept',
       data: {'code': code.trim()}));
-    ActiveCompanySession.set(_asInt(result['active_company_id']));
+    final raw = result['company'];
+    if (raw is! Map<String, dynamic>) {
+      throw const SignApiException('Invalid invitation acceptance response.');
+    }
+    final selected = _parse(raw);
+    final active = _asInt(result['active_company_id']);
+    if (active <= 0 || _asInt(selected.id) != active) {
+      throw const SignApiException('Invalid invitation company response.');
+    }
+    ActiveCompanySession.set(active);
   }
 
   Future<void> uploadFile(String companyId, String kind, PlatformFile file) async {
