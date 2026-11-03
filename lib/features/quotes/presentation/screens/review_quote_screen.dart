@@ -70,8 +70,8 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
     var postalCode = _draft.payment?.postalCode ?? '';
     var city = _draft.payment?.city ?? '';
     var country = _draft.payment?.country ?? 'CH';
-    var vat = (_draft.vatBasisPoints / 100).toStringAsFixed(0);
-    var deposit = (_draft.depositBasisPoints / 100).toStringAsFixed(0);
+    var vat = quotePercentText(_draft.vatBasisPoints);
+    var deposit = quotePercentText(_draft.depositBasisPoints);
     var chosenCurrency = _draft.currency;
     var chosenDate = _draft.date;
     DateTime? validUntil = _draft.validUntil;
@@ -403,9 +403,9 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
           _pricingRow('Subtotal', _draft.subtotalMinor == null
               ? '${quoteMoney(_draft.validSubtotalMinor, _draft.currency)} (partial)'
               : quoteMoney(_draft.subtotalMinor, _draft.currency)),
-          _pricingRow('VAT (${(_draft.vatBasisPoints / 100).toStringAsFixed(0)}%)',
+          _pricingRow('VAT (${quotePercentText(_draft.vatBasisPoints)}%)',
               quoteMoney(_draft.vatMinor, _draft.currency)),
-          _pricingRow('Deposit (${(_draft.depositBasisPoints / 100).toStringAsFixed(0)}%)',
+          _pricingRow('Deposit (${quotePercentText(_draft.depositBasisPoints)}%)',
               quoteMoney(_draft.depositMinor, _draft.currency)),
           Container(
             key: const Key('quote-grand-total'),
