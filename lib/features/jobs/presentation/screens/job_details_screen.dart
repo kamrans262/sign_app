@@ -8,6 +8,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
+import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import '../../domain/job_details_model.dart';
 import 'job_photos_screen.dart';
 import 'job_notes_screen.dart';
@@ -34,6 +35,7 @@ class JobDetailsScreen extends StatelessWidget {
     this.onTabSelected,
     this.companyId,
     this.client,
+    this.onManageJob,
   });
 
   final JobModel job;
@@ -44,6 +46,43 @@ class JobDetailsScreen extends StatelessWidget {
   final String? companyId;
   /// Resolved from the real local client ID, never a name-only match.
   final ClientProfile? client;
+  /// Only supplied for authenticated, persisted jobs. Demo layout unchanged.
+  final Future<bool> Function(JobModel job, String action)? onManageJob;
+
+  Future<void> _showJobActions(BuildContext context) async {
+    final manage = onManageJob;
+    if (manage == null) return;
+    final options = job.category == JobCategory.archived
+        ? const ['Restore Job']
+        : <String>[
+            'Edit Job',
+            if (job.stage == JobStage.planning) 'Start Job',
+            if (job.stage == JobStage.inProgress ||
+                job.stage == JobStage.overdue) 'Set to Planning',
+            if (job.category == JobCategory.completed) 'Reopen Job',
+            if (job.category != JobCategory.completed) 'Mark Completed',
+            'Archive Job',
+          ];
+    var action = await Sign2DigitalSelectionSheet.show(
+      context, title: 'Manage Job', icon: Icons.work_outline,
+      subtitle: job.referenceNumber, options: options,
+    );
+    if (!context.mounted || action == null) return;
+    if (action == 'Archive Job') {
+      final confirmation = await Sign2DigitalSelectionSheet.show(
+        context, title: 'Archive Job',
+        icon: Icons.archive_outlined,
+        subtitle: 'This job can be restored later.',
+        options: const ['Cancel', 'Archive Job'],
+      );
+      if (!context.mounted || confirmation != 'Archive Job') return;
+    }
+    final updated = await manage(job, action);
+    if (context.mounted && updated) {
+      Navigator.of(context).pop();
+    }
+  }
+
 
   Future<void> _openSection(BuildContext context, JobSection section) async {
     if (onSectionTap != null) {
@@ -188,6 +227,24 @@ class JobDetailsScreen extends StatelessWidget {
             Sign2DigitalHeader(
               title: job.title,
               onBack: () => Navigator.of(context).maybePop(),
+              trailing: onManageJob == null ? null : SizedBox(
+                width: 40, height: 40,
+                child: Material(
+                  color: AppColors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    side: const BorderSide(color: AppColors.lightBorder),
+                  ),
+                  child: IconButton(
+                    key: const Key('manage-job-action'),
+                    tooltip: 'Manage Job',
+                    padding: EdgeInsets.zero,
+                    onPressed: () => _showJobActions(context),
+                    icon: const Icon(Icons.more_horiz_rounded,
+                      color: AppColors.primary, size: 22),
+                  ),
+                ),
+              ),
             ),
             Expanded(
               child: SizedBox(

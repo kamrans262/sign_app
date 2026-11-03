@@ -319,6 +319,63 @@ class _ClientsScreenState extends State<ClientsScreen> {
     }
   }
 
+  Future<bool> _manageJobAction(JobModel job, String action) async {
+    if (!_usesRemoteJobs) return false;
+    final jobId = int.tryParse(job.id);
+    if (jobId == null || jobId <= 0) return false;
+    try {
+      final jobs = RemoteJobRepository.shared;
+      switch (action) {
+        case 'Edit Job':
+          ClientProfile? linkedClient;
+          for (final client in await _repository.listClients()) {
+            if (client.id == job.clientId) {
+              linkedClient = client;
+              break;
+            }
+          }
+          if (!mounted) return false;
+          final draft = await Navigator.of(context).push<CreateJobDraft>(
+            MaterialPageRoute<CreateJobDraft>(
+              builder: (_) => CreateJobScreen(
+                clientRepository: _repository,
+                initialClient: linkedClient,
+                initialJob: job,
+              ),
+            ),
+          );
+          if (draft == null) return false;
+          await jobs.updateDraft(job, draft);
+        case 'Start Job':
+          await jobs.updateJob(jobId, {'stage': 'in_progress'});
+        case 'Set to Planning':
+          await jobs.updateJob(jobId, {'stage': 'planning'});
+        case 'Mark Completed':
+          await jobs.updateJob(jobId, {'stage': 'completed'});
+        case 'Reopen Job':
+          await jobs.updateJob(jobId, {
+            'stage': 'in_progress',
+            'progress_percentage': job.progressPercentage >= 100
+                ? 0 : job.progressPercentage,
+          });
+        case 'Archive Job':
+          await jobs.archiveJob(jobId);
+        case 'Restore Job':
+          await jobs.restoreJob(jobId);
+        default:
+          return false;
+      }
+      if (!mounted) return false;
+      await _loadJobs();
+      _notifyHome('Job updated successfully.');
+      return true;
+    } catch (error) {
+      _notifyHome(error is SignApiException
+          ? error.message : 'Unable to update this job.');
+      return false;
+    }
+  }
+
   Future<void> _openJobDetails(JobModel job) async {
     FocusManager.instance.primaryFocus?.unfocus();
     ClientProfile? linkedClient;
@@ -350,6 +407,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
         builder: (_) => JobDetailsScreen(
           job: realDetails?.job ?? job,
           details: realDetails,
+          onManageJob: _usesRemoteJobs ? _manageJobAction : null,
           companyId: _selectedCompanyId,
           client: linkedClient,
           onTabSelected: (index) {

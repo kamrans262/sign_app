@@ -80,6 +80,7 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
         )),
       );
     }
+    if (mounted) setState(() {});
   }
 
   @override
