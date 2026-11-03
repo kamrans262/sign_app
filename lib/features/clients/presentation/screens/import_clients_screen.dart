@@ -44,8 +44,11 @@ class _ImportClientsScreenState extends State<ImportClientsScreen> {
   String? _contactError;
 
   bool get _liveImport =>
-      widget.contacts == null && widget.onReviewSelected == null &&
-      MobileAuthRepository.shared.isSignedIn;
+      // Explicit remote repository injection also enables deterministic
+      // review/permission widget tests; the API still enforces authentication.
+      widget.clientRepository != null ||
+      (widget.contacts == null && widget.onReviewSelected == null &&
+          MobileAuthRepository.shared.isSignedIn);
 
   @override
   void initState() {
