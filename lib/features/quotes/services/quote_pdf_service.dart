@@ -22,7 +22,11 @@ class Sign2DigitalQuotePdfBuilder {
       // Flutter can still export a readable PDF if the bundled variable font
       // is unsupported by a particular pdf package version.
     }
+    // M8 signing uses the open-source FPDI parser, which needs normal
+    // PDF cross-reference tables rather than PDF 1.5 compressed xref streams.
+    // Do not alter an already-approved M7 PDF: its original bytes remain frozen.
     final pdf = pw.Document(
+      version: PdfVersion.pdf_1_4,
       theme: inter == null ? null : pw.ThemeData.withFont(base: inter, bold: inter),
     );
     final blue = PdfColor.fromHex('#166282');
