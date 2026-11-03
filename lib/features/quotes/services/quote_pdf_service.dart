@@ -141,7 +141,7 @@ class Sign2DigitalQuotePdfBuilder {
                 pw.Text('Pricing incomplete - unresolved work item prices.',
                   style: style(10, color: PdfColor.fromHex('#E6A23C'))),
               lineAmount('Subtotal', quoteMoney(quote.subtotalMinor, quote.currency)),
-              lineAmount('Tax (${(quote.vatBasisPoints / 100).toStringAsFixed(0)}%)',
+              lineAmount('Tax (${quotePercentText(quote.vatBasisPoints)}%)',
                 quoteMoney(quote.vatMinor, quote.currency)),
               lineAmount('Total', quoteMoney(quote.totalMinor, quote.currency), total: true),
         pw.SizedBox(height: 65),
