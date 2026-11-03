@@ -332,7 +332,9 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
 
     return Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 720),
+        constraints: BoxConstraints(maxWidth:
+            MediaQuery.orientationOf(context) == Orientation.landscape
+                ? double.infinity : 720),
         child: RefreshIndicator(
           onRefresh: _reload,
           child: ListView(
