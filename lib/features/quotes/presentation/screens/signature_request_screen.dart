@@ -161,14 +161,31 @@ class _SignatureRequestScreenState extends State<SignatureRequestScreen> {
   Uri? get _link => _tracking.usableUrl(DateTime.now());
 
   Future<void> _copyLink() async {
-    final link = _link;
-    if (link == null) {
+    Uri? link=_link;
+    if(link==null && _serverRequestId!=null && !_loadingRequest && !_resending) {
+      setState(() => _loadingRequest=true);
+      try {
+        final result=await RemoteSignatureRequestRepository.shared.rotateLink(
+          _quote,_serverRequestId!,
+        );
+        if(!mounted)return;
+        setState(() => _tracking=result.tracking);
+        link=_tracking.usableUrl(DateTime.now());
+      } catch(error) {
+        if(mounted)_notify('Could not renew signing link: $error');
+        return;
+      } finally {
+        if(mounted)setState(() => _loadingRequest=false);
+      }
+    }
+    if(link==null) {
       _notify('No genuine secure document link is available yet.');
       return;
     }
-    await Clipboard.setData(ClipboardData(text: link.toString()));
+    await Clipboard.setData(ClipboardData(text:link.toString()));
     _notify('Document link copied.');
   }
+
 
   Future<void> _resend() async {
     if (_resending || _loadingRequest) return;
@@ -308,7 +325,7 @@ class _SignatureRequestScreenState extends State<SignatureRequestScreen> {
         IconButton(
           key: const Key('signature-banner-copy'),
           tooltip: 'Copy secure document link',
-          onPressed: _link == null ? null : _copyLink,
+          onPressed: _link == null && _serverRequestId == null ? null : _copyLink,
           icon: SvgPicture.asset('assets/icons_2/copy.svg',
             width: 22, height: 22,
             colorFilter: const ColorFilter.mode(
