@@ -1,6 +1,7 @@
 import 'sign2digital_selection_sheet.dart';
 // Sign2Digital: reusable, frontend-only phone country picker.
 import 'package:flutter/material.dart';
+import 'package:country_flags/country_flags.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
@@ -248,7 +249,10 @@ class Sign2DigitalCountrySelector extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(selected.flag, style: const TextStyle(fontSize: 15)),
+              CountryFlag.fromCountryCode(
+                selected.isoCode,
+                theme: const ImageTheme(width: 20, height: 15),
+              ),
               const SizedBox(width: 5),
               Text(selected.dialCode, style: AppTextStyles.fieldInput),
             ],
@@ -308,9 +312,9 @@ class _CountrySelectionSheetState extends State<_CountrySelectionSheet> {
                 return ListTile(
                   key: Key('country-${country.isoCode}'),
                   selected: country.isoCode == widget.selected.isoCode,
-                  leading: Text(
-                    country.flag,
-                    style: const TextStyle(fontSize: 24),
+                  leading: CountryFlag.fromCountryCode(
+                    country.isoCode,
+                    theme: const ImageTheme(width: 28, height: 21),
                   ),
                   title: Text(country.name, style: AppTextStyles.fieldInput),
                   trailing: Row(mainAxisSize: MainAxisSize.min, children: [
