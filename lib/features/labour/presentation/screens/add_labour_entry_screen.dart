@@ -18,6 +18,9 @@ import '../../../jobs/presentation/widgets/sign2digital_photo_preview.dart';
 import '../../../jobs/services/voice_job_extraction_service.dart';
 import '../../../jobs/services/voice_recorder_service.dart';
 import '../../domain/labour_entry.dart';
+import '../../data/remote_labour_repository.dart';
+import '../../services/remote_labour_voice_extraction_service.dart';
+import '../../../auth/data/mobile_auth_repository.dart';
 import '../../services/labour_voice_extraction_service.dart';
 
 /// Create a labour entry and return it to TimeLabourScreen for saving.
@@ -64,6 +67,9 @@ class _AddLabourEntryScreenState extends State<AddLabourEntryScreen> {
   final _description = TextEditingController();
   final _photos = <LocalJobPhotoSelection>[];
   JobModel? _job;
+  int? _workerId;
+
+  bool get _remote => MobileAuthRepository.shared.isSignedIn;
   DateTime? _date;
   TimeOfDay? _start;
   TimeOfDay? _end;
@@ -94,6 +100,7 @@ class _AddLabourEntryScreenState extends State<AddLabourEntryScreen> {
         }
       }
       _worker.text = previous.workerName;
+      _workerId = previous.workerId;
       _role.text = previous.role;
       _description.text = previous.task;
       _rate.text = previous.hourlyRate?.toStringAsFixed(2) ?? '';
@@ -180,6 +187,10 @@ class _AddLabourEntryScreenState extends State<AddLabourEntryScreen> {
       );
       if (chosen != null && mounted) {
         setState(() {
+          if (_job?.id != chosen.id && _remote) {
+            _workerId = null;
+            _worker.clear();
+          }
           _job = chosen;
           _voiceJobHint = null;
           _error = null;
@@ -187,6 +198,49 @@ class _AddLabourEntryScreenState extends State<AddLabourEntryScreen> {
       }
     } finally {
       search.dispose();
+    }
+  }
+
+  Future<void> _selectWorker() async {
+    if (_job == null) {
+      _notice('Select a saved job before choosing an assigned worker.');
+      return;
+    }
+    try {
+      final workers=await RemoteLabourRepository.shared.workers(_job!.id);
+      if(!mounted)return;
+      final chosen=await Sign2DigitalSelectionSheet.showCustom<LabourWorker>(
+        title:'Assigned Team Member',
+        icon:Icons.group_outlined,
+        subtitle:'Only active workers assigned to this job can log time',
+        context:context,isScrollControlled:true,
+        builder:(sheet)=>SafeArea(child:ListView(
+          shrinkWrap:true,
+          children:[
+            for(final worker in workers)
+              ListTile(
+                key:Key('labour-worker-${worker.id}'),
+                title:Text(worker.name),
+                selected:worker.id==_workerId,
+                trailing:worker.id==_workerId?
+                    const Icon(Icons.check_circle_rounded,
+                      color:AppColors.primary):null,
+                onTap:()=>Navigator.of(sheet).pop(worker),
+              ),
+            if(workers.isEmpty)const ListTile(
+              title:Text('No assigned team members found')),
+          ],
+        )),
+      );
+      if(chosen!=null&&mounted) {
+        setState((){
+          _workerId=chosen.id;
+          _worker.text=chosen.name;
+          _error=null;
+        });
+      }
+    } catch (_) {
+      _notice('Unable to load assigned team members.');
     }
   }
 
@@ -300,46 +354,6 @@ class _AddLabourEntryScreenState extends State<AddLabourEntryScreen> {
     ),
   );
 
-  Future<String?> _askApiKey(BuildContext parent) {
-    String value = '';
-    return showDialog<String>(
-      context: parent,
-      builder: (dialog) => AlertDialog(
-        title: const Text('Connect Labour AI'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'For personal testing, enter a temporary OpenAI API key. '
-              'The key is not saved. A production app needs a secure backend.',
-            ),
-            TextField(
-              key: const Key('labour-ai-key'),
-              obscureText: true,
-              onChanged: (text) => value = text,
-              decoration: const InputDecoration(labelText: 'OpenAI API key'),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialog).pop(),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            key: const Key('labour-ai-extract'),
-            onPressed: () {
-              if (value.trim().isNotEmpty) {
-                Navigator.of(dialog).pop(value.trim());
-              }
-            },
-            child: const Text('Process recording'),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _applyVoice(LabourVoiceSuggestion suggestion) {
     if (!mounted) { return; }
     JobModel? matched;
@@ -396,13 +410,9 @@ class _AddLabourEntryScreenState extends State<AddLabourEntryScreen> {
           extraction: OpenAiVoiceJobExtractionService(),
           recordingTitle: 'Record labour Details',
           onAudioProcessed: (path) async {
-            final key = await (widget.requestTemporaryApiKey?.call(context) ??
-                _askApiKey(context));
-            if (key == null) {
-              throw StateError('AI processing was cancelled.');
-            }
+            final key = await widget.requestTemporaryApiKey?.call(context) ?? '';
             final result = await (widget.voiceExtractionService ??
-                const OpenAiLabourVoiceExtractionService()).extract(path, key);
+                RemoteLabourVoiceExtractionService()).extract(path, key);
             _applyVoice(result);
           },
         ),
@@ -425,10 +435,12 @@ class _AddLabourEntryScreenState extends State<AddLabourEntryScreen> {
       _rate.text.trim().replaceAll(',', '.'),
     );
     if (_job == null || _worker.text.trim().isEmpty ||
+        (_remote && _workerId == null) ||
         _date == null || _start == null || _end == null ||
         minutes == null || minutes <= 0 ||
-        _role.text.trim().isEmpty || rate == null ||
-        !rate.isFinite || rate < 0) {
+        _role.text.trim().isEmpty ||
+        (!_remote && rate == null) ||
+        (rate != null && (!rate.isFinite || rate < 0))) {
       setState(() => _error =
         'Select a job, worker, date, start and end time, '
         'labour type and valid hourly rate.');
@@ -456,6 +468,9 @@ class _AddLabourEntryScreenState extends State<AddLabourEntryScreen> {
       startMinutes: _minutes(_start!),
       endMinutes: _minutes(_end!),
       hourlyRate: rate,
+      workerId: _workerId ?? previous?.workerId,
+      lockVersion: previous?.lockVersion ?? 1,
+      source: previous?.source ?? 'manual',
       task: _description.text.trim(),
       photos: List.unmodifiable(_photos),
       status: previous?.status ?? LabourEntryStatus.pending,
@@ -507,14 +522,27 @@ class _AddLabourEntryScreenState extends State<AddLabourEntryScreen> {
                           color: AppColors.secondaryText),
                     ),
                     const SizedBox(height: 20),
-                    Sign2DigitalInputField(
-                      key: const Key('labour-form-worker'),
-                      label: 'Worker',
-                      hintText: 'e.g, Marc dupont',
-                      iconAsset: 'assets/icons/user.svg',
-                      controller: _worker,
-                      textCapitalization: TextCapitalization.words,
-                    ),
+                    if (_remote)
+                      Sign2DigitalSelectionField(
+                        key: const Key('labour-form-worker'),
+                        label: 'Worker',
+                        hintText: 'Select assigned team member',
+                        iconAsset: 'assets/icons/user.svg',
+                        value: _worker.text.isEmpty ? null : _worker.text,
+                        onTap: widget.initialEntry == null
+                            ? _selectWorker : () {},
+                        trailing: const Icon(Icons.keyboard_arrow_down_rounded,
+                          color: AppColors.secondaryText),
+                      )
+                    else
+                      Sign2DigitalInputField(
+                        key: const Key('labour-form-worker'),
+                        label: 'Worker',
+                        hintText: 'e.g, Marc dupont',
+                        iconAsset: 'assets/icons/user.svg',
+                        controller: _worker,
+                        textCapitalization: TextCapitalization.words,
+                      ),
                     const SizedBox(height: 20),
                     Sign2DigitalSelectionField(
                       key: const Key('labour-form-date'),
