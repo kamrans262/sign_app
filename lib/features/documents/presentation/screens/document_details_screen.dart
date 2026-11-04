@@ -101,12 +101,12 @@ class _AddendumApprovalConfirmationState
       Text(widget.draft.description),
       if (widget.draft.hasPricedWork) ...[
         const SizedBox(height: 8),
-        Text('Additional work: ' + widget.draft.additionalWork),
-        Text('Quantity: ' + widget.draft.quantity),
+        Text('Additional work: ${widget.draft.additionalWork}'),
+        Text('Quantity: ${widget.draft.quantity}'),
       ],
       const SizedBox(height: 8),
-      Text('Total: ' + quoteMoney(
-        widget.draft.totalMinor, widget.draft.currency)),
+      Text('Total: ${quoteMoney(
+        widget.draft.totalMinor, widget.draft.currency)}'),
       const SizedBox(height: 12),
       CheckboxListTile(
         contentPadding: EdgeInsets.zero,
