@@ -30,7 +30,9 @@ Map<String, dynamic> report({
          'attendees': ['Jean Client'], 'absentees': <String>[],
          'decisions': ['Replace one pane'],
          'next_steps': ['Order glass'],
-         'action_items': [{'description': 'Contact supplier'}]},
+         'outstanding_points': ['Approve supplier selection'],
+         'action_items': [{'description': 'Contact supplier',
+             'assignee': 'Inspector', 'due_date': '2026-11-12'}]},
 };
 
 void main() {
@@ -72,6 +74,12 @@ void main() {
     expect(records.single.meetingMinutesDetails!.attendees, ['Jean Client']);
     expect(records.single.meetingMinutesDetails!.decisions, ['Replace one pane']);
     expect(records.single.meetingMinutesDetails!.actionItems, ['Contact supplier']);
+    expect(records.single.meetingMinutesDetails!.outstandingPoints,
+        ['Approve supplier selection']);
+    expect(records.single.meetingMinutesDetails!.actionDetails.single.assignee,
+        'Inspector');
+    expect(records.single.meetingMinutesDetails!.actionDetails.single.dueDate,
+        DateTime(2026,11,12));
     api.dispose();
   });
 

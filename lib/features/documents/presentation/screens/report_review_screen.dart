@@ -259,7 +259,15 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
                   _section('Absentees', minutes.absentees.join('\n')),
                   _section('Decisions', minutes.decisions.join('\n')),
                   _section('Next Steps', minutes.nextSteps.join('\n')),
-                  _section('Action Items', minutes.actionItems.join('\n')),
+                  _section('Outstanding Points', minutes.outstandingPoints.join('\n')),
+                  _section('Action Items', minutes.actionDetails.isNotEmpty
+                    ? minutes.actionDetails.map((item) => [
+                        item.description,
+                        if (item.assignee.isNotEmpty) 'Owner: ${item.assignee}',
+                        if (item.dueDate != null)
+                          'Due: ${RemoteSiteReportRepository.dateValue(item.dueDate!)}',
+                      ].join(' • ')).join('\n')
+                    : minutes.actionItems.join('\n')),
                 ],
                 if (_suggestion != null) ...[
                   const Divider(height: 25),
