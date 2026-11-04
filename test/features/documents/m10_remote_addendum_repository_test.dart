@@ -48,7 +48,7 @@ void main() {
       tokenProvider: () async => 'secure-token',
       activeCompanyId: () => ActiveCompanySession.companyId,
       httpClient: MockClient((request) async {
-        calls.add(request.method + ' ' + request.url.path);
+        calls.add('${request.method} ${request.url.path}');
         expect(request.headers['X-Company-Id'], '5');
         expect(request.headers['Authorization'], 'Bearer secure-token');
         if (request.url.path == '/api/v1/addenda') {
