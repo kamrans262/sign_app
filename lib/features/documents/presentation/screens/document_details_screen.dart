@@ -118,6 +118,17 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
 
   bool get _signed => _record?.status.toLowerCase() == 'signed';
 
+  /// Only authoritative catalog quotes use the read-only fallback.
+  /// Locally composed quotes may have numeric IDs too.
+  bool _needsReadOnlyQuotePreview(DocumentRecord record) {
+    if (record.demoOnly || record.verifiedSignedPdfAvailable) return false;
+    final match = RegExp(r'^quote-([1-9][0-9]*)$').firstMatch(record.id);
+    if (match == null) return false;
+    final serverId = int.parse(match.group(1)!);
+    return record.quote?.serverId == serverId ||
+        (record.quote == null && widget.loadDocument != null);
+  }
+
   Future<Uint8List?> _makePdf(DocumentRecord record) async {
     if (record.category == DocumentCategory.addends &&
         record.addendumDraftId != null) {
@@ -161,7 +172,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
     // An M6 draft/legacy quote may have saved structured data but no
     // immutable approved file. Its in-app preview must never be exported as
     // the original customer-approved or signed PDF.
-    if (!record.demoOnly && record.id.startsWith('quote-')) {
+    if (_needsReadOnlyQuotePreview(record)) {
       throw const FormatException(
         'No verified approved PDF is available for this quote.');
     }
@@ -179,8 +190,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
   Future<void> _doDownload() async {
     final record = _record;
     if (record == null) return;
-    if (!record.demoOnly && record.id.startsWith('quote-') &&
-        !record.verifiedSignedPdfAvailable) {
+    if (_needsReadOnlyQuotePreview(record)) {
       _message('No verified quote PDF exists. The Preview tab shows '
           'saved quote details only.');
       return;
@@ -210,8 +220,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
   Future<void> _doShare() async {
     final record = _record;
     if (record == null) return;
-    if (!record.demoOnly && record.id.startsWith('quote-') &&
-        !record.verifiedSignedPdfAvailable) {
+    if (_needsReadOnlyQuotePreview(record)) {
       _message('No verified quote PDF exists. The Preview tab shows '
           'saved quote details only.');
       return;
@@ -614,8 +623,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
     // Existing M6 drafts and legacy approved quotes without frozen PDF bytes
     // can still display their current saved fields using the approved
     // Sign2Digital Quote Preview styling. This is NOT a signed/approved PDF.
-    if (!record.demoOnly && record.id.startsWith('quote-') &&
-        !record.verifiedSignedPdfAvailable) {
+    if (_needsReadOnlyQuotePreview(record)) {
       final quote = record.quote;
       if (quote == null) {
         return const Text(
