@@ -11,6 +11,12 @@ import '../../../../core/widgets/sign2digital_selection_field.dart';
 import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import '../../../jobs/domain/job_model.dart';
 import '../../data/demo_labour_repository.dart';
+import '../../data/remote_labour_repository.dart';
+import '../widgets/m15_live_timer_panel.dart';
+import '../widgets/m15_labour_summary.dart';
+import '../../../auth/data/mobile_auth_repository.dart';
+import '../../../../core/services/active_company_session.dart';
+import '../../../../core/services/sign_api_client.dart';
 import '../../domain/labour_entry.dart';
 import 'add_labour_entry_screen.dart';
 import 'labour_entry_details_screen.dart';
@@ -34,6 +40,7 @@ class TimeLabourScreen extends StatefulWidget {
     this.onNotificationTap,
     this.onProfileTap,
     this.selectedNavigationIndex = 4,
+    this.jobId, this.initialJob,
   });
 
   final LabourRepository? repository;
@@ -43,6 +50,8 @@ class TimeLabourScreen extends StatefulWidget {
   final VoidCallback? onNotificationTap;
   final VoidCallback? onProfileTap;
   final int selectedNavigationIndex;
+  final String? jobId;
+  final JobModel? initialJob;
 
   @override
   State<TimeLabourScreen> createState() => _TimeLabourScreenState();
@@ -57,7 +66,7 @@ class _TimeLabourScreenState extends State<TimeLabourScreen> {
   String? _error;
   int _tab = 0;
   LabourSort _sort = LabourSort.newest;
-  String? _jobId = LabourDemoJobs.riverside.id;
+  String? _jobId;
 
   LabourEntryKind get _kind =>
       _tab == 0 ? LabourEntryKind.labour : LabourEntryKind.timeSheet;
@@ -71,7 +80,12 @@ class _TimeLabourScreenState extends State<TimeLabourScreen> {
   @override
   void initState() {
     super.initState();
-    _repository = widget.repository ?? const DemoLabourRepository();
+    _repository = widget.repository ?? (
+      !MobileAuthRepository.shared.isSignedIn &&
+      ActiveCompanySession.companyId == null
+          ? const DemoLabourRepository() : RemoteLabourRepository.shared);
+    _jobId = widget.jobId ?? (_repository is RemoteLabourRepository
+        ? null : LabourDemoJobs.riverside.id);
     _load();
   }
 
@@ -233,8 +247,16 @@ class _TimeLabourScreenState extends State<TimeLabourScreen> {
       setState(() { _jobId = entry.jobId; });
       await _load();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Time entry saved locally as Pending.')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(_repository is RemoteLabourRepository
+            ? 'Time entry saved as Pending for review.'
+            : 'Time entry saved locally as Pending.')));
+      }
+    } on SignApiException catch (error) {
+      if (mounted) {
+        await _load();
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.message)));
       }
     } catch (_) {
       if (mounted) {
@@ -290,9 +312,7 @@ class _TimeLabourScreenState extends State<TimeLabourScreen> {
           onNotificationTap: widget.onNotificationTap,
           onProfileTap: widget.onProfileTap,
         ),
-        Expanded(child: Center(child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 720),
-          child: Stack(children: [
+        Expanded(child: Stack(children: [
             CustomScrollView(
               key: const Key('labour-scroll'),
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -304,7 +324,7 @@ class _TimeLabourScreenState extends State<TimeLabourScreen> {
                     children: [
                       Sign2DigitalSearchField(
                         controller: _search,
-                        hintText: 'Search documents',
+                        hintText: 'Search time entries',
                         onChanged: (_) => setState(() {}),
                         onTrailingTap: () => FocusManager.instance.primaryFocus?.unfocus(),
                       ),
@@ -331,6 +351,18 @@ class _TimeLabourScreenState extends State<TimeLabourScreen> {
                         trailing: const Icon(Icons.keyboard_arrow_down_rounded,
                           color: AppColors.secondaryText),
                       ),
+                      if (_repository is RemoteLabourRepository) ...[
+                        const SizedBox(height: 15),
+                        M15LiveTimerPanel(
+                          repository:_repository,
+                          job:_selectedJob,
+                          onUpdated:_load,
+                        ),
+                        if (_jobId != null) ...[
+                          const SizedBox(height:15),
+                          M15LabourSummary(jobId:_jobId!,refreshKey:_all.length),
+                        ],
+                      ],
                       const SizedBox(height: 15),
                       Sign2DigitalListSortControl(
                         key: const Key('labour-sort'),
@@ -383,7 +415,7 @@ class _TimeLabourScreenState extends State<TimeLabourScreen> {
                   foregroundColor: AppColors.white,
                   child: const Icon(Icons.add, size: 30)))),
           ]),
-        ))),
+        ),
       ])),
       bottomNavigationBar: Sign2DigitalBottomNavigationBar(
         selectedIndex: widget.selectedNavigationIndex,
