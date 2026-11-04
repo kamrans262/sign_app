@@ -9,6 +9,7 @@ class NoteDocumentDraft {
     required this.title,
     required this.content,
     this.approvedLocally = false,
+    this.serverId,
   });
 
   final String noteId;
@@ -17,6 +18,7 @@ class NoteDocumentDraft {
   final String title;
   final String content;
   final bool approvedLocally;
+  final int? serverId;
 
   NoteDocumentDraft copyWith({
     String? title, String? content, bool? approvedLocally,
@@ -25,6 +27,7 @@ class NoteDocumentDraft {
     title: title ?? this.title,
     content: content ?? this.content,
     approvedLocally: approvedLocally ?? this.approvedLocally,
+    serverId: serverId,
   );
 }
 

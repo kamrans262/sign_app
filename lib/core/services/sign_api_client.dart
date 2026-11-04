@@ -205,6 +205,61 @@ class SignApiClient {
     }
   }
 
+
+  /// M11 private authenticated media. Never exposes storage paths or redirects.
+  Future<Uint8List> getPrivateMedia(
+      String endpoint, {required String mimeType, required int maxBytes}) async {
+    if (!['image/jpeg', 'image/png', 'audio/mp4', 'audio/aac', 'audio/wav']
+            .contains(mimeType) ||
+        maxBytes <= 0 || maxBytes > 25 * 1024 * 1024) {
+      throw const SignApiException('Invalid private media request.');
+    }
+    final request = http.Request('GET', _uri(endpoint))
+      ..followRedirects = false;
+    request.headers.addAll(await _headers(
+      authenticated: true, companyScoped: true));
+    try {
+      final streamed = await _http.send(request)
+          .timeout(const Duration(seconds: 60));
+      final response = await http.Response.fromStream(streamed)
+          .timeout(const Duration(seconds: 60));
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        _decode(response);
+        throw SignApiException('Media download failed.',
+            statusCode: response.statusCode);
+      }
+      final actual = (response.headers['content-type'] ?? '')
+          .split(';').first.trim().toLowerCase();
+      final bytes = response.bodyBytes;
+      if (actual != mimeType || bytes.isEmpty || bytes.length > maxBytes) {
+        throw const SignApiException('Invalid private media response.');
+      }
+      final valid = switch (mimeType) {
+        'image/png' => bytes.length > 8 &&
+          bytes[0] == 137 && bytes[1] == 80 && bytes[2] == 78 &&
+          bytes[3] == 71 && bytes[4] == 13 && bytes[5] == 10 &&
+          bytes[6] == 26 && bytes[7] == 10,
+        'image/jpeg' => bytes.length > 4 &&
+          bytes[0] == 255 && bytes[1] == 216 &&
+          bytes[bytes.length - 2] == 255 && bytes.last == 217,
+        'audio/mp4' => bytes.length > 12 &&
+          ascii.decode(bytes.sublist(4, 8)) == 'ftyp',
+        'audio/wav' => bytes.length > 12 &&
+          ascii.decode(bytes.sublist(0, 4)) == 'RIFF' &&
+          ascii.decode(bytes.sublist(8, 12)) == 'WAVE',
+        'audio/aac' => bytes.length > 3 &&
+          bytes.first == 255 && (bytes[1] & 240) == 240,
+        _ => false,
+      };
+      if (!valid) throw const SignApiException('Invalid private media bytes.');
+      return bytes;
+    } on SignApiException {
+      rethrow;
+    } catch (_) {
+      throw const SignApiException('Unable to download private media.');
+    }
+  }
+
   Future<Map<String, dynamic>> postMultipart(
     String endpoint, {
     required String filename,
