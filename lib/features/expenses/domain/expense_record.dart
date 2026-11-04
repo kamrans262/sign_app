@@ -82,7 +82,7 @@ class ExpenseRecord {
   bool matches(String input) {
     final query = input.trim().toLowerCase();
     if (query.isEmpty) return true;
-    return [id, title, category.label, job, report, status.label, description, ...tags]
+    return [id, title, category.label, job, report, status.label, supplier, description, ...tags]
         .any((value) => value.toLowerCase().contains(query));
   }
 
