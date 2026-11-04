@@ -549,9 +549,9 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
       Expanded(child: SingleChildScrollView(
         key: const Key('create-addendum-scroll'),
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 30),
-        child: Center(child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 720),
-          child: Column(
+        // Stretch to the available landscape/tablet width with the same
+        // established 20px horizontal padding, no centered fixed-width panel.
+        child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Sign2DigitalAiVoiceButton(onPressed: _voice),
@@ -628,7 +628,7 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
                 key: const Key('addendum-effective-date'),
                 label: 'Effective Dates',
                 iconAsset: 'assets/icons/calendar-outlined.svg',
-                hintText: 'August 25, 2026',
+                hintText: 'Select effective date',
                 value: _effectiveDate == null ? null : _dateText(_effectiveDate),
                 onTap: _chooseDate,
               ),
@@ -642,7 +642,6 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
               _footer(),
             ],
           ),
-        )),
       )),
     ])),
   );
