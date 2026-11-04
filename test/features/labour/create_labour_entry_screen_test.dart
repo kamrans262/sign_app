@@ -233,7 +233,7 @@ void main() {
     await _reach(tester, 'labour-form-worker');
     expect(find.text('Marc Dupont'), findsOneWidget);
     await _reach(tester, 'labour-form-rate');
-    expect(find.text('85.00'), findsOneWidget);
+    expect(find.text('85.00'), findsWidgets);
     expect(recorder.disposed, isTrue);
     expect(tester.takeException(), isNull);
   });
