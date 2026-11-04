@@ -85,9 +85,16 @@ class RemoteSiteReportRepository implements DocumentRepository {
       throw const SignApiException('Approved report has no verified PDF.');
     }
     final actions = content['action_items'] is List
-        ? (content['action_items'] as List).map((item) =>
-            (_object(item)['description'] ?? '').toString()).toList()
-        : <String>[];
+        ? (content['action_items'] as List).map((value) {
+            final item = _object(value);
+            return MeetingActionItem(
+              description: (item['description'] ?? '').toString(),
+              assignee: (item['assignee'] ?? '').toString(),
+              dueDate: item['due_date'] == null
+                  ? null : _date(item['due_date']),
+            );
+          }).toList()
+        : <MeetingActionItem>[];
     return DocumentRecord(
       id: 'report-$id',
       category: DocumentCategory.reports,
@@ -126,7 +133,9 @@ class RemoteSiteReportRepository implements DocumentRepository {
               absentees: _strings(content['absentees']),
               decisions: _strings(content['decisions']),
               nextSteps: _strings(content['next_steps']),
-              actionItems: actions,
+              outstandingPoints: _strings(content['outstanding_points']),
+              actionItems: actions.map((item) => item.description).toList(),
+              actionDetails: actions,
             )
           : null,
     );
@@ -266,8 +275,14 @@ class RemoteSiteReportRepository implements DocumentRepository {
         if (minutes != null) 'absentees': minutes.absentees,
         if (minutes != null) 'decisions': minutes.decisions,
         if (minutes != null) 'next_steps': minutes.nextSteps,
-        if (minutes != null) 'action_items': minutes.actionItems.map(
-          (line) => {'description': line}).toList(),
+        if (minutes != null) 'outstanding_points': minutes.outstandingPoints,
+        if (minutes != null) 'action_items': minutes.actionDetails.isNotEmpty
+          ? minutes.actionDetails.map((item) => {
+              'description': item.description,
+              if (item.assignee.trim().isNotEmpty) 'assignee': item.assignee.trim(),
+              if (item.dueDate != null) 'due_date': dateValue(item.dueDate!),
+            }).toList()
+          : minutes.actionItems.map((line) => {'description': line}).toList(),
       },
     };
     final existing = draft.id.startsWith('report-') ? reportId(draft.id) : null;

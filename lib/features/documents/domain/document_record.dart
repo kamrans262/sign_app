@@ -50,6 +50,17 @@ class SiteReportDetails {
   final List<LocalJobPhotoSelection> photos;
 }
 
+/// Accountable meeting action with an optional owner and due date.
+class MeetingActionItem {
+  const MeetingActionItem({
+    required this.description, this.assignee = '', this.dueDate,
+  });
+
+  final String description;
+  final String assignee;
+  final DateTime? dueDate;
+}
+
 /// Real M12 meeting minutes, distinct from the work acceptance milestone.
 class MeetingMinutesDetails {
   const MeetingMinutesDetails({
@@ -59,7 +70,9 @@ class MeetingMinutesDetails {
     this.absentees = const [],
     this.decisions = const [],
     this.nextSteps = const [],
+    this.outstandingPoints = const [],
     this.actionItems = const [],
+    this.actionDetails = const [],
     this.summary = '',
   });
 
@@ -69,7 +82,9 @@ class MeetingMinutesDetails {
   final List<String> absentees;
   final List<String> decisions;
   final List<String> nextSteps;
+  final List<String> outstandingPoints;
   final List<String> actionItems;
+  final List<MeetingActionItem> actionDetails;
   final String summary;
 }
 
