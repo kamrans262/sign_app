@@ -21,6 +21,7 @@ import '../../domain/labour_entry.dart';
 import '../../data/remote_labour_repository.dart';
 import '../../services/remote_labour_voice_extraction_service.dart';
 import '../../../auth/data/mobile_auth_repository.dart';
+import '../../../../core/services/active_company_session.dart';
 import '../../services/labour_voice_extraction_service.dart';
 
 /// Create a labour entry and return it to TimeLabourScreen for saving.
@@ -69,7 +70,8 @@ class _AddLabourEntryScreenState extends State<AddLabourEntryScreen> {
   JobModel? _job;
   int? _workerId;
 
-  bool get _remote => MobileAuthRepository.shared.isSignedIn;
+  bool get _remote => MobileAuthRepository.shared.isSignedIn ||
+      ActiveCompanySession.companyId != null;
   DateTime? _date;
   TimeOfDay? _start;
   TimeOfDay? _end;
