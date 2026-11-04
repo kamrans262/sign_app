@@ -22,6 +22,8 @@ class WorkAcceptanceScreen extends StatefulWidget {
     required this.report,
     this.onShareReport,
     this.onViewReport,
+    this.onApprove,this.onSend,this.onRevoke,
+    this.onEditDraft,this.onRefresh,
     this.onNavigationSelected,
     this.selectedNavigationIndex = 2,
   });
@@ -29,6 +31,11 @@ class WorkAcceptanceScreen extends StatefulWidget {
   final DocumentRecord report;
   final WorkAcceptanceAction? onShareReport;
   final WorkAcceptanceAction? onViewReport;
+  final WorkAcceptanceAction? onApprove;
+  final WorkAcceptanceAction? onSend;
+  final WorkAcceptanceAction? onRevoke;
+  final WorkAcceptanceAction? onEditDraft;
+  final Future<DocumentRecord> Function(DocumentRecord)? onRefresh;
   final ValueChanged<int>? onNavigationSelected;
   final int selectedNavigationIndex;
 
@@ -38,21 +45,25 @@ class WorkAcceptanceScreen extends StatefulWidget {
 
 class _WorkAcceptanceScreenState extends State<WorkAcceptanceScreen> {
   bool _busy = false;
+  late DocumentRecord _report;
 
-  WorkAcceptanceEvidence? get _evidence => widget.report.workAcceptance;
+  @override
+  void initState() { super.initState(); _report=widget.report; }
+
+  WorkAcceptanceEvidence? get _evidence => _report.workAcceptance;
 
   /// Local/demo PDFs and unverified signature drafts are never accepted.
   bool get _hasVerifiedPdf =>
-      !widget.report.demoOnly &&
+      !_report.demoOnly &&
       (_evidence?.verifiedReportPdf?.isNotEmpty ?? false);
 
   bool get _hasVerifiedSignature =>
-      !widget.report.demoOnly &&
+      !_report.demoOnly &&
       (_evidence?.verifiedSignaturePng?.isNotEmpty ?? false);
 
   WorkAcceptanceEvent? _event(WorkAcceptanceStage stage) {
     final matching = _evidence?.events.where((item) =>
-      item.documentId == widget.report.id && item.stage == stage);
+      item.documentId == _report.id && item.stage == stage);
     if (matching == null || matching.isEmpty) return null;
     return matching.reduce((a, b) =>
         a.occurredAt.isAfter(b.occurredAt) ? a : b);
@@ -60,13 +71,14 @@ class _WorkAcceptanceScreenState extends State<WorkAcceptanceScreen> {
 
   bool _recorded(WorkAcceptanceStage stage, WorkAcceptanceEvent? event) {
     if (event == null || event.actorName.trim().isEmpty) return false;
-    if (widget.report.demoOnly) return true;
+    if (_report.demoOnly) return true;
     if ((stage == WorkAcceptanceStage.clientSigned ||
          stage == WorkAcceptanceStage.completed) && !_hasVerifiedSignature) {
       return false;
     }
     if (stage == WorkAcceptanceStage.completed &&
-        widget.report.status.toLowerCase() != 'completed') {
+        !['completed','accepted','accepted_with_reservations']
+            .contains(_report.status.toLowerCase())) {
       return false;
     }
     return true;
@@ -95,7 +107,11 @@ class _WorkAcceptanceScreenState extends State<WorkAcceptanceScreen> {
     if (_busy) return;
     setState(() => _busy = true);
     try {
-      await action(widget.report);
+      await action(_report);
+      if(widget.onRefresh!=null) {
+        final fresh=await widget.onRefresh!(_report);
+        if(mounted)setState(()=>_report=fresh);
+      }
     } catch (_) {
       _notice('The report action could not be completed.');
     } finally {
@@ -186,7 +202,7 @@ class _WorkAcceptanceScreenState extends State<WorkAcceptanceScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (widget.report.demoOnly) ...[
+                if (_report.demoOnly) ...[
                   const Text(
                     'DEMO — lifecycle events are sample data, not verified.',
                     key: Key('work-acceptance-demo-label'),
@@ -209,6 +225,20 @@ class _WorkAcceptanceScreenState extends State<WorkAcceptanceScreen> {
                       ? _evidence!.verifiedSignaturePng : null,
                 ),
                 const SizedBox(height: 25),
+                if(!_report.demoOnly &&
+                    _evidence?.acceptanceResult!=null) ...[
+                  Text(_evidence!.acceptanceResult=='accepted_with_reservations'
+                      ?'Accepted with Reservations':'Accepted',
+                    style:const TextStyle(fontFamily:'Inter',fontSize:16,
+                      fontWeight:FontWeight.w600,color:AppColors.dark)),
+                  if(_evidence!.reservation.trim().isNotEmpty)
+                    Padding(padding:const EdgeInsets.only(top:8),
+                      child:Text('Reservations: '+_evidence!.reservation)),
+                  if(_evidence!.outstandingIssues.trim().isNotEmpty)
+                    Padding(padding:const EdgeInsets.only(top:8),
+                      child:Text('Outstanding Issues: '+_evidence!.outstandingIssues)),
+                  const SizedBox(height:20),
+                ],
                 Row(children: [
                   Expanded(child: Sign2DigitalOutlinedButton(
                     key: const Key('work-acceptance-share'),
@@ -225,6 +255,27 @@ class _WorkAcceptanceScreenState extends State<WorkAcceptanceScreen> {
                     onPressed: _view,
                   )),
                 ]),
+                if(_report.status=='draft'&&widget.onEditDraft!=null) ...[
+                  const SizedBox(height:12),
+                  Sign2DigitalOutlinedButton(label:'Edit Acceptance Draft',
+                    enabled:!_busy,onPressed:()=>_run(widget.onEditDraft!)),
+                ],
+                if(_report.status=='draft'&&widget.onApprove!=null) ...[
+                  const SizedBox(height:12),
+                  Sign2DigitalPrimaryButton(label:'Approve Acceptance PDF',
+                    enabled:!_busy,onPressed:()=>_run(widget.onApprove!)),
+                ],
+                if(_report.status=='approved'&&widget.onSend!=null) ...[
+                  const SizedBox(height:12),
+                  Sign2DigitalPrimaryButton(label:'Send to Customer',
+                    enabled:!_busy,onPressed:()=>_run(widget.onSend!)),
+                ],
+                if(['sent','viewed'].contains(_report.status)&&
+                    widget.onRevoke!=null) ...[
+                  const SizedBox(height:12),
+                  Sign2DigitalOutlinedButton(label:'Revoke Signing Link',
+                    enabled:!_busy,onPressed:()=>_run(widget.onRevoke!)),
+                ],
               ],
             ),
           ),
