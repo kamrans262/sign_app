@@ -58,7 +58,9 @@ class AddendumDraft {
     final count = int.tryParse(quantity.trim());
     final unit = parseQuoteMinorUnits(unitPrice);
     if (additionalWork.trim().isEmpty || count == null ||
-        count < 1 || count > 100000 || unit == null || unit <= 0) return null;
+        count < 1 || count > 100000 || unit == null || unit <= 0) {
+      return null;
+    }
     return count * unit;
   }
 
