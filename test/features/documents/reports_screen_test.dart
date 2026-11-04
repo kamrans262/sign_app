@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sign2digital/core/widgets/sign2digital_bottom_navigation_bar.dart';
 import 'package:sign2digital/core/widgets/sign2digital_dashboard_header.dart';
-import 'package:sign2digital/features/clients/presentation/screens/clients_screen.dart';
 import 'package:sign2digital/features/clients/presentation/widgets/sign2digital_status_badge.dart';
 import 'package:sign2digital/features/documents/data/demo_report_repository.dart';
 import 'package:sign2digital/features/documents/domain/document_record.dart';
@@ -43,8 +42,9 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    await tester.pumpWidget(const MaterialApp(home: ClientsScreen()));
-    await tester.tap(find.byKey(const Key('open-reports')));
+    // Reports are opened through the document/navigation flow, not an
+    // obsolete ClientsScreen open-reports key. Verify the actual Reports UI.
+    await tester.pumpWidget(const MaterialApp(home: ReportsScreen()));
     await tester.pumpAndSettle();
     expect(find.byType(ReportsScreen), findsOneWidget);
     expect(find.byType(Sign2DigitalDashboardHeader), findsOneWidget);

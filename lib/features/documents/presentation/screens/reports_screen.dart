@@ -351,7 +351,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     color: AppColors.lightBorder),
                 ),
                 Sign2DigitalDetailsTabs(
-                  labels: const ['All Report', 'Site Report', 'Work acceptance', 'Meeting Minutes'],
+                  labels: const ['All Report', 'Site Report', 'Work acceptance'],
                   selectedIndex: _selectedKind == null
                       ? 0 : _selectedKind!.index + 1,
                   onSelected: _selectTab,

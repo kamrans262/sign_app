@@ -142,7 +142,7 @@ class RemoteSiteReportRepository implements DocumentRepository {
       final data = _data(await _api.get('/api/v1/reports',
         companyScoped: true,
         queryParameters: {'page': page.toString(), 'per_page': '100',
-          if (jobId != null) 'job_id': jobId}));
+          'job_id': ?jobId}));
       _check(company);
       final rows = data['reports'];
       final lastPage = _id(data['last_page']);
@@ -196,7 +196,7 @@ class RemoteSiteReportRepository implements DocumentRepository {
         .map((p) => LocalJobPhotoSelection(
           name: 'job-photo-${p.id}${p.bytes![0] == 137 ? '.png' : '.jpg'}',
           bytes: p.bytes!,
-          sourceKey: 'remote:' + p.id,
+          sourceKey: 'remote:${p.id}',
         )).toList();
     final site = result.siteReportDetails!;
     return DocumentRecord(
