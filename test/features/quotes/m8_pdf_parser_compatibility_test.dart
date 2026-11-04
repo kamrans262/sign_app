@@ -32,7 +32,7 @@ void main() {
     expect(bytes.length, inInclusiveRange(1000, 5 * 1024 * 1024));
     expect(latin1.decode(bytes.take(8).toList()), '%PDF-1.4');
     final body = latin1.decode(bytes);
-    expect(RegExp(r'(?m)^xref\s*\r?$').hasMatch(body), isTrue,
+    expect(RegExp(r'^xref\s*\r?$', multiLine: true).hasMatch(body), isTrue,
         reason: 'FPDI free requires a classic cross-reference table.');
     expect(body.contains('/Type /XRef'), isFalse,
         reason: 'Compressed xref streams break the free FPDI parser.');
