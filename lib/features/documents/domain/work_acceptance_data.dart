@@ -35,9 +35,20 @@ class WorkAcceptanceEvidence {
     this.events = const [],
     this.verifiedSignaturePng,
     this.verifiedReportPdf,
+    this.acceptanceResult, this.reservation = '',
+    this.outstandingIssues = '', this.customerComment = '',
+    this.customerRating, this.signedAt,
   });
 
   final List<WorkAcceptanceEvent> events;
   final Uint8List? verifiedSignaturePng;
   final Uint8List? verifiedReportPdf;
+
+  /// These fields come from the verified customer acceptance record.
+  final String? acceptanceResult;
+  final String reservation;
+  final String outstandingIssues;
+  final String customerComment;
+  final int? customerRating;
+  final DateTime? signedAt;
 }
