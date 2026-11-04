@@ -6,7 +6,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: sign2digital-m15-flutter
+  group: sign2digital-m15-flutter-stage1-verified
   cancel-in-progress: true
 jobs:
   labour:
