@@ -1,0 +1,27 @@
+name: M15 Stage 1 Flutter Time and Labour
+on:
+  push:
+    branches: [feature/m12-site-reports-meeting-minutes-2026-11-04]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: sign2digital-m15-flutter
+  cancel-in-progress: true
+jobs:
+  labour:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Analyze M15 model, repo, widgets and existing labour screens
+        run: |
+          dart analyze lib/features/labour lib/features/jobs/presentation/screens/job_details_screen.dart test/features/labour/m15_remote_labour_repository_test.dart
+      - name: Labour screens, secure API, timer and Job Details regression
+        run: |
+          flutter test --no-pub --concurrency=2 --reporter=expanded test/features/labour/m15_remote_labour_repository_test.dart test/features/labour/time_labour_screen_test.dart test/features/labour/create_labour_entry_screen_test.dart test/features/labour/labour_entry_details_screen_test.dart test/features/jobs/job_details_screen_test.dart test/features/expenses/m14_remote_expense_repository_test.dart
