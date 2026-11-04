@@ -1,0 +1,283 @@
+import 'package:flutter/material.dart';
+
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/sign2digital_header.dart';
+import '../../../../core/widgets/sign2digital_primary_button.dart';
+import '../../../../core/widgets/sign2digital_outlined_button.dart';
+import '../../data/remote_site_report_repository.dart';
+import '../../data/remote_document_repository.dart';
+import '../../domain/document_record.dart';
+import 'document_details_screen.dart';
+
+/// Existing Sign2Digital layout applied to the real report review lifecycle.
+/// AI never approves or sends a document on behalf of the professional.
+class ReportReviewScreen extends StatefulWidget {
+  const ReportReviewScreen({
+    super.key,
+    required this.report,
+    this.repository,
+    this.documents,
+  });
+
+  final DocumentRecord report;
+  final RemoteSiteReportRepository? repository;
+  final RemoteDocumentRepository? documents;
+
+  @override
+  State<ReportReviewScreen> createState() => _ReportReviewScreenState();
+}
+
+class _ReportReviewScreenState extends State<ReportReviewScreen> {
+  late DocumentRecord _report;
+  late final RemoteSiteReportRepository _repository;
+  Map<String, dynamic>? _suggestion;
+  bool _busy = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _report = widget.report;
+    _repository = widget.repository ?? RemoteSiteReportRepository.shared;
+    _reload();
+  }
+
+  bool get _isDraft => _report.status.toLowerCase() == 'draft';
+
+  Future<void> _reload() async {
+    try {
+      final result = await _repository.details(_report.id);
+      if (mounted) setState(() => _report = result);
+    } catch (error) {
+      if (mounted) setState(() => _error = 'Unable to refresh report: ' + error.toString());
+    }
+  }
+
+  void _notify(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)));
+  }
+
+  Future<bool> _confirm(String title, String message) async {
+    return await showDialog<bool>(
+      context: context,
+      builder: (dialog) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialog).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialog).pop(true),
+            child: const Text('Confirm'),
+          ),
+        ],
+      ),
+    ) ?? false;
+  }
+
+  Future<void> _prepare() async {
+    if (_busy || !_isDraft) return;
+    if (!await _confirm('Prepare AI Draft',
+        'Use the saved report details to suggest an editable draft? No report will be approved or sent.')) {
+      return;
+    }
+    setState(() { _busy = true; _error = null; });
+    try {
+      final suggestion = await _repository.suggestAi(_report);
+      if (mounted) {
+        setState(() => _suggestion = suggestion);
+        _notify('AI suggestion ready. Please review every detail.');
+      }
+    } catch (error) {
+      if (mounted) setState(() => _error = 'AI preparation failed: ' + error.toString());
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _apply() async {
+    if (_busy || !_isDraft || _suggestion == null) return;
+    if (!await _confirm('Apply Suggested Changes',
+        'Save the reviewed AI text to this editable report? This does not approve or send the report.')) {
+      return;
+    }
+    setState(() { _busy = true; _error = null; });
+    try {
+      final result = await _repository.applyAi(_report, _suggestion!);
+      if (mounted) {
+        setState(() { _report = result; _suggestion = null; });
+        _notify('Draft updated. Review again before approval.');
+      }
+    } catch (error) {
+      if (mounted) setState(() => _error = 'Unable to apply AI suggestion: ' + error.toString());
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _approve() async {
+    if (_busy || !_isDraft) return;
+    if (!await _confirm('Approve Report',
+        'Freeze this exact revision as a verified PDF in Documents? Approved reports cannot be edited.')) {
+      return;
+    }
+    setState(() { _busy = true; _error = null; });
+    try {
+      final approved = await _repository.approve(_report);
+      if (mounted) {
+        setState(() { _report = approved; _suggestion = null; });
+        _notify('Approved PDF saved securely in Documents.');
+      }
+    } catch (error) {
+      if (mounted) setState(() => _error = 'Unable to approve report: ' + error.toString());
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _send() async {
+    if (_busy || _isDraft) return;
+    if (!await _confirm('Send Report',
+        'Send the approved PDF to the email address saved for the linked client?')) {
+      return;
+    }
+    setState(() { _busy = true; _error = null; });
+    try {
+      final sent = await _repository.send(_report);
+      if (mounted) {
+        setState(() => _report = sent);
+        _notify('Approved report sent to the linked client.');
+      }
+    } catch (error) {
+      if (mounted) setState(() => _error = 'Report was not sent: ' + error.toString());
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _openPdf() async {
+    final id = _report.reportManagedDocumentId;
+    if (_busy || id == null) return;
+    setState(() { _busy = true; _error = null; });
+    try {
+      final documents = widget.documents ?? RemoteDocumentRepository.shared;
+      final doc = await documents.details('managed-' + id.toString());
+      if (!mounted) return;
+      await Navigator.of(context).push<void>(MaterialPageRoute(
+        builder: (_) => DocumentDetailsScreen(
+          documentId: doc.id, document: doc,
+          loadDocument: documents.details,
+          loadSignedPdf: documents.downloadPdf,
+        ),
+      ));
+    } catch (error) {
+      if (mounted) setState(() => _error = 'Verified document unavailable: ' + error.toString());
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Widget _section(String heading, String value) {
+    if (value.trim().isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 15),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(heading, style: const TextStyle(
+          fontFamily: 'Inter', fontWeight: FontWeight.w600,
+          fontSize: 15, color: AppColors.textPrimary)),
+        const SizedBox(height: 5),
+        Text(value, style: const TextStyle(
+          fontFamily: 'Inter', fontSize: 14, color: AppColors.secondaryText)),
+      ]),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final minutes = _report.meetingMinutesDetails;
+    final site = _report.siteReportDetails;
+    final siteSections = site?.sectionContent ?? const <SiteReportSection, String>{};
+    final suggestions = _suggestion?['sections'];
+    return Scaffold(
+      backgroundColor: AppColors.white,
+      body: SafeArea(
+        child: Column(children: [
+          Sign2DigitalHeader(title: 'Review Reports'),
+          Expanded(child: Center(child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
+              children: [
+                _section('Report', _report.number),
+                _section('Title', _report.title),
+                _section('Status', _report.status.toUpperCase()),
+                _section('Project', _report.project),
+                _section('Customer', _report.customer),
+                _section('Prepared By', _report.createdBy ?? ''),
+                if (site != null)
+                  for (final section in siteSections.entries)
+                    _section(section.key.label, section.value),
+                if (minutes != null) ...[
+                  _section('Location', minutes.location),
+                  _section('Summary', minutes.summary),
+                  _section('Attendees', minutes.attendees.join('\n')),
+                  _section('Absentees', minutes.absentees.join('\n')),
+                  _section('Decisions', minutes.decisions.join('\n')),
+                  _section('Next Steps', minutes.nextSteps.join('\n')),
+                  _section('Action Items', minutes.actionItems.join('\n')),
+                ],
+                if (_suggestion != null) ...[
+                  const Divider(height: 25),
+                  _section('AI Suggested Title', (_suggestion!['title'] ?? '').toString()),
+                  if (suggestions is Map)
+                    for (final entry in suggestions.entries)
+                      _section(entry.key.toString(), entry.value.toString()),
+                  _section('Review Required',
+                      'AI text is not applied, approved, or sent. Check each detail first.'),
+                  Sign2DigitalOutlinedButton(
+                    label: 'Apply Reviewed Suggestion',
+                    onPressed: _apply,
+                  ),
+                  const SizedBox(height: 14),
+                ],
+                if (_error != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Text(_error!, style: const TextStyle(
+                      fontFamily: 'Inter', color: Color(0xFFB42318))),
+                  ),
+                if (_isDraft) ...[
+                  Sign2DigitalOutlinedButton(
+                    label: 'Prepare with AI',
+                    onPressed: _prepare,
+                  ),
+                  const SizedBox(height: 12),
+                  Sign2DigitalPrimaryButton(
+                    label: 'Approve Report', loading: _busy,
+                    onPressed: _approve,
+                  ),
+                ] else if (_report.reportManagedDocumentId != null) ...[
+                  Sign2DigitalOutlinedButton(
+                    label: 'View Approved PDF',
+                    onPressed: _openPdf,
+                  ),
+                  if (_report.status != 'archived') ...[
+                    const SizedBox(height: 12),
+                    Sign2DigitalPrimaryButton(
+                      label: 'Send to Client', loading: _busy,
+                      onPressed: _send,
+                    ),
+                  ],
+                ],
+              ],
+            ),
+          ))),
+        ]),
+      ),
+    );
+  }
+}
