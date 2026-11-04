@@ -274,6 +274,8 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
           requestAddendumSignature: widget.requestAddendumSignature,
           onAddVersion: live ? RemoteDocumentRepository.shared.addVersion : null,
           onAddAttachment: live ? RemoteDocumentRepository.shared.addAttachment : null,
+          onDownloadAttachment: live
+              ? RemoteDocumentRepository.shared.downloadAttachment : null,
           loadSignedPdf: (selectedRecord) async {
             if (live && RegExp(r'^(quote|signed|managed)-[1-9][0-9]*$')
                 .hasMatch(selectedRecord.id)) {
