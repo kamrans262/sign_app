@@ -188,7 +188,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(heading, style: const TextStyle(
           fontFamily: 'Inter', fontWeight: FontWeight.w600,
-          fontSize: 15, color: AppColors.textPrimary)),
+          fontSize: 15, color: AppColors.dark)),
         const SizedBox(height: 5),
         Text(value, style: const TextStyle(
           fontFamily: 'Inter', fontSize: 14, color: AppColors.secondaryText)),
