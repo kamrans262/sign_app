@@ -67,6 +67,20 @@ class _TimeLabourScreenState extends State<TimeLabourScreen> {
   int _tab = 0;
   LabourSort _sort = LabourSort.newest;
   String? _jobId;
+  int _loadSerial=0;
+
+  void _onCompanyChanged() {
+    if(!mounted)return;
+    setState(() {
+      // Clear previous-company records before any new remote response arrives.
+      _all=[];
+      _jobs=[];
+      _jobId=null;
+      _error=null;
+      _loading=true;
+    });
+    _load();
+  }
 
   LabourEntryKind get _kind =>
       _tab == 0 ? LabourEntryKind.labour : LabourEntryKind.timeSheet;
@@ -86,21 +100,26 @@ class _TimeLabourScreenState extends State<TimeLabourScreen> {
           ? const DemoLabourRepository() : RemoteLabourRepository.shared);
     _jobId = widget.jobId ?? (_repository is RemoteLabourRepository
         ? null : LabourDemoJobs.riverside.id);
+    ActiveCompanySession.selected.addListener(_onCompanyChanged);
     _load();
   }
 
   @override
   void dispose() {
+    ActiveCompanySession.selected.removeListener(_onCompanyChanged);
     _search.dispose();
     super.dispose();
   }
 
   Future<void> _load() async {
+    final serial=++_loadSerial;
+    final company=ActiveCompanySession.companyId;
     if (mounted) setState(() { _loading = true; _error = null; });
     try {
       final records = await _repository.list();
       final jobs = await _repository.jobs();
-      if (!mounted) return;
+      if (!mounted || serial!=_loadSerial ||
+          ActiveCompanySession.companyId!=company) return;
       setState(() {
         _all = records;
         _jobs = jobs;
@@ -108,7 +127,8 @@ class _TimeLabourScreenState extends State<TimeLabourScreen> {
         _loading = false;
       });
     } catch (_) {
-      if (mounted) {
+      if (mounted && serial==_loadSerial &&
+          ActiveCompanySession.companyId==company) {
         setState(() {
           _loading = false;
           _error = 'Unable to load time entries.';
