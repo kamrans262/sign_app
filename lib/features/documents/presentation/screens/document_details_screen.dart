@@ -554,6 +554,31 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
               RegExp(r'^addendum-[1-9][0-9]*$').hasMatch(record.id) &&
               widget.onApproveAddendum != null)
             ListTile(
+              key: const Key('addendum-edit-server-draft'),
+              leading: const Icon(Icons.edit_outlined),
+              title: const Text('Edit Addendum Draft'),
+              onTap: () async {
+                Navigator.pop(sheet);
+                await Navigator.of(context).push<void>(
+                  MaterialPageRoute<void>(
+                    builder: (_) => CreateAddendumScreen(
+                      draftId: record.id,
+                      linkedDocument: record.related.firstWhere(
+                        (item) => item.id.startsWith('signed-'),
+                      ),
+                    ),
+                  ),
+                );
+                if (mounted && widget.loadDocument != null) {
+                  await _load();
+                }
+              },
+            ),
+          if (record.category == DocumentCategory.addends &&
+              record.status.toLowerCase() == 'draft' &&
+              RegExp(r'^addendum-[1-9][0-9]*$').hasMatch(record.id) &&
+              widget.onApproveAddendum != null)
+            ListTile(
               key: const Key('addendum-approve'),
               leading: const Icon(Icons.verified_outlined),
               title: const Text('Review and Approve Addendum'),
