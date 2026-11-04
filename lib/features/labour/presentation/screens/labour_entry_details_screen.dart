@@ -83,7 +83,7 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
     if (value == null) { return 'Not recorded'; }
     final hours = value ~/ 60;
     final minutes = (value % 60).toString().padLeft(2, '0');
-    return '${hours}:${minutes}';
+    return '$hours:$minutes';
   }
 
   static String _cost(double? number) =>
