@@ -864,9 +864,10 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
           onTap: () => Navigator.push<void>(context, MaterialPageRoute<void>(
             builder: (_) => DocumentDetailsScreen(
               documentId: linked[i].id,
-              document: linked[i].id.startsWith('quote-') &&
-                      !linked[i].verifiedSignedPdfAvailable &&
-                      widget.loadDocument != null
+              document: widget.loadDocument != null &&
+                      (linked[i].id.startsWith('quote-') &&
+                              !linked[i].verifiedSignedPdfAvailable ||
+                          linked[i].id.startsWith('addendum-'))
                   ? null : linked[i],
               loadDocument: widget.loadDocument,
               loadSignedPdf: widget.loadSignedPdf,
@@ -874,6 +875,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
               onAddAttachment: widget.onAddAttachment,
               onDownloadAttachment: widget.onDownloadAttachment,
               onViewSignatures: widget.onViewSignatures,
+              onApproveAddendum: widget.onApproveAddendum,
               requestAddendumSignature: widget.requestAddendumSignature,
             ),
           )),
