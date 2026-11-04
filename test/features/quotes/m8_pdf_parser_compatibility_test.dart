@@ -41,9 +41,11 @@ void main() {
     // Synthetic fixture only. The independent PHP acceptance job imports the
     // byte-identical PDF emitted by the actual Flutter quote builder.
     if (Platform.environment['M8_EXPORT_PDF_FIXTURE'] == '1') {
-      await Directory('build/m8-stage2').create(recursive: true);
-      await File('build/m8-stage2/flutter_approved_quote.pdf')
-          .writeAsBytes(bytes, flush: true);
+      // testWidgets uses FakeAsync; synchronous fixture I/O avoids hanging
+      // the widget-test scheduler while only writing synthetic data.
+      Directory('build/m8-stage2').createSync(recursive: true);
+      File('build/m8-stage2/flutter_approved_quote.pdf')
+          .writeAsBytesSync(bytes, flush: true);
     }
   });
 }
