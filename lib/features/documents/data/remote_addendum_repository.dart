@@ -44,9 +44,9 @@ class RemoteAddendumRepository {
   }
 
   static String _date(DateTime d) =>
-      d.year.toString().padLeft(4, '0') + '-' +
-      d.month.toString().padLeft(2, '0') + '-' +
-      d.day.toString().padLeft(2, '0');
+      '${d.year.toString().padLeft(4, '0')}-'
+      '${d.month.toString().padLeft(2, '0')}-'
+      '${d.day.toString().padLeft(2, '0')}';
 
   static AddendumDraft _parse(Object? raw, int company, {int? expectedId}) {
     if (raw is! Map<String, dynamic> ||
@@ -64,8 +64,7 @@ class RemoteAddendumRepository {
     final minor = raw['unit_price_minor'];
     final cents = _int(minor);
     final unit = minor == null ? '' :
-        (cents ~/ 100).toString() + '.' +
-        (cents % 100).toString().padLeft(2, '0');
+        '${cents ~/ 100}.${(cents % 100).toString().padLeft(2, '0')}';
     final draft = AddendumDraft(
       id: 'addendum-$id',
       serverId: id, serverRevision: revision,
@@ -127,8 +126,7 @@ class RemoteAddendumRepository {
     };
     final response = draft.serverId == null
         ? await _api.post('/api/v1/addenda', data: body, companyScoped: true)
-        : await _api.request('PATCH', '/api/v1/addenda/' +
-            draft.serverId.toString(), data: body, companyScoped: true);
+        : await _api.request('PATCH', '/api/v1/addenda/${draft.serverId}', data: body, companyScoped: true);
     _check(company);
     return _parse(_payload(response)['addendum'], company,
         expectedId: draft.serverId);
@@ -141,7 +139,7 @@ class RemoteAddendumRepository {
     }
     final company = _company();
     final response = await _api.post(
-      '/api/v1/addenda/' + draft.serverId.toString() + '/approve',
+      '/api/v1/addenda/${draft.serverId}/approve',
       data: {'confirmed': true, 'expected_revision': draft.serverRevision},
       companyScoped: true,
     );
@@ -171,7 +169,7 @@ class RemoteAddendumRepository {
       throw const SignApiException('Original quote has no verified customer email.');
     }
     final response = await _api.post(
-      '/api/v1/addenda/' + draft.serverId.toString() + '/signature-requests',
+      '/api/v1/addenda/${draft.serverId}/signature-requests',
       companyScoped: true,
       data: {
         'signer_name': quote.clientName,
