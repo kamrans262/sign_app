@@ -38,8 +38,7 @@ class NoteDocumentDraftSession {
   static final Map<String, NoteDocumentDraft> _drafts = {};
 
   static String _key(String noteId, String documentType) =>
-      (ActiveCompanySession.companyId?.toString() ?? 'demo') +
-      '::' + noteId + '::' + documentType;
+      '${ActiveCompanySession.companyId ?? "demo"}::$noteId::$documentType';
 
   static NoteDocumentDraft? forNote(String id, String type) =>
       _drafts[_key(id, type)];

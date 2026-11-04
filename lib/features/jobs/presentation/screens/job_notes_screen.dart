@@ -68,8 +68,10 @@ class _JobNotesScreenState extends State<JobNotesScreen> {
       final notes = await RemoteJobMediaRepository.shared.listNotes(widget.job.id);
       if (mounted) setState(() => _remoteNotes = notes);
     } catch (error) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Unable to load saved notes: $error')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Unable to load saved notes: $error')));
+      }
     }
   }
 
@@ -79,14 +81,15 @@ class _JobNotesScreenState extends State<JobNotesScreen> {
       final audio = await RemoteJobMediaRepository.shared.audioFile(note.jobId, note.id);
       if (!mounted) return;
       final folder = await getTemporaryDirectory();
-      final file = File(folder.path + '/sign2digital_job_' + note.jobId +
-          '_note_' + note.id + '.' + audio.extension);
+      final file = File('${folder.path}/sign2digital_job_${note.jobId}_note_${note.id}.${audio.extension}');
       await file.writeAsBytes(audio.bytes, flush: true);
       await _audioPlayer.stop();
       await _audioPlayer.play(DeviceFileSource(file.path));
     } catch (error) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Unable to play this voice note: $error')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Unable to play this voice note: $error')));
+      }
     }
   }
 
@@ -200,8 +203,11 @@ class _JobNotesScreenState extends State<JobNotesScreen> {
         )),
       );
       if (mounted && saved == true) {
-        if (_remote) await _loadRemoteNotes();
-        else setState(() {});
+        if (_remote) {
+          await _loadRemoteNotes();
+        } else {
+          setState(() {});
+        }
       }
     }
   }

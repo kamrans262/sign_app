@@ -210,7 +210,9 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
     if (!mounted || saved != true) return;
     if (_remote) {
       if (staged != null && _pending.isNotEmpty &&
-          identical(_pending.first, staged)) _pending.removeAt(0);
+          identical(_pending.first, staged)) {
+        _pending.removeAt(0);
+      }
       await _loadRemotePhotos();
       if (mounted) setState(() => _selectedTab = 0);
       return;

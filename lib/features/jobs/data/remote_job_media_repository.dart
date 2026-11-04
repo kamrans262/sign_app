@@ -138,7 +138,7 @@ class RemoteJobMediaRepository {
       title: (row['title'] ?? '').toString(),
       body: (row['body'] ?? '').toString(), createdAt: date,
       type: type, visibility: visibility,
-      audioPath: row['has_audio'] == true ? 'remote:' + row['id'].toString() : null);
+      audioPath: row['has_audio'] == true ? 'remote:${row["id"]}' : null);
   }
 
   Future<List<JobNoteModel>> listNotes(String jobId) async {
@@ -225,7 +225,7 @@ class RemoteJobMediaRepository {
       throw const SignApiException('A saved private voice note is required.');
     }
     final data = _payload(await _api.post(
-      '/api/v1/jobs/' + note.jobId + '/notes/' + note.id + '/transcribe',
+      '/api/v1/jobs/${note.jobId}/notes/${note.id}/transcribe',
       companyScoped: true,
     ));
     _check(company);

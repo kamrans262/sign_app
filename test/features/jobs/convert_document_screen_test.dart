@@ -13,7 +13,6 @@ import 'package:sign2digital/features/quotes/domain/quote_extraction_models.dart
 import 'package:sign2digital/features/quotes/domain/quote_preparation_service.dart';
 import 'package:sign2digital/features/quotes/presentation/screens/quote_ai_processing_screen.dart';
 import 'package:sign2digital/features/quotes/presentation/screens/review_quote_screen.dart';
-import 'package:sign2digital/features/quotes/presentation/widgets/sign2digital_document_status_timeline.dart';
 import 'package:sign2digital/features/quotes/presentation/widgets/sign2digital_signature_action_card.dart';
 import 'package:sign2digital/core/widgets/sign2digital_bottom_navigation_bar.dart';
 
