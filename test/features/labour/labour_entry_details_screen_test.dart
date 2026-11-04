@@ -37,7 +37,9 @@ Future<void> _show(WidgetTester tester, LabourEntry entry,
     home: LabourEntryDetailsScreen(
       entry: entry, repository: repository),
   ));
-  await tester.pumpAndSettle();
+  // Bounded frames avoid waiting for unrelated ongoing UI activity.
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 300));
 }
 
 Future<void> _reveal(WidgetTester tester, String key) async {
@@ -59,6 +61,20 @@ void main() {
   testWidgets('Details use saved cost, job copy and real approval fields',
       (tester) async {
     final entry = _entry(status: LabourEntryStatus.approved);
+    String? clipboardText;
+    final messenger=TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    messenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+      if(call.method=='Clipboard.setData') {
+        clipboardText=(call.arguments as Map)['text'] as String?;
+        return null;
+      }
+      if(call.method=='Clipboard.getData') {
+        return {'text':clipboardText};
+      }
+      return null;
+    });
+    addTearDown(() => messenger.setMockMethodCallHandler(
+      SystemChannels.platform,null));
     await _show(tester, entry);
     expect(find.text('Alex Martin'), findsOneWidget);
     expect(find.text('8.00 hours'), findsOneWidget);
