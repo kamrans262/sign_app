@@ -226,29 +226,12 @@ class RemoteQuoteRepository {
     return _data(response);
   }
 
-  Future<List<QuoteReviewDraft>> listQuotes({String? jobId}) async {
-    final company=_company();
-    final records=<QuoteReviewDraft>[];
-    var page=1;
-    while(true) {
-      final data=_data(await _api.get(
-        '/api/v1/quotes',companyScoped:true,
-        queryParameters:{
-          'page':'$page','per_page':'100',
-          if (int.tryParse(jobId ?? '') case final int id when id > 0)
-            'job_id':'$id',
-        },
-      ));
-      _check(company);
-      final rows=data['quotes'];
-      if (rows is! List) {
-        throw const SignApiException('Invalid quote list.');
-      }
-      for (final item in rows) {
-        if (item is! Map<String,dynamic> ||
-            _id(item['company_id']) != company) {
-          throw const SignApiException('Cross-company quote response.');
-        }
+  /// Exact server quote payload mapping is shared by the list and ID lookup.
+  /// Draft previews are never treated as approved PDF artifacts.
+  static QuoteReviewDraft _readServerQuote(Map<String,dynamic> item, int company) {
+    if (_id(item['company_id']) != company || _id(item['id']) <= 0) {
+      throw const SignApiException('Cross-company quote response.');
+    }
         final lines=item['items'];
         if (lines is! List) throw const SignApiException('Missing quote items.');
         String fromMinor(Object? minor) {
@@ -256,7 +239,7 @@ class RemoteQuoteRepository {
           if(n == null) return '';
           return '${n ~/ 100}.${(n % 100).toString().padLeft(2,'0')}';
         }
-        records.add(QuoteReviewDraft(
+        return QuoteReviewDraft(
           id:'server-quote-${item['id']}',
           serverId:_id(item['id']),
           serverRevision:_id(item['revision']) > 0
@@ -306,7 +289,48 @@ class RemoteQuoteRepository {
                           .map((v)=>'$v').toSet() : null,
                 ),
           ],
-        ));
+        );
+  }
+
+  Future<QuoteReviewDraft> getQuote(int id) async {
+    if (id <= 0) {
+      throw const SignApiException('Invalid saved quote identity.');
+    }
+    final company = _company();
+    final response = _data(await _api.get(
+      '/api/v1/quotes/$id', companyScoped: true,
+    ));
+    _check(company);
+    final raw = response['quote'];
+    if (raw is! Map<String,dynamic> || _id(raw['id']) != id) {
+      throw const SignApiException('Saved quote details are invalid.');
+    }
+    return _readServerQuote(raw, company);
+  }
+
+  Future<List<QuoteReviewDraft>> listQuotes({String? jobId}) async {
+    final company=_company();
+    final records=<QuoteReviewDraft>[];
+    var page=1;
+    while(true) {
+      final data=_data(await _api.get(
+        '/api/v1/quotes',companyScoped:true,
+        queryParameters:{
+          'page':'$page','per_page':'100',
+          if (int.tryParse(jobId ?? '') case final int id when id > 0)
+            'job_id':'$id',
+        },
+      ));
+      _check(company);
+      final rows=data['quotes'];
+      if (rows is! List) {
+        throw const SignApiException('Invalid quote list.');
+      }
+      for (final item in rows) {
+        if (item is! Map<String,dynamic>) {
+          throw const SignApiException('Invalid quote list item.');
+        }
+        records.add(_readServerQuote(item, company));
       }
       final pagination=data['pagination'];
       if (pagination is! Map || _id(pagination['last_page']) < page) {
