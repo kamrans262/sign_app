@@ -208,6 +208,31 @@ class RemoteJobMediaRepository {
     return bytes;
   }
 
+  /// On-demand voice transcription. Server enforces tenant and privacy.
+  Future<String> transcribeNote(JobNoteModel note) async {
+    final company = _company();
+    if (note.visibility != JobNoteVisibility.privateNote ||
+        !isLiveJob(note.jobId) || int.tryParse(note.id) == null ||
+        note.audioPath == null) {
+      throw const SignApiException('A saved private voice note is required.');
+    }
+    final data = _payload(await _api.post(
+      '/api/v1/jobs/' + note.jobId + '/notes/' + note.id + '/transcribe',
+      companyScoped: true,
+    ));
+    _check(company);
+    if (data['note_id'].toString() != note.id ||
+        data['job_id'].toString() != note.jobId) {
+      throw const SignApiException('Transcription note identity mismatch.');
+    }
+    final value = data['transcript'];
+    if (value is! String || value.trim().isEmpty ||
+        value.length > 20000) {
+      throw const SignApiException('Invalid voice transcription.');
+    }
+    return value.trim();
+  }
+
   Future<NoteDocumentDraft> prepareNote(JobNoteModel note, String type) async {
     final company = _company();
     if (note.visibility != JobNoteVisibility.privateNote) {

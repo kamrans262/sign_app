@@ -202,8 +202,12 @@ class _ConvertDocumentScreenState extends State<ConvertDocumentScreen> {
       _notify('A valid job note is required to prepare a document.');
       return;
     }
-    if (widget.note.body.trim().isEmpty) {
-      _notify('This note has no text to prepare. Add note content first.');
+    final hasRemoteVoice =
+        RemoteJobMediaRepository.isLiveJob(widget.note.jobId) &&
+        int.tryParse(widget.note.id) != null &&
+        widget.note.audioPath?.startsWith('remote:') == true;
+    if (widget.note.body.trim().isEmpty && !hasRemoteVoice) {
+      _notify('This note has no text or saved recording to prepare.');
       return;
     }
     if (widget.note.visibility != JobNoteVisibility.privateNote) {
@@ -259,10 +263,14 @@ class _ConvertDocumentScreenState extends State<ConvertDocumentScreen> {
       final QuotePreparationService service =
           widget.quotePreparationService ?? RemoteQuotePreparationService();
       if (!mounted) return;
+      final description = widget.note.body.trim().isNotEmpty
+          ? widget.note.body.trim()
+          : await RemoteJobMediaRepository.shared.transcribeNote(widget.note);
+      if (!mounted) return;
       final input = QuoteDraftInput(
         method: QuoteInputMethod.text,
         createdAt: DateTime.now(),
-        description: widget.note.body.trim(),
+        description: description,
         jobId: widget.note.jobId,
         sourceNoteId: widget.note.id,
       );
