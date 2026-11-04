@@ -590,7 +590,8 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
           if (record.category == DocumentCategory.addends &&
               AddendumDraftSession.load(record.addendumDraftId ?? '')
                   ?.isCreatedLocally == true &&
-              (!RegExp(r'^addendum-[1-9][0-9]*$').hasMatch(record.id) ||
+              (AddendumDraftSession.load(record.addendumDraftId ?? '')
+                      ?.serverId == null ||
                   ['approved','sent'].contains(record.status.toLowerCase())))
             ListTile(
               key: const Key('addendum-send-for-signature'),
