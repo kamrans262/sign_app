@@ -189,9 +189,7 @@ class _WorkAcceptanceEditorScreenState extends State<WorkAcceptanceEditorScreen>
     body:SafeArea(bottom:false,child:Column(children:[
       Sign2DigitalHeader(title:widget.initial==null
           ?'Create Work Acceptance':'Edit Work Acceptance'),
-      Expanded(child:Center(child:ConstrainedBox(
-        constraints:const BoxConstraints(maxWidth:720),
-        child:ListView(padding:const EdgeInsets.fromLTRB(20,0,20,24),children:[
+      Expanded(child:ListView(padding:const EdgeInsets.fromLTRB(20,0,20,24),children:[
           ListTile(key:const Key('acceptance-select-job'),
             title:Text(_job?.title??'Select Job / Project'),
             subtitle:Text(_job?.clientName??'Choose a saved job and customer'),
@@ -222,8 +220,7 @@ class _WorkAcceptanceEditorScreenState extends State<WorkAcceptanceEditorScreen>
           Sign2DigitalPrimaryButton(
             key:const Key('acceptance-save-draft'),
             label:'Save Acceptance Draft',loading:_busy,onPressed:_save),
-        ]),
-      ))),
+        ])),
     ])),
     bottomNavigationBar:Sign2DigitalBottomNavigationBar(
       selectedIndex:2,onSelected:(_)=>Navigator.of(context).maybePop()),
