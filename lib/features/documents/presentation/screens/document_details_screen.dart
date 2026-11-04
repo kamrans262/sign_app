@@ -342,7 +342,9 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
         allowedExtensions: [extension],
         bytes: bytes,
       );
-      if (saved != null) _message('Attachment saved.');
+      if (saved != null) {
+        _message('Attachment saved.');
+      }
     } catch (_) {
       _message('Unable to download this attachment.');
     }
