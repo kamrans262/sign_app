@@ -3,6 +3,7 @@ import 'package:file_picker/file_picker.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_search_field.dart';
+import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import 'document_details_screen.dart';
 import 'create_addendum_screen.dart';
@@ -353,16 +354,16 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                     ),
                     if (widget.repository == null &&
                         MobileAuthRepository.shared.isSignedIn) ...[
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton.icon(
-                          key: const Key('documents-upload-pdf'),
-                          onPressed: _uploadPdf,
-                          icon: const Icon(Icons.upload_file_outlined),
-                          label: const Text('Upload PDF'),
-                          style: TextButton.styleFrom(
-                            foregroundColor: AppColors.primary),
+                      const SizedBox(height: 15),
+                      Sign2DigitalPrimaryButton(
+                        key: const Key('documents-upload-pdf'),
+                        label: 'Upload PDF',
+                        height: 48,
+                        leading: const Icon(
+                          Icons.upload_file_outlined,
+                          size: 20, color: AppColors.white,
                         ),
+                        onPressed: _uploadPdf,
                       ),
                     ],
                     const SizedBox(height: 20),
