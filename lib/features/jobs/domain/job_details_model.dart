@@ -28,7 +28,8 @@ class JobDetailsModel {
   final bool financialsAvailable;
 
   /// Live jobs do not inherit any fictitious figures from screenshot demos.
-  factory JobDetailsModel.liveUnconnected(JobModel job, {int? quoteCount}) => JobDetailsModel(
+  factory JobDetailsModel.liveUnconnected(JobModel job,
+      {int? quoteCount, int? photoCount, int? noteCount}) => JobDetailsModel(
     job: job,
     quoteAmountChf: 0, expensesChf: 0, labourCostChf: 0,
     depositsChf: 0, invoicedChf: 0, receivedChf: 0,
@@ -37,7 +38,12 @@ class JobDetailsModel {
       for (final section in JobSection.values)
         JobSectionDetails(section,
           section == JobSection.quotes && quoteCount != null
-            ? '$quoteCount quotes' : 'Not connected yet'),
+            ? '$quoteCount quotes'
+            : section == JobSection.photos && photoCount != null
+              ? '$photoCount photos'
+              : section == JobSection.notes && noteCount != null
+                ? '$noteCount notes'
+                : 'Not connected yet'),
     ],
   );
 

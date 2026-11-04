@@ -199,8 +199,12 @@ class RemoteJobRepository {
     // intentionally unavailable until their own persistence is implemented.
     final sections = data['sections'];
     final visibleQuotes = sections is Map ? sections['quotes'] : null;
+    final visiblePhotos = sections is Map ? sections['photos'] : null;
+    final visibleNotes = sections is Map ? sections['notes'] : null;
     return JobDetailsModel.liveUnconnected(saved,
-      quoteCount: visibleQuotes is List ? visibleQuotes.length : null);
+      quoteCount: visibleQuotes is List ? visibleQuotes.length : null,
+      photoCount: visiblePhotos is List ? visiblePhotos.length : null,
+      noteCount: visibleNotes is List ? visibleNotes.length : null);
   }
 
   Future<JobModel> updateDraft(JobModel job, CreateJobDraft draft) async {
