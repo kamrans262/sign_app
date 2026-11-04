@@ -19,6 +19,11 @@ class AddendumDraft {
     this.linkedDocumentNumber,
     this.linkedJobId,
     this.linkedClientId,
+    this.serverId,
+    this.serverRevision,
+    this.serverStatus = 'draft',
+    this.currency = 'CHF',
+    this.quoteServerId,
   });
 
   final String id;
@@ -38,6 +43,12 @@ class AddendumDraft {
   final String? linkedDocumentNumber;
   final String? linkedJobId;
   final String? linkedClientId;
+  /// Authoritative server identity, retained across reconnects.
+  final int? serverId;
+  final int? serverRevision;
+  final String serverStatus;
+  final String currency;
+  final int? quoteServerId;
 
   bool get hasPricedWork => additionalWork.trim().isNotEmpty ||
       quantity.trim().isNotEmpty || unitPrice.trim().isNotEmpty;
@@ -73,6 +84,8 @@ class AddendumDraft {
     String? linkedClientId,
     DateTime? effectiveDate, String? linkedDocumentId,
     PlatformFile? logo, bool? isCreatedLocally,
+    int? serverId, int? serverRevision, String? serverStatus,
+    String? currency, int? quoteServerId,
     bool removeLinkedDocument = false, bool removeLogo = false,
   }) => AddendumDraft(
     id: id,
@@ -90,6 +103,11 @@ class AddendumDraft {
     linkedDocumentNumber: linkedDocumentNumber ?? this.linkedDocumentNumber,
     linkedJobId: linkedJobId ?? this.linkedJobId,
     linkedClientId: linkedClientId ?? this.linkedClientId,
+    serverId: serverId ?? this.serverId,
+    serverRevision: serverRevision ?? this.serverRevision,
+    serverStatus: serverStatus ?? this.serverStatus,
+    currency: currency ?? this.currency,
+    quoteServerId: quoteServerId ?? this.quoteServerId,
   );
 
   List<String> get validationIssues => [
@@ -128,6 +146,21 @@ class AddendumDraftSession {
       throw StateError('An addendum with an issued signing link cannot be edited.');
     }
     _drafts[draft.id] = draft;
+  }
+
+  /// Server-owned records can be rediscovered after app restart.
+  /// This cache only supports the existing UI; Laravel is authoritative.
+  static void rememberRemote(AddendumDraft draft) {
+    if (draft.serverId == null || draft.serverRevision == null ||
+        draft.linkedDocumentId == null || draft.validationIssues.isNotEmpty) {
+      throw const FormatException('Invalid server-backed addendum.');
+    }
+    final stored = draft.copyWith(isCreatedLocally: true);
+    _created[stored.id] = stored;
+    _drafts.remove(stored.id);
+    if (stored.serverStatus != 'draft') {
+      _locked.add(stored.id);
+    }
   }
 
   static void lockForSignature(String id) {
