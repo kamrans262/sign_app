@@ -303,7 +303,7 @@ class _AddLabourEntryScreenState extends State<AddLabourEntryScreen> {
       final source = widget.photoSource ?? DeviceJobPhotoSource();
       final chosen = camera
           ? <LocalJobPhotoSelection>[
-              if (await source.camera() case final photo?) photo,
+              ?await source.camera(),
             ]
           : await source.upload();
       for (final photo in chosen) {
