@@ -115,7 +115,7 @@ class _M15LabourSummaryState extends State<M15LabourSummary> {
                   style:const TextStyle(fontFamily:'Inter',fontSize:12,
                     color:AppColors.secondaryText)),
             ],
-          )),
+          ),
         );
       },
     );
