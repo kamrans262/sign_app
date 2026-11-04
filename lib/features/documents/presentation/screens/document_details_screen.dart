@@ -282,7 +282,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
     final record = _record;
     if (record == null) return;
     try {
-      final selection = await FilePicker.platform.pickFiles(
+      final selection = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: newVersion
             ? ['pdf'] : ['pdf', 'png', 'jpg', 'jpeg'],
