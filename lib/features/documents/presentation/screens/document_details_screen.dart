@@ -251,9 +251,21 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
       'Sign2Digital_${record.category.name}_${record.number.replaceAll(
         RegExp(r'[^a-zA-Z0-9_-]'), '_')}.pdf';
 
+  bool _isUnapprovedServerAddendum(DocumentRecord record) {
+    if (record.category != DocumentCategory.addends ||
+        record.verifiedSignedPdfAvailable) return false;
+    final draft = AddendumDraftSession.load(record.addendumDraftId ?? '');
+    return draft?.serverId != null;
+  }
+
   Future<void> _doDownload() async {
     final record = _record;
     if (record == null) return;
+    if (_isUnapprovedServerAddendum(record)) {
+      _message('This is an unsigned draft preview. Approve the addendum '
+          'before downloading an official PDF.');
+      return;
+    }
     if (_needsReadOnlyQuotePreview(record)) {
       _message('No verified quote PDF exists. The Preview tab shows '
           'saved quote details only.');
@@ -284,6 +296,11 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
   Future<void> _doShare() async {
     final record = _record;
     if (record == null) return;
+    if (_isUnapprovedServerAddendum(record)) {
+      _message('This is an unsigned draft preview. Approve the addendum '
+          'before sharing an official PDF.');
+      return;
+    }
     if (_needsReadOnlyQuotePreview(record)) {
       _message('No verified quote PDF exists. The Preview tab shows '
           'saved quote details only.');
@@ -710,7 +727,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
         DocumentCategory.quotes => 'Quote',
         DocumentCategory.contacts => 'Contact',
         DocumentCategory.reports => 'Report',
-        DocumentCategory.addends => 'Addend',
+        DocumentCategory.addends => 'Addendum',
         DocumentCategory.receipts => 'Receipt',
         DocumentCategory.invoices => 'Invoice',
         DocumentCategory.other => 'Other',
