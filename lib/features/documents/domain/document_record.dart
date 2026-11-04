@@ -11,7 +11,8 @@ enum DocumentCategory {
 /// Report-specific filtering, stored on the existing document record.
 enum ReportKind {
   siteReport('Site Report'),
-  workAcceptance('Work acceptance');
+  workAcceptance('Work acceptance'),
+  meetingMinutes('Meeting Minutes');
 
   const ReportKind(this.label);
   final String label;
@@ -47,6 +48,29 @@ class SiteReportDetails {
   final List<SiteReportSection> selectedSections;
   final Map<SiteReportSection, String> sectionContent;
   final List<LocalJobPhotoSelection> photos;
+}
+
+/// Real M12 meeting minutes, distinct from the work acceptance milestone.
+class MeetingMinutesDetails {
+  const MeetingMinutesDetails({
+    required this.location,
+    required this.preparedBy,
+    this.attendees = const [],
+    this.absentees = const [],
+    this.decisions = const [],
+    this.nextSteps = const [],
+    this.actionItems = const [],
+    this.summary = '',
+  });
+
+  final String location;
+  final String preparedBy;
+  final List<String> attendees;
+  final List<String> absentees;
+  final List<String> decisions;
+  final List<String> nextSteps;
+  final List<String> actionItems;
+  final String summary;
 }
 
 /// A documented event linked to a particular document. Production callers
@@ -137,6 +161,8 @@ class DocumentRecord {
     this.addendumDraftId,
     this.reportKind,
     this.siteReportDetails,
+    this.meetingMinutesDetails,
+    this.reportManagedDocumentId,
     this.workAcceptance,
   });
 
@@ -167,6 +193,8 @@ class DocumentRecord {
   final String? addendumDraftId;
   final ReportKind? reportKind;
   final SiteReportDetails? siteReportDetails;
+  final MeetingMinutesDetails? meetingMinutesDetails;
+  final int? reportManagedDocumentId;
   final WorkAcceptanceEvidence? workAcceptance;
 
   /// Return a view with linked records while preserving the source document's
@@ -196,6 +224,8 @@ class DocumentRecord {
     addendumDraftId: addendumDraftId,
     reportKind: reportKind,
     siteReportDetails: siteReportDetails,
+    meetingMinutesDetails: meetingMinutesDetails,
+    reportManagedDocumentId: reportManagedDocumentId,
     workAcceptance: workAcceptance,
   );
 
