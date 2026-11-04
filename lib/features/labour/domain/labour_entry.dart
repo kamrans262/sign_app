@@ -35,6 +35,9 @@ class LabourEntry {
     this.startMinutes,
     this.endMinutes,
     this.hourlyRate,
+    this.workerId,
+    this.lockVersion = 1,
+    this.source = 'manual',
     this.photos = const [],
     this.approvedBy,
     this.approvedAt,
@@ -56,6 +59,9 @@ class LabourEntry {
   final int? startMinutes;
   final int? endMinutes;
   final double? hourlyRate;
+  final int? workerId;
+  final int lockVersion;
+  final String source;
   final List<LocalJobPhotoSelection> photos;
   final String? approvedBy;
   final DateTime? approvedAt;
@@ -75,6 +81,7 @@ class LabourEntry {
     int? startMinutes,
     int? endMinutes,
     double? hourlyRate,
+    int? workerId,
     List<LocalJobPhotoSelection>? photos,
     List<LabourHistoryEvent>? history,
   }) => LabourEntry(
@@ -90,6 +97,8 @@ class LabourEntry {
     startMinutes: startMinutes ?? this.startMinutes,
     endMinutes: endMinutes ?? this.endMinutes,
     hourlyRate: hourlyRate ?? this.hourlyRate,
+    workerId: workerId ?? this.workerId,
+    lockVersion: lockVersion, source: source,
     photos: photos ?? this.photos,
     history: history ?? this.history,
     status: status,
