@@ -271,6 +271,16 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
                 _section('Project', _report.project),
                 _section('Customer', _report.customer),
                 _section('Prepared By', _report.createdBy ?? ''),
+                if (site != null) ...[
+                  _section('Site Location', site.location),
+                  _section('Attendees', site.attendees.join('\n')),
+                  _section('Absentees', site.absentees.join('\n')),
+                  _section('Decisions', site.decisions.join('\n')),
+                  _section('Outstanding Points', site.outstandingPoints.join('\n')),
+                  _section('Next Steps', site.nextSteps.join('\n')),
+                  _section('Action Items', site.actionItems.map((item) =>
+                    item.description).join('\n')),
+                ],
                 if (site != null)
                   for (final section in siteSections.entries)
                     _section(section.key.label, section.value),

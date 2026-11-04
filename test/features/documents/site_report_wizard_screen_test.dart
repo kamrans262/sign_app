@@ -106,6 +106,7 @@ DocumentRecord _completeReviewFixture({bool photo = true, String? title}) {
       reportDate: DateTime(2026, 8, 25),
       preparedBy: 'Jean Dupont',
       weatherCondition: 'Sunny',
+      location: 'Verified job site',
       selectedSections: [
         SiteReportSection.siteProgress,
         if (photo) SiteReportSection.photos,
