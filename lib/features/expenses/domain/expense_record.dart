@@ -42,6 +42,8 @@ class ExpenseRecord {
     required this.date,
     required this.status,
     this.description = '',
+    this.supplier = '',
+    this.lockVersion = 1,
     this.demoOnly = true,
     this.jobId,
     this.photos = const [],
@@ -64,6 +66,8 @@ class ExpenseRecord {
   final DateTime date;
   final ExpenseStatus status;
   final String description;
+  final String supplier;
+  final int lockVersion;
   final bool demoOnly;
   final String? jobId;
   final List<LocalJobPhotoSelection> photos;
@@ -86,7 +90,7 @@ class ExpenseRecord {
     ExpenseCategory? category, String? title, String? job, String? jobId,
     String? report, double? amount, DateTime? date, String? description,
     List<LocalJobPhotoSelection>? photos, List<String>? tags,
-    DateTime? updatedAt, List<ExpenseHistoryEvent>? history,
+    String? supplier, DateTime? updatedAt, List<ExpenseHistoryEvent>? history,
     bool? reimbursementRequested,
   }) => ExpenseRecord(
     id: id, category: category ?? this.category,
@@ -95,6 +99,7 @@ class ExpenseRecord {
     amount: amount ?? this.amount, date: date ?? this.date,
     status: status, demoOnly: demoOnly,
     description: description ?? this.description,
+    supplier: supplier ?? this.supplier, lockVersion: lockVersion,
     photos: photos ?? this.photos, tags: tags ?? this.tags,
     clientName: clientName, approvedBy: approvedBy, approvedAt: approvedAt,
     updatedAt: updatedAt ?? this.updatedAt,
