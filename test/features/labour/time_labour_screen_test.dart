@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:sign2digital/core/services/active_company_session.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sign2digital/core/widgets/sign2digital_bottom_navigation_bar.dart';
@@ -26,6 +28,18 @@ class _Stub extends LabourRepository {
   Future<List<JobModel>> jobs() async => available;
   @override
   Future<void> save(LabourEntry entry) async => entries.add(entry);
+}
+
+class _SwitchingLabourStub extends LabourRepository {
+  final first=Completer<List<LabourEntry>>();
+  int calls=0;
+  @override
+  Future<List<LabourEntry>> list() {
+    calls++;
+    return calls==1?first.future:Future.value([record('company-eight')]);
+  }
+  @override
+  Future<List<JobModel>> jobs() async=>[LabourDemoJobs.riverside];
 }
 
 LabourEntry record(String id, {LabourEntryKind kind=LabourEntryKind.labour,
@@ -222,6 +236,27 @@ void main() {
     expect(find.byKey(const Key('labour-empty')), findsOneWidget);
     expect(find.text('Alex Martin'), findsNothing);
     expect(tester.takeException(), isNull);
+  });
+
+
+  testWidgets('company switch immediately clears old entries and ignores late loads',
+      (tester) async {
+    ActiveCompanySession.set(7);
+    addTearDown(ActiveCompanySession.clear);
+    final repository=_SwitchingLabourStub();
+    await tester.pumpWidget(MaterialApp(
+      home:TimeLabourScreen(repository:repository),
+    ));
+    await tester.pump();
+    ActiveCompanySession.set(8);
+    await tester.pump(const Duration(milliseconds:200));
+    expect(find.byKey(const Key('labour-card-company-eight')),findsOneWidget);
+    repository.first.complete([record('company-seven')]);
+    await tester.pump(const Duration(milliseconds:200));
+    expect(find.byKey(const Key('labour-card-company-seven')),findsNothing);
+    expect(find.byKey(const Key('labour-card-company-eight')),findsOneWidget);
+    expect(repository.calls,2);
+    expect(tester.takeException(),isNull);
   });
 
   for (final size in [
