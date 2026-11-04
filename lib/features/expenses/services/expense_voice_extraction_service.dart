@@ -5,12 +5,13 @@ import '../domain/expense_record.dart';
 
 class ExpenseVoiceSuggestion {
   const ExpenseVoiceSuggestion({this.jobReference, this.category, this.date,
-    this.amount, this.description, this.tags = const []});
+    this.amount, this.description, this.supplier, this.tags = const []});
   final String? jobReference;
   final ExpenseCategory? category;
   final DateTime? date;
   final double? amount;
   final String? description;
+  final String? supplier;
   final List<String> tags;
 
   factory ExpenseVoiceSuggestion.fromJson(Map<String,dynamic> json) {
@@ -36,7 +37,8 @@ class ExpenseVoiceSuggestion {
       jobReference: nonblank(json['jobReference']),
       category: category, date: day,
       amount: amount != null && amount.isFinite && amount > 0 ? amount : null,
-      description: nonblank(json['description']), tags: tags,
+      description: nonblank(json['description']),
+      supplier: nonblank(json['supplier']), tags: tags,
     );
   }
 }
