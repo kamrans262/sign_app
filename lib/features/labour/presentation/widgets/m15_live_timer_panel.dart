@@ -10,7 +10,7 @@ import '../../data/remote_labour_repository.dart';
 /// an estimated display and is resynchronized on foreground and every action.
 class M15LiveTimerPanel extends StatefulWidget {
   const M15LiveTimerPanel({
-    super.key,required this.repository,this.job,this.onUpdated,
+    super.key,required this.repository,this.job,required this.onUpdated,
   });
   final RemoteLabourRepository repository;
   final JobModel? job;
