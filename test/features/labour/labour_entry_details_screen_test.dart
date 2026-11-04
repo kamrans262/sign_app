@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -118,6 +119,21 @@ void main() {
     expect(find.text('Labour entry created'), findsOneWidget);
     expect(find.textContaining('Alex Martin'), findsWidgets);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('PDF labour evidence uses a document tile not a broken image',
+      (tester) async {
+    final pdf = LocalJobPhotoSelection(
+      name:'approved-attendance.pdf',
+      bytes:Uint8List.fromList('%PDF-1.4\\n1 0 obj\\n'.codeUnits),
+      sourceKey:'labour-evidence-17',
+    );
+    await _show(tester, _entry(photos:[pdf]));
+    await tester.tap(find.byKey(const Key('details-tab-1')));
+    await tester.pump();
+    expect(find.byKey(const Key('labour-pdf-tile-0')), findsOneWidget);
+    expect(find.text('approved-attendance.pdf'), findsOneWidget);
+    expect(tester.takeException(),isNull);
   });
 
   testWidgets('Empty photos and history do not fabricate information',
