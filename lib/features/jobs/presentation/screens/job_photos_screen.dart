@@ -71,7 +71,7 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
     super.initState();
     _source = widget.source ?? DeviceJobPhotoSource();
     _store = widget.store ?? JobPhotoLocalStore.shared;
-    _photos = _store.photosFor(widget.job.id).toList();
+    _photos = _remote ? [] : _store.photosFor(widget.job.id).toList();
     if (_remote) _loadRemotePhotos();
   }
 

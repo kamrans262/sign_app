@@ -181,7 +181,11 @@ class RemoteJobMediaRepository {
     _check(company);
   }
 
-  Future<Uint8List> audioBytes(String jobId, String noteId) async {
+  Future<Uint8List> audioBytes(String jobId, String noteId) async =>
+      (await audioFile(jobId, noteId)).bytes;
+
+  Future<({Uint8List bytes, String extension})> audioFile(
+      String jobId, String noteId) async {
     final company = _company();
     final raw = _payload(await _api.get(
       '/api/v1/jobs/$jobId/notes/$noteId', companyScoped: true));
@@ -205,7 +209,11 @@ class RemoteJobMediaRepository {
     if (sha256.convert(bytes).toString() != digest) {
       throw const SignApiException('Recording integrity check failed.');
     }
-    return bytes;
+    return (bytes: bytes, extension: switch (mime) {
+      'audio/wav' => 'wav',
+      'audio/aac' => 'aac',
+      _ => 'm4a',
+    });
   }
 
   /// On-demand voice transcription. Server enforces tenant and privacy.

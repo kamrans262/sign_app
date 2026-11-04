@@ -207,7 +207,7 @@ class _ConvertDocumentScreenState extends State<ConvertDocumentScreen> {
         int.tryParse(widget.note.id) != null &&
         widget.note.audioPath?.startsWith('remote:') == true;
     if (widget.note.body.trim().isEmpty && !hasRemoteVoice) {
-      _notify('This note has no text or saved recording to prepare.');
+      _notify('This note has no text to prepare and no saved recording.');
       return;
     }
     if (widget.note.visibility != JobNoteVisibility.privateNote) {

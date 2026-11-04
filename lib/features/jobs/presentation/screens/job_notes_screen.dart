@@ -76,10 +76,12 @@ class _JobNotesScreenState extends State<JobNotesScreen> {
   Future<void> _playNote(JobNoteModel note) async {
     try {
       if (!_remote || !note.audioPath!.startsWith('remote:')) return;
-      final bytes = await RemoteJobMediaRepository.shared.audioBytes(note.jobId, note.id);
+      final audio = await RemoteJobMediaRepository.shared.audioFile(note.jobId, note.id);
+      if (!mounted) return;
       final folder = await getTemporaryDirectory();
-      final file = File(folder.path + '/sign2digital_job_' + note.jobId + '_note_' + note.id + '.m4a');
-      await file.writeAsBytes(bytes, flush: true);
+      final file = File(folder.path + '/sign2digital_job_' + note.jobId +
+          '_note_' + note.id + '.' + audio.extension);
+      await file.writeAsBytes(audio.bytes, flush: true);
       await _audioPlayer.stop();
       await _audioPlayer.play(DeviceFileSource(file.path));
     } catch (error) {
@@ -102,7 +104,8 @@ class _JobNotesScreenState extends State<JobNotesScreen> {
   }
 
   List<JobNoteModel> get _filteredNotes {
-    final source = widget.notes ?? _remoteNotes ?? _store.notesFor(widget.job.id);
+    final source = widget.notes ?? _remoteNotes ??
+        (_remote ? <JobNoteModel>[] : _store.notesFor(widget.job.id));
     return source
         .where((note) {
           if (note.jobId != widget.job.id) {
