@@ -29,6 +29,7 @@ class ReportsScreen extends StatefulWidget {
     super.key,
     this.repository,
     this.jobId,
+    this.initialKind,
     this.onReportTap,
     this.onCreateReport,
     this.reportGenerator,
@@ -41,6 +42,7 @@ class ReportsScreen extends StatefulWidget {
   final DocumentRepository? repository;
   /// When opened from Job Details, only show the selected real job.
   final String? jobId;
+  final ReportKind? initialKind;
   final ValueChanged<DocumentRecord>? onReportTap;
   final VoidCallback? onCreateReport;
   /// Optional real report generation. Absence keeps local draft behavior.
@@ -65,6 +67,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
   @override
   void initState() {
     super.initState();
+    _selectedKind = widget.initialKind;
     _repository = widget.repository ??
         (ActiveCompanySession.companyId == null
           ? const DemoReportRepository()

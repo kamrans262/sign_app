@@ -293,6 +293,7 @@ class JobDetailsScreen extends StatelessWidget {
       await Navigator.of(context).push<void>(MaterialPageRoute<void>(
         builder: (_) => ReportsScreen(
           jobId: int.tryParse(job.id) != null ? job.id : null,
+          initialKind: ReportKind.workAcceptance,
           onNavigationSelected: (index) => _selectTab(context, index),
         ),
       ));
