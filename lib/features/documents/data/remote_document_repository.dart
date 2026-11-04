@@ -205,7 +205,7 @@ class RemoteDocumentRepository implements DocumentRepository {
     }
     // SHA supplied by authoritative document details, not a local demo file.
     final detailResponse = await _api.request(
-      'GET', '/api/v1/documents/' + document.id,
+      'GET', '/api/v1/documents/${document.id}',
       companyScoped: true,
     );
     _assertCompany(company);
@@ -218,7 +218,7 @@ class RemoteDocumentRepository implements DocumentRepository {
       throw const SignApiException('Document digest is invalid.');
     }
     final bytes = await _api.getPdf(
-      '/api/v1/documents/' + document.id + '/pdf',
+      '/api/v1/documents/${document.id}/pdf',
       companyScoped: true,
       maxBytes: 12 * 1024 * 1024,
     );
@@ -266,7 +266,7 @@ class RemoteDocumentRepository implements DocumentRepository {
     }
     final company = _company();
     final response = await _api.postMultipart(
-      '/api/v1/documents/' + document.id + '/versions',
+      '/api/v1/documents/${document.id}/versions',
       filename: name,
       bytes: bytes,
       companyScoped: true,
@@ -284,7 +284,7 @@ class RemoteDocumentRepository implements DocumentRepository {
       DocumentRecord document, String name, Uint8List bytes) async {
     final company = _company();
     await _api.postMultipart(
-      '/api/v1/documents/' + document.id + '/attachments',
+      '/api/v1/documents/${document.id}/attachments',
       filename: name,
       bytes: bytes,
       companyScoped: true,
