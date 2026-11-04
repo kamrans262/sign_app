@@ -41,7 +41,7 @@ void main() {
         home: CreateAddendumScreen(
           repository: _FixedDocuments([original]),
           linkedDocument: original,
-          draftId: 'responsive-'+screen.width.toString(),
+          draftId: 'responsive-${screen.width}',
         ),
       ));
       await tester.pump();
