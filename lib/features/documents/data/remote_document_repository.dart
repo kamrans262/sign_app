@@ -223,13 +223,18 @@ class RemoteDocumentRepository implements DocumentRepository {
       if (quoteId == null || quoteId <= 0) {
         throw const SignApiException('Invalid quote document identity.');
       }
-      quoteSnapshot = await RemoteQuoteRepository(api: _api).getQuote(quoteId);
-      _assertCompany(company);
-      if (quoteSnapshot.serverRevision != _int(raw['version']) ||
-          quoteSnapshot.serverStatus != (raw['status'] ?? '').toString() ||
-          quoteSnapshot.quoteNumber != (raw['number'] ?? '').toString()) {
-        throw const SignApiException(
-          'Quote changed while loading. Please reopen the document.');
+      try {
+        quoteSnapshot = await RemoteQuoteRepository(api: _api).getQuote(quoteId);
+        _assertCompany(company);
+        if (quoteSnapshot.serverRevision != _int(raw['version']) ||
+            quoteSnapshot.serverStatus != (raw['status'] ?? '').toString()) {
+          throw const SignApiException(
+            'Quote changed while loading. Please reopen the document.');
+        }
+      } on SignApiException catch (error) {
+        // A documents.read-only member may not have quotes.read permission.
+        // Keep document details accessible without exposing quote line items.
+        if (error.statusCode != 403) rethrow;
       }
     }
     final document = _record(Map<String, dynamic>.from(raw),
