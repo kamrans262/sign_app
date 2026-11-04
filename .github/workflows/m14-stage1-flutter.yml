@@ -1,0 +1,27 @@
+name: M14 Stage 1 Flutter Expenses and Receipts
+on:
+  push:
+    branches: [feature/m12-site-reports-meeting-minutes-2026-11-04]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: sign2digital-m14-flutter
+  cancel-in-progress: true
+jobs:
+  expenses:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Analyze M14 existing screens, model, services and repository
+        run: |
+          dart analyze lib/features/expenses/data/remote_expense_repository.dart lib/features/expenses/domain/expense_record.dart lib/features/expenses/services/expense_voice_extraction_service.dart lib/features/expenses/services/remote_expense_voice_extraction_service.dart lib/features/expenses/presentation/screens/expenses_screen.dart lib/features/expenses/presentation/screens/add_expense_screen.dart lib/features/expenses/presentation/screens/expense_details_screen.dart lib/features/expenses/presentation/screens/receipt_screen.dart test/features/expenses/m14_remote_expense_repository_test.dart
+      - name: Expenses screens, API contract and M13 regression
+        run: |
+          flutter test --no-pub --concurrency=2 --reporter=expanded test/features/expenses/m14_remote_expense_repository_test.dart test/features/expenses/expenses_screen_test.dart test/features/expenses/add_expense_screen_test.dart test/features/expenses/expense_details_screen_test.dart test/features/expenses/receipt_screen_test.dart test/features/documents/m13_remote_work_acceptance_repository_test.dart
