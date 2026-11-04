@@ -24,13 +24,13 @@ jobs:
           dart analyze lib/features/labour lib/features/jobs/presentation/screens/job_details_screen.dart test/features/labour/m15_remote_labour_repository_test.dart test/features/labour/m15_live_timer_widget_test.dart
       - name: M15 API contract and persistent timer widget
         run: |
-          flutter test --no-pub --concurrency=2 --timeout=60s --reporter=expanded test/features/labour/m15_remote_labour_repository_test.dart test/features/labour/m15_live_timer_widget_test.dart
+          timeout --signal=TERM --kill-after=10s 180s flutter test --no-pub --concurrency=2 --timeout=60s --reporter=expanded test/features/labour/m15_remote_labour_repository_test.dart test/features/labour/m15_live_timer_widget_test.dart
       - name: M15 labour list, job filters and layout
-        run: flutter test --no-pub --concurrency=1 --timeout=35s --reporter=expanded test/features/labour/time_labour_screen_test.dart
+        run: timeout --signal=TERM --kill-after=10s 135s flutter test --no-pub --concurrency=1 --timeout=35s --reporter=expanded test/features/labour/time_labour_screen_test.dart
       - name: M15 create labour and voice draft
-        run: flutter test --no-pub --concurrency=1 --timeout=35s --reporter=expanded test/features/labour/create_labour_entry_screen_test.dart
+        run: timeout --signal=TERM --kill-after=10s 135s flutter test --no-pub --concurrency=1 --timeout=35s --reporter=expanded test/features/labour/create_labour_entry_screen_test.dart
       - name: M15 labour detail, audit and edit protections
-        run: flutter test --no-pub --concurrency=1 --timeout=35s --reporter=expanded test/features/labour/labour_entry_details_screen_test.dart
+        run: timeout --signal=TERM --kill-after=10s 135s flutter test --no-pub --concurrency=1 --timeout=35s --reporter=expanded test/features/labour/labour_entry_details_screen_test.dart
       - name: M15 Job Details and M14 expense regression
         run: |
-          flutter test --no-pub --concurrency=2 --timeout=60s --reporter=expanded test/features/jobs/job_details_screen_test.dart test/features/expenses/m14_remote_expense_repository_test.dart
+          timeout --signal=TERM --kill-after=10s 180s flutter test --no-pub --concurrency=2 --timeout=60s --reporter=expanded test/features/jobs/job_details_screen_test.dart test/features/expenses/m14_remote_expense_repository_test.dart
