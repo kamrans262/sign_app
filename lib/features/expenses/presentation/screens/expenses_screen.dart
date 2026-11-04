@@ -229,7 +229,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                     children: [
                       Sign2DigitalSearchField(
                         controller: _search,
-                        hintText: 'Search documents',
+                        hintText: 'Search expenses',
                         onChanged: (_) => setState(() {}),
                         onTrailingTap: () =>
                           FocusManager.instance.primaryFocus?.unfocus()),
