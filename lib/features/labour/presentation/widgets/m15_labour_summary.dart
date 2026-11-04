@@ -20,10 +20,21 @@ class M15LabourSummary extends StatefulWidget {
 
 class _M15LabourSummaryState extends State<M15LabourSummary> {
   Future<Map<String,dynamic>>? _summary;
+  int? _companyId;
+
+  void _onCompanyChanged() {
+    if(!mounted||_companyId==ActiveCompanySession.companyId)return;
+    setState(() {
+      _companyId=ActiveCompanySession.companyId;
+      _load();
+    });
+  }
 
   @override
   void initState(){
     super.initState();
+    _companyId=ActiveCompanySession.companyId;
+    ActiveCompanySession.selected.addListener(_onCompanyChanged);
     _load();
   }
 
@@ -34,6 +45,12 @@ class _M15LabourSummaryState extends State<M15LabourSummary> {
         widget.refreshKey!=oldWidget.refreshKey) {
       _load();
     }
+  }
+
+  @override
+  void dispose() {
+    ActiveCompanySession.selected.removeListener(_onCompanyChanged);
+    super.dispose();
   }
 
   void _load(){
@@ -67,8 +84,10 @@ class _M15LabourSummaryState extends State<M15LabourSummary> {
         : const SizedBox.shrink();
     }
     return FutureBuilder<Map<String,dynamic>>(
+      key:ValueKey('m15-summary-$_companyId-${widget.jobId}-${widget.refreshKey}'),
       future:future,builder:(context,state){
-        final d=state.data;
+        // Never reuse the previous tenant/job amount while a new request loads.
+        final d=state.connectionState==ConnectionState.done?state.data:null;
         if(widget.asFinancialCard){
           final cost=_integer(d?['approved_labour_cost_minor']);
           return Sign2DigitalJobFinancialCard(
