@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../domain/document_record.dart';
 
 /// Shared borderless tracking row. The Document History and Work Acceptance
@@ -181,9 +180,55 @@ class _Sign2DigitalDocumentHistoryState
                 fontSize: 16, letterSpacing: -0.3, color: AppColors.dark,
               )),
               const SizedBox(height: 5),
-              Text(_timestamp(event.occurredAt),
-                style: const TextStyle(fontFamily: 'Inter', fontSize: 14,
-                  fontWeight: FontWeight.w500, color: AppColors.placeholder)),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      _timestamp(event.occurredAt),
+                      softWrap: true,
+                      style: const TextStyle(
+                        fontFamily: 'Inter', fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.placeholder,
+                      ),
+                    ),
+                  ),
+                  if (expanded &&
+                      (event.type == DocumentHistoryType.signed ||
+                          widget.onOpenDocument != null)) ...[
+                    const SizedBox(width: 8),
+                    InkWell(
+                      key: event.type == DocumentHistoryType.signed
+                          ? const Key('document-view-signatures')
+                          : Key('document-history-action-${event.id}'),
+                      onTap: event.type == DocumentHistoryType.signed
+                          ? () => _showSignatures(event)
+                          : () => widget.onOpenDocument!(
+                                _opensPreview(event.type) ? 1 : 0),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 3),
+                        child: Text(
+                          event.type == DocumentHistoryType.signed
+                              ? 'View Signatures'
+                              : _opensPreview(event.type)
+                                  ? 'View Document'
+                                  : 'View Details',
+                          textAlign: TextAlign.right,
+                          style: const TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.primary,
+                            decoration: TextDecoration.underline,
+                            decorationColor: AppColors.primary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
               if ((event.description ?? '').trim().isNotEmpty ||
                   (event.actorEmail ?? '').trim().isNotEmpty) ...[
                 const SizedBox(height: 5),
@@ -197,35 +242,6 @@ class _Sign2DigitalDocumentHistoryState
                   style: const TextStyle(fontFamily: 'Inter', fontSize: 14,
                     fontWeight: FontWeight.w400,
                     color: AppColors.placeholder)),
-              ],
-              if (expanded &&
-                  (event.type == DocumentHistoryType.signed ||
-                      widget.onOpenDocument != null)) ...[
-                const SizedBox(height: 15),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 220),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: Sign2DigitalPrimaryButton(
-                        key: event.type == DocumentHistoryType.signed
-                            ? const Key('document-view-signatures')
-                            : Key('document-history-action-${event.id}'),
-                        label: event.type == DocumentHistoryType.signed
-                            ? 'View Signatures'
-                            : _opensPreview(event.type)
-                                ? 'View Document'
-                                : 'View Details',
-                        height: 48,
-                        onPressed: event.type == DocumentHistoryType.signed
-                            ? () => _showSignatures(event)
-                            : () => widget.onOpenDocument!(
-                                  _opensPreview(event.type) ? 1 : 0),
-                      ),
-                    ),
-                  ),
-                ),
               ],
             ]),
           ),
