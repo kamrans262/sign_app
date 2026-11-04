@@ -173,7 +173,22 @@ class _MeetingMinutesEditorScreenState extends State<MeetingMinutesEditorScreen>
       final dueText = fields.length == 3 ? fields[2] : '';
       final due = dueText.isEmpty ? null : DateTime.tryParse(dueText);
       if (dueText.isNotEmpty &&
-          (!RegExp(r'^\d{4}-\d{2}-\d{2}
+          (!RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(dueText) ||
+           due == null)) {
+        throw const FormatException('Use YYYY-MM-DD for action due dates.');
+      }
+      items.add(MeetingActionItem(
+        description: fields.first,
+        assignee: fields.length >= 2 ? fields[1] : '',
+        dueDate: due,
+      ));
+    }
+    return items;
+  }
+
+  DocumentRecord _draft() {
+    final job = _job!;
+    final actionDetails = _readActions();
     final details = MeetingMinutesDetails(
       location: _location.text.trim(),
       preparedBy: _preparer.text.trim(),
@@ -280,145 +295,6 @@ class _MeetingMinutesEditorScreenState extends State<MeetingMinutesEditorScreen>
             _field('Next Steps (one per line)', _nextSteps, multiline: true),
             _field('Outstanding Points (one per line)', _outstanding, multiline: true),
             _field('Action Items (task | owner | YYYY-MM-DD)', _actions, multiline: true),
-            if (_error != null)
-              Padding(padding: const EdgeInsets.only(bottom: 12),
-                child: Text(_error!, style: const TextStyle(
-                  fontFamily: 'Inter', color: Color(0xFFB42318)))),
-            Sign2DigitalPrimaryButton(
-              key: const Key('meeting-save-draft'),
-              label: 'Save Meeting Minutes',
-              loading: _saving, onPressed: _save,
-            ),
-          ],
-        ),
-      ))),
-    ])),
-    bottomNavigationBar: Sign2DigitalBottomNavigationBar(
-      selectedIndex: 2,
-      onSelected: widget.onNavigationSelected ??
-          (_) => Navigator.of(context).maybePop(),
-    ),
-  );
-}
-).hasMatch(dueText) ||
-           due == null)) {
-        throw const FormatException('Use YYYY-MM-DD for action due dates.');
-      }
-      items.add(MeetingActionItem(
-        description: fields.first,
-        assignee: fields.length >= 2 ? fields[1] : '',
-        dueDate: due,
-      ));
-    }
-    return items;
-  }
-
-  DocumentRecord _draft() {
-    final job = _job!;
-    final actionDetails = _readActions();
-    final details = MeetingMinutesDetails(
-      location: _location.text.trim(),
-      preparedBy: _preparer.text.trim(),
-      summary: _summary.text.trim(),
-      attendees: _lines(_attendees.text),
-      absentees: _lines(_absentees.text),
-      decisions: _lines(_decisions.text),
-      nextSteps: _lines(_nextSteps.text),
-      actionItems: _lines(_actions.text),
-    );
-    return DocumentRecord(
-      id: widget.initial?.id ??
-          'local-meeting-${DateTime.now().microsecondsSinceEpoch}',
-      category: DocumentCategory.reports,
-      number: widget.initial?.number ?? 'Meeting Minutes',
-      title: _title.text.trim(),
-      project: job.title, customer: job.clientName,
-      jobId: job.id, timestamp: _date, status: 'Draft',
-      reportKind: ReportKind.meetingMinutes,
-      createdBy: details.preparedBy,
-      meetingMinutesDetails: details,
-      demoOnly: widget.reportGenerator == null,
-    );
-  }
-
-  Future<void> _save() async {
-    if (_saving) return;
-    if (_job == null || _title.text.trim().isEmpty ||
-        _location.text.trim().isEmpty || _preparer.text.trim().isEmpty ||
-        (_summary.text.trim().isEmpty && _attendees.text.trim().isEmpty &&
-        _decisions.text.trim().isEmpty && _actions.text.trim().isEmpty)) {
-      setState(() => _error =
-          'Select a job and enter title, location, preparer, and meeting content.');
-      return;
-    }
-    setState(() { _saving = true; _error = null; });
-    try {
-      final draft = _draft();
-      final saved = widget.reportGenerator == null
-          ? draft : await widget.reportGenerator!(draft);
-      if (!mounted) {
-        return;
-      }
-      if (widget.reportGenerator != null &&
-          (saved.demoOnly || !saved.id.startsWith('report-'))) {
-        throw const FormatException('The server did not save meeting minutes.');
-      }
-      Navigator.of(context).pop(saved);
-    } catch (error) {
-      if (mounted) {
-        setState(() => _error = 'Unable to save meeting minutes: $error');
-      }
-    } finally {
-      if (mounted) setState(() => _saving = false);
-    }
-  }
-
-  Widget _field(String label, TextEditingController controller,
-      {bool multiline = false}) => Padding(
-    padding: const EdgeInsets.only(bottom: 15),
-    child: Sign2DigitalInputField(
-      label: label,
-      hintText: 'Enter ${label.toLowerCase()}',
-      iconAsset: '', leadingIcon: Icons.edit_note_outlined,
-      controller: controller,
-      minLines: multiline ? 3 : 1,
-      maxLines: multiline ? 6 : 1,
-    ),
-  );
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    backgroundColor: AppColors.white,
-    body: SafeArea(bottom: false, child: Column(children: [
-      const Sign2DigitalHeader(title: 'Meeting Minutes'),
-      Expanded(child: Center(child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 720),
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-          children: [
-            ListTile(
-              key: const Key('meeting-select-job'),
-              title: Text(_job?.title ?? 'Select Job / Project'),
-              subtitle: Text(_job?.clientName ?? 'Choose a real job and client'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: _chooseJob,
-            ),
-            _field('Title', _title),
-            ListTile(
-              key: const Key('meeting-date'),
-              title: const Text('Meeting Date'),
-              subtitle: Text('${_date.year}-${_date.month.toString().padLeft(2,'0')}-${_date.day.toString().padLeft(2,'0')}'),
-              trailing: const Icon(Icons.calendar_today_outlined),
-              onTap: _pickDate,
-            ),
-            _field('Prepared By', _preparer),
-            _field('Location', _location),
-            _field('Summary', _summary, multiline: true),
-            _field('Attendees (one per line)', _attendees, multiline: true),
-            _field('Absentees (one per line)', _absentees, multiline: true),
-            _field('Decisions (one per line)', _decisions, multiline: true),
-            _field('Next Steps (one per line)', _nextSteps, multiline: true),
-            _field('Action Items (one per line)', _actions, multiline: true),
             if (_error != null)
               Padding(padding: const EdgeInsets.only(bottom: 12),
                 child: Text(_error!, style: const TextStyle(
