@@ -389,9 +389,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
     body: SafeArea(bottom: false, child: Column(children: [
       Sign2DigitalHeader(title: 'Receipt',
         onBack: () => Navigator.of(context).maybePop()),
-      Expanded(child: Center(child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 720),
-        child: ListView(
+      Expanded(child: ListView(
           key: const Key('receipt-scroll'),
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
           children: [
@@ -424,7 +422,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
                   ])),
           ],
         ),
-      ))),
+      ),
     ])),
     bottomNavigationBar: Sign2DigitalBottomNavigationBar(
       selectedIndex: widget.selectedNavigationIndex,
