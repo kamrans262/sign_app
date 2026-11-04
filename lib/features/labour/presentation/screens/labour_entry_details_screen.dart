@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:printing/printing.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
@@ -41,6 +42,8 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
   int _tab = 0;
   bool _busy = false;
   bool _confirmingDeletion = false;
+  bool _verifiedRemote = false;
+  bool _loadingRemote = false;
 
   @override
   void initState() {
@@ -55,13 +58,29 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
 
   Future<void> _reload() async {
     if (_repository is! RemoteLabourRepository) return;
+    if (mounted) {
+      setState(() {
+        _loadingRemote = true;
+        _verifiedRemote = false;
+      });
+    }
     try {
       final full=await (_repository as RemoteLabourRepository).detail(_record.id);
-      if(mounted)setState(()=>_record=full);
-    }catch(_){
+      if(mounted) {
+        setState(() {
+          _record=full;
+          _verifiedRemote=true;
+        });
+      }
+    } catch (_) {
       _notice('Unable to load verified labour details.');
+    } finally {
+      if(mounted) setState(()=>_loadingRemote=false);
     }
   }
+
+  bool get _canModifyRemote => _repository is! RemoteLabourRepository ||
+      (_verifiedRemote && !_loadingRemote);
 
   static const _months = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -212,8 +231,33 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
       key: const Key('labour-detail-table'), rows: rows);
   }
 
+  bool _isPdf(LocalJobPhotoSelection proof) {
+    final bytes=proof.bytes;
+    return proof.name.toLowerCase().endsWith('.pdf') ||
+      (bytes.length>=5 && bytes[0]==37 && bytes[1]==80 &&
+       bytes[2]==68 && bytes[3]==70 && bytes[4]==45);
+  }
+
   Future<void> _openPhoto(int index) async {
     final selected = _record.photos[index];
+    if(_isPdf(selected)) {
+      await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+        builder: (_) => Scaffold(
+          backgroundColor: AppColors.white,
+          appBar: AppBar(title: Text(selected.name),
+            backgroundColor: AppColors.white,
+            foregroundColor: AppColors.dark),
+          body: SafeArea(child: PdfPreview(
+            build: (_) async => selected.bytes,
+            allowPrinting:false,
+            allowSharing:false,
+            canChangePageFormat:false,
+            canChangeOrientation:false,
+          )),
+        ),
+      ));
+      return;
+    }
     await Navigator.of(context).push<void>(MaterialPageRoute<void>(
       builder: (_) => Scaffold(
         backgroundColor: Colors.black,
@@ -267,13 +311,34 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
             itemBuilder: (context, index) => InkWell(
               key: Key('labour-detail-photo-$index'),
               onTap: () => _openPhoto(index),
-              child: Sign2DigitalPhotoPreview(
-                bytes: photos[index].bytes,
-                showDemo: false,
-                compactTile: true,
-                showRemove: false,
-                onRemove: () {},
-              ),
+              child: _isPdf(photos[index])
+                ? Sign2DigitalOutlinedContainer(
+                    key: Key('labour-pdf-tile-$index'),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.picture_as_pdf_outlined,
+                            color: AppColors.primary, size: 28),
+                          const SizedBox(height: 8),
+                          Text(photos[index].name, maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontFamily:'Inter',fontSize:13,
+                              color:AppColors.dark)),
+                        ],
+                      ),
+                    ),
+                  )
+                : Sign2DigitalPhotoPreview(
+                    bytes: photos[index].bytes,
+                    showDemo: false,
+                    compactTile: true,
+                    showRemove: false,
+                    onRemove: () {},
+                  ),
             ),
           ),
         ),
@@ -319,6 +384,10 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
 
   Future<void> _delete() async {
     if (_busy || _confirmingDeletion) { return; }
+    if (!_canModifyRemote) {
+      _notice('Verify labour details and private evidence before changing this entry.');
+      return;
+    }
     if (_record.status != LabourEntryStatus.pending) {
       _notice('Approved entries are locked and cannot be deleted.');
       return;
@@ -359,6 +428,10 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
 
   Future<void> _edit() async {
     if (_busy) { return; }
+    if (!_canModifyRemote) {
+      _notice('Verify labour details and private evidence before editing.');
+      return;
+    }
     if (_record.status != LabourEntryStatus.pending ||
         (_repository is RemoteLabourRepository && _record.source != 'manual')) {
       _notice('Reviewed or timer-created entries require an audited correction.');
@@ -406,14 +479,16 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
         key: const Key('labour-detail-delete'),
         label: _repository is RemoteLabourRepository ? 'Void' : 'Delete',
         primaryOutline: true,
-        enabled: !_busy && _record.status == LabourEntryStatus.pending,
+        enabled: !_busy && _canModifyRemote &&
+            _record.status == LabourEntryStatus.pending,
         onPressed: _delete,
       )),
       const SizedBox(width: 10),
       Expanded(child: Sign2DigitalPrimaryButton(
         key: const Key('labour-detail-edit'),
         label: 'Edit',
-        enabled: !_busy && _record.status == LabourEntryStatus.pending &&
+        enabled: !_busy && _canModifyRemote &&
+            _record.status == LabourEntryStatus.pending &&
             (_repository is! RemoteLabourRepository || _record.source == 'manual'),
         onPressed: _edit,
       )),
