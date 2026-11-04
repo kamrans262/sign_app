@@ -6,6 +6,7 @@ import '../../../../core/widgets/sign2digital_input_field.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import '../../data/job_note_local_store.dart';
+import '../../data/remote_job_media_repository.dart';
 import '../../domain/job_model.dart';
 import '../../domain/job_note_model.dart';
 import '../../services/voice_job_extraction_service.dart';
@@ -13,19 +14,19 @@ import '../../services/voice_recorder_service.dart';
 import '../widgets/ai_voice_flow_dialog.dart';
 import '../widgets/sign2digital_note_visibility_card.dart';
 
-/// Session-only editor: recordings are local and notes never auto-publish.
+/// Existing editor; persisted jobs upload explicitly via the M11 Laravel API.
 class AddJobNoteScreen extends StatefulWidget {
   const AddJobNoteScreen({
     super.key,
     required this.job,
-    required this.store,
+    this.store,
     required this.initialType,
     required this.initialVisibility,
     this.voiceRecorderFactory,
   });
 
   final JobModel job;
-  final JobNoteLocalStore store;
+  final JobNoteLocalStore? store;
   final JobNoteType initialType;
   final JobNoteVisibility initialVisibility;
   final VoiceRecorderService Function()? voiceRecorderFactory;
@@ -41,6 +42,7 @@ class _AddJobNoteScreenState extends State<AddJobNoteScreen> {
   late JobNoteType _type;
   String? _audioPath;
   bool _recording = false;
+  bool _saving = false;
 
   @override
   void initState() {
@@ -86,7 +88,8 @@ class _AddJobNoteScreenState extends State<AddJobNoteScreen> {
     }
   }
 
-  void _save() {
+  Future<void> _save() async {
+    if (_saving) return;
     final title = _title.text.trim();
     final body = _body.text.trim();
     if (title.isEmpty) {
@@ -102,8 +105,15 @@ class _AddJobNoteScreenState extends State<AddJobNoteScreen> {
       return;
     }
     final now = DateTime.now();
+    setState(() => _saving = true);
     try {
-      widget.store.add(JobNoteModel(
+      if (widget.store == null &&
+          RemoteJobMediaRepository.isLiveJob(widget.job.id)) {
+        await RemoteJobMediaRepository.shared.createNote(
+          jobId: widget.job.id, title: title, body: body,
+          type: _type, visibility: _visibility, audioPath: _audioPath);
+      } else {
+      widget.store!.add(JobNoteModel(
         id: 'local-note-${widget.job.id}-${now.microsecondsSinceEpoch}',
         jobId: widget.job.id,
         title: title,
@@ -113,9 +123,12 @@ class _AddJobNoteScreenState extends State<AddJobNoteScreen> {
         visibility: _visibility,
         audioPath: _audioPath,
       ));
-      Navigator.of(context).pop(true);
+      }
+      if (mounted) Navigator.of(context).pop(true);
     } catch (error) {
       _message('Unable to save note: $error');
+    } finally {
+      if (mounted) setState(() => _saving = false);
     }
   }
 
@@ -205,7 +218,7 @@ class _AddJobNoteScreenState extends State<AddJobNoteScreen> {
               const SizedBox(height: 25),
               Sign2DigitalPrimaryButton(
                 key: const Key('job-note-save'),
-                label: 'Save Note', onPressed: _save),
+                label: 'Save Note', onPressed: _saving ? null : _save),
             ],
           ),
         )),

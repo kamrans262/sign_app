@@ -142,7 +142,7 @@ class Sign2DigitalJobNoteCard extends StatelessWidget {
                       const SizedBox(height: 5),
                       Text(
                         note.visibility == JobNoteVisibility.privateNote
-                            ? 'Private Note' : 'Customer-facing (local only)',
+                            ? 'Private Note' : 'Customer-facing',
                         style: const TextStyle(
                           fontFamily: 'Inter', fontSize: 12,
                           color: AppColors.primary,

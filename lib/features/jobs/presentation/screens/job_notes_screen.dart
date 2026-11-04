@@ -1,4 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
@@ -6,6 +9,7 @@ import '../../../../core/widgets/sign2digital_header.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import '../../data/job_note_local_store.dart';
+import '../../data/remote_job_media_repository.dart';
 import '../../services/voice_recorder_service.dart';
 import '../../domain/job_model.dart';
 import '../../domain/job_note_model.dart';
@@ -52,15 +56,53 @@ class _JobNotesScreenState extends State<JobNotesScreen> {
   JobNoteVisibility _visibility = JobNoteVisibility.privateNote;
   bool _showBanner = true;
   late final JobNoteLocalStore _store;
+  List<JobNoteModel>? _remoteNotes;
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
+  bool get _remote => widget.store == null && widget.notes == null &&
+      RemoteJobMediaRepository.isLiveJob(widget.job.id);
+
+  Future<void> _loadRemoteNotes() async {
+    if (!_remote) return;
+    try {
+      final notes = await RemoteJobMediaRepository.shared.listNotes(widget.job.id);
+      if (mounted) setState(() => _remoteNotes = notes);
+    } catch (error) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Unable to load saved notes: $error')));
+    }
+  }
+
+  Future<void> _playNote(JobNoteModel note) async {
+    try {
+      if (!_remote || !note.audioPath!.startsWith('remote:')) return;
+      final bytes = await RemoteJobMediaRepository.shared.audioBytes(note.jobId, note.id);
+      final folder = await getTemporaryDirectory();
+      final file = File(folder.path + '/sign2digital_job_' + note.jobId + '_note_' + note.id + '.m4a');
+      await file.writeAsBytes(bytes, flush: true);
+      await _audioPlayer.stop();
+      await _audioPlayer.play(DeviceFileSource(file.path));
+    } catch (error) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Unable to play this voice note: $error')));
+    }
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
     super.initState();
     _store = widget.store ?? JobNoteLocalStore.shared;
+    if (_remote) _loadRemoteNotes();
   }
 
   List<JobNoteModel> get _filteredNotes {
-    final source = widget.notes ?? _store.notesFor(widget.job.id);
+    final source = widget.notes ?? _remoteNotes ?? _store.notesFor(widget.job.id);
     return source
         .where((note) {
           if (note.jobId != widget.job.id) {
@@ -98,7 +140,8 @@ class _JobNotesScreenState extends State<JobNotesScreen> {
               ),
               if (note.audioPath != null) ...[
                 const SizedBox(height: 12),
-                const Text('Voice recording saved on this device.'),
+                Text(_remote ? 'Voice recording attached to this job.' :
+                    'Voice recording saved on this device.'),
               ],
               if (note.type != JobNoteType.text && note.audioPath == null) ...[
                 const SizedBox(height: 12),
@@ -108,6 +151,11 @@ class _JobNotesScreenState extends State<JobNotesScreen> {
           ),
         ),
         actions: [
+          if (note.audioPath != null && _remote)
+            TextButton(
+              onPressed: () => _playNote(note),
+              child: const Text('Play Recording'),
+            ),
           if (note.visibility == JobNoteVisibility.privateNote)
             TextButton(
               key: const Key('job-note-convert'),
@@ -142,13 +190,16 @@ class _JobNotesScreenState extends State<JobNotesScreen> {
       final saved = await Navigator.of(context).push<bool>(
         MaterialPageRoute(builder: (_) => AddJobNoteScreen(
           job: widget.job,
-          store: _store,
+          store: _remote ? null : _store,
           initialType: _selectedTab == 0 ? JobNoteType.text : JobNoteType.voice,
           initialVisibility: _visibility,
           voiceRecorderFactory: widget.voiceRecorderFactory,
         )),
       );
-      if (mounted && saved == true) setState(() {});
+      if (mounted && saved == true) {
+        if (_remote) await _loadRemoteNotes();
+        else setState(() {});
+      }
     }
   }
 
