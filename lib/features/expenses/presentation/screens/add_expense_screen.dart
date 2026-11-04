@@ -448,8 +448,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               updatedAt: now, history: [event],
             )
           : previous.copyWith(
-              jobId: _job?.id ?? previous?.jobId,
-              job: _job?.title ?? previous!.job,
+              jobId: _job?.id ?? previous.jobId,
+              job: _job?.title ?? previous.job,
               category: _category!, title: _category!.label,
               amount: value, date: _date!,
               description: _description.text.trim(),
@@ -498,7 +498,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     : '${_job!.title} (${_job!.referenceNumber})',
                 trailing: const Icon(Icons.keyboard_arrow_down_rounded,
                   color: AppColors.secondaryText),
-                onTap: widget.initialExpense == null ? _chooseJob : null),
+                onTap: widget.initialExpense == null ? _chooseJob : () {}),
               const SizedBox(height: 20),
               Sign2DigitalSelectionField(
                 key: const Key('expense-add-category'), label: 'Expense Type',
