@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sign2digital/features/clients/presentation/screens/clients_screen.dart';
 import 'package:sign2digital/features/jobs/data/mock_jobs.dart';
 import 'package:sign2digital/features/jobs/domain/job_details_model.dart';
+import 'package:sign2digital/features/jobs/domain/job_model.dart';
+import 'package:sign2digital/features/jobs/widgets/m14_verified_job_expenses.dart';
 import 'package:sign2digital/features/jobs/presentation/screens/job_details_screen.dart';
 
 // The existing Home dashboard has unrelated ongoing asynchronous widgets.
@@ -24,6 +26,29 @@ void main() {
     expect(JobDetailsModel.formatChf(24500), 'CHF 24,500');
     expect(JobDetailsModel.formatChf(-4500), '-CHF 4,500');
     expect(JobDetailsModel.formatChf(0), 'CHF 0');
+  });
+
+  testWidgets('M14 totals are used even when authenticated job details loaded',
+      (tester) async {
+    // Actual server jobs use numeric IDs AND have a loaded JobDetailsModel.
+    final savedJob=JobModel(
+      id:'123',title:job.title,clientId:job.clientId,
+      clientName:job.clientName,description:job.description,
+      referenceNumber:job.referenceNumber,imageAsset:job.imageAsset,
+      amountChf:job.amountChf,progressPercentage:job.progressPercentage,
+      dueDate:job.dueDate,stage:job.stage,category:job.category,
+    );
+    await tester.pumpWidget(MaterialApp(
+      home:JobDetailsScreen(
+        job:savedJob,details:JobDetailsModel.liveUnconnected(savedJob),
+      ),
+    ));
+    await pumpUi(tester);
+    final totalCards=find.byType(M14VerifiedJobExpensesCard);
+    expect(totalCards,findsNWidgets(2));
+    expect(tester.widgetList<M14VerifiedJobExpensesCard>(totalCards)
+        .every((card)=>card.jobId==123),isTrue);
+    expect(tester.takeException(),isNull);
   });
 
   testWidgets('Jobs card opens selected details and back preserves filter', (
