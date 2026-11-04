@@ -7,7 +7,6 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
 import '../../../../core/widgets/sign2digital_information_table.dart';
 import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
-import '../../../clients/presentation/widgets/sign2digital_status_badge.dart';
 import '../../../quotes/presentation/widgets/sign2digital_quote_summary_card.dart';
 import '../../../quotes/presentation/widgets/sign2digital_signature_action_card.dart';
 import '../../../quotes/services/quote_pdf_service.dart';
@@ -431,10 +430,6 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
   static const _label = TextStyle(
     fontFamily: 'Inter', fontSize: 14, fontWeight: FontWeight.w500,
     letterSpacing: -0.3, color: AppColors.placeholder,
-  );
-  static const _value = TextStyle(
-    fontFamily: 'Inter', fontSize: 14, fontWeight: FontWeight.w500,
-    letterSpacing: -0.3, color: AppColors.dark,
   );
 
   String _date(DateTime? date) {
