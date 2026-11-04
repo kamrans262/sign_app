@@ -353,7 +353,9 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
   Future<void> _chooseAttachment() async {
     final record = _record;
     if (record == null || record.attachments.isEmpty ||
-        widget.onDownloadAttachment == null) return;
+        widget.onDownloadAttachment == null) {
+      return;
+    }
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
