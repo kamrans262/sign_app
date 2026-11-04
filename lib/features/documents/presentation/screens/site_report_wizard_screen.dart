@@ -494,6 +494,7 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
       customer: _clientName,
       timestamp: widget.initial?.timestamp ?? now,
       status: 'Draft',
+      version: widget.initial?.version ?? 1,
       demoOnly: true,
       createdAt: widget.initial?.createdAt ?? now,
       updatedAt: now,

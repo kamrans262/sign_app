@@ -190,6 +190,28 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
     }
   }
 
+  Future<void> _archive() async {
+    if (_busy || _report.status == 'archived') return;
+    if (!await _confirm('Archive Report',
+        'Archive this report? The approved PDF and audit history will remain unchanged.')) {
+      return;
+    }
+    setState(() { _busy = true; _error = null; });
+    try {
+      await _repository.archive(_report);
+      if (!mounted) return;
+      final fresh = await _repository.details(_report.id);
+      if (mounted) {
+        setState(() { _report = fresh; _suggestion = null; });
+        _notify('Report archived. Original documents remain saved.');
+      }
+    } catch (error) {
+      if (mounted) setState(() => _error = 'Unable to archive report: $error');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   Future<void> _openPdf() async {
     final id = _report.reportManagedDocumentId;
     if (_busy || id == null) return;
@@ -315,6 +337,12 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
                       onPressed: _send,
                     ),
                   ],
+                ],
+                if (_report.status != 'archived') ...[
+                  const SizedBox(height: 12),
+                  Sign2DigitalOutlinedButton(
+                    label: 'Archive Report', onPressed: _archive,
+                  ),
                 ],
               ],
             ),

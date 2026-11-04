@@ -209,6 +209,7 @@ class _MeetingMinutesEditorScreenState extends State<MeetingMinutesEditorScreen>
       title: _title.text.trim(),
       project: job.title, customer: job.clientName,
       jobId: job.id, timestamp: _date, status: 'Draft',
+      version: widget.initial?.version ?? 1,
       reportKind: ReportKind.meetingMinutes,
       createdBy: details.preparedBy,
       meetingMinutesDetails: details,

@@ -238,6 +238,9 @@ class RemoteSiteReportRepository implements DocumentRepository {
         draft.reportKind == ReportKind.workAcceptance) {
       throw const SignApiException('Choose a real job and complete the report.');
     }
+    if ((site?.photos.length ?? 0) > 8) {
+      throw const SignApiException('Choose up to eight photos per report.');
+    }
     final photoIds = <int>[];
     if (site != null) {
       for (final photo in site.photos) {
@@ -264,6 +267,7 @@ class RemoteSiteReportRepository implements DocumentRepository {
     };
     final body = <String, dynamic>{
       'job_id': job, 'kind': kind, 'title': draft.title.trim(),
+      if (draft.id.startsWith('report-')) 'revision': draft.version,
       'report_date': dateValue(site?.reportDate ?? draft.timestamp),
       'prepared_by': site?.preparedBy ?? minutes?.preparedBy ?? '',
       'weather': site?.weatherCondition,
@@ -299,7 +303,7 @@ class RemoteSiteReportRepository implements DocumentRepository {
     final company = _company();
     final data = _data(await _api.post(
       '/api/v1/reports/${reportId(report.id)}/prepare-ai',
-      companyScoped: true, data: {'confirm': true}));
+      companyScoped: true, data: {'confirm': true, 'revision': report.version}));
     _check(company);
     final raw = _object(data['suggestion']);
     if (raw['applied'] != false || raw['approved'] != false ||
@@ -326,12 +330,20 @@ class RemoteSiteReportRepository implements DocumentRepository {
       '/api/v1/reports/${reportId(report.id)}',
       companyScoped: true));
     _check(company);
-    final existing = _object(_object(raw['report'])['content']);
+    final fetchedReport = _object(raw['report']);
+    if (_id(fetchedReport['revision']) != report.version) {
+      throw const SignApiException('Draft changed. Reload before applying AI.');
+    }
+    if (_id(suggestion['revision']) != report.version) {
+      throw const SignApiException('AI suggestion is stale. Prepare it again.');
+    }
+    final existing = _object(fetchedReport['content']);
     final updated = <String, dynamic>{...existing, 'sections': reportSections};
     final data = _data(await _api.request('PATCH',
       '/api/v1/reports/${reportId(report.id)}',
       companyScoped: true,
-      data: {'title': suggestion['title'], 'content': updated}));
+      data: {'title': suggestion['title'], 'content': updated,
+        'revision': report.version}));
     _check(company);
     return _parse(data['report'], company);
   }
@@ -353,6 +365,20 @@ class RemoteSiteReportRepository implements DocumentRepository {
       data: {'confirm': true}, companyScoped: true));
     _check(company);
     return _parse(response['report'], company);
+  }
+
+  Future<void> archive(DocumentRecord report) async {
+    final company = _company();
+    final data = _data(await _api.request(
+      'DELETE', '/api/v1/reports/${reportId(report.id)}',
+      companyScoped: true,
+    ));
+    _check(company);
+    final response = _object(data['report']);
+    if ((response['status'] ?? '').toString() != 'archived' ||
+        _id(response['id']) != reportId(report.id)) {
+      throw const SignApiException('Report archive could not be verified.');
+    }
   }
 
   Future<Uint8List> verifiedPdf(DocumentRecord report) async {
