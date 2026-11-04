@@ -253,7 +253,9 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
 
   bool _isUnapprovedServerAddendum(DocumentRecord record) {
     if (record.category != DocumentCategory.addends ||
-        record.verifiedSignedPdfAvailable) return false;
+        record.verifiedSignedPdfAvailable) {
+      return false;
+    }
     final draft = AddendumDraftSession.load(record.addendumDraftId ?? '');
     return draft?.serverId != null;
   }
