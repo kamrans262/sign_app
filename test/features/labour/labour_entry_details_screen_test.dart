@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sign2digital/core/widgets/sign2digital_primary_button.dart';
+import 'package:sign2digital/core/widgets/sign2digital_outlined_button.dart';
 import 'package:sign2digital/features/jobs/data/local_job_photo_source.dart';
 import 'package:sign2digital/features/labour/data/demo_labour_repository.dart';
 import 'package:sign2digital/features/labour/domain/labour_entry.dart';
@@ -135,11 +137,10 @@ void main() {
     await _show(tester, _entry(status: LabourEntryStatus.approved),
       repository: repo);
     await _reveal(tester, 'labour-detail-edit');
-    await tester.tap(find.byKey(const Key('labour-detail-edit')));
-    await tester.pump();
-    expect(find.textContaining('locked'), findsOneWidget);
-    await tester.pump(const Duration(seconds: 5));
-    await tester.pumpAndSettle();
+    expect(tester.widget<Sign2DigitalPrimaryButton>(
+      find.byKey(const Key('labour-detail-edit'))).enabled,isFalse);
+    expect(tester.widget<Sign2DigitalOutlinedButton>(
+      find.byKey(const Key('labour-detail-delete'))).enabled,isFalse);
     await tester.tap(find.byKey(const Key('labour-detail-delete')));
     await tester.pump();
     expect(find.byKey(const Key('labour-confirm-delete')), findsNothing);
