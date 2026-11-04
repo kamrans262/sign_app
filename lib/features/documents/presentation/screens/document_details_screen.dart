@@ -10,6 +10,7 @@ import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import '../../../quotes/presentation/widgets/sign2digital_quote_summary_card.dart';
 import '../../../quotes/presentation/widgets/sign2digital_signature_action_card.dart';
 import '../../../quotes/services/quote_pdf_service.dart';
+import '../../../quotes/presentation/widgets/sign2digital_financial_document_sections.dart';
 import '../../../quotes/presentation/screens/send_quote_screen.dart';
 import '../../data/document_activity_session.dart';
 import '../../domain/document_record.dart';
@@ -157,6 +158,13 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
       }
       return pdf;
     }
+    // An M6 draft/legacy quote may have saved structured data but no
+    // immutable approved file. Its in-app preview must never be exported as
+    // the original customer-approved or signed PDF.
+    if (!record.demoOnly && record.id.startsWith('quote-')) {
+      throw const FormatException(
+        'No verified approved PDF is available for this quote.');
+    }
     if (record.quote == null) return null;
     return const Sign2DigitalQuotePdfBuilder().build(record.quote!);
   }
@@ -171,6 +179,12 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
   Future<void> _doDownload() async {
     final record = _record;
     if (record == null) return;
+    if (!record.demoOnly && record.id.startsWith('quote-') &&
+        !record.verifiedSignedPdfAvailable) {
+      _message('No verified quote PDF exists. The Preview tab shows '
+          'saved quote details only.');
+      return;
+    }
     setState(() => _action = 1);
     try {
       final bytes = await _pdf(record);
@@ -196,6 +210,12 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
   Future<void> _doShare() async {
     final record = _record;
     if (record == null) return;
+    if (!record.demoOnly && record.id.startsWith('quote-') &&
+        !record.verifiedSignedPdfAvailable) {
+      _message('No verified quote PDF exists. The Preview tab shows '
+          'saved quote details only.');
+      return;
+    }
     setState(() => _action = 2);
     try {
       final bytes = await _pdf(record);
@@ -591,6 +611,45 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
   );
 
   Widget _preview(DocumentRecord record) {
+    // Existing M6 drafts and legacy approved quotes without frozen PDF bytes
+    // can still display their current saved fields using the approved
+    // Sign2Digital Quote Preview styling. This is NOT a signed/approved PDF.
+    if (!record.demoOnly && record.id.startsWith('quote-') &&
+        !record.verifiedSignedPdfAvailable) {
+      final quote = record.quote;
+      if (quote == null) {
+        return const Text(
+          'The saved quote preview is unavailable for this account.',
+          key: Key('document-quote-preview-unavailable'),
+          style: _label,
+        );
+      }
+      final isDraft = record.status.toLowerCase() == 'draft';
+      return Column(
+        key: const Key('document-read-only-quote-preview'),
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Text(
+              isDraft
+                  ? 'DRAFT PREVIEW — saved quote details, not an approved PDF.'
+                  : 'UNVERIFIED QUOTE PREVIEW — the original approved PDF '
+                    'is unavailable. These are saved quote details, not '
+                    'the original approved or signed document.',
+              key: const Key('document-quote-preview-notice'),
+              style: const TextStyle(
+                fontFamily: 'Inter', fontSize: 12,
+                fontWeight: FontWeight.w500, color: AppColors.primary,
+              ),
+            ),
+          ),
+          Sign2DigitalFinancialDocumentSections(
+            document: quote, showSignature: false,
+          ).invoiceOrQuoteDocument(),
+        ],
+      );
+    }
     if (_signed && !record.demoOnly &&
         (!record.verifiedSignedPdfAvailable || widget.loadSignedPdf == null)) {
       return const Text(
@@ -673,7 +732,12 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
           listStyle: true,
           onTap: () => Navigator.push<void>(context, MaterialPageRoute<void>(
             builder: (_) => DocumentDetailsScreen(
-              documentId: linked[i].id, document: linked[i],
+              documentId: linked[i].id,
+              document: linked[i].id.startsWith('quote-') &&
+                      !linked[i].verifiedSignedPdfAvailable &&
+                      widget.loadDocument != null
+                  ? null : linked[i],
+              loadDocument: widget.loadDocument,
               loadSignedPdf: widget.loadSignedPdf,
               onDownloadAttachment: widget.onDownloadAttachment,
               onViewSignatures: widget.onViewSignatures,
