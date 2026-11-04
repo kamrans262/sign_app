@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sign2digital/core/widgets/sign2digital_bottom_navigation_bar.dart';
 import 'package:sign2digital/core/widgets/sign2digital_dashboard_header.dart';
 import 'package:sign2digital/features/clients/presentation/screens/clients_screen.dart';
+import 'package:sign2digital/features/clients/presentation/screens/more_screen.dart';
 import 'package:sign2digital/features/clients/presentation/widgets/sign2digital_status_badge.dart';
 import 'package:sign2digital/features/expenses/data/demo_expense_repository.dart';
 import 'package:sign2digital/features/expenses/domain/expense_record.dart';
@@ -53,22 +54,34 @@ void main() {
     expect(demo[0].matches('no-match'), isFalse);
   });
 
-  testWidgets('main dashboard More tab opens Expenses with reused widgets',
-      (tester) async {
+  testWidgets('dashboard More tab keeps original More navigation', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: ClientsScreen()));
     await tester.tap(find.byKey(const Key('dashboard-tab-4')));
     await tester.pump(const Duration(milliseconds: 600));
-    // Expenses is below the fold in the existing More list.
+    expect(tester.widget<Sign2DigitalBottomNavigationBar>(
+      find.byType(Sign2DigitalBottomNavigationBar).last).selectedIndex, 4);
+    expect(find.byType(MoreScreen), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('More tile opens existing Expenses screen', (tester) async {
+    // Isolate the navigation route from the Home tab's ongoing animations.
+    await tester.pumpWidget(const MaterialApp(
+      home: Scaffold(body: MoreScreen()),
+    ));
     await tester.scrollUntilVisible(
       find.byKey(const Key('open-expenses')), 200,
       scrollable: find.descendant(
         of: find.byKey(const Key('more-menu-scroll')),
         matching: find.byType(Scrollable)).first,
     );
-    await tester.tap(find.byKey(const Key('open-expenses')));
-    await tester.pump(const Duration(milliseconds: 600));
+    final entry = find.byKey(const Key('open-expenses'));
+    await tester.ensureVisible(entry);
+    await tester.pump();
+    await tester.tap(entry);
+    await tester.pumpAndSettle();
     expect(find.byType(ExpensesScreen), findsOneWidget);
-    expect(find.byType(Sign2DigitalDashboardHeader), findsWidgets);
+    expect(find.byType(Sign2DigitalDashboardHeader), findsOneWidget);
     expect(find.text('Search expenses'), findsOneWidget);
     expect(find.text('All'), findsOneWidget);
     expect(find.text('To Review'), findsWidgets);
