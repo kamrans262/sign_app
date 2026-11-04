@@ -11,7 +11,7 @@ import 'package:sign2digital/features/labour/presentation/screens/labour_entry_d
 import 'package:sign2digital/features/labour/presentation/screens/add_labour_entry_screen.dart';
 import 'package:sign2digital/features/jobs/domain/job_model.dart';
 
-class _Stub implements LabourRepository {
+class _Stub extends LabourRepository {
   _Stub(this.entries, this.available);
   final List<LabourEntry> entries;
   final List<JobModel> available;
