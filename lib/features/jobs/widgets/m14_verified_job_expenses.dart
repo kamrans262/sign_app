@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/services/active_company_session.dart';
+import '../../../core/services/active_company_session.dart';
 import '../../expenses/data/remote_expense_repository.dart';
 import '../presentation/widgets/sign2digital_job_financial_card.dart';
 
@@ -63,8 +63,9 @@ class _M14VerifiedJobExpensesCardState extends State<M14VerifiedJobExpensesCard>
     return FutureBuilder<Map<String,dynamic>>(
       future:future,builder:(context,snapshot) {
         final data=snapshot.data;
-        final cents=_amount(data?[
-            widget.budgetRemaining?'remaining_budget_minor':'total_expenses_minor']);
+        final key=widget.budgetRemaining
+            ?'remaining_budget_minor':'total_expenses_minor';
+        final cents=_amount(data?[key]);
         if (widget.budgetRemaining && cents == null) {
           return const SizedBox.shrink();
         }
