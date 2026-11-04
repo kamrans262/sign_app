@@ -56,8 +56,9 @@ void main() {
         return http.Response(jsonEncode(catalog(status, revision, hasPdf)), 200);
       }
       if (request.url.path == '/api/v1/quotes/7') {
-        if (forbidden) return http.Response(
-          jsonEncode({'message': 'Unauthorized'}), 403);
+        if (forbidden) {
+          return http.Response(jsonEncode({'message': 'Unauthorized'}), 403);
+        }
         return http.Response(jsonEncode(quote(
           status, quoteRevision > 0 ? quoteRevision : revision,
           company: quoteCompany,
