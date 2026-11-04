@@ -10,6 +10,7 @@ import 'create_addendum_screen.dart';
 import '../../../quotes/presentation/widgets/sign2digital_quote_summary_card.dart';
 import '../../../quotes/data/signed_quote_file_store.dart';
 import '../../data/remote_document_repository.dart';
+import '../../data/remote_addendum_repository.dart';
 import '../../../auth/data/mobile_auth_repository.dart';
 import '../../data/demo_document_repository.dart';
 import '../../domain/document_record.dart';
@@ -243,7 +244,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     final live = widget.repository == null &&
         MobileAuthRepository.shared.isSignedIn;
     var selected = record;
-    if (live && RegExp(r'^(quote|signed|managed)-[1-9][0-9]*$')
+    if (live && RegExp(r'^(quote|signed|managed|addendum)-[1-9][0-9]*$')
         .hasMatch(record.id)) {
       try {
         selected = await RemoteDocumentRepository.shared.details(record.id);
@@ -272,13 +273,20 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
           documentId: selected.id,
           document: selected,
           loadDocument: live ? RemoteDocumentRepository.shared.details : null,
-          requestAddendumSignature: widget.requestAddendumSignature,
+          requestAddendumSignature: widget.requestAddendumSignature ??
+              (live ? RemoteAddendumRepository.shared.requestSignature : null),
+          onApproveAddendum: live ? (record) async {
+            final id = int.parse(record.id.substring('addendum-'.length));
+            final saved = await RemoteAddendumRepository.shared.get(id);
+            await RemoteAddendumRepository.shared.approve(saved);
+            return RemoteDocumentRepository.shared.details(record.id);
+          } : null,
           onAddVersion: live ? RemoteDocumentRepository.shared.addVersion : null,
           onAddAttachment: live ? RemoteDocumentRepository.shared.addAttachment : null,
           onDownloadAttachment: live
               ? RemoteDocumentRepository.shared.downloadAttachment : null,
           loadSignedPdf: (selectedRecord) async {
-            if (live && RegExp(r'^(quote|signed|managed)-[1-9][0-9]*$')
+            if (live && RegExp(r'^(quote|signed|managed|addendum)-[1-9][0-9]*$')
                 .hasMatch(selectedRecord.id)) {
               return RemoteDocumentRepository.shared.downloadPdf(selectedRecord);
             }
