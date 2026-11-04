@@ -92,7 +92,9 @@ class _M15LiveTimerPanelState extends State<M15LiveTimerPanel>
     try{
       final timer=await widget.repository.timerCurrent();
       if(!mounted||serial!=_refreshSerial||
-          ActiveCompanySession.companyId!=company)return;
+          ActiveCompanySession.companyId!=company){
+        return;
+      }
       setState((){
         _timer=timer;
         _displaySeconds=timer.elapsedSeconds;
