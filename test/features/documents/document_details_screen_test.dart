@@ -52,7 +52,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('History hides actions, orders events and exposes contextual button',
+  testWidgets('History orders events and shows underlined inline contextual links',
       (tester) async {
     await tester.pumpWidget(page(initialTab: 3));
     expect(find.byType(Sign2DigitalSignatureActionCard), findsNothing);
@@ -83,10 +83,16 @@ void main() {
       Key('document-history-event-${record.id}-signed')));
     await tester.pump();
     expect(find.text('View Signatures'), findsOneWidget);
-    final signatureButton = find.byKey(const Key('document-view-signatures'));
-    final buttonSize = tester.getSize(signatureButton);
-    expect(buttonSize.width, greaterThanOrEqualTo(200));
-    expect(buttonSize.height, 48);
+    final signatureLink = find.byKey(const Key('document-view-signatures'));
+    final linkText = tester.widget<Text>(find.text('View Signatures'));
+    expect(linkText.style?.fontSize, 12);
+    expect(linkText.style?.decoration, TextDecoration.underline);
+    expect(tester.widget<InkWell>(signatureLink).onTap, isNotNull);
+    expect(tester.getSize(signatureLink).height, lessThan(48));
+    final signedRow = find.byKey(
+        Key('document-history-event-${record.id}-signed'));
+    expect((tester.getTopRight(signatureLink).dx -
+        tester.getTopRight(signedRow).dx).abs(), lessThan(2));
     await tester.ensureVisible(find.text('View Signatures'));
     await tester.tap(find.text('View Signatures'));
     await tester.pump();
