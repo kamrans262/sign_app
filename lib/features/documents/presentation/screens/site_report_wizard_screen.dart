@@ -27,6 +27,7 @@ class SiteReportWizardScreen extends StatefulWidget {
   const SiteReportWizardScreen({
     super.key,
     this.initial,
+    this.initialJobId,
     this.photoSource,
     this.reportGenerator,
     this.onNavigationSelected,
@@ -34,6 +35,7 @@ class SiteReportWizardScreen extends StatefulWidget {
   });
 
   final DocumentRecord? initial;
+  final String? initialJobId;
   final JobPhotoSource? photoSource;
   /// Optional real report-generation service supplied by production wiring.
   /// No success is assumed when absent; local drafts stay distinct.
@@ -126,6 +128,37 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
         if (_photos.isNotEmpty) {
           _selectedSections.add(SiteReportSection.photos);
         }
+      }
+    }
+    final linkedId = initial?.jobId ?? widget.initialJobId;
+    if (linkedId != null && int.tryParse(linkedId) != null &&
+        widget.reportGenerator != null &&
+        ActiveCompanySession.companyId != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _resolveRealJob(linkedId);
+      });
+    }
+  }
+
+  Future<void> _resolveRealJob(String jobId) async {
+    try {
+      final jobs = await RemoteJobRepository.shared.listJobs();
+      if (!mounted || (_selectedJob != null &&
+          _selectedJob!.id != jobId)) return;
+      for (final job in jobs) {
+        if (job.id == jobId) {
+          setState(() {
+            _selectedJob = job;
+            _projectName = job.title;
+            _clientName = job.clientName;
+          });
+          return;
+        }
+      }
+      setState(() => _error = 'The linked job is unavailable in this company.');
+    } catch (error) {
+      if (mounted) {
+        setState(() => _error = 'Unable to verify the linked job: $error');
       }
     }
   }

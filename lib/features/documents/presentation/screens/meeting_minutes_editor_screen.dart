@@ -14,11 +14,12 @@ import '../../domain/document_record.dart';
 /// Dedicated M12 meeting-minute editor, reusing existing Sign2Digital fields.
 class MeetingMinutesEditorScreen extends StatefulWidget {
   const MeetingMinutesEditorScreen({
-    super.key, this.initial, this.reportGenerator, this.jobs,
+    super.key, this.initial, this.initialJobId, this.reportGenerator, this.jobs,
     this.onNavigationSelected,
   });
 
   final DocumentRecord? initial;
+  final String? initialJobId;
   final Future<DocumentRecord> Function(DocumentRecord draft)? reportGenerator;
   final List<JobModel>? jobs;
   final ValueChanged<int>? onNavigationSelected;
@@ -65,6 +66,31 @@ class _MeetingMinutesEditorScreenState extends State<MeetingMinutesEditorScreen>
           (job.title == initial?.project && job.clientName == initial?.customer)) {
         _job = job;
         break;
+      }
+    }
+    final linkedId = initial?.jobId ?? widget.initialJobId;
+    if (linkedId != null && int.tryParse(linkedId) != null &&
+        widget.jobs == null && widget.reportGenerator != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _resolveLinkedJob(linkedId);
+      });
+    }
+  }
+
+  Future<void> _resolveLinkedJob(String jobId) async {
+    try {
+      final jobs = await RemoteJobRepository.shared.listJobs();
+      if (!mounted || (_job != null && _job!.id != jobId)) return;
+      for (final job in jobs) {
+        if (job.id == jobId) {
+          setState(() { _job = job; _error = null; });
+          return;
+        }
+      }
+      setState(() => _error = 'Linked company job is not available.');
+    } catch (error) {
+      if (mounted) {
+        setState(() => _error = 'Unable to verify linked job: $error');
       }
     }
   }

@@ -150,6 +150,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
       MaterialPageRoute<DocumentRecord>(
         builder: (_) => SiteReportWizardScreen(
           initial: initial,
+          initialJobId: widget.jobId,
           reportGenerator: generator,
           selectedNavigationIndex: widget.selectedNavigationIndex,
           onNavigationSelected: _navigation,
@@ -206,6 +207,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     final result = await Navigator.of(context).push<DocumentRecord>(
       MaterialPageRoute(builder: (_) => MeetingMinutesEditorScreen(
         initial: initial,
+        initialJobId: widget.jobId,
         reportGenerator: widget.reportGenerator ??
             (remote ? repository!.saveDraft : null),
       )),

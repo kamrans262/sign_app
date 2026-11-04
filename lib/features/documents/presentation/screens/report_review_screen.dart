@@ -8,6 +8,8 @@ import '../../data/remote_site_report_repository.dart';
 import '../../data/remote_document_repository.dart';
 import '../../domain/document_record.dart';
 import 'document_details_screen.dart';
+import 'site_report_wizard_screen.dart';
+import 'meeting_minutes_editor_screen.dart';
 
 /// Existing Sign2Digital layout applied to the real report review lifecycle.
 /// AI never approves or sends a document on behalf of the professional.
@@ -77,6 +79,35 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
         ],
       ),
     ) ?? false;
+  }
+
+  Future<void> _editDraft() async {
+    if (_busy || !_isDraft) return;
+    setState(() { _busy = true; _error = null; });
+    DocumentRecord current;
+    try {
+      current = await _repository.details(_report.id);
+    } catch (error) {
+      if (mounted) {
+        setState(() => _error = 'Unable to open saved draft: $error');
+      }
+      if (mounted) setState(() => _busy = false);
+      return;
+    }
+    if (!mounted) return;
+    setState(() => _busy = false);
+    final updated = await Navigator.of(context).push<DocumentRecord>(
+      MaterialPageRoute(builder: (_) =>
+        current.reportKind == ReportKind.meetingMinutes
+            ? MeetingMinutesEditorScreen(
+                initial: current, reportGenerator: _repository.saveDraft)
+            : SiteReportWizardScreen(
+                initial: current, reportGenerator: _repository.saveDraft)),
+    );
+    if (mounted && updated != null) {
+      setState(() { _report = updated; _suggestion = null; });
+      _notify('Draft saved. Review again before approval.');
+    }
   }
 
   Future<void> _prepare() async {
@@ -251,6 +282,10 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
                       fontFamily: 'Inter', color: Color(0xFFB42318))),
                   ),
                 if (_isDraft) ...[
+                  Sign2DigitalOutlinedButton(
+                    label: 'Edit Draft', onPressed: _editDraft,
+                  ),
+                  const SizedBox(height: 12),
                   Sign2DigitalOutlinedButton(
                     label: 'Prepare with AI',
                     onPressed: _prepare,
