@@ -8,6 +8,8 @@ import '../../../../core/widgets/sign2digital_list_sort_control.dart';
 import '../../../../core/widgets/sign2digital_search_field.dart';
 import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import '../../data/demo_expense_repository.dart';
+import '../../data/remote_expense_repository.dart';
+import '../../../../core/services/active_company_session.dart';
 import '../../domain/expense_record.dart';
 import 'add_expense_screen.dart';
 import 'expense_details_screen.dart';
@@ -54,7 +56,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
   @override
   void initState() {
     super.initState();
-    _repository = widget.repository ?? const DemoExpenseRepository();
+    _repository = widget.repository ?? (ActiveCompanySession.companyId == null
+        ? const DemoExpenseRepository() : RemoteExpenseRepository.shared);
     _load();
   }
 
@@ -125,6 +128,10 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     await Navigator.of(context).push<void>(MaterialPageRoute<void>(
       builder: (_) => ExpenseDetailsScreen(
         expense: expense, repository: _repository,
+        loadExpense: _repository is RemoteExpenseRepository
+            ? (_repository as RemoteExpenseRepository).getExpense : null,
+        onRequestReimbursement: _repository is RemoteExpenseRepository
+            ? (_repository as RemoteExpenseRepository).requestReimbursement : null,
         selectedNavigationIndex: widget.selectedNavigationIndex,
         onNavigationSelected: widget.onNavigationSelected,
       )));
@@ -151,7 +158,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       await _load();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Expense saved locally for review.')));
+          content: Text(_repository is RemoteExpenseRepository
+              ? 'Expense saved for review.' : 'Expense saved locally for review.')));
       }
     } catch (_) {
       if (mounted) {
