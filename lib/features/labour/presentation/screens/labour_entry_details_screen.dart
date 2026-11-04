@@ -12,6 +12,7 @@ import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import '../../../clients/presentation/widgets/sign2digital_status_badge.dart';
 import '../../../documents/presentation/widgets/sign2digital_document_history.dart';
 import '../../../jobs/presentation/widgets/sign2digital_photo_preview.dart';
+import '../../../jobs/data/local_job_photo_source.dart';
 import '../../data/demo_labour_repository.dart';
 import '../../data/remote_labour_repository.dart';
 import '../../../auth/data/mobile_auth_repository.dart';
