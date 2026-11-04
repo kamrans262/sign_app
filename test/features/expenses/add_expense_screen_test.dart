@@ -98,9 +98,11 @@ void main() {
     await tester.pump();
     expect(find.byKey(const Key('expense-tag-Transport')), findsOneWidget);
     expect(find.byKey(const Key('expense-tag-Site Visit')), findsOneWidget);
-    await tester.tap(find.descendant(
-      of: find.byKey(const Key('expense-tag-Transport')),
-      matching: find.byIcon(Icons.cancel)));
+    // InputChip deletion uses the framework's delete affordance, whose
+    // icon may differ across Flutter versions. Verify its callback instead.
+    tester.widget<InputChip>(
+      find.byKey(const Key('expense-tag-Transport')),
+    ).onDeleted?.call();
     await tester.pump();
     expect(find.byKey(const Key('expense-tag-Transport')), findsNothing);
     expect(tester.takeException(), isNull);
