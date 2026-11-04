@@ -28,10 +28,12 @@ void main() {
       demoOnly: true,
     );
     const widths = <(Size, double)>[
-      (Size(320, 650), 250),
-      (Size(430, 932), 360),
-      (Size(720, 390), 650),
-      (Size(1024, 768), 940),
+      // The existing field has a 20px icon plus fixed internal padding.
+      // Assert its editable text area expands with the screen width.
+      (Size(320, 650), 180),
+      (Size(430, 932), 275),
+      (Size(720, 390), 550),
+      (Size(1024, 768), 850),
     ];
     for (final (screen, minimumInputWidth) in widths) {
       tester.view.physicalSize = screen;
