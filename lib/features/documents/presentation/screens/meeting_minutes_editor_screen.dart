@@ -8,6 +8,9 @@ import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import '../../../jobs/data/mock_jobs.dart';
 import '../../../jobs/data/remote_job_repository.dart';
+import '../../../jobs/services/voice_recorder_service.dart';
+import '../../../jobs/services/voice_job_extraction_service.dart';
+import '../../../jobs/presentation/widgets/ai_voice_flow_dialog.dart';
 import '../../../jobs/domain/job_model.dart';
 import '../../domain/document_record.dart';
 import '../../data/remote_site_report_repository.dart';
@@ -43,6 +46,7 @@ class _MeetingMinutesEditorScreenState extends State<MeetingMinutesEditorScreen>
   JobModel? _job;
   DateTime _date = DateTime.now();
   bool _saving = false;
+  bool _dictating = false;
   String? _error;
 
   @override
@@ -116,6 +120,36 @@ class _MeetingMinutesEditorScreenState extends State<MeetingMinutesEditorScreen>
   List<String> _lines(String input) => input.split('\n')
       .map((value) => value.trim())
       .where((value) => value.isNotEmpty).toList();
+
+  Future<void> _dictateSummary() async {
+    if (_dictating || widget.reportGenerator == null || _job == null) {
+      setState(() => _error = 'Choose a real job before dictating minutes.');
+      return;
+    }
+    _dictating = true;
+    try {
+      await showDialog<void>(
+        context: context, barrierDismissible: false,
+        builder: (_) => AiVoiceFlowDialog(
+          recorder: LocalVoiceRecorderService(),
+          extraction: OpenAiVoiceJobExtractionService(),
+          recordingTitle: 'Dictate Meeting Minutes',
+          onAudioProcessed: (path) async {
+            final text = await RemoteSiteReportRepository.shared
+                .transcribeAudio(_job!.id, path);
+            if (!mounted) return;
+            final earlier = _summary.text.trim();
+            setState(() {
+              _summary.text = earlier.isEmpty ? text : '$earlier\n$text';
+              _error = null;
+            });
+          },
+        ),
+      );
+    } finally {
+      _dictating = false;
+    }
+  }
 
   Future<void> _chooseJob() async {
     try {
@@ -290,6 +324,11 @@ class _MeetingMinutesEditorScreenState extends State<MeetingMinutesEditorScreen>
             _field('Prepared By', _preparer),
             _field('Location', _location),
             _field('Summary', _summary, multiline: true),
+            if (widget.reportGenerator != null)
+              Padding(padding: const EdgeInsets.only(bottom: 15),
+                child: Sign2DigitalPrimaryButton(
+                  label: 'Dictate Meeting Notes', onPressed: _dictateSummary,
+                )),
             _field('Attendees (one per line)', _attendees, multiline: true),
             _field('Absentees (one per line)', _absentees, multiline: true),
             _field('Decisions (one per line)', _decisions, multiline: true),
