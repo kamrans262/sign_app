@@ -215,9 +215,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
           onNotificationTap: widget.onNotificationTap,
           onProfileTap: widget.onProfileTap,
         ),
-        Expanded(child: Center(child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 720),
-          child: Stack(children: [
+        Expanded(child: Stack(children: [
             CustomScrollView(
               key: const Key('expenses-scroll'),
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -295,7 +293,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                   foregroundColor: AppColors.white,
                   child: const Icon(Icons.add, size: 30)))),
           ]),
-        ))),
+        ),
       ])),
       bottomNavigationBar: Sign2DigitalBottomNavigationBar(
         selectedIndex: widget.selectedNavigationIndex,
