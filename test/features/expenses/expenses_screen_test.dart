@@ -9,7 +9,7 @@ import 'package:sign2digital/features/expenses/domain/expense_record.dart';
 import 'package:sign2digital/features/expenses/presentation/screens/expense_details_screen.dart';
 import 'package:sign2digital/features/expenses/presentation/screens/expenses_screen.dart';
 
-class _StubRepository implements ExpenseRepository {
+class _StubRepository extends ExpenseRepository {
   _StubRepository(this.records, {this.fail = false});
   final List<ExpenseRecord> records;
   bool fail;
