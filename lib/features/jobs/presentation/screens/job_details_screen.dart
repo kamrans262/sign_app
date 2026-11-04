@@ -425,7 +425,7 @@ class JobDetailsScreen extends StatelessWidget {
                             icon: Icons.description_outlined,
                             iconAsset: 'assets/icons/description.svg',
                           ),
-                          1 => details == null && int.tryParse(job.id) != null
+                          1 => int.tryParse(job.id) != null
                               ? M14VerifiedJobExpensesCard(jobId: int.parse(job.id))
                               : Sign2DigitalJobFinancialCard(
                                   label: 'Expenses',
@@ -466,7 +466,7 @@ class JobDetailsScreen extends StatelessWidget {
                         balanceChf: data.remainingBalanceChf,
                         showAmount: data.financialsAvailable,
                       ),
-                      if (details == null && int.tryParse(job.id) != null) ...[
+                      if (int.tryParse(job.id) != null) ...[
                         const SizedBox(height: 20),
                         M14VerifiedJobExpensesCard(
                           jobId: int.parse(job.id), budgetRemaining: true),
