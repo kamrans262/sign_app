@@ -256,8 +256,10 @@ class _TimeLabourScreenState extends State<TimeLabourScreen> {
     } on SignApiException catch (error) {
       if (mounted) {
         await _load();
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.message)));
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(error.message)));
+        }
       }
     } catch (_) {
       if (mounted) {
