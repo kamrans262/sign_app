@@ -406,7 +406,7 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
         key: const Key('labour-detail-delete'),
         label: _repository is RemoteLabourRepository ? 'Void' : 'Delete',
         primaryOutline: true,
-        enabled: !_busy,
+        enabled: !_busy && _record.status == LabourEntryStatus.pending,
         onPressed: _delete,
       )),
       const SizedBox(width: 10),
