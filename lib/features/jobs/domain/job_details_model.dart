@@ -30,7 +30,7 @@ class JobDetailsModel {
   /// Live jobs do not inherit any fictitious figures from screenshot demos.
   factory JobDetailsModel.liveUnconnected(JobModel job,
       {int? quoteCount, int? photoCount, int? noteCount,
-       int? siteReportCount}) => JobDetailsModel(
+       int? siteReportCount, int? acceptanceCount}) => JobDetailsModel(
     job: job,
     quoteAmountChf: 0, expensesChf: 0, labourCostChf: 0,
     depositsChf: 0, invoicedChf: 0, receivedChf: 0,
@@ -46,7 +46,9 @@ class JobDetailsModel {
                 ? '$noteCount notes'
                 : section == JobSection.siteReports && siteReportCount != null
                   ? '$siteReportCount reports'
-                  : 'Not connected yet'),
+                  : section == JobSection.acceptance && acceptanceCount != null
+                    ? '$acceptanceCount acceptances'
+                    : 'Not connected yet'),
     ],
   );
 

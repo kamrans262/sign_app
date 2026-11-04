@@ -289,6 +289,15 @@ class JobDetailsScreen extends StatelessWidget {
       }
       if (!context.mounted) return;
     }
+    if (section == JobSection.acceptance) {
+      await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+        builder: (_) => ReportsScreen(
+          jobId: int.tryParse(job.id) != null ? job.id : null,
+          onNavigationSelected: (index) => _selectTab(context, index),
+        ),
+      ));
+      return;
+    }
     if (section == JobSection.siteReports) {
       await Navigator.of(context).push<void>(MaterialPageRoute<void>(
         builder: (_) => ReportsScreen(
