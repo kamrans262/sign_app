@@ -306,47 +306,6 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
     return '${months[value.month-1]} ${value.day}, ${value.year}';
   }
 
-  Future<String?> _askApiKey(BuildContext context) async {
-    String key = '';
-    bool hidden = true;
-    return showDialog<String>(
-      context: context,
-      builder: (dialog) => StatefulBuilder(
-        builder: (dialog, update) => AlertDialog(
-          title: const Text('Connect Addendum AI'),
-          content: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Text('For personal testing only. Enter a temporary OpenAI API key. '
-                'It is not saved or committed. Do not use this approach in a public app.'),
-            const SizedBox(height: 12),
-            TextField(
-              key: const Key('addendum-api-key'),
-              obscureText: hidden,
-              onChanged: (value) => key = value,
-              decoration: InputDecoration(
-                labelText: 'OpenAI API key',
-                suffixIcon: IconButton(
-                  onPressed: () => update(() => hidden = !hidden),
-                  icon: Icon(hidden ? Icons.visibility : Icons.visibility_off),
-                ),
-              ),
-            ),
-          ]),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(dialog),
-              child: const Text('Cancel')),
-            FilledButton(
-              key: const Key('addendum-api-connect'),
-              onPressed: () {
-                if (key.trim().isNotEmpty) Navigator.pop(dialog, key.trim());
-              },
-              child: const Text('Process recording'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Future<void> _applySuggestions(AddendumVoiceSuggestion result) async {
     if (!mounted) return;
     var applied = 0;
@@ -359,6 +318,27 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
       }
       if (_description.text.trim().isEmpty && result.description != null) {
         _description.text = result.description!; applied++;
+      }
+      if (_additionalWork.text.trim().isEmpty &&
+          result.additionalWork != null) {
+        _additionalWork.text = result.additionalWork!; applied++;
+      }
+      if (_quantity.text.trim().isEmpty && result.quantity != null &&
+          RegExp(r'^[1-9][0-9]{0,5}$').hasMatch(result.quantity!) &&
+          int.parse(result.quantity!) <= 100000) {
+        _quantity.text = result.quantity!; applied++;
+      }
+      if (_unitPrice.text.trim().isEmpty && result.unitPrice != null &&
+          RegExp(r'^\d{1,10}(\.\d{1,2})?$')
+              .hasMatch(result.unitPrice!)) {
+        _unitPrice.text = result.unitPrice!; applied++;
+      }
+      if (_vat.text.trim() == '0' && result.vatPercent != null) {
+        final bps = double.tryParse(result.vatPercent!);
+        if (bps != null && bps.isFinite && bps >= 0 && bps <= 100 &&
+            (bps * 100 - (bps * 100).round()).abs() < .00001) {
+          _vat.text = result.vatPercent!; applied++;
+        }
       }
       if (_effectiveDate == null && result.effectiveDate != null) {
         _effectiveDate = result.effectiveDate; applied++;
@@ -408,9 +388,29 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
     }
   }
 
-  void _saveDraft() {
-    AddendumDraftSession.save(_draft());
-    _notice('Addendum draft saved locally on this device for this session.');
+  Future<void> _saveDraft() async {
+    if (_creating) return;
+    if (!_live) {
+      AddendumDraftSession.save(_draft());
+      _notice('Addendum draft saved locally on this device for this session.');
+      return;
+    }
+    final draft = _draft();
+    if (draft.validationIssues.isNotEmpty) {
+      _notice(draft.validationIssues.first);
+      return;
+    }
+    setState(() => _creating = true);
+    try {
+      final saved = await RemoteAddendumRepository.shared.save(draft);
+      if (!mounted) return;
+      setState(() => _serverDraft = saved);
+      _notice('Addendum draft saved securely to your company.');
+    } catch (_) {
+      _notice('Unable to save addendum draft. No approval was recorded.');
+    } finally {
+      if (mounted) setState(() => _creating = false);
+    }
   }
 
   Future<void> _create() async {
@@ -437,9 +437,45 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
       final original = linked.single;
       final snapshot = draft.copyWith(
         linkedDocumentNumber: original.number,
-        linkedJobId: original.quote?.jobId,
-        linkedClientId: original.quote?.clientId,
+        linkedJobId: original.jobId ?? original.quote?.jobId,
+        linkedClientId: original.quote?.clientId ??
+            _serverDraft?.linkedClientId,
       );
+      if (_live) {
+        if (!RegExp(r'^signed-[1-9][0-9]*$').hasMatch(original.id) ||
+            !original.verifiedSignedPdfAvailable ||
+            original.status.toLowerCase() != 'signed') {
+          _notice('A verified signed original is required to create an addendum.');
+          return;
+        }
+        // M10 persists the distinct draft. Approval and customer consent are
+        // separate explicit steps; neither is fabricated by this action.
+        final saved = await RemoteAddendumRepository.shared.save(snapshot);
+        if (!mounted) return;
+        final details = await RemoteDocumentRepository.shared
+            .details(saved.id);
+        if (!mounted) return;
+        _serverDraft = saved;
+        _notice('Addendum draft saved to the company; review before approving.');
+        unawaited(Navigator.of(context).pushReplacement<void, void>(
+          MaterialPageRoute(builder: (_) => DocumentDetailsScreen(
+            documentId: details.id,
+            document: details,
+            loadDocument: RemoteDocumentRepository.shared.details,
+            loadSignedPdf: RemoteDocumentRepository.shared.downloadPdf,
+            requestAddendumSignature:
+                RemoteAddendumRepository.shared.requestSignature,
+            onApproveAddendum: (record) async {
+              final serverId = int.parse(
+                record.id.substring('addendum-'.length));
+              final draft = await RemoteAddendumRepository.shared.get(serverId);
+              await RemoteAddendumRepository.shared.approve(draft);
+              return RemoteDocumentRepository.shared.details(record.id);
+            },
+          )),
+        ));
+        return;
+      }
       AddendumDraftSession.create(snapshot);
       if (!mounted) return;
       final record = DocumentRecord(
@@ -485,7 +521,7 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
       final draft = Sign2DigitalOutlinedButton(
         key: const Key('addendum-save-draft'),
         label: 'Save as Draft', onPressed: _saveDraft,
-        primaryOutline: true,
+        enabled: !_creating, primaryOutline: true,
       );
       final create = Sign2DigitalPrimaryButton(
         key: const Key('addendum-create'),
@@ -560,7 +596,7 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
               _field('Quantity', 'e.g, 2',
                 'assets/icons/hashtag.svg', _quantity),
               const SizedBox(height: 20),
-              _field('Unit Price (CHF)', 'e.g, 250.00',
+              _field('Unit Price (${_serverDraft?.currency ?? 'CHF'})', 'e.g, 250.00',
                 'assets/icons/hashtag.svg', _unitPrice),
               const SizedBox(height: 20),
               _field('VAT (%)', 'e.g, 8.10',
@@ -572,7 +608,7 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
                 builder: (context, child) {
                   final draft = _draft();
                   return Text(
-                    'Addendum Total: ${quoteMoney(draft.totalMinor, 'CHF')}',
+                    'Addendum Total: ${quoteMoney(draft.totalMinor, draft.currency)}',
                     key: const Key('addendum-total'),
                     style: const TextStyle(fontFamily: 'Inter',
                       fontSize: 16, fontWeight: FontWeight.w600,
