@@ -8,6 +8,7 @@ import '../../../../core/widgets/sign2digital_header.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import '../../data/job_photo_local_store.dart';
+import '../../data/remote_job_media_repository.dart';
 import '../../data/local_job_photo_source.dart';
 import '../../domain/job_model.dart';
 import '../../domain/job_photo_model.dart';
@@ -50,6 +51,20 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
   bool _showBanner = true;
   bool _picking = false;
   int _nextId = 0;
+  bool _savingPhotos = false;
+
+  bool get _remote => widget.store == null &&
+      RemoteJobMediaRepository.isLiveJob(widget.job.id);
+
+  Future<void> _loadRemotePhotos() async {
+    if (!_remote) return;
+    try {
+      final records = await RemoteJobMediaRepository.shared.listPhotos(widget.job.id);
+      if (mounted) setState(() => _photos = records);
+    } catch (error) {
+      if (mounted) _message('Unable to load saved job photos: $error');
+    }
+  }
 
   @override
   void initState() {
@@ -57,6 +72,7 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
     _source = widget.source ?? DeviceJobPhotoSource();
     _store = widget.store ?? JobPhotoLocalStore.shared;
     _photos = _store.photosFor(widget.job.id).toList();
+    if (_remote) _loadRemotePhotos();
   }
 
   List<JobPhotoModel> get _filteredPhotos => _selectedTab == 0
@@ -125,9 +141,31 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
   }
 
-  void _commitPendingPhotos() {
+  Future<void> _commitPendingPhotos() async {
+    if (_savingPhotos) return;
     if (_pending.isEmpty) {
       _message('Select photos with Upload or Camera first.');
+      return;
+    }
+    if (_remote) {
+      setState(() => _savingPhotos = true);
+      try {
+        for (final pending in List<_PendingPhoto>.of(_pending)) {
+          final stored = await RemoteJobMediaRepository.shared.uploadPhoto(
+            widget.job.id, pending.value, pending.category, pending.caption);
+          if (!mounted) return;
+          setState(() {
+            _photos.insert(0, stored);
+            _pending.remove(pending);
+            _selectedTab = 0;
+          });
+        }
+        if (mounted) _message('Photos uploaded successfully.');
+      } catch (error) {
+        if (mounted) _message('Could not upload photo: $error');
+      } finally {
+        if (mounted) setState(() => _savingPhotos = false);
+      }
       return;
     }
     final time = DateTime.now();
@@ -161,7 +199,7 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
       MaterialPageRoute(
         builder: (_) => AddPhotosScreen(
           job: widget.job,
-          store: _store,
+          store: _remote ? null : _store,
           source: _source,
           initialSelection: staged?.value,
           initialCategory: staged?.category ?? JobPhotoCategory.during,
@@ -170,6 +208,13 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
       ),
     );
     if (!mounted || saved != true) return;
+    if (_remote) {
+      if (staged != null && _pending.isNotEmpty &&
+          identical(_pending.first, staged)) _pending.removeAt(0);
+      await _loadRemotePhotos();
+      if (mounted) setState(() => _selectedTab = 0);
+      return;
+    }
     setState(() {
       if (staged != null &&
           _pending.isNotEmpty &&

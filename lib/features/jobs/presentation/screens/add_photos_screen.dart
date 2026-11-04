@@ -7,6 +7,7 @@ import '../../../../core/widgets/sign2digital_input_field.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import '../../data/job_photo_local_store.dart';
+import '../../data/remote_job_media_repository.dart';
 import '../../data/local_job_photo_source.dart';
 import '../../domain/job_model.dart';
 import '../../domain/job_photo_model.dart';
@@ -159,6 +160,13 @@ class _AddPhotosScreenState extends State<AddPhotosScreen> {
     setState(() => _saving = true);
     try {
       DeviceJobPhotoSource.validate(selection.name, selection.bytes);
+      if (widget.store == null &&
+          RemoteJobMediaRepository.isLiveJob(widget.job.id)) {
+        await RemoteJobMediaRepository.shared.uploadPhoto(
+          widget.job.id, selection, _category, _caption.text.trim());
+        if (mounted) Navigator.of(context).pop(true);
+        return;
+      }
       final existing = _store.photosFor(widget.job.id);
       if (existing.any((photo) => photo.sourceKey == selection.sourceKey)) {
         _message('This photo has already been added.');

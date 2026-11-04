@@ -282,9 +282,9 @@ class SignApiClient {
     ));
     if (fields != null) request.fields.addAll(fields);
     try {
-      final streamed = await _http.send(request).timeout(const Duration(seconds: 25));
+      final streamed = await _http.send(request).timeout(const Duration(seconds: 90));
       final response = await http.Response.fromStream(streamed)
-          .timeout(const Duration(seconds: 25));
+          .timeout(const Duration(seconds: 90));
       return _decode(response);
     } on SignApiException {
       rethrow;
