@@ -218,7 +218,7 @@ class _AddJobNoteScreenState extends State<AddJobNoteScreen> {
               const SizedBox(height: 25),
               Sign2DigitalPrimaryButton(
                 key: const Key('job-note-save'),
-                label: 'Save Note', onPressed: _saving ? null : _save),
+                label: 'Save Note', onPressed: _save, enabled: !_saving),
             ],
           ),
         )),
