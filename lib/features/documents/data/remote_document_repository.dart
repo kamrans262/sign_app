@@ -5,6 +5,8 @@ import 'package:crypto/crypto.dart';
 import '../../../core/services/active_company_session.dart';
 import '../../../core/services/sign_api_client.dart';
 import '../../auth/data/mobile_auth_repository.dart';
+import '../../quotes/data/remote_quote_repository.dart';
+import '../../quotes/domain/quote_review_models.dart';
 import '../domain/document_record.dart';
 
 /// M9 company-scoped document service. Server owns the source of truth:
@@ -112,6 +114,7 @@ class RemoteDocumentRepository implements DocumentRepository {
     Object? history,
     Object? attachments,
     List<DocumentRecord> related = const [],
+    QuoteReviewDraft? quote,
   }) {
     final id = (raw['id'] ?? '').toString();
     if (!RegExp(r'^(quote|signed|managed)-[1-9][0-9]*$').hasMatch(id)) {
@@ -129,6 +132,7 @@ class RemoteDocumentRepository implements DocumentRepository {
     final verifiedAttachments = _attachments(attachments);
     return DocumentRecord(
       id: id,
+      quote: quote,
       category: _category(raw['category']),
       number: (raw['number'] ?? '').toString(),
       title: (raw['title'] ?? '').toString(),
@@ -210,9 +214,27 @@ class RemoteDocumentRepository implements DocumentRepository {
         }
       }
     }
+    // M9 catalog lists quotes but has no embedded quote item model. For a
+    // draft or legacy approved quote without frozen bytes, load the actual
+    // M6 saved quote read-only. Never synthesize an approved/signed PDF.
+    QuoteReviewDraft? quoteSnapshot;
+    if (id.startsWith('quote-') && raw['has_pdf'] != true) {
+      final quoteId = int.tryParse(id.substring('quote-'.length));
+      if (quoteId == null || quoteId <= 0) {
+        throw const SignApiException('Invalid quote document identity.');
+      }
+      quoteSnapshot = await RemoteQuoteRepository(api: _api).getQuote(quoteId);
+      _assertCompany(company);
+      if (quoteSnapshot.serverRevision != _int(raw['version']) ||
+          quoteSnapshot.serverStatus != (raw['status'] ?? '').toString() ||
+          quoteSnapshot.quoteNumber != (raw['number'] ?? '').toString()) {
+        throw const SignApiException(
+          'Quote changed while loading. Please reopen the document.');
+      }
+    }
     final document = _record(Map<String, dynamic>.from(raw),
         history: payload['history'], attachments: payload['attachments'],
-        related: linked);
+        related: linked, quote: quoteSnapshot);
     if (document.id != id) {
       throw const SignApiException('Document identity changed.');
     }
