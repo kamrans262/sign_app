@@ -341,7 +341,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     setState(() => _busy = true);
     try {
       final image = _photos.firstWhere(
-        (file) => RegExp(r'\\.(png|jpe?g)$', caseSensitive: false)
+        (file) => RegExp(r'\.(png|jpe?g)$', caseSensitive: false)
             .hasMatch(file.name));
       final suggestion = await RemoteExpenseVoiceExtractionService()
           .extractReceipt(image);
