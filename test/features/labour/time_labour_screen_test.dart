@@ -170,7 +170,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(LabourEntryDetailsScreen), findsOneWidget);
     expect(find.text('Jordan Lee'), findsWidgets);
-    expect(find.text('12.00h'), findsOneWidget);
+    expect(find.text('12.00 hours'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
