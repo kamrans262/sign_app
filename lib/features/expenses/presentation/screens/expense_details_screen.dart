@@ -409,9 +409,7 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
     body: SafeArea(bottom: false, child: Column(children: [
       Sign2DigitalHeader(title: 'Expenses',
         onBack: () => Navigator.of(context).maybePop()),
-      Expanded(child: Center(child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 720),
-        child: _loading
+      Expanded(child: _loading
             ? const Center(child: CircularProgressIndicator(
                 key: Key('expense-details-loading')))
             : _error != null
@@ -457,7 +455,7 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
                         _actions(),
                       ]),
                   ),
-      ))),
+      ),
     ])),
   );
 }
