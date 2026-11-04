@@ -103,7 +103,7 @@ class RemoteWorkAcceptanceRepository implements DocumentRepository {
     if(m==null)throw const SignApiException('Invalid acceptance ID.');
     return int.parse(m.group(1)!);
   }
-  static String _path(String id)=>'/api/v1/work-acceptances/'+idOf(id).toString();
+  static String _path(String id)=>'/api/v1/work-acceptances/${idOf(id)}';
 
   DocumentRecord _record(Object? raw,int company,
       {WorkAcceptanceEvidence? evidence}) {
@@ -121,10 +121,10 @@ class RemoteWorkAcceptanceRepository implements DocumentRepository {
     }
     final project=(row['project']??'').toString();
     return DocumentRecord(
-      id:'acceptance-'+id.toString(),
+      id:'acceptance-$id',
       category:DocumentCategory.reports,
       number:(row['number']??'').toString(),
-      title:'Work Acceptance · '+project,
+      title:'Work Acceptance · $project',
       project:project,customer:(row['customer']??'').toString(),
       timestamp:_date(row['completion_date']),
       status:status,version:_id(row['revision']),demoOnly:false,
@@ -148,7 +148,7 @@ class RemoteWorkAcceptanceRepository implements DocumentRepository {
       final data=_data(await _api.get('/api/v1/work-acceptances',
         companyScoped:true,queryParameters:{
           'page':'$page','per_page':'100',
-          if(jobId!=null) 'job_id':jobId,
+          'job_id':?jobId,
         }));
       _check(company);
       final list=data['records'],last=_id(data['last_page']);
@@ -183,7 +183,7 @@ class RemoteWorkAcceptanceRepository implements DocumentRepository {
       throw const SignApiException('Complete the acceptance report first.');
     }
     final path=draft.id==null?'/api/v1/work-acceptances':
-        '/api/v1/work-acceptances/'+draft.id.toString();
+        '/api/v1/work-acceptances/${draft.id}';
     final data=_data(await _api.request(draft.id==null?'POST':'PATCH',
         path,companyScoped:true,data:draft.toJson()));
     _check(company);
@@ -192,7 +192,7 @@ class RemoteWorkAcceptanceRepository implements DocumentRepository {
 
   Future<DocumentRecord> approve(DocumentRecord report) async {
     final company=_company();
-    final data=_data(await _api.post(_path(report.id)+'/approve',
+    final data=_data(await _api.post('${_path(report.id)}/approve',
         companyScoped:true,data:{'revision':report.version,'confirm':true}));
     _check(company);
     return _record(data['acceptance'],company);
@@ -200,7 +200,7 @@ class RemoteWorkAcceptanceRepository implements DocumentRepository {
 
   Future<DocumentRecord> send(DocumentRecord report) async {
     final company=_company();
-    final data=_data(await _api.post(_path(report.id)+'/send',
+    final data=_data(await _api.post('${_path(report.id)}/send',
         companyScoped:true,data:{'confirm':true}));
     _check(company);
     return _record(data['report'],company);
@@ -208,7 +208,7 @@ class RemoteWorkAcceptanceRepository implements DocumentRepository {
 
   Future<DocumentRecord> revokeActive(DocumentRecord report) async {
     final company=_company();
-    final data=_data(await _api.get(_path(report.id)+'/requests',
+    final data=_data(await _api.get('${_path(report.id)}/requests',
         companyScoped:true));
     _check(company);
     final entries=data['requests'];
@@ -221,7 +221,7 @@ class RemoteWorkAcceptanceRepository implements DocumentRepository {
     final id=_id(active.single['id']);
     if(id<1)throw const SignApiException('Invalid signing request.');
     final result=_data(await _api.post(
-        _path(report.id)+'/requests/'+id.toString()+'/revoke',
+        '${_path(report.id)}/requests/$id/revoke',
         companyScoped:true));
     _check(company);
     return _record(result['acceptance'],company);
@@ -234,7 +234,7 @@ class RemoteWorkAcceptanceRepository implements DocumentRepository {
       throw const SignApiException('Missing PDF integrity metadata.');
     }
     final bytes=await _api.getPdf(
-      '/api/v1/work-acceptances/'+row['id'].toString()+'/pdf/'+kind,
+      '/api/v1/work-acceptances/${row['id']}/pdf/$kind',
       companyScoped:true,maxBytes:12*1024*1024);
     _check(company);
     if(sha256.convert(bytes).toString()!=digest) {
@@ -264,7 +264,7 @@ class RemoteWorkAcceptanceRepository implements DocumentRepository {
       };
       for(final stage in stages) {
         events.add(WorkAcceptanceEvent(
-          id:item['id'].toString()+'-'+stage.name,
+          id:'${item['id']}-${stage.name}',
           documentId:id,stage:stage,
           occurredAt:_date(item['created_at']),
           actorName:item['actor_id']==null?'Customer':'Sign2Digital User',
@@ -275,7 +275,7 @@ class RemoteWorkAcceptanceRepository implements DocumentRepository {
     Uint8List? pdf,signature;
     if(_signed(status)) {
       pdf=await _pdf(row,'signed',company);
-      signature=await _api.getPrivateMedia(_path(id)+'/signature',
+      signature=await _api.getPrivateMedia('${_path(id)}/signature',
           mimeType:'image/png',maxBytes:300*1024);
       _check(company);
     }else if(_approved(status)) {

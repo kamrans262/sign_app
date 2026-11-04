@@ -233,10 +233,10 @@ class _WorkAcceptanceScreenState extends State<WorkAcceptanceScreen> {
                       fontWeight:FontWeight.w600,color:AppColors.dark)),
                   if(_evidence!.reservation.trim().isNotEmpty)
                     Padding(padding:const EdgeInsets.only(top:8),
-                      child:Text('Reservations: '+_evidence!.reservation)),
+                      child:Text('Reservations: ${_evidence!.reservation}')),
                   if(_evidence!.outstandingIssues.trim().isNotEmpty)
                     Padding(padding:const EdgeInsets.only(top:8),
-                      child:Text('Outstanding Issues: '+_evidence!.outstandingIssues)),
+                      child:Text('Outstanding Issues: ${_evidence!.outstandingIssues}')),
                   const SizedBox(height:20),
                 ],
                 Row(children: [

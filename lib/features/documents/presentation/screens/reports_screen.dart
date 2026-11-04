@@ -243,8 +243,10 @@ class _ReportsScreenState extends State<ReportsScreen> {
       try {
         draft=await repository.loadDraft(existing.id);
       }catch(error) {
-        if(mounted)ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content:Text('Unable to open acceptance draft: $error')));
+        if(mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content:Text('Unable to open acceptance draft: $error')));
+        }
         return;
       }
     }
@@ -264,8 +266,10 @@ class _ReportsScreenState extends State<ReportsScreen> {
     try {
       latest=await repository.details(report.id);
     }catch(error) {
-      if(mounted)ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content:Text('Unable to load acceptance evidence: $error')));
+      if(mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content:Text('Unable to load acceptance evidence: $error')));
+      }
       return;
     }
     if(!mounted)return;

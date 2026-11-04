@@ -11,7 +11,6 @@ import '../../../jobs/data/remote_job_repository.dart';
 import '../../../jobs/data/remote_job_media_repository.dart';
 import '../../../jobs/domain/job_model.dart';
 import '../../data/remote_work_acceptance_repository.dart';
-import '../../domain/document_record.dart';
 
 /// Existing Sign2Digital fields; M13 records must reference a real company job.
 class WorkAcceptanceEditorScreen extends StatefulWidget {
@@ -85,9 +84,9 @@ class _WorkAcceptanceEditorScreenState extends State<WorkAcceptanceEditorScreen>
               onTap:()=>Navigator.of(sheet).pop(job)),
         ]),
       );
-      if(result!=null&&mounted)setState(() {
-        _job=result;_photoIds.clear();_error=null;
-      });
+      if(result!=null&&mounted) {
+        setState(() { _job=result;_photoIds.clear();_error=null; });
+      }
     }catch(error){
       if(mounted)setState(()=>_error='Unable to select company job: $error');
     }
@@ -125,9 +124,9 @@ class _WorkAcceptanceEditorScreenState extends State<WorkAcceptanceEditorScreen>
           ],
         )),
       );
-      if(selected==true&&mounted)setState(() {
-        _photoIds..clear()..addAll(chosen);
-      });
+      if(selected==true&&mounted) {
+        setState(() { _photoIds..clear()..addAll(chosen); });
+      }
     }catch(error) {
       if(mounted)setState(()=>_error='Unable to load job photos: $error');
     }
@@ -214,7 +213,7 @@ class _WorkAcceptanceEditorScreenState extends State<WorkAcceptanceEditorScreen>
           _input('Outstanding Issues',_issues),
           _input('Required Remedial Work',_remedial),
           Sign2DigitalOutlinedButton(
-            label:'Select Job Photos ('+_photoIds.length.toString()+'/8)',
+            label:'Select Job Photos (${_photoIds.length}/8)',
             onPressed:_choosePhotos),
           const SizedBox(height:15),
           if(_error!=null)Padding(padding:const EdgeInsets.only(bottom:15),
