@@ -308,7 +308,9 @@ class RemoteLabourRepository implements LabourRepository {
   Future<void> save(LabourEntry entry) async {
     final company=_company();
     if(entry.photos.length>10)throw const SignApiException('Maximum 10 files.');
-    for(final proof in entry.photos)_checkProof(proof);
+    for(final proof in entry.photos) {
+      _checkProof(proof);
+    }
     final res=_data(await _api.post('/api/v1/labour/entries',
       companyScoped:true,data:_fields(entry)));
     _ensureCompany(company);
