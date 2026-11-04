@@ -86,7 +86,9 @@ class _MeetingMinutesEditorScreenState extends State<MeetingMinutesEditorScreen>
     try {
       final jobs = widget.jobs ?? (widget.reportGenerator == null
           ? MockJobsData.jobs : await RemoteJobRepository.shared.listJobs());
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       final selected = await Sign2DigitalSelectionSheet.showCustom<JobModel>(
         context: context, title: 'Select Job / Project',
         subtitle: 'Select a saved job and its linked client',
@@ -98,9 +100,9 @@ class _MeetingMinutesEditorScreenState extends State<MeetingMinutesEditorScreen>
           child: ListView(shrinkWrap: true, children: [
             for (final job in jobs)
               ListTile(
-                key: Key('meeting-job-' + job.id),
+                key: Key('meeting-job-${job.id}'),
                 title: Text(job.title),
-                subtitle: Text(job.referenceNumber + ' • ' + job.clientName),
+                subtitle: Text('${job.referenceNumber} • ${job.clientName}'),
                 trailing: _job?.id == job.id
                     ? const Icon(Icons.check_circle, color: AppColors.primary)
                     : null,
@@ -109,12 +111,13 @@ class _MeetingMinutesEditorScreenState extends State<MeetingMinutesEditorScreen>
           ]),
         )),
       );
-      if (selected != null && mounted) setState(() {
-        _job = selected; _error = null;
-      });
+      if (selected != null && mounted) {
+        setState(() { _job = selected; _error = null; });
+      }
     } catch (error) {
-      if (mounted) setState(() =>
-          _error = 'Unable to load real jobs: ' + error.toString());
+      if (mounted) {
+        setState(() => _error = 'Unable to load real jobs: $error');
+      }
     }
   }
 
@@ -139,7 +142,7 @@ class _MeetingMinutesEditorScreenState extends State<MeetingMinutesEditorScreen>
     );
     return DocumentRecord(
       id: widget.initial?.id ??
-          'local-meeting-' + DateTime.now().microsecondsSinceEpoch.toString(),
+          'local-meeting-${DateTime.now().microsecondsSinceEpoch}',
       category: DocumentCategory.reports,
       number: widget.initial?.number ?? 'Meeting Minutes',
       title: _title.text.trim(),
@@ -167,15 +170,18 @@ class _MeetingMinutesEditorScreenState extends State<MeetingMinutesEditorScreen>
       final draft = _draft();
       final saved = widget.reportGenerator == null
           ? draft : await widget.reportGenerator!(draft);
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       if (widget.reportGenerator != null &&
           (saved.demoOnly || !saved.id.startsWith('report-'))) {
         throw const FormatException('The server did not save meeting minutes.');
       }
       Navigator.of(context).pop(saved);
     } catch (error) {
-      if (mounted) setState(() =>
-          _error = 'Unable to save meeting minutes: ' + error.toString());
+      if (mounted) {
+        setState(() => _error = 'Unable to save meeting minutes: $error');
+      }
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -186,7 +192,7 @@ class _MeetingMinutesEditorScreenState extends State<MeetingMinutesEditorScreen>
     padding: const EdgeInsets.only(bottom: 15),
     child: Sign2DigitalInputField(
       label: label,
-      hintText: 'Enter ' + label.toLowerCase(),
+      hintText: 'Enter ${label.toLowerCase()}',
       iconAsset: '', leadingIcon: Icons.edit_note_outlined,
       controller: controller,
       minLines: multiline ? 3 : 1,
@@ -215,9 +221,7 @@ class _MeetingMinutesEditorScreenState extends State<MeetingMinutesEditorScreen>
             ListTile(
               key: const Key('meeting-date'),
               title: const Text('Meeting Date'),
-              subtitle: Text(_date.year.toString() + '-' +
-                  _date.month.toString().padLeft(2,'0') + '-' +
-                  _date.day.toString().padLeft(2,'0')),
+              subtitle: Text('${_date.year}-${_date.month.toString().padLeft(2,'0')}-${_date.day.toString().padLeft(2,'0')}'),
               trailing: const Icon(Icons.calendar_today_outlined),
               onTap: _pickDate,
             ),

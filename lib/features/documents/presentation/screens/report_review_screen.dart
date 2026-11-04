@@ -49,7 +49,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
       final result = await _repository.details(_report.id);
       if (mounted) setState(() => _report = result);
     } catch (error) {
-      if (mounted) setState(() => _error = 'Unable to refresh report: ' + error.toString());
+      if (mounted) setState(() => _error = 'Unable to refresh report: $error');
     }
   }
 
@@ -93,7 +93,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
         _notify('AI suggestion ready. Please review every detail.');
       }
     } catch (error) {
-      if (mounted) setState(() => _error = 'AI preparation failed: ' + error.toString());
+      if (mounted) setState(() => _error = 'AI preparation failed: $error');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -113,7 +113,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
         _notify('Draft updated. Review again before approval.');
       }
     } catch (error) {
-      if (mounted) setState(() => _error = 'Unable to apply AI suggestion: ' + error.toString());
+      if (mounted) setState(() => _error = 'Unable to apply AI suggestion: $error');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -133,7 +133,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
         _notify('Approved PDF saved securely in Documents.');
       }
     } catch (error) {
-      if (mounted) setState(() => _error = 'Unable to approve report: ' + error.toString());
+      if (mounted) setState(() => _error = 'Unable to approve report: $error');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -153,7 +153,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
         _notify('Approved report sent to the linked client.');
       }
     } catch (error) {
-      if (mounted) setState(() => _error = 'Report was not sent: ' + error.toString());
+      if (mounted) setState(() => _error = 'Report was not sent: $error');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -165,7 +165,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
     setState(() { _busy = true; _error = null; });
     try {
       final documents = widget.documents ?? RemoteDocumentRepository.shared;
-      final doc = await documents.details('managed-' + id.toString());
+      final doc = await documents.details('managed-$id');
       if (!mounted) return;
       await Navigator.of(context).push<void>(MaterialPageRoute(
         builder: (_) => DocumentDetailsScreen(
@@ -175,7 +175,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
         ),
       ));
     } catch (error) {
-      if (mounted) setState(() => _error = 'Verified document unavailable: ' + error.toString());
+      if (mounted) setState(() => _error = 'Verified document unavailable: $error');
     } finally {
       if (mounted) setState(() => _busy = false);
     }

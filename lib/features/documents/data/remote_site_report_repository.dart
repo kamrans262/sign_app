@@ -89,7 +89,7 @@ class RemoteSiteReportRepository implements DocumentRepository {
             (_object(item)['description'] ?? '').toString()).toList()
         : <String>[];
     return DocumentRecord(
-      id: 'report-' + id.toString(),
+      id: 'report-$id',
       category: DocumentCategory.reports,
       number: (raw['number'] ?? '').toString(),
       title: (raw['title'] ?? '').toString(),
@@ -160,14 +160,16 @@ class RemoteSiteReportRepository implements DocumentRepository {
 
   static int reportId(String id) {
     final match = RegExp(r'^report-([1-9][0-9]*)$').firstMatch(id);
-    if (match == null) throw const SignApiException('Invalid report ID.');
+    if (match == null) {
+      throw const SignApiException('Invalid report ID.');
+    }
     return int.parse(match.group(1)!);
   }
 
   Future<DocumentRecord> details(String reportIdValue) async {
     final company = _company();
     final id = reportId(reportIdValue);
-    final data = _data(await _api.get('/api/v1/reports/' + id.toString(),
+    final data = _data(await _api.get('/api/v1/reports/$id',
       companyScoped: true));
     _check(company);
     final raw = _object(data['report']);
@@ -176,9 +178,13 @@ class RemoteSiteReportRepository implements DocumentRepository {
       throw const SignApiException('Report ID changed.');
     }
     if (result.reportKind != ReportKind.siteReport ||
-        result.siteReportDetails == null) return result;
+        result.siteReportDetails == null) {
+      return result;
+    }
     final ids = raw['photo_ids'];
-    if (ids is! List || ids.isEmpty) return result;
+    if (ids is! List || ids.isEmpty) {
+      return result;
+    }
     final expected = ids.map(_id).toSet();
     final available = await RemoteJobMediaRepository.shared.listPhotos(
         result.jobId!);
@@ -188,7 +194,7 @@ class RemoteSiteReportRepository implements DocumentRepository {
     }
     final photos = available.where((p) => expected.contains(int.tryParse(p.id)))
         .map((p) => LocalJobPhotoSelection(
-          name: 'job-photo-' + p.id + (p.bytes![0] == 137 ? '.png' : '.jpg'),
+          name: 'job-photo-${p.id}${p.bytes![0] == 137 ? '.png' : '.jpg'}',
           bytes: p.bytes!,
           sourceKey: 'remote:' + p.id,
         )).toList();
@@ -268,7 +274,7 @@ class RemoteSiteReportRepository implements DocumentRepository {
     final response = _data(existing == null
         ? await _api.post('/api/v1/reports', companyScoped: true, data: body)
         : await _api.request('PATCH',
-            '/api/v1/reports/' + existing.toString(),
+            '/api/v1/reports/$existing',
             companyScoped: true, data: body));
     _check(company);
     return _parse(response['report'], company);
@@ -277,7 +283,7 @@ class RemoteSiteReportRepository implements DocumentRepository {
   Future<Map<String, dynamic>> suggestAi(DocumentRecord report) async {
     final company = _company();
     final data = _data(await _api.post(
-      '/api/v1/reports/' + reportId(report.id).toString() + '/prepare-ai',
+      '/api/v1/reports/${reportId(report.id)}/prepare-ai',
       companyScoped: true, data: {'confirm': true}));
     _check(company);
     final raw = _object(data['suggestion']);
@@ -302,13 +308,13 @@ class RemoteSiteReportRepository implements DocumentRepository {
     }
     // Keep attendance, action owners and deadlines from verified source.
     final raw = _data(await _api.get(
-      '/api/v1/reports/' + reportId(report.id).toString(),
+      '/api/v1/reports/${reportId(report.id)}',
       companyScoped: true));
     _check(company);
     final existing = _object(_object(raw['report'])['content']);
     final updated = <String, dynamic>{...existing, 'sections': reportSections};
     final data = _data(await _api.request('PATCH',
-      '/api/v1/reports/' + reportId(report.id).toString(),
+      '/api/v1/reports/${reportId(report.id)}',
       companyScoped: true,
       data: {'title': suggestion['title'], 'content': updated}));
     _check(company);
@@ -318,7 +324,7 @@ class RemoteSiteReportRepository implements DocumentRepository {
   Future<DocumentRecord> approve(DocumentRecord report) async {
     final company = _company();
     final response = _data(await _api.post(
-      '/api/v1/reports/' + reportId(report.id).toString() + '/approve',
+      '/api/v1/reports/${reportId(report.id)}/approve',
       data: {'confirm': true, 'revision': report.version},
       companyScoped: true));
     _check(company);
@@ -328,7 +334,7 @@ class RemoteSiteReportRepository implements DocumentRepository {
   Future<DocumentRecord> send(DocumentRecord report) async {
     final company = _company();
     final response = _data(await _api.post(
-      '/api/v1/reports/' + reportId(report.id).toString() + '/send',
+      '/api/v1/reports/${reportId(report.id)}/send',
       data: {'confirm': true}, companyScoped: true));
     _check(company);
     return _parse(response['report'], company);
@@ -341,7 +347,7 @@ class RemoteSiteReportRepository implements DocumentRepository {
       throw const SignApiException('Approve report before downloading a PDF.');
     }
     final doc = _data(await _api.get(
-      '/api/v1/documents/managed-' + documentId.toString(),
+      '/api/v1/documents/managed-$documentId',
       companyScoped: true));
     _check(company);
     final metadata = _object(doc['document']);
@@ -351,7 +357,7 @@ class RemoteSiteReportRepository implements DocumentRepository {
       throw const SignApiException('Verified PDF metadata is missing.');
     }
     final bytes = await _api.getPdf(
-      '/api/v1/reports/' + reportId(report.id).toString() + '/pdf',
+      '/api/v1/reports/${reportId(report.id)}/pdf',
       companyScoped: true, maxBytes: 12 * 1024 * 1024);
     _check(company);
     if (sha256.convert(bytes).toString() != digest) {

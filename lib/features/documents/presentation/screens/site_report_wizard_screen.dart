@@ -388,8 +388,9 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
       try {
         choices = await RemoteJobRepository.shared.listJobs();
       } catch (error) {
-        if (mounted) setState(() => _error =
-            'Unable to load saved company jobs: $error');
+        if (mounted) {
+          setState(() => _error = 'Unable to load saved company jobs: $error');
+        }
         return;
       }
     }

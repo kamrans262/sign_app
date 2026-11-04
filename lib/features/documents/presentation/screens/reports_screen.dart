@@ -72,7 +72,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     setState(() { _loading = true; _error = null; });
     try {
       final records = _repository is RemoteSiteReportRepository && widget.jobId != null
-          ? await (_repository as RemoteSiteReportRepository).listForJob(widget.jobId)
+          ? await (_repository).listForJob(widget.jobId)
           : await _repository.listDocuments();
       if (!mounted) return;
       setState(() {
@@ -133,17 +133,19 @@ class _ReportsScreenState extends State<ReportsScreen> {
     DocumentRecord? initial = existing;
     if (remote && existing != null) {
       try {
-        initial = await (_repository as RemoteSiteReportRepository)
+        initial = await (_repository)
             .details(existing.id);
       } catch (error) {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Unable to load saved site report: $error')));
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Unable to load saved site report: $error')));
+        }
         return;
       }
     }
     if (!mounted) return;
     final generator = widget.reportGenerator ??
-        (remote ? (_repository as RemoteSiteReportRepository).saveDraft : null);
+        (remote ? (_repository).saveDraft : null);
     final report = await Navigator.of(context).push<DocumentRecord>(
       MaterialPageRoute<DocumentRecord>(
         builder: (_) => SiteReportWizardScreen(
@@ -162,7 +164,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
         await Navigator.of(context).push<void>(MaterialPageRoute<void>(
           builder: (_) => ReportReviewScreen(report: report,
             repository: _repository is RemoteSiteReportRepository
-              ? _repository as RemoteSiteReportRepository : null),
+              ? _repository : null),
         ));
         if (mounted) await _load();
       }
@@ -187,15 +189,17 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
   Future<void> _openMinutes(DocumentRecord? existing) async {
     final remote = _repository is RemoteSiteReportRepository;
-    final repository = remote ? _repository as RemoteSiteReportRepository : null;
+    final repository = remote ? _repository : null;
     final DocumentRecord? initial;
     try {
       initial = remote && existing != null
           ? await repository!.details(existing.id)
           : existing;
     } catch (error) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Unable to load meeting minutes: $error')));
+      }
       return;
     }
     if (!mounted) return;
@@ -279,12 +283,12 @@ class _ReportsScreenState extends State<ReportsScreen> {
           report.reportKind == ReportKind.meetingMinutes) {
         await _openMinutes(report);
       } else {
-        final latest = await (_repository as RemoteSiteReportRepository)
+        final latest = await (_repository)
             .details(report.id);
         if (!mounted) return;
         await Navigator.of(context).push<void>(MaterialPageRoute(
           builder: (_) => ReportReviewScreen(report: latest,
-              repository: _repository as RemoteSiteReportRepository),
+              repository: _repository),
         ));
         if (mounted) await _load();
       }
