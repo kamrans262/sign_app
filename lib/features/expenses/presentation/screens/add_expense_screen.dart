@@ -238,7 +238,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     try {
       final service = widget.photoSource ?? DeviceJobPhotoSource();
       final chosen = camera
-          ? <LocalJobPhotoSelection>[if (await service.camera() case final photo?) photo]
+          ? <LocalJobPhotoSelection>[?await service.camera()]
           : await service.upload();
       for (final photo in chosen) {
         DeviceJobPhotoSource.validate(photo.name, photo.bytes);
