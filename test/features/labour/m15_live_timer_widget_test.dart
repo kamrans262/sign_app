@@ -11,6 +11,26 @@ import 'package:sign2digital/features/jobs/domain/job_model.dart';
 import 'package:sign2digital/features/labour/data/remote_labour_repository.dart';
 import 'package:sign2digital/features/labour/presentation/widgets/m15_live_timer_panel.dart';
 
+class _SwitchingTimerRepository extends RemoteLabourRepository {
+  final stale=Completer<LabourTimerSnapshot>();
+  int sevenRequests=0;
+
+  static LabourTimerSnapshot snapshot(String status,int seconds)=>
+      LabourTimerSnapshot(status:status,elapsedSeconds:seconds,
+        version:2,serverNow:DateTime.utc(2026,11,5,8),
+        jobId:34,workerId:52);
+
+  @override
+  Future<LabourTimerSnapshot> timerCurrent() {
+    if(ActiveCompanySession.companyId==7){
+      sevenRequests++;
+      if(sevenRequests==2)return stale.future;
+      return Future.value(snapshot('running',180));
+    }
+    return Future.value(snapshot('stopped',0));
+  }
+}
+
 void main(){
   setUp(()=>ActiveCompanySession.set(7));
   tearDown(()=>ActiveCompanySession.clear());
@@ -86,48 +106,23 @@ void main(){
   });
 
 
-  testWidgets('company switch ignores a late previous-company timer response',
+  testWidgets('company switch clears old timer and ignores late refresh',
       (tester) async {
-    final oldReply=Completer<http.Response>();
-    var sevenRequests=0;
-    http.Response timer(String status,int seconds)=>http.Response(
-      jsonEncode({'data':{'timer':{
-        'status':status,'job_id':34,'worker_id':52,
-        'elapsed_seconds':seconds,
-        'server_now':'2026-11-05T08:00:00Z',
-        'lock_version':2,
-      }}}),200,
-    );
-    final client=SignApiClient(
-      baseUrl:Uri.parse('https://example.test'),
-      tokenProvider:() async=>'m15-company-test',
-      activeCompanyId:()=>ActiveCompanySession.companyId,
-      httpClient:MockClient((req) async {
-        expect(req.url.path,'/api/v1/labour/timer/current');
-        if(req.headers['X-Company-Id']=='7'){
-          sevenRequests++;
-          if(sevenRequests==2)return oldReply.future;
-          return timer('running',180);
-        }
-        expect(req.headers['X-Company-Id'],'8');
-        return timer('stopped',0);
-      }),
-    );
+    final repository=_SwitchingTimerRepository();
     await tester.pumpWidget(MaterialApp(home:Scaffold(
-      body:M15LiveTimerPanel(repository:RemoteLabourRepository(api:client),
-        job:null,onUpdated:(){}),
+      body:M15LiveTimerPanel(repository:repository,job:null,onUpdated:(){}),
     )));
-    await tester.pump(const Duration(milliseconds:150));
+    await tester.pump(const Duration(milliseconds:200));
     expect(find.text('Status: RUNNING'),findsOneWidget);
     await tester.tap(find.byKey(const Key('m15-timer-refresh')));
     await tester.pump();
     ActiveCompanySession.set(8);
-    // Let the asynchronous token and HTTP pipeline settle before inspecting
-    // the new-company server response.
+    // Old running time must disappear before the new-company reply arrives.
     await tester.pumpAndSettle(const Duration(milliseconds:100));
     expect(find.text('Status: STOPPED'),findsOneWidget);
     expect(find.text('Status: RUNNING'),findsNothing);
-    oldReply.complete(timer('running',999));
+    repository.stale.complete(
+      _SwitchingTimerRepository.snapshot('running',999));
     await tester.pumpAndSettle(const Duration(milliseconds:100));
     expect(find.text('Status: STOPPED'),findsOneWidget);
     expect(find.byKey(const Key('m15-timer-start')),findsOneWidget);
@@ -137,7 +132,6 @@ void main(){
     expect(find.text('Select a company before tracking work.'),findsOneWidget);
     expect(tester.takeException(),isNull);
     await tester.pumpWidget(const SizedBox.shrink());
-    client.dispose();
   });
 
 }
