@@ -11,6 +11,7 @@ import '../../data/demo_expense_repository.dart';
 import '../../data/remote_expense_repository.dart';
 import '../../../../core/services/active_company_session.dart';
 import '../../domain/expense_record.dart';
+import '../../../jobs/domain/job_model.dart';
 import 'add_expense_screen.dart';
 import 'expense_details_screen.dart';
 import '../widgets/sign2digital_expense_category_icon.dart';
@@ -30,9 +31,12 @@ class ExpensesScreen extends StatefulWidget {
     super.key, this.repository, this.onExpenseTap, this.onCreateExpense,
     this.onNavigationSelected, this.onNotificationTap, this.onProfileTap,
     this.selectedNavigationIndex = 4,
+    this.jobId, this.initialJob,
   });
 
   final ExpenseRepository? repository;
+  final String? jobId;
+  final JobModel? initialJob;
   final ValueChanged<ExpenseRecord>? onExpenseTap;
   final VoidCallback? onCreateExpense;
   final ValueChanged<int>? onNavigationSelected;
@@ -84,6 +88,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
 
   List<ExpenseRecord> get _visible {
     final list = _all.where((item) =>
+        (widget.jobId == null || item.jobId == widget.jobId) &&
         (_tab == 0 || item.status == ExpenseStatus.values[_tab - 1]) &&
         item.matches(_search.text)).toList();
     list.sort((a, b) {
@@ -146,6 +151,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     final draft = await Navigator.of(context).push<ExpenseRecord>(
       MaterialPageRoute<ExpenseRecord>(
         builder: (_) => AddExpenseScreen(
+          initialJob: widget.initialJob,
           selectedNavigationIndex: widget.selectedNavigationIndex,
           onNavigationSelected: widget.onNavigationSelected,
         ),
