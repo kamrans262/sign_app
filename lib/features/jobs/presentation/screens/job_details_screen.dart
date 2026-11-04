@@ -28,6 +28,7 @@ import '../widgets/sign2digital_job_progress_indicator.dart';
 import '../widgets/sign2digital_job_section_card.dart';
 import '../widgets/sign2digital_job_status_badge.dart';
 import '../widgets/sign2digital_remaining_balance_card.dart';
+import '../../widgets/m14_verified_job_expenses.dart';
 
 /// Job-specific details on a separate route. The underlying dashboard shell
 /// keeps its selected filter/search state and bottom bar is never duplicated.
@@ -413,12 +414,14 @@ class JobDetailsScreen extends StatelessWidget {
                             icon: Icons.description_outlined,
                             iconAsset: 'assets/icons/description.svg',
                           ),
-                          1 => Sign2DigitalJobFinancialCard(
-                            label: 'Expenses',
-                            amountChf: data.expensesChf,
-                            showAmount: data.financialsAvailable,
-                            icon: Icons.shopping_cart_outlined,
-                          ),
+                          1 => details == null && int.tryParse(job.id) != null
+                              ? M14VerifiedJobExpensesCard(jobId: int.parse(job.id))
+                              : Sign2DigitalJobFinancialCard(
+                                  label: 'Expenses',
+                                  amountChf: data.expensesChf,
+                                  showAmount: data.financialsAvailable,
+                                  icon: Icons.shopping_cart_outlined,
+                                ),
                           2 => Sign2DigitalJobFinancialCard(
                             label: 'Labour cost',
                             amountChf: data.labourCostChf,
@@ -452,6 +455,11 @@ class JobDetailsScreen extends StatelessWidget {
                         balanceChf: data.remainingBalanceChf,
                         showAmount: data.financialsAvailable,
                       ),
+                      if (details == null && int.tryParse(job.id) != null) ...[
+                        const SizedBox(height: 20),
+                        M14VerifiedJobExpensesCard(
+                          jobId: int.parse(job.id), budgetRemaining: true),
+                      ],
                       const SizedBox(height: 20),
                       _ResponsiveCardGrid(
                         count: data.sections.length,
