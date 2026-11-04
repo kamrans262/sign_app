@@ -145,12 +145,13 @@ class _ConvertDocumentScreenState extends State<ConvertDocumentScreen> {
                   approvedLocally: false,
                 );
                 try {
-                  NoteDocumentDraftSession.save(next);
+                  if (next.serverId == null) NoteDocumentDraftSession.save(next);
                   final saved = next.serverId != null
                       ? await RemoteJobMediaRepository.shared.saveDocument(
                           next, approve: false)
                       : next;
                   if (!mounted || !dialog.mounted) return;
+                  if (saved.serverId != null) NoteDocumentDraftSession.save(saved);
                   setState(() { _genericDraft = saved; _approved = false; });
                   FocusManager.instance.primaryFocus?.unfocus();
                   Navigator.pop(dialog);
@@ -170,12 +171,13 @@ class _ConvertDocumentScreenState extends State<ConvertDocumentScreen> {
                   approvedLocally: true,
                 );
                 try {
-                  NoteDocumentDraftSession.save(next);
+                  if (next.serverId == null) NoteDocumentDraftSession.save(next);
                   final approved = next.serverId != null
                       ? await RemoteJobMediaRepository.shared.saveDocument(
                           next, approve: true)
                       : next;
                   if (!mounted || !dialog.mounted) return;
+                  if (approved.serverId != null) NoteDocumentDraftSession.save(approved);
                   setState(() { _genericDraft = approved; _approved = true; });
                   FocusManager.instance.primaryFocus?.unfocus();
                   Navigator.pop(dialog);

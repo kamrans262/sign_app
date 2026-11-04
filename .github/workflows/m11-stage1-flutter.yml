@@ -1,0 +1,25 @@
+name: M11 Photos and Notes focused Flutter verification
+on:
+  push:
+    branches: [feature/m11-job-photos-notes-2026-11-04]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: sign2digital-m11-flutter
+  cancel-in-progress: true
+jobs:
+  focused:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: dart analyze lib/core/services/sign_api_client.dart lib/features/jobs
+      - name: Existing approved Photos/Notes and Conversion regressions
+        run: |
+          flutter test test/features/jobs/add_photos_screen_test.dart test/features/jobs/job_photos_screen_test.dart test/features/jobs/job_notes_screen_test.dart test/features/jobs/convert_document_screen_test.dart test/features/jobs/phase6_photos_notes_flow_test.dart test/features/jobs/m11_remote_job_media_repository_test.dart
