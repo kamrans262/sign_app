@@ -389,10 +389,12 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
     body: SafeArea(bottom: false, child: Column(children: [
       Sign2DigitalHeader(title: 'Receipt',
         onBack: () => Navigator.of(context).maybePop()),
-      Expanded(child: ListView(
+      Expanded(child: SingleChildScrollView(
           key: const Key('receipt-scroll'),
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-          children: [
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
             _preview(),
             const SizedBox(height: 20),
             _grid(),
@@ -421,6 +423,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
                       onPressed: _download)),
                   ])),
           ],
+          ),
         ),
       ),
     ])),
