@@ -13,6 +13,8 @@ import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../../../core/widgets/sign2digital_selection_field.dart';
 import '../../../jobs/data/local_job_photo_source.dart';
 import '../../../jobs/data/mock_jobs.dart';
+import '../../../jobs/data/remote_job_repository.dart';
+import '../../../../core/services/active_company_session.dart';
 import '../../../jobs/domain/job_model.dart';
 import '../../../jobs/presentation/widgets/ai_voice_flow_dialog.dart';
 import '../../../jobs/presentation/widgets/sign2digital_photo_preview.dart';
@@ -20,6 +22,7 @@ import '../../../jobs/services/voice_job_extraction_service.dart';
 import '../../../jobs/services/voice_recorder_service.dart';
 import '../../domain/expense_record.dart';
 import '../../services/expense_voice_extraction_service.dart';
+import '../../services/remote_expense_voice_extraction_service.dart';
 import '../widgets/sign2digital_expense_upload_tile.dart';
 
 /// Full Create Expense page; returns a validated local record for the caller
@@ -44,6 +47,7 @@ class AddExpenseScreen extends StatefulWidget {
 class _AddExpenseScreenState extends State<AddExpenseScreen> {
   final _amount = TextEditingController();
   final _description = TextEditingController();
+  final _supplier = TextEditingController();
   final _tagInput = TextEditingController();
   JobModel? _job;
   ExpenseCategory? _category;
@@ -69,17 +73,19 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       _date = existing.date;
       _amount.text = existing.amount.toStringAsFixed(2);
       _description.text = existing.description;
+      _supplier.text = existing.supplier;
       _photos.addAll(existing.photos);
       _tags.addAll(existing.tags);
     }
     _amount.addListener(_refresh);
     _description.addListener(_refresh);
+    _supplier.addListener(_refresh);
     _tagInput.addListener(_refresh);
   }
   void _refresh() { if (mounted) setState(() {}); }
   @override
   void dispose() {
-    _amount.dispose(); _description.dispose(); _tagInput.dispose();
+    _amount.dispose(); _description.dispose(); _supplier.dispose(); _tagInput.dispose();
     super.dispose();
   }
 
@@ -91,13 +97,15 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           _date != original.date ||
           _amount.text.trim() != original.amount.toStringAsFixed(2) ||
           _description.text != original.description ||
+          _supplier.text != original.supplier ||
           _photos.length != original.photos.length ||
           _tags.join('|') != original.tags.join('|') ||
           _tagInput.text.trim().isNotEmpty;
     }
     return _job != widget.initialJob ||
         _category != null || _date != null || _amount.text.isNotEmpty ||
-        _description.text.isNotEmpty || _photos.isNotEmpty || _tags.isNotEmpty ||
+        _description.text.isNotEmpty || _supplier.text.isNotEmpty ||
+        _photos.isNotEmpty || _tags.isNotEmpty ||
         _tagInput.text.isNotEmpty;
   }
 
@@ -135,6 +143,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   Future<void> _chooseJob() async {
     final search = TextEditingController();
     try {
+      final jobs = ActiveCompanySession.companyId == null
+          ? MockJobsData.jobs : await RemoteJobRepository.shared.listJobs();
+      if (!mounted) return;
       final chosen = await Sign2DigitalSelectionSheet.showCustom<JobModel>(
         title: 'Select Job / Project',
         icon: Icons.work_outline_rounded,
@@ -152,7 +163,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                   onChanged: (_) => update(() {}),
                 )),
               Expanded(child: ListView(children: [
-                for (final job in MockJobsData.jobs.where((item) =>
+                for (final job in jobs.where((item) =>
                     item.matches(search.text)))
                   ListTile(
                     key: Key('expense-job-${job.id}'),
@@ -325,33 +336,33 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     ]),
   );
 
-  Future<String?> _askApiKey(BuildContext parent) async {
-    String value = '';
-    return showDialog<String>(context: parent,
-      builder: (dialog) => AlertDialog(
-        title: const Text('Connect Expense AI'),
-        content: Column(mainAxisSize: MainAxisSize.min, children: [
-          const Text('For personal testing: enter a temporary API key. '
-              'It is not stored. Production extraction needs the backend.'),
-          TextField(key: const Key('expense-ai-key'), obscureText: true,
-            onChanged: (text) => value = text,
-            decoration: const InputDecoration(labelText: 'OpenAI API key')),
-        ]),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(dialog).pop(),
-            child: const Text('Cancel')),
-          TextButton(key: const Key('expense-ai-extract'),
-            onPressed: () {
-              if (value.trim().isNotEmpty) Navigator.of(dialog).pop(value.trim());
-            }, child: const Text('Process recording')),
-        ],
-      ));
+  Future<void> _extractReceipt() async {
+    if (_busy || _photos.isEmpty) return;
+    setState(() => _busy = true);
+    try {
+      final image = _photos.firstWhere(
+        (file) => RegExp(r'\\.(png|jpe?g)$', caseSensitive: false)
+            .hasMatch(file.name));
+      final suggestion = await RemoteExpenseVoiceExtractionService()
+          .extractReceipt(image);
+      await _applyVoice(suggestion);
+      _notice('Review extracted receipt details before saving.');
+    } on StateError {
+      _notice('Select a JPG or PNG receipt for AI extraction.');
+    } catch (_) {
+      _notice('Unable to extract receipt details. Enter them manually.');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   Future<void> _applyVoice(ExpenseVoiceSuggestion suggested) async {
     if (!mounted) return;
     setState(() {
       _category ??= suggested.category;
+      if (_supplier.text.trim().isEmpty && suggested.supplier != null) {
+        _supplier.text = suggested.supplier!;
+      }
       _date ??= suggested.date;
       if (_amount.text.trim().isEmpty && suggested.amount != null) {
         _amount.text = suggested.amount!.toStringAsFixed(2);
@@ -384,11 +395,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           extraction: OpenAiVoiceJobExtractionService(),
           recordingTitle: 'Record Expense Details',
           onAudioProcessed: (path) async {
-            final key = await (widget.requestTemporaryApiKey?.call(context)
-                ?? _askApiKey(context));
-            if (key == null) throw StateError('AI processing was cancelled.');
+            final key = await widget.requestTemporaryApiKey?.call(context) ?? '';
             final extracted = await (widget.voiceExtractionService ??
-              OpenAiExpenseVoiceExtractionService()).extract(path,key);
+              RemoteExpenseVoiceExtractionService()).extract(path,key);
             await _applyVoice(extracted);
           },
         ));
@@ -433,6 +442,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               report: '', amount: value, date: _date!,
               status: ExpenseStatus.toReview,
               description: _description.text.trim(),
+
+              supplier: _supplier.text.trim(),
               photos: List.unmodifiable(_photos), tags: List.unmodifiable(_tags),
               updatedAt: now, history: [event],
             )
@@ -442,6 +453,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               category: _category!, title: _category!.label,
               amount: value, date: _date!,
               description: _description.text.trim(),
+
+              supplier: _supplier.text.trim(),
               photos: List.unmodifiable(_photos), tags: List.unmodifiable(_tags),
               updatedAt: now, history: [...previous.history, event],
             );
@@ -520,7 +533,20 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 iconAsset: 'assets/icons/description.svg',
                 controller: _description, minLines: 2, maxLines: null),
               const SizedBox(height: 20),
+              Sign2DigitalInputField(
+                key: const Key('expense-add-supplier'),
+                label: 'Supplier', hintText: 'Supplier or store',
+                iconAsset: 'assets/icons/description.svg',
+                controller: _supplier),
+              const SizedBox(height: 20),
               _photoGrid(),
+              if (_photos.isNotEmpty && ActiveCompanySession.companyId != null) ...[
+                const SizedBox(height: 10),
+                Sign2DigitalOutlinedButton(
+                  key: const Key('expense-ai-extract-receipt'),
+                  label: 'Extract Receipt Details',
+                  enabled: !_busy, onPressed: _extractReceipt),
+              ],
               const SizedBox(height: 20),
               _tagField(),
               if (_error != null) ...[
