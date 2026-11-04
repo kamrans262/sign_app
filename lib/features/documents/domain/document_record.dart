@@ -96,6 +96,21 @@ class DocumentPermissionDeniedException implements Exception {
   const DocumentPermissionDeniedException();
 }
 
+/// A private file stored separately from an immutable source document.
+class DocumentAttachmentReference {
+  const DocumentAttachmentReference({
+    required this.id,
+    required this.name,
+    required this.mimeType,
+    required this.sha256,
+  });
+
+  final int id;
+  final String name;
+  final String mimeType;
+  final String sha256;
+}
+
 class DocumentRecord {
   const DocumentRecord({
     required this.id,
@@ -112,6 +127,7 @@ class DocumentRecord {
     this.version = 1,
     this.jobId,
     this.attachmentNames = const [],
+    this.attachments = const [],
     this.createdBy,
     this.createdAt,
     this.updatedAt,
@@ -140,6 +156,7 @@ class DocumentRecord {
   /// Authoritative linked job for company-scoped document records.
   final String? jobId;
   final List<String> attachmentNames;
+  final List<DocumentAttachmentReference> attachments;
   final String? createdBy;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -169,6 +186,7 @@ class DocumentRecord {
     version: version,
     jobId: jobId,
     attachmentNames: attachmentNames,
+    attachments: attachments,
     createdBy: createdBy,
     createdAt: createdAt,
     updatedAt: updatedAt,
