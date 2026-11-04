@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_search_field.dart';
@@ -7,9 +8,7 @@ import 'document_details_screen.dart';
 import 'create_addendum_screen.dart';
 import '../../../quotes/presentation/widgets/sign2digital_quote_summary_card.dart';
 import '../../../quotes/data/signed_quote_file_store.dart';
-import '../../../quotes/domain/quote_review_models.dart';
-import '../../data/phase4_document_records.dart';
-import '../../data/remote_signed_document_repository.dart';
+import '../../data/remote_document_repository.dart';
 import '../../../auth/data/mobile_auth_repository.dart';
 import '../../data/demo_document_repository.dart';
 import '../../domain/document_record.dart';
@@ -46,7 +45,6 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
   final TextEditingController _search = TextEditingController();
   late final DocumentRepository _repository;
   List<DocumentRecord> _documents = const [];
-  Map<int, SignedJobDocument> _signedByServerId = const {};
   DocumentCategory? _category;
   DocumentBrowseType _advancedType = DocumentBrowseType.all;
   DocumentSortOrder _sort = DocumentSortOrder.asListed;
@@ -75,42 +73,8 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     }
   }
 
-  Future<List<DocumentRecord>> _liveDocuments() async {
-    final signed=await RemoteSignedDocumentRepository.shared.list(jobId:widget.jobId);
-    _signedByServerId={for(final item in signed)item.id:item};
-    final quotes=phase4DocumentRecords(
-      savedQuotes:QuoteReviewSessionStore.savedDrafts,
-      signedFiles:const [],
-    );
-    return [
-      ...quotes,
-      for(final file in signed)
-        DocumentRecord(
-          id:'m8-signed-${file.id}',
-          category:DocumentCategory.quotes,
-          number:file.quoteNumber,
-          title:'Signed Quote ${file.quoteNumber}',
-          project:file.jobId ?? 'Not linked to a job',
-          customer:file.signerName,
-          timestamp:file.signedAt,
-          status:'Signed',
-          verifiedSignedPdfAvailable:true,
-          createdAt:file.signedAt,
-          updatedAt:file.signedAt,
-          history:[
-            DocumentHistoryEvent(
-              id:'server-signed-${file.documentId}',
-              documentId:file.documentId,
-              type:DocumentHistoryType.signed,
-              occurredAt:file.signedAt,
-              actorName:file.signerName,
-              signatureReference:file.documentId,
-              description:'Verified by the Sign2Digital signing service',
-            ),
-          ],
-        ),
-    ];
-  }
+  Future<List<DocumentRecord>> _liveDocuments() =>
+      RemoteDocumentRepository.shared.listDocuments(jobId: widget.jobId);
 
   Future<void> _load() async {
     setState(() {
@@ -210,6 +174,64 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     );
   }
 
+  Future<void> _uploadPdf() async {
+    try {
+      final chosen = await FilePicker.platform.pickFiles(
+        type: FileType.custom, allowedExtensions: ['pdf'],
+        withData: true,
+      );
+      if (chosen == null || chosen.files.isEmpty || !mounted) return;
+      final file = chosen.files.single;
+      if (file.bytes == null || file.bytes!.isEmpty) {
+        throw const FormatException('The selected PDF could not be read.');
+      }
+      final category = await showModalBottomSheet<DocumentCategory>(
+        context: context,
+        builder: (sheet) => SafeArea(
+          child: ListView(
+            shrinkWrap: true,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            children: [
+              const Padding(
+                padding: EdgeInsets.fromLTRB(20, 8, 20, 8),
+                child: Text('Document category', style: TextStyle(
+                  fontFamily: 'Inter', fontSize: 18,
+                  fontWeight: FontWeight.w600, color: AppColors.dark,
+                )),
+              ),
+              for (final category in [
+                DocumentCategory.reports, DocumentCategory.addends,
+                DocumentCategory.receipts, DocumentCategory.invoices,
+                DocumentCategory.contacts, DocumentCategory.other,
+              ])
+                ListTile(
+                  title: Text(category.name),
+                  onTap: () => Navigator.pop(sheet, category),
+                ),
+            ],
+          ),
+        ),
+      );
+      if (category == null || !mounted) return;
+      final name = file.name;
+      final title = name.replaceFirst(RegExp(r'\.pdf$', caseSensitive: false), '');
+      await RemoteDocumentRepository.shared.uploadPdf(
+        name: name, bytes: file.bytes!, title: title,
+        category: category, jobId: widget.jobId,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Document uploaded securely.'),
+      ));
+      await _load();
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Could not upload this document PDF.'),
+      ));
+    }
+  }
+
   Future<void> _openDocument(DocumentRecord record) async {
     FocusManager.instance.primaryFocus?.unfocus();
     final handler = widget.onDocumentTap;
@@ -217,13 +239,28 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
       handler(record);
       return;
     }
-    // Keep this route above the dashboard. Back restores search and category.
-    if (record.addendumDraftId != null &&
-        AddendumDraftSession.load(record.addendumDraftId!)?.isCreatedLocally !=
-            true) {
+    final live = widget.repository == null &&
+        MobileAuthRepository.shared.isSignedIn;
+    var selected = record;
+    if (live && RegExp(r'^(quote|signed|managed)-[1-9][0-9]*$')
+        .hasMatch(record.id)) {
+      try {
+        selected = await RemoteDocumentRepository.shared.details(record.id);
+      } catch (_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Could not open document details.'),
+        ));
+        return;
+      }
+      if (!mounted) return;
+    }
+    if (selected.addendumDraftId != null &&
+        AddendumDraftSession.load(selected.addendumDraftId!)
+                ?.isCreatedLocally != true) {
       await Navigator.of(context).push<void>(MaterialPageRoute<void>(
         builder: (_) => CreateAddendumScreen(
-          draftId: record.addendumDraftId,
+          draftId: selected.addendumDraftId,
           repository: _repository,
           requestAddendumSignature: widget.requestAddendumSignature,
         ),
@@ -231,29 +268,27 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     } else {
       await Navigator.of(context).push<void>(MaterialPageRoute<void>(
         builder: (_) => DocumentDetailsScreen(
-          documentId: record.id,
-          document: record,
+          documentId: selected.id,
+          document: selected,
+          loadDocument: live ? RemoteDocumentRepository.shared.details : null,
           requestAddendumSignature: widget.requestAddendumSignature,
-          loadSignedPdf: (signedRecord) async {
-            if (signedRecord.id.startsWith('m8-signed-')) {
-              final id=int.tryParse(
-                signedRecord.id.substring('m8-signed-'.length));
-              final verified=id==null ? null : _signedByServerId[id];
-              if(verified==null) return null;
-              return RemoteSignedDocumentRepository.shared.download(verified);
+          onAddVersion: live ? RemoteDocumentRepository.shared.addVersion : null,
+          onAddAttachment: live ? RemoteDocumentRepository.shared.addAttachment : null,
+          loadSignedPdf: (selectedRecord) async {
+            if (live && RegExp(r'^(quote|signed|managed)-[1-9][0-9]*$')
+                .hasMatch(selectedRecord.id)) {
+              return RemoteDocumentRepository.shared.downloadPdf(selectedRecord);
             }
             final files = await SignedQuoteFileStore.shared.list();
             final exact = files.where(
-              (file) => file.documentId == signedRecord.id,
+              (file) => file.documentId == selectedRecord.id,
             ).toList();
             if (exact.length == 1) {
               return SignedQuoteFileStore.shared.read(exact.single);
             }
-            // A verified signed quote and its original draft have different
-            // document IDs. Never match a signed PDF by customer/name alone.
-            final quote = signedRecord.quote;
+            final quote = selectedRecord.quote;
             if (quote == null || quote.jobId == null ||
-                !signedRecord.verifiedSignedPdfAvailable) {
+                !selectedRecord.verifiedSignedPdfAvailable) {
               return null;
             }
             final linked = files.where((file) =>
@@ -265,7 +300,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
         ),
       ));
     }
-    if (mounted) { await _load(); }
+    if (mounted) await _load();
   }
 
   @override
@@ -285,7 +320,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     ).where((record) {
       final jobId = widget.jobId;
       if (jobId == null) return true;
-      if (record.quote?.jobId == jobId) return true;
+      if (record.jobId == jobId || record.quote?.jobId == jobId) return true;
       if (record.id.startsWith('m8-signed-') && record.project == jobId) {
         return true;
       }
@@ -296,7 +331,8 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
 
     return Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 720),
+        constraints: BoxConstraints(maxWidth:
+            MediaQuery.sizeOf(context).width >= 900 ? double.infinity : 720),
         child: CustomScrollView(
           key: const Key('documents-scroll'),
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -313,6 +349,20 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                       onChanged: (_) => setState(() {}),
                       onTrailingTap: _openDocumentFilters,
                     ),
+                    if (widget.repository == null &&
+                        MobileAuthRepository.shared.isSignedIn) ...[
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton.icon(
+                          key: const Key('documents-upload-pdf'),
+                          onPressed: _uploadPdf,
+                          icon: const Icon(Icons.upload_file_outlined),
+                          label: const Text('Upload PDF'),
+                          style: TextButton.styleFrom(
+                            foregroundColor: AppColors.primary),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 20),
                     Stack(
                       children: [
