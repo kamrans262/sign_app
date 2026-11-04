@@ -69,7 +69,7 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
 
   Future<void> _reload() async {
     final load = widget.loadExpense ?? (_repository is RemoteExpenseRepository
-        ? (_repository as RemoteExpenseRepository).getExpense : null);
+        ? _repository.getExpense : null);
     if (load == null) return;
     setState(() { _loading = true; _error = null; });
     try {
@@ -338,7 +338,7 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
     }
     final submit = widget.onRequestReimbursement ??
         (_repository is RemoteExpenseRepository
-            ? (_repository as RemoteExpenseRepository).requestReimbursement : null);
+            ? _repository.requestReimbursement : null);
     if (submit == null) {
       _notice('Reimbursement service is not connected yet.');
       return;
