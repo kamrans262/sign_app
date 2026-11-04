@@ -17,6 +17,9 @@ import '../../../jobs/services/voice_recorder_service.dart';
 import '../../../quotes/presentation/widgets/sign2digital_quote_summary_card.dart';
 import '../../../quotes/domain/quote_review_models.dart' show quoteMoney;
 import '../../data/demo_document_repository.dart';
+import '../../data/remote_addendum_repository.dart';
+import '../../data/remote_document_repository.dart';
+import '../../../auth/data/mobile_auth_repository.dart';
 import '../../domain/addendum_draft.dart';
 import '../../domain/addendum_signature_request.dart';
 import '../../domain/document_record.dart';
@@ -63,13 +66,24 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
   PlatformFile? _logo;
   bool _voiceOpen = false;
   bool _creating = false;
+  AddendumDraft? _serverDraft;
+
+  bool get _live => widget.repository == null &&
+      MobileAuthRepository.shared.isSignedIn;
 
   @override
   void initState() {
     super.initState();
-    _repository = widget.repository ?? const DemoDocumentRepository();
+    _repository = widget.repository ??
+        (_live ? RemoteDocumentRepository.shared
+            : const DemoDocumentRepository());
     _id = widget.draftId ?? 'local-addendum-${DateTime.now().microsecondsSinceEpoch}';
     final existing = AddendumDraftSession.load(_id);
+    _serverDraft = existing?.serverId != null ? existing : null;
+    if (existing == null && _live &&
+        RegExp(r'^addendum-[1-9][0-9]*$').hasMatch(_id)) {
+      _restoreServerDraft(int.parse(_id.substring('addendum-'.length)));
+    }
     _number.text = existing?.number ?? '';
     _title.text = existing?.title ?? '';
     _description.text = existing?.description ?? '';
@@ -84,6 +98,29 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
     if ((existing?.linkedDocumentId ?? '').isNotEmpty &&
         existing!.linkedDocumentId != _linked?.id) {
       _restoreLink(existing.linkedDocumentId!);
+    }
+  }
+
+  Future<void> _restoreServerDraft(int id) async {
+    try {
+      final remote = await RemoteAddendumRepository.shared.get(id);
+      if (!mounted) return;
+      setState(() {
+        _serverDraft = remote;
+        _number.text = remote.number;
+        _title.text = remote.title;
+        _description.text = remote.description;
+        _additionalWork.text = remote.additionalWork;
+        _quantity.text = remote.quantity;
+        _unitPrice.text = remote.unitPrice;
+        _vat.text = (remote.vatBasisPoints / 100).toStringAsFixed(2);
+        _effectiveDate = remote.effectiveDate;
+      });
+      if (remote.linkedDocumentId != null) {
+        await _restoreLink(remote.linkedDocumentId!);
+      }
+    } catch (_) {
+      _notice('Saved addendum could not be loaded.');
     }
   }
 
@@ -108,7 +145,12 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
   }
 
   AddendumDraft _draft() => AddendumDraft(
-    id: _id, number: _number.text.trim(),
+    id: _serverDraft?.id ?? _id, number: _number.text.trim(),
+    serverId: _serverDraft?.serverId,
+    serverRevision: _serverDraft?.serverRevision,
+    serverStatus: _serverDraft?.serverStatus ?? 'draft',
+    currency: _serverDraft?.currency ?? 'CHF',
+    quoteServerId: _serverDraft?.quoteServerId,
     title: _title.text.trim(), description: _description.text.trim(),
     effectiveDate: _effectiveDate,
     linkedDocumentId: _linked?.id, logo: _logo,
@@ -117,8 +159,9 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
     unitPrice: _unitPrice.text.trim(),
     vatBasisPoints: _vatBasisPoints,
     linkedDocumentNumber: _linked?.number,
-    linkedJobId: _linked?.quote?.jobId,
-    linkedClientId: _linked?.quote?.clientId,
+    linkedJobId: _linked?.jobId ?? _linked?.quote?.jobId,
+    linkedClientId: _serverDraft?.linkedClientId ??
+        _linked?.quote?.clientId,
   );
 
   int get _vatBasisPoints {
@@ -197,8 +240,11 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
     try {
       final all = await _repository.listDocuments();
       if (!mounted) return;
-      final candidates = all.where((record) =>
-          record.category != DocumentCategory.addends).toList();
+      final candidates = all.where((record) => _live
+          ? record.id.startsWith('signed-') &&
+              record.status.toLowerCase() == 'signed' &&
+              record.verifiedSignedPdfAvailable
+          : record.category != DocumentCategory.addends).toList();
       if (candidates.isEmpty) {
         _notice('No eligible documents are available to link.');
         return;
@@ -340,14 +386,20 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
           extraction: OpenAiVoiceJobExtractionService(),
           recordingTitle: 'Record Addendum Details',
           onAudioProcessed: (path) async {
-            final key = await (widget.requestTemporaryApiKey?.call(context) ??
-                _askApiKey(context));
-            if (key == null) {
-              throw StateError('AI processing was cancelled. You can retry.');
+            if (_live) {
+              // Authenticated Laravel proxy; no API key exposed to mobile.
+              final fields = await RemoteAddendumRepository.shared
+                  .prepareVoice(path);
+              await _applySuggestions(fields);
+              return;
             }
-            final fields = await (widget.voiceExtractionService ??
-                OpenAiAddendumVoiceExtractionService()).extract(path, key);
-            await _applySuggestions(fields);
+            // Explicitly injected isolated testing service only.
+            final key = await widget.requestTemporaryApiKey?.call(context);
+            final extractor = widget.voiceExtractionService;
+            if (key == null || extractor == null) {
+              throw StateError('Sign in to use Addendum AI voice.');
+            }
+            await _applySuggestions(await extractor.extract(path, key));
           },
         ),
       );
