@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/m9-document-management.yml'
       - 'lib/features/documents/**'
+      - 'lib/features/quotes/data/remote_quote_repository.dart'
       - 'lib/core/services/sign_api_client.dart'
       - 'test/core/sign_api_client_test.dart'
       - 'test/features/documents/**'
@@ -33,6 +34,6 @@ jobs:
       - run: flutter pub get
       - name: Analyze M9 document integration
         run: |
-          flutter analyze --no-pub lib/core/services/sign_api_client.dart lib/features/documents/data/remote_document_repository.dart lib/features/documents/domain/document_record.dart lib/features/documents/presentation/screens/documents_screen.dart lib/features/documents/presentation/screens/document_details_screen.dart lib/features/documents/presentation/widgets/sign2digital_document_history.dart test/features/documents/m9_remote_document_repository_test.dart test/features/documents/document_history_inline_actions_test.dart
+          flutter analyze --no-pub lib/core/services/sign_api_client.dart lib/features/quotes/data/remote_quote_repository.dart lib/features/documents/data/remote_document_repository.dart lib/features/documents/domain/document_record.dart lib/features/documents/presentation/screens/documents_screen.dart lib/features/documents/presentation/screens/document_details_screen.dart lib/features/documents/presentation/widgets/sign2digital_document_history.dart test/features/documents/m9_remote_document_repository_test.dart test/features/documents/m9_previous_quote_preview_test.dart test/features/documents/document_history_inline_actions_test.dart
       - name: Verify M9/M8 repositories and existing document workflows
-        run: flutter test --no-pub --concurrency=2 --timeout=2m --reporter=expanded test/features/documents/document_history_inline_actions_test.dart test/features/documents/m9_remote_document_repository_test.dart test/features/documents/m8_signed_document_repository_test.dart test/core/sign_api_client_test.dart test/features/documents/phase4_document_flow_test.dart test/features/documents/phase5_addendum_flow_test.dart
+        run: flutter test --no-pub --concurrency=2 --timeout=2m --reporter=expanded test/features/quotes/m6_remote_quote_repository_test.dart test/features/documents/m9_previous_quote_preview_test.dart test/features/documents/document_history_inline_actions_test.dart test/features/documents/m9_remote_document_repository_test.dart test/features/documents/m8_signed_document_repository_test.dart test/core/sign_api_client_test.dart test/features/documents/phase4_document_flow_test.dart test/features/documents/phase5_addendum_flow_test.dart
