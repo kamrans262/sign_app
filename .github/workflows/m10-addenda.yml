@@ -1,4 +1,4 @@
-name: M10 Addenda Stage 1 Flutter verification
+name: M10 Addenda Stage 2 Flutter verification
 
 on:
   push:
@@ -21,7 +21,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  m10-stage1:
+  m10-stage2:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -33,6 +33,6 @@ jobs:
       - run: flutter pub get
       - name: Analyze live M10 documents and original screens
         run: |
-          flutter analyze --no-pub lib/features/documents/data/remote_addendum_repository.dart lib/features/documents/domain/addendum_draft.dart lib/features/documents/services/addendum_voice_extraction_service.dart lib/features/documents/presentation/screens/create_addendum_screen.dart lib/features/documents/presentation/screens/document_details_screen.dart lib/features/documents/presentation/screens/documents_screen.dart lib/features/documents/data/remote_document_repository.dart test/features/documents/m10_remote_addendum_repository_test.dart
+          flutter analyze --no-pub lib/features/documents/data/remote_addendum_repository.dart lib/features/documents/domain/addendum_draft.dart lib/features/documents/services/addendum_voice_extraction_service.dart lib/features/documents/presentation/screens/create_addendum_screen.dart lib/features/documents/presentation/screens/document_details_screen.dart lib/features/documents/presentation/screens/documents_screen.dart lib/features/documents/data/remote_document_repository.dart test/features/documents/m10_remote_addendum_repository_test.dart test/features/documents/m10_addendum_responsive_test.dart
       - name: Check M10 persistence and M9 signed document regressions
-        run: flutter test --no-pub --concurrency=2 --timeout=2m --reporter=expanded test/features/documents/m10_remote_addendum_repository_test.dart test/features/documents/m9_previous_quote_preview_test.dart test/features/documents/m9_remote_document_repository_test.dart test/features/documents/m8_signed_document_repository_test.dart test/features/documents/phase5_addendum_flow_test.dart
+        run: flutter test --no-pub --concurrency=2 --timeout=2m --reporter=expanded test/features/documents/m10_remote_addendum_repository_test.dart test/features/documents/m10_addendum_responsive_test.dart test/features/documents/m9_previous_quote_preview_test.dart test/features/documents/m9_remote_document_repository_test.dart test/features/documents/m8_signed_document_repository_test.dart test/features/documents/phase5_addendum_flow_test.dart
