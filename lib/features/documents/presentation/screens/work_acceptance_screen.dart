@@ -237,6 +237,15 @@ class _WorkAcceptanceScreenState extends State<WorkAcceptanceScreen> {
                   if(_evidence!.outstandingIssues.trim().isNotEmpty)
                     Padding(padding:const EdgeInsets.only(top:8),
                       child:Text('Outstanding Issues: ${_evidence!.outstandingIssues}')),
+                  if(_evidence!.signedAt!=null)
+                    Padding(padding:const EdgeInsets.only(top:8),
+                      child:Text('Signed: ${_date(_evidence!.signedAt!)}')),
+                  if(_evidence!.customerRating!=null)
+                    Padding(padding:const EdgeInsets.only(top:8),
+                      child:Text('Customer Rating: ${_evidence!.customerRating}/5')),
+                  if(_evidence!.customerComment.trim().isNotEmpty)
+                    Padding(padding:const EdgeInsets.only(top:8),
+                      child:Text('Customer Comment: ${_evidence!.customerComment}')),
                   const SizedBox(height:20),
                 ],
                 Row(children: [
