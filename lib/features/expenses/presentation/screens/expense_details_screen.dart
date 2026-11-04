@@ -10,6 +10,8 @@ import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import '../../../clients/presentation/widgets/sign2digital_status_badge.dart';
 import '../../../documents/presentation/widgets/sign2digital_document_history.dart';
 import '../../data/demo_expense_repository.dart';
+import '../../data/remote_expense_repository.dart';
+import '../../../../core/services/active_company_session.dart';
 import '../../domain/expense_record.dart';
 import '../widgets/sign2digital_expense_category_icon.dart';
 import 'add_expense_screen.dart';
@@ -60,12 +62,14 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
   void initState() {
     super.initState();
     _record = widget.expense;
-    _repository = widget.repository ?? const DemoExpenseRepository();
-    if (widget.loadExpense != null) _reload();
+    _repository = widget.repository ?? (ActiveCompanySession.companyId == null
+        ? const DemoExpenseRepository() : RemoteExpenseRepository.shared);
+    if (widget.loadExpense != null || _repository is RemoteExpenseRepository) _reload();
   }
 
   Future<void> _reload() async {
-    final load = widget.loadExpense;
+    final load = widget.loadExpense ?? (_repository is RemoteExpenseRepository
+        ? (_repository as RemoteExpenseRepository).getExpense : null);
     if (load == null) return;
     setState(() { _loading = true; _error = null; });
     try {
@@ -188,6 +192,7 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
       builder: (_) => ReceiptScreen(
         expense: _record,
         repository: _repository,
+        canEdit: _record.demoOnly || _record.status == ExpenseStatus.toReview,
         initialIndex: index,
         photoSource: widget.receiptPhotoSource,
         onShare: widget.onReceiptShare,
@@ -201,6 +206,7 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
         },
       ),
     ));
+    if (mounted && _repository is RemoteExpenseRepository) await _reload();
   }
 
   Widget _receipts() {
@@ -310,8 +316,12 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
     try {
       await _repository.updateExpense(updated);
       if (!mounted) return;
-      setState(() => _record = updated);
-      _notice('Expense changes saved locally.');
+      if (_repository is RemoteExpenseRepository) {
+        await _reload();
+      } else {
+        setState(() => _record = updated);
+      }
+      _notice('Expense changes saved.');
     } catch (_) {
       _notice('Unable to save changes to this expense.');
     } finally {
@@ -326,7 +336,9 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
       _notice('This expense is not eligible for another reimbursement request.');
       return;
     }
-    final submit = widget.onRequestReimbursement;
+    final submit = widget.onRequestReimbursement ??
+        (_repository is RemoteExpenseRepository
+            ? (_repository as RemoteExpenseRepository).requestReimbursement : null);
     if (submit == null) {
       _notice('Reimbursement service is not connected yet.');
       return;
