@@ -176,7 +176,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
 
   Future<void> _uploadPdf() async {
     try {
-      final chosen = await FilePicker.platform.pickFiles(
+      final chosen = await FilePicker.pickFiles(
         type: FileType.custom, allowedExtensions: ['pdf'],
         withData: true,
       );
