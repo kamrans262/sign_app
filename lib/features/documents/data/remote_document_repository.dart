@@ -180,8 +180,18 @@ class RemoteDocumentRepository implements DocumentRepository {
     if (raw is! Map) {
       throw const SignApiException('Document details are unavailable.');
     }
+    final relatedData = payload['related'];
+    final linked = <DocumentRecord>[];
+    if (relatedData is List) {
+      for (final entry in relatedData) {
+        if (entry is Map) {
+          linked.add(_record(Map<String, dynamic>.from(entry)));
+        }
+      }
+    }
     final document = _record(Map<String, dynamic>.from(raw),
-        history: payload['history'], attachments: payload['attachments']);
+        history: payload['history'], attachments: payload['attachments'],
+        related: linked);
     if (document.id != id) {
       throw const SignApiException('Document identity changed.');
     }
