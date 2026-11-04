@@ -18,6 +18,7 @@ import '../../../quotes/data/remote_quote_repository.dart';
 import '../../../quotes/presentation/screens/review_quote_screen.dart';
 import '../../../quotes/presentation/screens/quote_preview_screen.dart';
 import '../../../documents/presentation/screens/documents_screen.dart';
+import '../../../documents/presentation/screens/reports_screen.dart';
 import '../../../documents/domain/document_record.dart';
 import '../../../quotes/data/signed_quote_file_store.dart';
 import '../../../documents/data/remote_signed_document_repository.dart';
@@ -287,6 +288,15 @@ class JobDetailsScreen extends StatelessWidget {
         // Leave the original placeholder intact if local storage is unavailable.
       }
       if (!context.mounted) return;
+    }
+    if (section == JobSection.siteReports) {
+      await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+        builder: (_) => ReportsScreen(
+          jobId: int.tryParse(job.id) != null ? job.id : null,
+          onNavigationSelected: (index) => _selectTab(context, index),
+        ),
+      ));
+      return;
     }
     if (section == JobSection.photos) {
       Navigator.of(context).push<void>(

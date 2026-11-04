@@ -24,6 +24,7 @@ class ReportsScreen extends StatefulWidget {
   const ReportsScreen({
     super.key,
     this.repository,
+    this.jobId,
     this.onReportTap,
     this.onCreateReport,
     this.reportGenerator,
@@ -34,6 +35,8 @@ class ReportsScreen extends StatefulWidget {
   });
 
   final DocumentRepository? repository;
+  /// When opened from Job Details, only show the selected real job.
+  final String? jobId;
   final ValueChanged<DocumentRecord>? onReportTap;
   final VoidCallback? onCreateReport;
   /// Optional real report generation. Absence keeps local draft behavior.
@@ -68,7 +71,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
   Future<void> _load() async {
     setState(() { _loading = true; _error = null; });
     try {
-      final records = await _repository.listDocuments();
+      final records = _repository is RemoteSiteReportRepository && widget.jobId != null
+          ? await (_repository as RemoteSiteReportRepository).listForJob(widget.jobId)
+          : await _repository.listDocuments();
       if (!mounted) return;
       setState(() {
         _reports = records.where((record) =>

@@ -201,10 +201,12 @@ class RemoteJobRepository {
     final visibleQuotes = sections is Map ? sections['quotes'] : null;
     final visiblePhotos = sections is Map ? sections['photos'] : null;
     final visibleNotes = sections is Map ? sections['notes'] : null;
+    final visibleReports = sections is Map ? sections['site_reports'] : null;
     return JobDetailsModel.liveUnconnected(saved,
       quoteCount: visibleQuotes is List ? visibleQuotes.length : null,
       photoCount: visiblePhotos is List ? visiblePhotos.length : null,
-      noteCount: visibleNotes is List ? visibleNotes.length : null);
+      noteCount: visibleNotes is List ? visibleNotes.length : null,
+      siteReportCount: visibleReports is List ? visibleReports.length : null);
   }
 
   Future<JobModel> updateDraft(JobModel job, CreateJobDraft draft) async {

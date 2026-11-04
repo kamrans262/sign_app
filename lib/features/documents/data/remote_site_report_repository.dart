@@ -133,13 +133,16 @@ class RemoteSiteReportRepository implements DocumentRepository {
   }
 
   @override
-  Future<List<DocumentRecord>> listDocuments() async {
+  Future<List<DocumentRecord>> listDocuments() => listForJob(null);
+
+  Future<List<DocumentRecord>> listForJob(String? jobId) async {
     final company = _company();
     final documents = <DocumentRecord>[];
     for (var page = 1; page <= 100; page++) {
       final data = _data(await _api.get('/api/v1/reports',
         companyScoped: true,
-        queryParameters: {'page': page.toString(), 'per_page': '100'}));
+        queryParameters: {'page': page.toString(), 'per_page': '100',
+          if (jobId != null) 'job_id': jobId}));
       _check(company);
       final rows = data['reports'];
       final lastPage = _id(data['last_page']);
@@ -147,6 +150,9 @@ class RemoteSiteReportRepository implements DocumentRepository {
         throw const SignApiException('Invalid report pagination.');
       }
       documents.addAll(rows.map((row) => _parse(row, company)));
+      if (jobId != null && documents.any((r) => r.jobId != jobId)) {
+        throw const SignApiException('Received a report from another job.');
+      }
       if (page == lastPage) return List.unmodifiable(documents);
     }
     throw const SignApiException('Report list exceeded safety limit.');
