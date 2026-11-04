@@ -145,6 +145,66 @@ class SignApiClient {
     }
   }
 
+  /// Authenticated private attachment bytes; never follow redirects or trust
+  /// arbitrary HTML disguised as document/image content.
+  Future<Uint8List> getPrivateAttachment(
+    String endpoint, {
+    required String mimeType,
+    bool companyScoped = true,
+    int maxBytes = 10 * 1024 * 1024,
+  }) async {
+    if (!['application/pdf', 'image/png', 'image/jpeg'].contains(mimeType) ||
+        maxBytes <= 0 || maxBytes > 12 * 1024 * 1024) {
+      throw const SignApiException('Invalid attachment type or size limit.');
+    }
+    final request = http.Request('GET', _uri(endpoint))
+      ..followRedirects = false;
+    request.headers.addAll(await _headers(
+      authenticated: true, companyScoped: companyScoped,
+    ));
+    try {
+      final streamed = await _http.send(request)
+          .timeout(const Duration(seconds: 25));
+      final response = await http.Response.fromStream(streamed)
+          .timeout(const Duration(seconds: 25));
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        _decode(response);
+        throw SignApiException('Unable to download attachment.',
+            statusCode: response.statusCode);
+      }
+      final actualMime = (response.headers['content-type'] ?? '')
+          .split(';').first.trim().toLowerCase();
+      final bytes = response.bodyBytes;
+      if (actualMime != mimeType || bytes.isEmpty ||
+          bytes.length > maxBytes) {
+        throw const SignApiException('Invalid attachment response.');
+      }
+      final valid = switch (mimeType) {
+        'application/pdf' => bytes.length >= 12 &&
+          bytes[0] == 37 && bytes[1] == 80 && bytes[2] == 68 &&
+          bytes[3] == 70 && bytes[4] == 45 &&
+          latin1.decode(bytes.sublist(bytes.length > 4096
+              ? bytes.length - 4096 : 0)).contains('%%EOF'),
+        'image/png' => bytes.length >= 8 &&
+          bytes[0] == 137 && bytes[1] == 80 && bytes[2] == 78 &&
+          bytes[3] == 71 && bytes[4] == 13 && bytes[5] == 10 &&
+          bytes[6] == 26 && bytes[7] == 10,
+        'image/jpeg' => bytes.length >= 4 &&
+          bytes[0] == 255 && bytes[1] == 216 &&
+          bytes[bytes.length - 2] == 255 && bytes.last == 217,
+        _ => false,
+      };
+      if (!valid) {
+        throw const SignApiException('Attachment file validation failed.');
+      }
+      return bytes;
+    } on SignApiException {
+      rethrow;
+    } catch (_) {
+      throw const SignApiException('Unable to download private attachment.');
+    }
+  }
+
   Future<Map<String, dynamic>> postMultipart(
     String endpoint, {
     required String filename,
