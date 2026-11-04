@@ -221,20 +221,40 @@ class RemoteExpenseRepository implements ExpenseRepository {
   @override
   Future<void> saveDraft(ExpenseRecord expense) async {
     final company = _company();
+    // Validate all receipt sizes before creating a permanent expense.
+    if (expense.photos.length > 10) {
+      throw const SignApiException('Maximum 10 receipts per expense.');
+    }
+    for (final file in expense.photos) {
+      _validateReceiptSize(file);
+    }
     final response = _data(await _api.post('/api/v1/expenses',
       companyScoped: true, data: _fields(expense)));
     _assertCompany(company);
     final saved = _record(response['expense'], company);
-    for (final file in expense.photos) {
-      await _upload(idOf(saved), file);
-      _assertCompany(company);
+    final createdId = idOf(saved);
+    try {
+      for (final file in expense.photos) {
+        await _upload(createdId, file);
+        _assertCompany(company);
+      }
+    } catch (_) {
+      // The expense POST already committed: avoid duplicate records on retry.
+      throw SignApiException(
+        'Expense #$createdId was saved, but a receipt upload failed. '
+        'Open that expense to check or attach receipts; do not create it again.',
+      );
+    }
+  }
+
+  static void _validateReceiptSize(LocalJobPhotoSelection file) {
+    if (file.bytes.isEmpty || file.bytes.length > 10 * 1024 * 1024) {
+      throw const SignApiException('Receipt must not exceed 10 MB.');
     }
   }
 
   Future<void> _upload(int id, LocalJobPhotoSelection file) async {
-    if (file.bytes.isEmpty || file.bytes.length > 10 * 1024 * 1024) {
-      throw const SignApiException('Receipt must not exceed 10 MB.');
-    }
+    _validateReceiptSize(file);
     await _api.postMultipart('/api/v1/expenses/$id/receipts',
       filename: file.name, bytes: file.bytes,
       companyScoped: true, maxBytes: 10 * 1024 * 1024);
