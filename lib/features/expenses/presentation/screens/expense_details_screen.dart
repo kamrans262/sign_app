@@ -379,7 +379,8 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
       final edit = Sign2DigitalOutlinedButton(
         key: const Key('expense-edit'),
         label: 'Edit', primaryOutline: true,
-        enabled: !_busy, onPressed: _edit,
+        enabled: !_busy && (_record.demoOnly ||
+            _record.status == ExpenseStatus.toReview), onPressed: _edit,
       );
       final reimburse = Sign2DigitalPrimaryButton(
         key: const Key('expense-request-reimburse'),
