@@ -48,7 +48,9 @@ void main() {
               'sha256': List.filled(64, 'a').join(),
               'created_at': '2026-11-04T11:00:00Z',
             },
-            'attachments': [{'id': 8, 'original_name': 'photo.png'}],
+            'attachments': [{'id': 8, 'original_name': 'photo.png',
+              'mime_type': 'image/png',
+              'sha256': List.filled(64, 'b').join()}],
             'history': [{
               'id': 'event-1', 'type': 'version_changed',
               'occurred_at': '2026-11-04T12:00:00Z',
@@ -120,4 +122,51 @@ void main() {
       throwsA(isA<SignApiException>()),
     );
   });
+  test('private attachment content and SHA must both be verified', () async {
+    const png = <int>[137, 80, 78, 71, 13, 10, 26, 10, 0, 1];
+    final digest = sha256.convert(png).toString();
+    var damaged = false;
+    final calls = <String>[];
+    final api = SignApiClient(
+      baseUrl: Uri.parse('https://example.test'),
+      tokenProvider: () async => 'authorized',
+      activeCompanyId: () => ActiveCompanySession.companyId,
+      httpClient: MockClient((request) async {
+        calls.add(request.url.path);
+        expect(request.headers['X-Company-Id'], '5');
+        if (request.url.path.endsWith('/download')) {
+          return http.Response.bytes(damaged
+              ? <int>[137, 80, 78, 71, 13, 10, 26, 10, 0, 2] : png,
+              200, headers: {'content-type': 'image/png'});
+        }
+        return http.Response(jsonEncode({'data': {
+          'document': {
+            'id': 'managed-3', 'category': 'reports', 'number': 'R-3',
+            'title': 'Report', 'status': 'file', 'version': 1,
+            'has_pdf': false, 'created_at': '2026-11-04T11:00:00Z',
+          },
+          'related': [],
+          'history': [],
+          'attachments': [{
+            'id': 8, 'original_name': 'photo.png',
+            'mime_type': 'image/png', 'sha256': digest,
+          }],
+        }}), 200);
+      }),
+    );
+    final repository = RemoteDocumentRepository(api: api);
+    final document = await repository.details('managed-3');
+    final attachment = document.attachments.single;
+    expect(document.attachmentNames, ['photo.png']);
+    expect(await repository.downloadAttachment(document, attachment),
+        orderedEquals(png));
+    expect(calls.last,
+        '/api/v1/documents/managed-3/attachments/8/download');
+    damaged = true;
+    await expectLater(
+      repository.downloadAttachment(document, attachment),
+      throwsA(isA<SignApiException>()),
+    );
+  });
+
 }
