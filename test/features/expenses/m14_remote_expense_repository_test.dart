@@ -9,6 +9,7 @@ import 'package:sign2digital/core/services/active_company_session.dart';
 import 'package:sign2digital/core/services/sign_api_client.dart';
 import 'package:sign2digital/features/expenses/data/remote_expense_repository.dart';
 import 'package:sign2digital/features/expenses/domain/expense_record.dart';
+import 'package:sign2digital/features/jobs/data/local_job_photo_source.dart';
 
 Map<String,dynamic> expense({int company=7,int version=1,
   String status='to_review'}) => {
@@ -103,6 +104,71 @@ void main() {
     expect(loaded.photos.single.bytes,bytes);
     expect(loaded.photos.single.sourceKey,'remote-receipt-41');
     expect(loaded.history.single.title,'created');
+    client.dispose();
+  });
+
+  test('supplier search matches real expense supplier', () async {
+    final client=api((req) async=>http.Response(jsonEncode({'data':{
+      'records':[expense()],'page':1,'last_page':1,
+    }}),200));
+    final items=await RemoteExpenseRepository(api:client).listExpenses();
+    expect(items.single.matches('shop'),isTrue);
+    expect(items.single.matches('unrelated'),isFalse);
+    client.dispose();
+  });
+
+  test('bad receipt is rejected before creating the expense', () async {
+    var posts=0;
+    final client=api((req) async {
+      posts++;
+      return http.Response('Unexpected API call',500);
+    });
+    final draft=ExpenseRecord(
+      id:'local-expense-2',jobId:'34',job:'Kitchen',report:'',
+      category:ExpenseCategory.material,title:'Material',amount:12.34,
+      date:DateTime(2026,11,5),status:ExpenseStatus.toReview,
+      photos:[LocalJobPhotoSelection(name:'empty.png',
+          bytes:Uint8List(0),sourceKey:'empty')],
+    );
+    await expectLater(RemoteExpenseRepository(api:client).saveDraft(draft),
+      throwsA(isA<SignApiException>()));
+    expect(posts,0,reason:'Do not create an expense for an invalid attachment');
+    client.dispose();
+  });
+
+  test('receipt upload failure reports the already-saved expense ID',
+      () async {
+    var creates=0;
+    var uploadCalls=0;
+    final client=api((req) async {
+      if(req.url.path=='/api/v1/expenses') {
+        creates++;
+        return http.Response(jsonEncode({'data':{
+          'expense':expense(),
+        }}),201);
+      }
+      if(req.url.path=='/api/v1/expenses/21/receipts') {
+        uploadCalls++;
+        return http.Response(jsonEncode({'message':'Invalid receipt',
+          'errors':{'file':['Invalid receipt']}}),422,
+          headers:{'content-type':'application/json'});
+      }
+      return http.Response('Unexpected API path',404);
+    });
+    final draft=ExpenseRecord(
+      id:'local-expense-3',jobId:'34',job:'Kitchen',report:'',
+      category:ExpenseCategory.material,title:'Material',amount:12.34,
+      date:DateTime(2026,11,5),status:ExpenseStatus.toReview,
+      photos:[LocalJobPhotoSelection(name:'receipt.png',
+          bytes:Uint8List.fromList([137,80,78,71,13,10,26,10]),
+          sourceKey:'receipt')],
+    );
+    await expectLater(RemoteExpenseRepository(api:client).saveDraft(draft),
+      throwsA(isA<SignApiException>().having(
+        (e)=>e.message,'message',allOf(
+          contains('Expense #21 was saved'),contains('do not create it again')))));
+    expect(creates,1);
+    expect(uploadCalls,1);
     client.dispose();
   });
 
