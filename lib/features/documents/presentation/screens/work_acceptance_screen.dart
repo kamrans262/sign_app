@@ -213,9 +213,7 @@ class _WorkAcceptanceScreenState extends State<WorkAcceptanceScreen> {
           title: 'Work Acceptance',
           onBack: () => Navigator.of(context).maybePop(),
         ),
-        Expanded(child: Center(child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 720),
-          child: SingleChildScrollView(
+        Expanded(child: SingleChildScrollView(
             key: const Key('work-acceptance-scroll'),
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
             child: Column(
@@ -322,7 +320,7 @@ class _WorkAcceptanceScreenState extends State<WorkAcceptanceScreen> {
               ],
             ),
           ),
-        ))),
+        ),
       ]),
     ),
     bottomNavigationBar: Sign2DigitalBottomNavigationBar(
