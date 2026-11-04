@@ -10,6 +10,7 @@ import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import '../../data/demo_expense_repository.dart';
 import '../../data/remote_expense_repository.dart';
 import '../../../../core/services/active_company_session.dart';
+import '../../../auth/data/mobile_auth_repository.dart';
 import '../../domain/expense_record.dart';
 import '../../../jobs/domain/job_model.dart';
 import 'add_expense_screen.dart';
@@ -60,7 +61,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
   @override
   void initState() {
     super.initState();
-    _repository = widget.repository ?? (ActiveCompanySession.companyId == null
+    _repository = widget.repository ?? (ActiveCompanySession.companyId == null &&
+        !MobileAuthRepository.shared.isSignedIn
         ? const DemoExpenseRepository() : RemoteExpenseRepository.shared);
     _load();
   }
