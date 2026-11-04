@@ -113,6 +113,9 @@ class _Sign2DigitalDocumentHistoryState
     DocumentHistoryType.edited => Icons.edit_outlined,
     DocumentHistoryType.downloaded => Icons.download_outlined,
     DocumentHistoryType.versionChanged => Icons.history_outlined,
+    DocumentHistoryType.approved => Icons.check_circle_outline,
+    DocumentHistoryType.archived => Icons.archive_outlined,
+    DocumentHistoryType.attachmentAdded => Icons.attach_file_outlined,
   };
 
   String _timestamp(DateTime input) {
