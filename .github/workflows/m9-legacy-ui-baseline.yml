@@ -1,0 +1,49 @@
+name: M9 Stage 2 legacy UI baseline investigation
+
+on:
+  push:
+    branches: [feature/m9-document-management-2026-11-04]
+    paths:
+      - '.github/workflows/m9-legacy-ui-baseline.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sign2digital-m9-legacy-baseline
+  cancel-in-progress: true
+
+jobs:
+  check-m8-baseline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/m8-digital-signatures-2026-11-04
+          persist-credentials: false
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Compare legacy screen failures against untouched M8 source
+        shell: bash
+        run: |
+          set +e
+          flutter test --no-pub --concurrency=2 --timeout=2m --reporter=expanded \
+            test/features/documents/document_report_badge_alignment_test.dart \
+            test/features/documents/documents_screen_test.dart \
+            test/features/documents/document_details_screen_test.dart \
+            > "$RUNNER_TEMP/m8-document-ui-baseline.log" 2>&1
+          result=$?
+          printf 'M8_LEGACY_UI_BASELINE_EXIT=%s\n' "$result"
+          grep -E 'Some tests failed|All tests passed|\\[E\\]|pumpAndSettle timed out|Expected:|Actual:' \
+            "$RUNNER_TEMP/m8-document-ui-baseline.log" | tail -n 75 || true
+          if [[ "$result" -ne 0 ]]; then
+            echo "M8_BASELINE_HAS_FAILURES"
+          else
+            echo "M8_BASELINE_PASSED"
+          fi
+          echo "Baseline result is diagnostic; it does not declare M9 accepted."
