@@ -39,15 +39,16 @@ class Sign2DigitalQuotePdfBuilder {
     pw.TextStyle style(double size, {PdfColor? color, bool bold = false}) =>
         pw.TextStyle(fontSize: size, color: color ?? ink,
           fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal);
-    // Align both PDF date values in one column while retaining the same
-    // right margin as the quote number; the Laravel web view is unchanged.
+    // Align both date values against the quote card's right-hand inset,
+    // matching the quote number. Keep the label/value gap and original style.
     pw.Widget quoteDateRow(String label, String value) => pw.Row(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.SizedBox(width: 72, child: pw.Text(label,
           textAlign: pw.TextAlign.right, style: style(11))),
         pw.SizedBox(width: 6),
-        pw.Expanded(child: pw.Text(value, style: style(11, color: grey))),
+        pw.Expanded(child: pw.Text(value,
+          textAlign: pw.TextAlign.right, style: style(11, color: grey))),
       ],
     );
     pw.Widget lineAmount(String label, String amount, {bool total = false}) {
@@ -116,7 +117,7 @@ class Sign2DigitalQuotePdfBuilder {
                     ],
                   )),
                   pw.SizedBox(width: 12),
-                  pw.SizedBox(width: 168, child: pw.Column(
+                  pw.SizedBox(width: 156, child: pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.stretch,
                     children: [
                       quoteDateRow('Date:', formatDate(quote.date)),
