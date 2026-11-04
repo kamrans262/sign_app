@@ -9,6 +9,7 @@ import 'package:sign2digital/features/documents/data/demo_report_repository.dart
 import 'package:sign2digital/features/documents/domain/document_record.dart';
 import 'package:sign2digital/features/documents/domain/work_acceptance_data.dart';
 import 'package:sign2digital/features/documents/presentation/screens/reports_screen.dart';
+import 'package:sign2digital/features/documents/presentation/screens/work_acceptance_editor_screen.dart';
 import 'package:sign2digital/features/documents/presentation/screens/work_acceptance_screen.dart';
 import 'package:sign2digital/features/documents/presentation/widgets/sign2digital_document_history.dart';
 import 'package:sign2digital/features/quotes/presentation/widgets/sign2digital_signature_draw_canvas.dart';
@@ -218,6 +219,10 @@ void main() {
       )));
       final scroll = find.byKey(const Key('work-acceptance-scroll'));
       final nav = find.byType(Sign2DigitalBottomNavigationBar);
+      if (size.width > 720) {
+        expect(tester.getSize(scroll).width, closeTo(size.width, 0.1),
+            reason: 'Acceptance details must use full landscape width');
+      }
       expect(tester.getBottomLeft(scroll).dy,
           lessThanOrEqualTo(tester.getTopLeft(nav).dy + 1));
       await tester.ensureVisible(find.byKey(
@@ -229,4 +234,17 @@ void main() {
       expect(tester.takeException(), isNull, reason: '$size');
     });
   }
+
+  testWidgets('Work acceptance editor fills tablet landscape width',
+      (tester) async {
+    tester.view.physicalSize = const Size(1024, 768);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+        const MaterialApp(home: WorkAcceptanceEditorScreen()));
+    expect(tester.getSize(find.byType(ListView)).width,
+        closeTo(1024, 0.1));
+    expect(tester.takeException(), isNull);
+  });
 }
