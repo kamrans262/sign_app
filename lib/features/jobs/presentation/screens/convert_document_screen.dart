@@ -10,11 +10,11 @@ import '../../../quotes/domain/quote_preparation_service.dart';
 import '../../../quotes/presentation/screens/quote_ai_processing_screen.dart';
 import '../../../quotes/presentation/widgets/sign2digital_document_status_timeline.dart';
 import '../../../quotes/presentation/widgets/sign2digital_signature_action_card.dart';
-import '../../../quotes/presentation/widgets/sign2digital_temporary_ai_key_dialog.dart';
-import '../../../quotes/services/openai_quote_preparation_service.dart';
+import '../../../quotes/services/remote_quote_preparation_service.dart';
 import '../../domain/job_note_model.dart';
 import '../../domain/note_document_draft.dart';
-import '../../services/openai_note_document_preparation_service.dart';
+import '../../data/remote_job_media_repository.dart';
+import '../../services/remote_note_document_preparation_service.dart';
 import '../widgets/sign2digital_job_note_card.dart';
 
 enum ConvertedDocumentType { quote, report, letter, custom }
@@ -112,7 +112,7 @@ class _ConvertDocumentScreenState extends State<ConvertDocumentScreen> {
                   key: const Key('note-document-title'),
                   initialValue: editedTitle,
                   onChanged: (value) => editedTitle = value,
-                  maxLength: 300,
+                  maxLength: 255,
                   decoration: const InputDecoration(
                     labelText: 'Title', border: OutlineInputBorder()),
                 ),
@@ -138,7 +138,7 @@ class _ConvertDocumentScreenState extends State<ConvertDocumentScreen> {
             ),
             TextButton(
               key: const Key('note-document-save-draft'),
-              onPressed: () {
+              onPressed: () async {
                 final next = current.copyWith(
                   title: editedTitle.trim(),
                   content: editedContent.trim(),
@@ -146,18 +146,24 @@ class _ConvertDocumentScreenState extends State<ConvertDocumentScreen> {
                 );
                 try {
                   NoteDocumentDraftSession.save(next);
-                  setState(() { _genericDraft = next; _approved = false; });
+                  final saved = next.serverId != null
+                      ? await RemoteJobMediaRepository.shared.saveDocument(
+                          next, approve: false)
+                      : next;
+                  if (!mounted || !dialog.mounted) return;
+                  setState(() { _genericDraft = saved; _approved = false; });
                   FocusManager.instance.primaryFocus?.unfocus();
                   Navigator.pop(dialog);
-                } on FormatException {
-                  _notify('Enter a document title and content.');
+                  _notify('Draft saved. No document was sent or signed.');
+                } catch (error) {
+                  _notify('Unable to save document draft: $error');
                 }
               },
               child: const Text('Save Draft'),
             ),
             FilledButton(
               key: const Key('note-document-approve'),
-              onPressed: () {
+              onPressed: () async {
                 final next = current.copyWith(
                   title: editedTitle.trim(),
                   content: editedContent.trim(),
@@ -165,15 +171,23 @@ class _ConvertDocumentScreenState extends State<ConvertDocumentScreen> {
                 );
                 try {
                   NoteDocumentDraftSession.save(next);
-                  setState(() { _genericDraft = next; _approved = true; });
+                  final approved = next.serverId != null
+                      ? await RemoteJobMediaRepository.shared.saveDocument(
+                          next, approve: true)
+                      : next;
+                  if (!mounted || !dialog.mounted) return;
+                  setState(() { _genericDraft = approved; _approved = true; });
                   FocusManager.instance.primaryFocus?.unfocus();
                   Navigator.pop(dialog);
-                  _notify('Approved locally. No document was sent or signed.');
-                } on FormatException {
-                  _notify('Enter a document title and content.');
+                  _notify(approved.serverId != null
+                      ? 'Approved PDF saved to Documents. Nothing was sent.'
+                      : 'Approved locally. Nothing was sent or signed.');
+                } catch (error) {
+                  _notify('Unable to approve document: $error');
                 }
               },
-              child: const Text('Approve Locally'),
+              child: Text(current.serverId != null
+                  ? 'Approve Document' : 'Approve Locally'),
             ),
           ],
         ),
@@ -200,21 +214,9 @@ class _ConvertDocumentScreenState extends State<ConvertDocumentScreen> {
     if (_type != ConvertedDocumentType.quote) {
       setState(() { _starting = true; _error = null; });
       try {
-        NoteDocumentPreparationService? service = widget.notePreparationService;
-        if (service == null) {
-          final key = await (widget.requestTemporaryApiKey?.call(context) ??
-              Sign2DigitalTemporaryAiKeyDialog.request(
-                context,
-                title: 'Connect Document AI',
-                message: 'For personal development testing only. A temporary '
-                    'OpenAI key sends this private note to OpenAI for document '
-                    'preparation. The key is not saved. Production requires '
-                    'a secure backend.',
-              ));
-          if (!mounted || key == null) return;
-          service = OpenAiNoteDocumentPreparationService(
-              temporaryApiKey: key);
-        }
+        final NoteDocumentPreparationService service =
+            widget.notePreparationService ??
+            RemoteNoteDocumentPreparationService();
         setState(() {
           _stage = QuotePreparationStage.preparing;
           _approved = false;
@@ -249,19 +251,8 @@ class _ConvertDocumentScreenState extends State<ConvertDocumentScreen> {
 
     setState(() { _starting = true; _error = null; });
     try {
-      QuotePreparationService? service = widget.quotePreparationService;
-      if (service == null) {
-        final key = await (widget.requestTemporaryApiKey?.call(context) ??
-            Sign2DigitalTemporaryAiKeyDialog.request(
-              context,
-              title: 'Connect Quote AI',
-              message: 'For personal development testing only. '
-                  'Provide a temporary OpenAI key to prepare a Quote '
-                  'from the selected Job Note. The key is not saved.',
-            ));
-        if (!mounted || key == null) return;
-        service = OpenAiQuotePreparationService(temporaryApiKey: key);
-      }
+      final QuotePreparationService service =
+          widget.quotePreparationService ?? RemoteQuotePreparationService();
       if (!mounted) return;
       final input = QuoteDraftInput(
         method: QuoteInputMethod.text,
