@@ -220,7 +220,8 @@ class _TimeLabourScreenState extends State<TimeLabourScreen> {
     await _load();
     if (deleted == true && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Labour entry deleted.'),
+        content: Text(_repository is RemoteLabourRepository
+            ? 'Labour entry voided; audit retained.' : 'Labour entry deleted.'),
       ));
     }
   }
