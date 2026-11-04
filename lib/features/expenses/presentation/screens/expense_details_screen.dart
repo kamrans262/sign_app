@@ -12,6 +12,7 @@ import '../../../documents/presentation/widgets/sign2digital_document_history.da
 import '../../data/demo_expense_repository.dart';
 import '../../data/remote_expense_repository.dart';
 import '../../../../core/services/active_company_session.dart';
+import '../../../auth/data/mobile_auth_repository.dart';
 import '../../domain/expense_record.dart';
 import '../widgets/sign2digital_expense_category_icon.dart';
 import 'add_expense_screen.dart';
@@ -62,7 +63,8 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
   void initState() {
     super.initState();
     _record = widget.expense;
-    _repository = widget.repository ?? (ActiveCompanySession.companyId == null
+    _repository = widget.repository ?? (ActiveCompanySession.companyId == null &&
+        !MobileAuthRepository.shared.isSignedIn
         ? const DemoExpenseRepository() : RemoteExpenseRepository.shared);
     if (widget.loadExpense != null || _repository is RemoteExpenseRepository) _reload();
   }
