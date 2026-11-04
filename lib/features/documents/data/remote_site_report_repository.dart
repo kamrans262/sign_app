@@ -202,19 +202,37 @@ class RemoteSiteReportRepository implements DocumentRepository {
     if (ids is! List || ids.isEmpty) {
       return result;
     }
+
     final expected = ids.map(_id).toSet();
-    final available = await RemoteJobMediaRepository.shared.listPhotos(
-        result.jobId!);
-    _check(company);
-    if (!expected.every((id) => available.any((p) => p.id == id.toString()))) {
-      throw const SignApiException('A referenced job photo is unavailable.');
+    if (expected.length > 8) {
+      throw const SignApiException('Invalid report photo count.');
     }
-    final photos = available.where((p) => expected.contains(int.tryParse(p.id)))
-        .map((p) => LocalJobPhotoSelection(
-          name: 'job-photo-${p.id}${p.bytes![0] == 137 ? '.png' : '.jpg'}',
-          bytes: p.bytes!,
-          sourceKey: 'remote:${p.id}',
-        )).toList();
+    final meta = data['photos'];
+    if (meta is! List || meta.length != expected.length) {
+      throw const SignApiException('Report photo metadata does not match.');
+    }
+    final photos = <LocalJobPhotoSelection>[];
+    for (final value in meta) {
+      final item = _object(value);
+      final id = _id(item['id']);
+      final mime = (item['mime_type'] ?? '').toString();
+      final digest = (item['sha256'] ?? '').toString().toLowerCase();
+      if (!expected.contains(id) || !['image/png','image/jpeg'].contains(mime) ||
+          !RegExp(r'^[0-9a-f]{64}$').hasMatch(digest)) {
+        throw const SignApiException('Invalid report photo metadata.');
+      }
+      final bytes = await _api.getPrivateMedia(
+        '/api/v1/reports/' + reportId(result.id).toString() + '/photos/$id',
+        mimeType: mime, maxBytes: 20 * 1024 * 1024);
+      _check(company);
+      if (sha256.convert(bytes).toString() != digest) {
+        throw const SignApiException('Report photo content failed integrity check.');
+      }
+      photos.add(LocalJobPhotoSelection(
+        name: 'report-photo-$id.' + (mime == 'image/png' ? 'png' : 'jpg'),
+        bytes: bytes, sourceKey: 'remote:$id',
+      ));
+    }
     final site = result.siteReportDetails!;
     return DocumentRecord(
       id: result.id, category: result.category, number: result.number,
