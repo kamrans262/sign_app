@@ -135,13 +135,18 @@ class _Sign2DigitalDocumentHistoryState
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text('UI demo: no verified signature record is available.'),
       ));
-    } else if (event.signatureReference == null ||
-        widget.onViewSignatures == null) {
+    } else if (event.signatureReference != null &&
+        widget.onViewSignatures != null) {
+      widget.onViewSignatures!(event);
+    } else if (widget.document.status.toLowerCase() == 'signed' &&
+        widget.canPreview && widget.onOpenDocument != null) {
+      // The signed PDF is the authoritative M8 signature evidence, not a
+      // reconstructed quote or an unverified client-side drawing.
+      widget.onOpenDocument!(1);
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text('Verified signature details are not available yet.'),
       ));
-    } else {
-      widget.onViewSignatures!(event);
     }
   }
 
