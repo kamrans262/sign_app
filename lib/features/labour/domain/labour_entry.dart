@@ -2,7 +2,7 @@ import '../../jobs/domain/job_model.dart';
 import '../../jobs/data/local_job_photo_source.dart';
 
 enum LabourEntryKind { labour, timeSheet }
-enum LabourEntryStatus { pending, approved }
+enum LabourEntryStatus { pending, approved, voided }
 
 /// An actual event recorded by the local repository or a future API.
 class LabourHistoryEvent {
@@ -114,8 +114,11 @@ class LabourEntry {
   }
 
   String get formattedHours => '${hours.toStringAsFixed(2)}h';
-  String get statusLabel => status == LabourEntryStatus.approved
-      ? 'Approved' : 'Pending';
+  String get statusLabel => switch (status) {
+    LabourEntryStatus.pending => 'Pending',
+    LabourEntryStatus.approved => 'Approved',
+    LabourEntryStatus.voided => 'Void',
+  };
 
   bool matches(String text) {
     final q = text.trim().toLowerCase();
