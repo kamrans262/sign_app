@@ -219,7 +219,7 @@ class _TimeLabourScreenState extends State<TimeLabourScreen> {
     // Re-read after a detail route, so the listing reflects edits/deletion.
     await _load();
     if (deleted == true && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(_repository is RemoteLabourRepository
             ? 'Labour entry voided; audit retained.' : 'Labour entry deleted.'),
       ));
