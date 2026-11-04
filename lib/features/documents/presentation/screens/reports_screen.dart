@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:printing/printing.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/services/active_company_session.dart';
+import '../../../../core/services/sign_api_client.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
 import '../../../../core/widgets/sign2digital_dashboard_header.dart';
 import '../../../../core/widgets/sign2digital_input_field.dart';
@@ -11,12 +13,14 @@ import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import '../../../quotes/presentation/widgets/sign2digital_quote_summary_card.dart';
 import '../../data/demo_report_repository.dart';
 import '../../data/remote_site_report_repository.dart';
+import '../../data/remote_work_acceptance_repository.dart';
 import '../../domain/document_record.dart';
 import 'document_details_screen.dart';
 import 'site_report_wizard_screen.dart';
 import 'meeting_minutes_editor_screen.dart';
 import 'report_review_screen.dart';
 import 'work_acceptance_screen.dart';
+import 'work_acceptance_editor_screen.dart';
 
 /// Report library using the same list layout and document models as Documents.
 /// A caller may inject real records and its own navigation/creation callbacks.
@@ -71,9 +75,15 @@ class _ReportsScreenState extends State<ReportsScreen> {
   Future<void> _load() async {
     setState(() { _loading = true; _error = null; });
     try {
-      final records = _repository is RemoteSiteReportRepository && widget.jobId != null
+      final base = _repository is RemoteSiteReportRepository && widget.jobId != null
           ? await (_repository).listForJob(widget.jobId)
           : await _repository.listDocuments();
+      final records = <DocumentRecord>[...base];
+      if (_repository is RemoteSiteReportRepository) {
+        final acceptances =
+            await RemoteWorkAcceptanceRepository.shared.listForJob(widget.jobId);
+        records.addAll(acceptances);
+      }
       if (!mounted) return;
       setState(() {
         _reports = records.where((record) =>
@@ -226,6 +236,65 @@ class _ReportsScreenState extends State<ReportsScreen> {
     }
   }
 
+  Future<void> _openAcceptance(DocumentRecord? existing) async {
+    final repository=RemoteWorkAcceptanceRepository.shared;
+    WorkAcceptanceDraft? draft;
+    if(existing!=null) {
+      try {
+        draft=await repository.loadDraft(existing.id);
+      }catch(error) {
+        if(mounted)ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content:Text('Unable to open acceptance draft: $error')));
+        return;
+      }
+    }
+    if(!mounted)return;
+    final saved=await Navigator.of(context).push<DocumentRecord>(
+      MaterialPageRoute(builder:(_)=>WorkAcceptanceEditorScreen(
+        initial:draft,initialJobId:widget.jobId,repository:repository)),
+    );
+    if(!mounted||saved==null)return;
+    await _load();
+    if(mounted)await _showAcceptance(saved);
+  }
+
+  Future<void> _showAcceptance(DocumentRecord report) async {
+    final repository=RemoteWorkAcceptanceRepository.shared;
+    DocumentRecord latest;
+    try {
+      latest=await repository.details(report.id);
+    }catch(error) {
+      if(mounted)ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content:Text('Unable to load acceptance evidence: $error')));
+      return;
+    }
+    if(!mounted)return;
+    await Navigator.of(context).push<void>(MaterialPageRoute(
+      builder:(_)=>WorkAcceptanceScreen(
+        report:latest,
+        selectedNavigationIndex:widget.selectedNavigationIndex,
+        onNavigationSelected:_navigation,
+        onRefresh:(item)=>repository.details(item.id),
+        onApprove:(item) async { await repository.approve(item); },
+        onSend:(item) async { await repository.send(item); },
+        onRevoke:(item) async { await repository.revokeActive(item); },
+        onEditDraft:(item) async {
+          final draft=await repository.loadDraft(item.id);
+          if(!mounted)return;
+          await Navigator.of(context).push<DocumentRecord>(
+            MaterialPageRoute(builder:(_)=>WorkAcceptanceEditorScreen(
+              initial:draft,repository:repository)));
+        },
+        onViewReport:(item) async {
+          final bytes=item.workAcceptance?.verifiedReportPdf;
+          if(bytes==null)throw const SignApiException('Verified PDF missing.');
+          await Printing.layoutPdf(onLayout:(_)=>bytes);
+        },
+      ),
+    ));
+    if(mounted)await _load();
+  }
+
   Future<void> _create() async {
     if (widget.onCreateReport != null) {
       widget.onCreateReport!();
@@ -263,9 +332,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
       await _openMinutes(null);
     } else if (kind != null && mounted) {
       if (_repository is RemoteSiteReportRepository) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Work Acceptance is a separate module.'),
-        ));
+        await _openAcceptance(null);
       } else {
         await _editLocalDraft(null, kind);
       }
@@ -275,6 +342,15 @@ class _ReportsScreenState extends State<ReportsScreen> {
   Future<void> _openReport(DocumentRecord report) async {
     if (widget.onReportTap != null) {
       widget.onReportTap!(report);
+      return;
+    }
+    if (_repository is RemoteSiteReportRepository &&
+        report.reportKind == ReportKind.workAcceptance) {
+      if(report.status == 'draft') {
+        await _openAcceptance(report);
+      }else{
+        await _showAcceptance(report);
+      }
       return;
     }
     if (_repository is RemoteSiteReportRepository) {
