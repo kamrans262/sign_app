@@ -308,6 +308,16 @@ class _AddLabourEntryScreenState extends State<AddLabourEntryScreen> {
           : await source.upload();
       for (final photo in chosen) {
         DeviceJobPhotoSource.validate(photo.name, photo.bytes);
+        if (_remote && photo.bytes.length > 10 * 1024 * 1024) {
+          throw const FormatException('Labour evidence is limited to 10 MB per file.');
+        }
+      }
+      if (_remote) {
+        final sources = _photos.map((p) => p.sourceKey).toSet();
+        sources.addAll(chosen.map((p) => p.sourceKey));
+        if (sources.length > 10) {
+          throw const FormatException('Maximum 10 labour evidence files.');
+        }
       }
       if (!mounted) { return; }
       setState(() {
@@ -324,6 +334,12 @@ class _AddLabourEntryScreenState extends State<AddLabourEntryScreen> {
       if (mounted) { setState(() => _photoBusy = false); }
     }
   }
+
+  bool _isPdfEvidence(LocalJobPhotoSelection proof) =>
+      proof.name.toLowerCase().endsWith('.pdf') ||
+      (proof.bytes.length >= 5 && proof.bytes[0] == 37 &&
+        proof.bytes[1] == 80 && proof.bytes[2] == 68 &&
+        proof.bytes[3] == 70 && proof.bytes[4] == 45);
 
   Widget _photoGrid() => LayoutBuilder(
     builder: (context, bounds) => GridView.builder(
@@ -343,6 +359,28 @@ class _AddLabourEntryScreenState extends State<AddLabourEntryScreen> {
             key: const Key('labour-add-photo'),
             enabled: !_photoBusy && !_saving,
             onTap: _addPhotos,
+          );
+        }
+        if (_isPdfEvidence(_photos[index])) {
+          return Sign2DigitalOutlinedContainer(
+            key: Key('labour-pdf-edit-$index'),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Row(children: [
+                const Icon(Icons.picture_as_pdf_outlined,
+                  color: AppColors.primary, size: 28),
+                const SizedBox(width: 8),
+                Expanded(child: Text(_photos[index].name,
+                  maxLines: 2, overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontFamily:'Inter',fontSize:13,
+                    color:AppColors.dark))),
+                IconButton(
+                  tooltip: 'Remove PDF evidence',
+                  onPressed: () => setState(() => _photos.removeAt(index)),
+                  icon: const Icon(Icons.close, color: AppColors.secondaryText),
+                ),
+              ]),
+            ),
           );
         }
         return Sign2DigitalPhotoPreview(
