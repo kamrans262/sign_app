@@ -13,6 +13,7 @@ import '../../../jobs/data/local_job_photo_source.dart';
 import '../../../jobs/presentation/widgets/sign2digital_photo_preview.dart';
 import '../../../quotes/presentation/widgets/sign2digital_signature_draw_canvas.dart';
 import '../../domain/expense_record.dart';
+import '../../data/remote_expense_repository.dart';
 import '../widgets/sign2digital_expense_upload_tile.dart';
 
 typedef ReceiptShare = Future<void> Function(LocalJobPhotoSelection receipt);
@@ -56,7 +57,8 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
   bool _busy = false;
 
   List<LocalJobPhotoSelection> get _attachments => _record.photos;
-  bool get _canEdit => widget.canEdit ?? _record.demoOnly;
+  bool get _canEdit => widget.canEdit ??
+      (_record.demoOnly || _record.status == ExpenseStatus.toReview);
   LocalJobPhotoSelection? get _current =>
       _attachments.isEmpty ? null : _attachments[_selected.clamp(0, _attachments.length - 1).toInt()];
 
@@ -104,13 +106,16 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
         ],
       );
       await widget.repository.updateExpense(saved);
+      final confirmed = widget.repository is RemoteExpenseRepository
+          ? await (widget.repository as RemoteExpenseRepository).getExpense(saved.id)
+          : saved;
       if (!mounted) return;
       setState(() {
-        _record = saved;
-        _selected = photos.isEmpty ? 0
-            : (selected ?? _selected).clamp(0, photos.length - 1).toInt();
+        _record = confirmed;
+        _selected = confirmed.photos.isEmpty ? 0
+            : (selected ?? _selected).clamp(0, confirmed.photos.length - 1).toInt();
       });
-      widget.onExpenseChanged?.call(saved);
+      widget.onExpenseChanged?.call(confirmed);
     } catch (_) {
       _message('Could not save receipt changes. No attachments were changed.');
     } finally {
