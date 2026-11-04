@@ -236,6 +236,9 @@ class _ConvertDocumentScreenState extends State<ConvertDocumentScreen> {
           _stage = QuotePreparationStage.completed;
         });
         NoteDocumentDraftSession.save(prepared);
+        // Generation has completed. Stop the button spinner before opening
+        // the review dialog, otherwise its animation never settles.
+        setState(() => _starting = false);
         await _reviewGeneric();
       } catch (error) {
         if (mounted) {

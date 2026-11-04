@@ -64,6 +64,10 @@ void main() {
   setUp(NoteDocumentDraftSession.clear);
   testWidgets('note dialog opens real note conversion; Back preserves Job Notes',
       (tester) async {
+    tester.view.physicalSize = const Size(430, 932);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(MaterialApp(
       home: JobNotesScreen(
         job: MockJobsData.jobs.first,
@@ -78,6 +82,8 @@ void main() {
         ],
       ),
     ));
+    await tester.ensureVisible(find.byKey(const Key('job-note-linked-note')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('job-note-linked-note')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('job-note-convert')));
