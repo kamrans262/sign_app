@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sign2digital/core/widgets/sign2digital_bottom_navigation_bar.dart';
 import 'package:sign2digital/core/widgets/sign2digital_dashboard_header.dart';
 import 'package:sign2digital/features/clients/presentation/screens/clients_screen.dart';
+import 'package:sign2digital/features/clients/presentation/screens/more_screen.dart';
 import 'package:sign2digital/features/clients/presentation/widgets/sign2digital_status_badge.dart';
 import 'package:sign2digital/features/labour/data/demo_labour_repository.dart';
 import 'package:sign2digital/features/labour/domain/labour_entry.dart';
@@ -66,21 +67,41 @@ void main() {
     expect(entries[1].statusLabel, 'Pending');
   });
 
-  testWidgets('More opens Time & Labour with existing global components',
-      (tester) async {
+  testWidgets('dashboard More tab remains selected', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: ClientsScreen()));
     await tester.tap(find.byKey(const Key('dashboard-tab-4')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('open-time-labour')));
-    await tester.pumpAndSettle();
-    expect(find.byType(TimeLabourScreen), findsOneWidget);
-    expect(find.byType(Sign2DigitalDashboardHeader), findsWidgets);
-    expect(find.text('Search documents'), findsOneWidget);
-    expect(find.text('Labour'), findsOneWidget);
-    expect(find.text('Time Sheet'), findsOneWidget);
+    // The Home route has ongoing async updates; bounded pumps are intentional.
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(find.byType(MoreScreen),findsOneWidget);
     expect(tester.widget<Sign2DigitalBottomNavigationBar>(
-      find.byType(Sign2DigitalBottomNavigationBar).last).selectedIndex, 4);
-    expect(tester.takeException(), isNull);
+      find.byType(Sign2DigitalBottomNavigationBar).last).selectedIndex,4);
+    expect(tester.takeException(),isNull);
+  });
+
+  testWidgets('More tile opens Time & Labour with global components',
+      (tester) async {
+    await tester.pumpWidget(const MaterialApp(
+      home:Scaffold(body:MoreScreen()),
+    ));
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('open-time-labour')),200,
+      scrollable:find.descendant(
+        of:find.byKey(const Key('more-menu-scroll')),
+        matching:find.byType(Scrollable)).first,
+    );
+    final entry=find.byKey(const Key('open-time-labour'));
+    await tester.ensureVisible(entry);
+    await tester.pump();
+    await tester.tap(entry);
+    await tester.pumpAndSettle();
+    expect(find.byType(TimeLabourScreen),findsOneWidget);
+    expect(find.byType(Sign2DigitalDashboardHeader),findsWidgets);
+    expect(find.text('Search time entries'),findsOneWidget);
+    expect(find.text('Labour'),findsOneWidget);
+    expect(find.text('Time Sheet'),findsOneWidget);
+    expect(tester.widget<Sign2DigitalBottomNavigationBar>(
+      find.byType(Sign2DigitalBottomNavigationBar).last).selectedIndex,4);
+    expect(tester.takeException(),isNull);
   });
 
   testWidgets('Labour/Time Sheet tabs filter different records',
@@ -134,7 +155,10 @@ void main() {
     ], [LabourDemoJobs.riverside]);
     await tester.pumpWidget(MaterialApp(home: TimeLabourScreen(repository: stub)));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('labour-sort')));
+    await tester.tap(find.descendant(
+      of:find.byKey(const Key('labour-sort')),
+      matching:find.byType(InkWell),
+    ));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('labour-sort-mostHours')));
     await tester.pumpAndSettle();
