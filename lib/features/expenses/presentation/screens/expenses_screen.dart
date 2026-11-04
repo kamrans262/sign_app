@@ -129,9 +129,9 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       builder: (_) => ExpenseDetailsScreen(
         expense: expense, repository: _repository,
         loadExpense: _repository is RemoteExpenseRepository
-            ? (_repository as RemoteExpenseRepository).getExpense : null,
+            ? _repository.getExpense : null,
         onRequestReimbursement: _repository is RemoteExpenseRepository
-            ? (_repository as RemoteExpenseRepository).requestReimbursement : null,
+            ? _repository.requestReimbursement : null,
         selectedNavigationIndex: widget.selectedNavigationIndex,
         onNavigationSelected: widget.onNavigationSelected,
       )));
@@ -157,7 +157,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       if (!mounted) return;
       await _load();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(_repository is RemoteExpenseRepository
               ? 'Expense saved for review.' : 'Expense saved locally for review.')));
       }
