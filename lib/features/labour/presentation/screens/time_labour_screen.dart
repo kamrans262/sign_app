@@ -119,7 +119,9 @@ class _TimeLabourScreenState extends State<TimeLabourScreen> {
       final records = await _repository.list();
       final jobs = await _repository.jobs();
       if (!mounted || serial!=_loadSerial ||
-          ActiveCompanySession.companyId!=company) return;
+          ActiveCompanySession.companyId!=company) {
+        return;
+      }
       setState(() {
         _all = records;
         _jobs = jobs;
