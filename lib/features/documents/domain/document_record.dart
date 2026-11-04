@@ -40,8 +40,22 @@ class SiteReportDetails {
     required this.selectedSections,
     required this.sectionContent,
     this.photos = const [],
+    this.location = '',
+    this.attendees = const [],
+    this.absentees = const [],
+    this.decisions = const [],
+    this.outstandingPoints = const [],
+    this.nextSteps = const [],
+    this.actionItems = const [],
   });
 
+  final String location;
+  final List<String> attendees;
+  final List<String> absentees;
+  final List<String> decisions;
+  final List<String> outstandingPoints;
+  final List<String> nextSteps;
+  final List<MeetingActionItem> actionItems;
   final DateTime reportDate;
   final String preparedBy;
   final String weatherCondition;

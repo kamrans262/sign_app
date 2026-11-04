@@ -116,6 +116,13 @@ class RemoteSiteReportRepository implements DocumentRepository {
         reportDate: reportDate,
         preparedBy: (raw['prepared_by'] ?? '').toString(),
         weatherCondition: (raw['weather'] ?? '').toString(),
+        location: (raw['location'] ?? '').toString(),
+        attendees: _strings(content['attendees']),
+        absentees: _strings(content['absentees']),
+        decisions: _strings(content['decisions']),
+        outstandingPoints: _strings(content['outstanding_points']),
+        nextSteps: _strings(content['next_steps']),
+        actionItems: actions,
         selectedSections: SiteReportSection.values.where(
             (section) => sections.containsKey(section.name)).toList(),
         sectionContent: {
@@ -222,6 +229,10 @@ class RemoteSiteReportRepository implements DocumentRepository {
         weatherCondition: site.weatherCondition,
         selectedSections: site.selectedSections,
         sectionContent: site.sectionContent, photos: photos,
+        location: site.location, attendees: site.attendees,
+        absentees: site.absentees, decisions: site.decisions,
+        outstandingPoints: site.outstandingPoints, nextSteps: site.nextSteps,
+        actionItems: site.actionItems,
       ),
     );
   }
@@ -271,10 +282,20 @@ class RemoteSiteReportRepository implements DocumentRepository {
       'report_date': dateValue(site?.reportDate ?? draft.timestamp),
       'prepared_by': site?.preparedBy ?? minutes?.preparedBy ?? '',
       'weather': site?.weatherCondition,
-      'location': minutes?.location ?? draft.project,
+      'location': site?.location ?? minutes?.location ?? '',
       'photo_ids': photoIds,
       'content': <String, dynamic>{
         'sections': sections,
+        if (site != null) 'attendees': site.attendees,
+        if (site != null) 'absentees': site.absentees,
+        if (site != null) 'decisions': site.decisions,
+        if (site != null) 'outstanding_points': site.outstandingPoints,
+        if (site != null) 'next_steps': site.nextSteps,
+        if (site != null) 'action_items': site.actionItems.map((item) => {
+          'description': item.description,
+          if (item.assignee.trim().isNotEmpty) 'assignee': item.assignee,
+          if (item.dueDate != null) 'due_date': dateValue(item.dueDate!),
+        }).toList(),
         if (minutes != null) 'attendees': minutes.attendees,
         if (minutes != null) 'absentees': minutes.absentees,
         if (minutes != null) 'decisions': minutes.decisions,
