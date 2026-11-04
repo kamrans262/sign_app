@@ -652,6 +652,13 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
         textCapitalization: TextCapitalization.words,
       ),
       const SizedBox(height: 15),
+      Sign2DigitalInputField(
+        key: const Key('site-report-location'),
+        label: 'Site Location', hintText: 'Enter site location',
+        iconAsset: 'assets/icons/description.svg',
+        controller: _location,
+      ),
+      const SizedBox(height: 15),
       Sign2DigitalSelectionField(
         key: const Key('site-report-weather'),
         label: 'Weather Condition',
@@ -825,6 +832,21 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
         ),
         const SizedBox(height: 20),
       ],
+      for (final field in <(String, TextEditingController)>[
+        ('Attendees (one per line)', _attendees),
+        ('Absentees (one per line)', _absentees),
+        ('Decisions (one per line)', _decisions),
+        ('Outstanding Points (one per line)', _outstanding),
+        ('Next Steps (one per line)', _nextSteps),
+        ('Action Items (task | owner | YYYY-MM-DD)', _actions),
+      ]) ...[
+        Sign2DigitalInputField(
+          label: field.$1, hintText: field.$1,
+          iconAsset: 'assets/icons/description.svg',
+          controller: field.$2, minLines: 2, maxLines: null,
+        ),
+        const SizedBox(height: 15),
+      ],
       for (final section in [SiteReportSection.materials, SiteReportSection.labour])
         if (_selectedSections.contains(section)) ...[
           Sign2DigitalInputField(
@@ -996,6 +1018,12 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
         icon: 'assets/icons/calendar-outlined.svg',
         value: _reportDate == null ? '' : _dateText(_reportDate!),
         onTap: _chooseDate,
+      ),
+      const SizedBox(height: 15),
+      _reviewValue(
+        label: 'Site Location', hint: 'Enter site location',
+        icon: 'assets/icons/description.svg', value: _location.text.trim(),
+        onTap: () => _showStep(0),
       ),
       const SizedBox(height: 15),
       _reviewValue(
