@@ -23,6 +23,10 @@ import '../widgets/sign2digital_document_history.dart';
 typedef DocumentDetailsLoader = Future<DocumentRecord?> Function(String id);
 typedef DocumentPdfLoader = Future<Uint8List?> Function(DocumentRecord record);
 typedef DocumentPdfPreviewBuilder = Widget Function(Uint8List bytes);
+typedef DocumentFileAction = Future<void> Function(
+    DocumentRecord record, String name, Uint8List bytes);
+typedef DocumentVersionAction = Future<DocumentRecord> Function(
+    DocumentRecord record, String name, Uint8List bytes);
 
 /// Document details and its four tabs. No global bottom navigation.
 class DocumentDetailsScreen extends StatefulWidget {
@@ -32,6 +36,8 @@ class DocumentDetailsScreen extends StatefulWidget {
     this.document,
     this.loadDocument,
     this.loadSignedPdf,
+    this.onAddAttachment,
+    this.onAddVersion,
     this.pdfPreviewBuilder,
     this.onViewSignatures,
     this.requestAddendumSignature,
@@ -42,6 +48,8 @@ class DocumentDetailsScreen extends StatefulWidget {
   final DocumentRecord? document;
   final DocumentDetailsLoader? loadDocument;
   final DocumentPdfLoader? loadSignedPdf;
+  final DocumentFileAction? onAddAttachment;
+  final DocumentVersionAction? onAddVersion;
   /// Optional renderer for isolated widget tests; normal UI uses PdfPreview.
   final DocumentPdfPreviewBuilder? pdfPreviewBuilder;
   final ValueChanged<DocumentHistoryEvent>? onViewSignatures;
@@ -125,6 +133,16 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
     if (record.reportKind == ReportKind.workAcceptance) {
       if (record.demoOnly) return null;
       return record.workAcceptance?.verifiedReportPdf;
+    }
+    // M9: remote approved quotes and uploaded documents use their original
+    // integrity-verified server PDFs, never reconstructed editable drafts.
+    if (!record.demoOnly && record.verifiedSignedPdfAvailable &&
+        widget.loadSignedPdf != null) {
+      final pdf = await widget.loadSignedPdf!(record);
+      if (pdf == null || pdf.isEmpty) {
+        throw const FormatException('Verified document PDF is unavailable.');
+      }
+      return pdf;
     }
     if (record.status.toLowerCase() == 'signed' && !record.demoOnly) {
       if (!record.verifiedSignedPdfAvailable || widget.loadSignedPdf == null) {
@@ -260,6 +278,44 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
     }
   }
 
+  Future<void> _addDocumentFile({required bool newVersion}) async {
+    final record = _record;
+    if (record == null) return;
+    try {
+      final selection = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: newVersion
+            ? ['pdf'] : ['pdf', 'png', 'jpg', 'jpeg'],
+        withData: true,
+      );
+      if (selection == null || selection.files.isEmpty || !mounted) return;
+      final file = selection.files.single;
+      final bytes = file.bytes;
+      if (bytes == null || bytes.isEmpty) {
+        throw const FormatException('Selected file could not be read.');
+      }
+      if (newVersion) {
+        if (widget.onAddVersion == null) return;
+        await widget.onAddVersion!(record, file.name, bytes);
+      } else {
+        if (widget.onAddAttachment == null) return;
+        await widget.onAddAttachment!(record, file.name, bytes);
+      }
+      if (!mounted) return;
+      _pdfFuture = null;
+      if (widget.loadDocument != null) {
+        await _load();
+      }
+      _message(newVersion
+          ? 'New PDF version was saved.'
+          : 'Attachment added. Original PDF unchanged.');
+    } catch (_) {
+      _message(newVersion
+          ? 'Unable to upload document version.'
+          : 'Unable to add document attachment.');
+    }
+  }
+
   void _more() {
     final record = _record;
     if (record == null) return;
@@ -294,6 +350,28 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
               onTap: () {
                 Navigator.pop(sheet);
                 _sendAddendumForSignature();
+              },
+            ),
+          if (widget.onAddAttachment != null &&
+              RegExp(r'^(quote|signed|managed)-').hasMatch(record.id))
+            ListTile(
+              key: const Key('document-add-attachment'),
+              leading: const Icon(Icons.attach_file_outlined),
+              title: const Text('Add Attachment'),
+              onTap: () {
+                Navigator.pop(sheet);
+                _addDocumentFile(newVersion: false);
+              },
+            ),
+          if (widget.onAddVersion != null &&
+              record.id.startsWith('managed-'))
+            ListTile(
+              key: const Key('document-add-version'),
+              leading: const Icon(Icons.upload_file_outlined),
+              title: const Text('Add PDF Version'),
+              onTap: () {
+                Navigator.pop(sheet);
+                _addDocumentFile(newVersion: true);
               },
             ),
           if (record.category == DocumentCategory.quotes)
@@ -342,7 +420,8 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
       return record.verifiedSignedPdfAvailable &&
           widget.loadSignedPdf != null;
     }
-    return record.quote != null;
+    return record.quote != null ||
+        (record.verifiedSignedPdfAvailable && widget.loadSignedPdf != null);
   }
 
   void _view() {
@@ -528,7 +607,8 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
     key: const Key('document-details-scroll'),
     padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
     child: Center(child: ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 720),
+      constraints: BoxConstraints(maxWidth:
+          MediaQuery.sizeOf(context).width >= 900 ? double.infinity : 720),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
