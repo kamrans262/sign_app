@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -49,6 +50,20 @@ void main(){
     expect(rows.single.hourlyRate,25);
     expect(rows.single.status,LabourEntryStatus.pending);
     expect(rows.single.isDemo,false);
+    client.dispose();
+  });
+
+  test('changing active company during a request rejects stale labour data',() async {
+    final pending=Completer<http.Response>();
+    final client=api((req)=>pending.future);
+    final read=RemoteLabourRepository(api:client).list();
+    // Once an API request has started it must not populate another company.
+    await Future<void>.delayed(Duration.zero);
+    ActiveCompanySession.set(8);
+    pending.complete(http.Response(jsonEncode({'data':{
+      'records':[labour()],'page':1,'last_page':1,
+    }}),200));
+    await expectLater(read,throwsA(isA<SignApiException>()));
     client.dispose();
   });
 
