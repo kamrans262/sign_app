@@ -5,6 +5,7 @@ import 'package:printing/printing.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
+import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../../../core/widgets/sign2digital_information_table.dart';
 import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import '../../../quotes/presentation/widgets/sign2digital_quote_summary_card.dart';
@@ -44,6 +45,7 @@ class DocumentDetailsScreen extends StatefulWidget {
     this.pdfPreviewBuilder,
     this.onViewSignatures,
     this.requestAddendumSignature,
+    this.onApproveAddendum,
     this.initialTab = 0,
   });
 
@@ -58,10 +60,71 @@ class DocumentDetailsScreen extends StatefulWidget {
   final DocumentPdfPreviewBuilder? pdfPreviewBuilder;
   final ValueChanged<DocumentHistoryEvent>? onViewSignatures;
   final AddendumSignatureRequestService? requestAddendumSignature;
+  final Future<DocumentRecord> Function(DocumentRecord)? onApproveAddendum;
   final int initialTab;
 
   @override
   State<DocumentDetailsScreen> createState() => _DocumentDetailsScreenState();
+}
+
+/// Existing Sign2Digital bottom-sheet controls, not a new screen.
+class _AddendumApprovalConfirmation extends StatefulWidget {
+  const _AddendumApprovalConfirmation({
+    required this.draft, required this.onConfirmed,
+  });
+  final AddendumDraft draft;
+  final VoidCallback onConfirmed;
+
+  @override
+  State<_AddendumApprovalConfirmation> createState() =>
+      _AddendumApprovalConfirmationState();
+}
+
+class _AddendumApprovalConfirmationState
+    extends State<_AddendumApprovalConfirmation> {
+  bool _confirmed = false;
+  @override
+  Widget build(BuildContext context) => Column(
+    mainAxisSize: MainAxisSize.min,
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      const Text('Review Addendum',
+        style: TextStyle(fontFamily: 'Inter', fontSize: 18,
+          fontWeight: FontWeight.w600, color: AppColors.dark)),
+      const SizedBox(height: 14),
+      Text(widget.draft.number, style: const TextStyle(fontFamily: 'Inter',
+        fontWeight: FontWeight.w600)),
+      const SizedBox(height: 6),
+      Text(widget.draft.title),
+      const SizedBox(height: 8),
+      Text(widget.draft.description),
+      if (widget.draft.hasPricedWork) ...[
+        const SizedBox(height: 8),
+        Text('Additional work: ' + widget.draft.additionalWork),
+        Text('Quantity: ' + widget.draft.quantity),
+      ],
+      const SizedBox(height: 8),
+      Text('Total: ' + quoteMoney(
+        widget.draft.totalMinor, widget.draft.currency)),
+      const SizedBox(height: 12),
+      CheckboxListTile(
+        contentPadding: EdgeInsets.zero,
+        value: _confirmed,
+        activeColor: AppColors.primary,
+        title: const Text(
+          'I reviewed and approve this exact separate addendum.',
+          style: TextStyle(fontFamily: 'Inter', fontSize: 13)),
+        onChanged: (checked) =>
+            setState(() => _confirmed = checked ?? false),
+      ),
+      Sign2DigitalPrimaryButton(
+        key: const Key('addendum-confirm-approval'),
+        label: 'Approve Addendum',
+        enabled: _confirmed,
+        onPressed: widget.onConfirmed,
+      ),
+    ],
+  );
 }
 
 class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
@@ -130,6 +193,16 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
   }
 
   Future<Uint8List?> _makePdf(DocumentRecord record) async {
+    // A saved/approved/signed M10 addendum must use the exact server PDF,
+    // never a newly rendered local preview of the frozen original.
+    if (!record.demoOnly && record.verifiedSignedPdfAvailable &&
+        widget.loadSignedPdf != null) {
+      final pdf = await widget.loadSignedPdf!(record);
+      if (pdf == null || pdf.isEmpty) {
+        throw const FormatException('Verified document PDF is unavailable.');
+      }
+      return pdf;
+    }
     if (record.category == DocumentCategory.addends &&
         record.addendumDraftId != null) {
       final draft = AddendumDraftSession.load(record.addendumDraftId!);
@@ -148,16 +221,6 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
     if (record.reportKind == ReportKind.workAcceptance) {
       if (record.demoOnly) return null;
       return record.workAcceptance?.verifiedReportPdf;
-    }
-    // M9: remote approved quotes and uploaded documents use their original
-    // integrity-verified server PDFs, never reconstructed editable drafts.
-    if (!record.demoOnly && record.verifiedSignedPdfAvailable &&
-        widget.loadSignedPdf != null) {
-      final pdf = await widget.loadSignedPdf!(record);
-      if (pdf == null || pdf.isEmpty) {
-        throw const FormatException('Verified document PDF is unavailable.');
-      }
-      return pdf;
     }
     if (record.status.toLowerCase() == 'signed' && !record.demoOnly) {
       if (!record.verifiedSignedPdfAvailable || widget.loadSignedPdf == null) {
@@ -231,6 +294,49 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
       if (bytes == null) { _message('No document PDF is available.'); return; }
       await Printing.sharePdf(bytes: bytes, filename: _filename(record));
     } catch (_) { _message('Could not open the document share sheet.'); }
+  }
+
+  Future<void> _approveAddendum() async {
+    final record = _record;
+    final action = widget.onApproveAddendum;
+    final draft = AddendumDraftSession.load(record?.addendumDraftId ?? '');
+    if (record == null || action == null || draft == null ||
+        draft.serverId == null || draft.serverStatus != 'draft' ||
+        _requestingAddendum) {
+      _message('A saved server addendum draft is required for approval.');
+      return;
+    }
+    final approved = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheet) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: StatefulBuilder(builder: (sheet, update) {
+            // Explicit affirmation is required; merely viewing is not approval.
+            return _AddendumApprovalConfirmation(
+              draft: draft,
+              onConfirmed: () => Navigator.pop(sheet, true),
+            );
+          }),
+        ),
+      ),
+    );
+    if (approved != true || !mounted) return;
+    setState(() => _requestingAddendum = true);
+    try {
+      final latest = await action(record);
+      if (!mounted) return;
+      setState(() {
+        _record = latest;
+        _pdfFuture = null;
+      });
+      _message('Addendum approved and original PDF frozen securely.');
+    } catch (_) {
+      _message('Could not approve addendum. Reload and review again.');
+    } finally {
+      if (mounted) setState(() => _requestingAddendum = false);
+    }
   }
 
   Future<void> _sendAddendumForSignature() async {
@@ -445,8 +551,23 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
               },
             ),
           if (record.category == DocumentCategory.addends &&
+              record.status.toLowerCase() == 'draft' &&
+              record.id.startsWith('addendum-') &&
+              widget.onApproveAddendum != null)
+            ListTile(
+              key: const Key('addendum-approve'),
+              leading: const Icon(Icons.verified_outlined),
+              title: const Text('Review and Approve Addendum'),
+              onTap: () {
+                Navigator.pop(sheet);
+                _approveAddendum();
+              },
+            ),
+          if (record.category == DocumentCategory.addends &&
               AddendumDraftSession.load(record.addendumDraftId ?? '')
-                  ?.isCreatedLocally == true)
+                  ?.isCreatedLocally == true &&
+              (!record.id.startsWith('addendum-') ||
+                  ['approved','sent'].contains(record.status.toLowerCase())))
             ListTile(
               key: const Key('addendum-send-for-signature'),
               leading: const Icon(Icons.draw_outlined),
@@ -489,7 +610,10 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
                 _addDocumentFile(newVersion: true);
               },
             ),
-          if (record.category == DocumentCategory.quotes)
+          if (record.category == DocumentCategory.quotes &&
+              (widget.loadDocument == null ||
+                  record.id.startsWith('signed-') &&
+                      record.verifiedSignedPdfAvailable))
             ListTile(
               key: const Key('document-create-addendum'),
               leading: const Icon(Icons.note_add_outlined),
@@ -747,6 +871,8 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
                   ? null : linked[i],
               loadDocument: widget.loadDocument,
               loadSignedPdf: widget.loadSignedPdf,
+              onAddVersion: widget.onAddVersion,
+              onAddAttachment: widget.onAddAttachment,
               onDownloadAttachment: widget.onDownloadAttachment,
               onViewSignatures: widget.onViewSignatures,
               requestAddendumSignature: widget.requestAddendumSignature,
