@@ -104,10 +104,12 @@ void main() {
       expect(find.byKey(Key('receipt-thumbnail-$i')), findsOneWidget);
     }
     expect(find.byKey(const Key('receipt-preview-image')), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const Key('receipt-thumbnail-1')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('receipt-thumbnail-1')));
     await tester.pump();
     expect(find.byKey(const Key('receipt-preview-image')), findsOneWidget);
-    await tester.pageBack();
+    await tester.tap(find.byIcon(Icons.arrow_back_ios_new_rounded));
     await tester.pumpAndSettle();
     expect(find.byType(ExpenseDetailsScreen), findsOneWidget);
     expect(tester.widget<Sign2DigitalDetailsTabs>(
