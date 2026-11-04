@@ -62,7 +62,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(ExpensesScreen), findsOneWidget);
     expect(find.byType(Sign2DigitalDashboardHeader), findsWidgets);
-    expect(find.text('Search documents'), findsOneWidget);
+    expect(find.text('Search expenses'), findsOneWidget);
     expect(find.text('All'), findsOneWidget);
     expect(find.text('To Review'), findsWidgets);
     expect(find.text('Approved'), findsWidgets);
