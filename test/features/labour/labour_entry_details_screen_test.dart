@@ -204,6 +204,17 @@ void main() {
     expect(records.length, 1);
     expect(records.single.workerName, 'Taylor Reed');
     expect(records.single.history.length, 2);
+    // The editor leaves the details list scrolled near its bottom; rebuild
+    // the lazily rendered worker header before asserting the visible name.
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('labour-detail-worker')), -220,
+      scrollable: find.descendant(
+        of: find.byKey(const Key('labour-detail-scroll')),
+        matching: find.byType(Scrollable),
+      ).first,
+    );
+    await tester.pump();
+    expect(find.byKey(const Key('labour-detail-name')), findsOneWidget);
     expect(find.text('Taylor Reed'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
