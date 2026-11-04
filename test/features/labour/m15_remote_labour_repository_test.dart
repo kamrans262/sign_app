@@ -98,6 +98,22 @@ void main(){
     client.dispose();
   });
 
+  test('late old-company timer reply cannot cross an active company switch',
+      () async {
+    final reply=Completer<http.Response>();
+    final client=api((req)=>reply.future);
+    final pending=RemoteLabourRepository(api:client).timerCurrent();
+    await Future<void>.delayed(Duration.zero);
+    ActiveCompanySession.set(8);
+    reply.complete(http.Response(jsonEncode({'data':{'timer':{
+      'status':'running','job_id':34,'worker_id':52,
+      'elapsed_seconds':999,'lock_version':2,
+      'server_now':'2026-11-05T08:00:00Z',
+    }}}),200));
+    await expectLater(pending,throwsA(isA<SignApiException>()));
+    client.dispose();
+  });
+
   test('timer actions send idempotency keys and render server state',() async {
     final client=api((req) async {
       expect(req.method,'POST');
