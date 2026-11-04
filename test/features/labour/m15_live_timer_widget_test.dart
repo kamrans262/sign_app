@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -83,4 +84,58 @@ void main(){
     await tester.pumpWidget(const SizedBox.shrink());
     client.dispose();
   });
+
+
+  testWidgets('company switch ignores a late previous-company timer response',
+      (tester) async {
+    final oldReply=Completer<http.Response>();
+    var sevenRequests=0;
+    http.Response timer(String status,int seconds)=>http.Response(
+      jsonEncode({'data':{'timer':{
+        'status':status,'job_id':34,'worker_id':52,
+        'elapsed_seconds':seconds,
+        'server_now':'2026-11-05T08:00:00Z',
+        'lock_version':2,
+      }}}),200,
+    );
+    final client=SignApiClient(
+      baseUrl:Uri.parse('https://example.test'),
+      tokenProvider:() async=>'m15-company-test',
+      activeCompanyId:()=>ActiveCompanySession.companyId,
+      httpClient:MockClient((req) async {
+        expect(req.url.path,'/api/v1/labour/timer/current');
+        if(req.headers['X-Company-Id']=='7'){
+          sevenRequests++;
+          if(sevenRequests==2)return oldReply.future;
+          return timer('running',180);
+        }
+        expect(req.headers['X-Company-Id'],'8');
+        return timer('stopped',0);
+      }),
+    );
+    await tester.pumpWidget(MaterialApp(home:Scaffold(
+      body:M15LiveTimerPanel(repository:RemoteLabourRepository(api:client),
+        job:null,onUpdated:(){}),
+    )));
+    await tester.pump(const Duration(milliseconds:150));
+    expect(find.text('Status: RUNNING'),findsOneWidget);
+    await tester.tap(find.byKey(const Key('m15-timer-refresh')));
+    await tester.pump();
+    ActiveCompanySession.set(8);
+    await tester.pump(const Duration(milliseconds:150));
+    expect(find.text('Status: STOPPED'),findsOneWidget);
+    expect(find.text('Status: RUNNING'),findsNothing);
+    oldReply.complete(timer('running',999));
+    await tester.pump(const Duration(milliseconds:150));
+    expect(find.text('Status: STOPPED'),findsOneWidget);
+    expect(find.byKey(const Key('m15-timer-start')),findsOneWidget);
+    ActiveCompanySession.clear();
+    await tester.pump();
+    expect(find.text('Status: STOPPED'),findsNothing);
+    expect(find.text('Select a company before tracking work.'),findsOneWidget);
+    expect(tester.takeException(),isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+    client.dispose();
+  });
+
 }
