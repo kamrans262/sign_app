@@ -192,6 +192,22 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
   String get _actualTitle => _title == 'Custom title'
       ? _customTitle.text.trim() : (_title ?? '');
 
+  List<String> _lines(String value) => value.split('\n').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
+
+  List<MeetingActionItem> _actionRows() => _lines(_actions.text).map((line) {
+    final parts = line.split('|').map((s) => s.trim()).toList();
+    if (parts.length > 3 || parts.first.isEmpty) {
+      throw const FormatException('Use task | owner | YYYY-MM-DD.');
+    }
+    final due = parts.length == 3 && parts[2].isNotEmpty
+        ? DateTime.tryParse(parts[2]) : null;
+    if (parts.length == 3 && parts[2].isNotEmpty && due == null) {
+      throw const FormatException('Action due dates must use YYYY-MM-DD.');
+    }
+    return MeetingActionItem(description: parts.first,
+        assignee: parts.length > 1 ? parts[1] : '', dueDate: due);
+  }).toList();
+
   String _dateText(DateTime value) {
     const months = ['January', 'February', 'March', 'April', 'May', 'June',
       'July', 'August', 'September', 'October', 'November', 'December'];
@@ -274,6 +290,7 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
     if (_actualTitle.isEmpty) { return 'Choose a report title.'; }
     if (_reportDate == null) { return 'Choose a report date.'; }
     if (_preparer.text.trim().isEmpty) { return 'Enter who prepared the report.'; }
+    if (widget.reportGenerator != null && _location.text.trim().isEmpty) { return 'Enter the site location.'; }
     if ((_weather ?? '').isEmpty) { return 'Choose a weather condition.'; }
     if (_selectedSections.isEmpty) { return 'Select at least one report section.'; }
     return null;
@@ -281,6 +298,8 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
 
   String? _contentIssue() {
     if (_picking) { return 'Wait for photo selection to finish.'; }
+    if (widget.reportGenerator != null && _photos.length > 8) { return 'Select no more than eight photos.'; }
+    try { _actionRows(); } on FormatException catch (e) { return e.message; }
     for (final section in SiteReportSection.values) {
       if (!_selectedSections.contains(section)) { continue; }
       if (section == SiteReportSection.photos) {
@@ -487,6 +506,13 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
       reportDate: _reportDate!,
       preparedBy: _preparer.text.trim(),
       weatherCondition: _weather!,
+      location: _location.text.trim(),
+      attendees: _lines(_attendees.text),
+      absentees: _lines(_absentees.text),
+      decisions: _lines(_decisions.text),
+      outstandingPoints: _lines(_outstanding.text),
+      nextSteps: _lines(_nextSteps.text),
+      actionItems: _actionRows(),
       selectedSections: List.unmodifiable(
           SiteReportSection.values.where(_selectedSections.contains)),
       sectionContent: Map.unmodifiable({
