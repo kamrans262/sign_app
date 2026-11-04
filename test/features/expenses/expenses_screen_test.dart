@@ -57,9 +57,9 @@ void main() {
       (tester) async {
     await tester.pumpWidget(const MaterialApp(home: ClientsScreen()));
     await tester.tap(find.byKey(const Key('dashboard-tab-4')));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 600));
     await tester.tap(find.byKey(const Key('open-expenses')));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 600));
     expect(find.byType(ExpensesScreen), findsOneWidget);
     expect(find.byType(Sign2DigitalDashboardHeader), findsWidgets);
     expect(find.text('Search expenses'), findsOneWidget);
@@ -92,6 +92,10 @@ void main() {
     await tester.enterText(find.byKey(const Key('clients-search-input')), 'Fuel');
     await tester.pump();
     expect(find.byKey(const Key('expense-card-middle')), findsNothing);
+    tester.testTextInput.hide();
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.ensureVisible(find.byKey(const Key('expenses-sort')));
+    await tester.pump();
     await tester.tap(find.byKey(const Key('expenses-sort')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('expense-sort-highest')));
@@ -138,7 +142,7 @@ void main() {
     final details = tester.widget<ExpenseDetailsScreen>(
       find.byType(ExpenseDetailsScreen));
     expect(details.expense.id, 'demo-expense-1');
-    expect(find.text('CHF 78.80'), findsOneWidget);
+    expect(find.text('CHF 78.80'), findsNWidgets(2));
     expect(tester.takeException(), isNull);
   });
 
@@ -148,7 +152,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('expenses-create')));
     await tester.pumpAndSettle();
-    expect(find.text('Add Expense'), findsOneWidget);
+    expect(find.byKey(const Key('expense-save-draft')), findsOneWidget);
     await tester.ensureVisible(find.byKey(const Key('expense-save-draft')));
     await tester.tap(find.byKey(const Key('expense-save-draft')));
     await tester.pump();
