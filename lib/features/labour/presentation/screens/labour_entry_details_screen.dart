@@ -12,6 +12,9 @@ import '../../../clients/presentation/widgets/sign2digital_status_badge.dart';
 import '../../../documents/presentation/widgets/sign2digital_document_history.dart';
 import '../../../jobs/presentation/widgets/sign2digital_photo_preview.dart';
 import '../../data/demo_labour_repository.dart';
+import '../../data/remote_labour_repository.dart';
+import '../../../auth/data/mobile_auth_repository.dart';
+import '../../../../core/services/active_company_session.dart';
 import '../../domain/labour_entry.dart';
 import 'add_labour_entry_screen.dart';
 
@@ -43,7 +46,21 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
   void initState() {
     super.initState();
     _record = widget.entry;
-    _repository = widget.repository ?? const DemoLabourRepository();
+    _repository = widget.repository ?? (
+      !MobileAuthRepository.shared.isSignedIn &&
+      ActiveCompanySession.companyId == null
+        ? const DemoLabourRepository() : RemoteLabourRepository.shared);
+    if (_repository is RemoteLabourRepository) _reload();
+  }
+
+  Future<void> _reload() async {
+    if (_repository is! RemoteLabourRepository) return;
+    try {
+      final full=await (_repository as RemoteLabourRepository).detail(_record.id);
+      if(mounted)setState(()=>_record=full);
+    }catch(_){
+      _notice('Unable to load verified labour details.');
+    }
   }
 
   static const _months = [
@@ -307,12 +324,14 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
       return;
     }
     _confirmingDeletion = true;
+    final real=_repository is RemoteLabourRepository;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialog) => AlertDialog(
-        title: const Text('Delete labour entry?'),
-        content: Text('Delete the entry for ${_record.workerName}? '
-          'This action cannot be undone.'),
+        title: Text(real ? 'Void labour entry?' : 'Delete labour entry?'),
+        content: Text(real
+          ? 'Void the entry for ${_record.workerName}? The original remains in the audit trail.'
+          : 'Delete the entry for ${_record.workerName}? This action cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialog).pop(false),
@@ -320,7 +339,7 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
           TextButton(
             key: const Key('labour-confirm-delete'),
             onPressed: () => Navigator.of(dialog).pop(true),
-            child: const Text('Delete')),
+            child: Text(real ? 'Void Entry' : 'Delete')),
         ],
       ),
     );
@@ -340,8 +359,9 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
 
   Future<void> _edit() async {
     if (_busy) { return; }
-    if (_record.status != LabourEntryStatus.pending) {
-      _notice('Approved entries are locked and cannot be edited.');
+    if (_record.status != LabourEntryStatus.pending ||
+        (_repository is RemoteLabourRepository && _record.source != 'manual')) {
+      _notice('Reviewed or timer-created entries require an audited correction.');
       return;
     }
     setState(() => _busy = true);
@@ -363,10 +383,14 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
         return;
       }
       await _repository.update(edited);
-      final current = (await _repository.list())
-          .where((e) => e.id == edited.id).toList();
-      if (!mounted) { return; }
-      setState(() => _record = current.isEmpty ? edited : current.first);
+      if (_repository is RemoteLabourRepository) {
+        await _reload();
+      } else {
+        final current = (await _repository.list())
+            .where((e) => e.id == edited.id).toList();
+        if (!mounted) return;
+        setState(() => _record = current.isEmpty ? edited : current.first);
+      }
       _notice('Labour entry updated.');
     } catch (_) {
       _notice('Unable to update this entry. Please try again.');
@@ -380,7 +404,7 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
     children: [
       Expanded(child: Sign2DigitalOutlinedButton(
         key: const Key('labour-detail-delete'),
-        label: 'Delete',
+        label: _repository is RemoteLabourRepository ? 'Void' : 'Delete',
         primaryOutline: true,
         enabled: !_busy,
         onPressed: _delete,
@@ -389,7 +413,8 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
       Expanded(child: Sign2DigitalPrimaryButton(
         key: const Key('labour-detail-edit'),
         label: 'Edit',
-        enabled: !_busy,
+        enabled: !_busy && _record.status == LabourEntryStatus.pending &&
+            (_repository is! RemoteLabourRepository || _record.source == 'manual'),
         onPressed: _edit,
       )),
     ],
@@ -404,9 +429,7 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
           logoAsset: 'assets/header_logo.png',
           onBack: () => Navigator.of(context).maybePop(),
         ),
-        Expanded(child: Center(child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 720),
-          child: ListView(
+        Expanded(child: ListView(
             key: const Key('labour-detail-scroll'),
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
             children: [
@@ -434,7 +457,7 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
               _actions(),
             ],
           ),
-        ))),
+      ),
       ]),
     ),
   );
