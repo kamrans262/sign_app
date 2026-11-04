@@ -19,6 +19,7 @@ import '../../../quotes/presentation/screens/review_quote_screen.dart';
 import '../../../quotes/presentation/screens/quote_preview_screen.dart';
 import '../../../documents/presentation/screens/documents_screen.dart';
 import '../../../documents/presentation/screens/reports_screen.dart';
+import '../../../expenses/presentation/screens/expenses_screen.dart';
 import '../../../documents/domain/document_record.dart';
 import '../../../quotes/data/signed_quote_file_store.dart';
 import '../../../documents/data/remote_signed_document_repository.dart';
@@ -289,6 +290,16 @@ class JobDetailsScreen extends StatelessWidget {
         // Leave the original placeholder intact if local storage is unavailable.
       }
       if (!context.mounted) return;
+    }
+    if (section == JobSection.purchases) {
+      await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+        builder: (_) => ExpensesScreen(
+          jobId: int.tryParse(job.id) == null ? null : job.id,
+          initialJob: job,
+          onNavigationSelected: (index) => _selectTab(context, index),
+        ),
+      ));
+      return;
     }
     if (section == JobSection.acceptance) {
       await Navigator.of(context).push<void>(MaterialPageRoute<void>(
