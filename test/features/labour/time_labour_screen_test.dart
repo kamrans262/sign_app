@@ -40,6 +40,9 @@ class _SwitchingLabourStub extends LabourRepository {
   }
   @override
   Future<List<JobModel>> jobs() async=>[LabourDemoJobs.riverside];
+  @override
+  Future<void> save(LabourEntry entry) async =>
+      throw UnsupportedError('Read-only test fixture.');
 }
 
 LabourEntry record(String id, {LabourEntryKind kind=LabourEntryKind.labour,
