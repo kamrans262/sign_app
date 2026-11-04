@@ -22,6 +22,8 @@ import '../widgets/sign2digital_document_history.dart';
 typedef DocumentDetailsLoader = Future<DocumentRecord?> Function(String id);
 typedef DocumentPdfLoader = Future<Uint8List?> Function(DocumentRecord record);
 typedef DocumentPdfPreviewBuilder = Widget Function(Uint8List bytes);
+typedef DocumentAttachmentLoader = Future<Uint8List> Function(
+    DocumentRecord document, DocumentAttachmentReference attachment);
 typedef DocumentFileAction = Future<void> Function(
     DocumentRecord record, String name, Uint8List bytes);
 typedef DocumentVersionAction = Future<DocumentRecord> Function(
@@ -36,6 +38,7 @@ class DocumentDetailsScreen extends StatefulWidget {
     this.loadDocument,
     this.loadSignedPdf,
     this.onAddAttachment,
+    this.onDownloadAttachment,
     this.onAddVersion,
     this.pdfPreviewBuilder,
     this.onViewSignatures,
@@ -48,6 +51,7 @@ class DocumentDetailsScreen extends StatefulWidget {
   final DocumentDetailsLoader? loadDocument;
   final DocumentPdfLoader? loadSignedPdf;
   final DocumentFileAction? onAddAttachment;
+  final DocumentAttachmentLoader? onDownloadAttachment;
   final DocumentVersionAction? onAddVersion;
   /// Optional renderer for isolated widget tests; normal UI uses PdfPreview.
   final DocumentPdfPreviewBuilder? pdfPreviewBuilder;
@@ -315,6 +319,74 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
     }
   }
 
+  Future<void> _saveAttachment(
+      DocumentRecord record, DocumentAttachmentReference attachment) async {
+    final loader = widget.onDownloadAttachment;
+    if (loader == null) return;
+    try {
+      final bytes = await loader(record, attachment);
+      if (!mounted) return;
+      final extension = switch (attachment.mimeType) {
+        'application/pdf' => 'pdf',
+        'image/png' => 'png',
+        _ => 'jpg',
+      };
+      final cleaned = attachment.name.replaceAll(
+          RegExp(r'[^A-Za-z0-9._-]'), '_');
+      final filename = cleaned.toLowerCase().endsWith('.$extension')
+          ? cleaned : 'Sign2Digital_Attachment_${attachment.id}.$extension';
+      final saved = await FilePicker.saveFile(
+        dialogTitle: 'Save attachment',
+        fileName: filename,
+        type: FileType.custom,
+        allowedExtensions: [extension],
+        bytes: bytes,
+      );
+      if (saved != null) _message('Attachment saved.');
+    } catch (_) {
+      _message('Unable to download this attachment.');
+    }
+  }
+
+  Future<void> _chooseAttachment() async {
+    final record = _record;
+    if (record == null || record.attachments.isEmpty ||
+        widget.onDownloadAttachment == null) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheet) => SafeArea(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(sheet).height * .7,
+          ),
+          child: ListView(
+            shrinkWrap: true,
+            children: [
+              const Padding(
+                padding: EdgeInsets.fromLTRB(20, 16, 20, 8),
+                child: Text('Attachments', style: TextStyle(
+                  fontFamily: 'Inter', fontWeight: FontWeight.w600,
+                  fontSize: 18, color: AppColors.dark,
+                )),
+              ),
+              for (final attachment in record.attachments)
+                ListTile(
+                  key: Key('document-attachment-${attachment.id}'),
+                  leading: const Icon(Icons.download_outlined),
+                  title: Text(attachment.name),
+                  onTap: () {
+                    Navigator.pop(sheet);
+                    _saveAttachment(record, attachment);
+                  },
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   void _more() {
     final record = _record;
     if (record == null) return;
@@ -349,6 +421,17 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
               onTap: () {
                 Navigator.pop(sheet);
                 _sendAddendumForSignature();
+              },
+            ),
+          if (widget.onDownloadAttachment != null &&
+              record.attachments.isNotEmpty)
+            ListTile(
+              key: const Key('document-download-attachment'),
+              leading: const Icon(Icons.download_outlined),
+              title: const Text('Download Attachment'),
+              onTap: () {
+                Navigator.pop(sheet);
+                _chooseAttachment();
               },
             ),
           if (widget.onAddAttachment != null &&
@@ -588,6 +671,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
             builder: (_) => DocumentDetailsScreen(
               documentId: linked[i].id, document: linked[i],
               loadSignedPdf: widget.loadSignedPdf,
+              onDownloadAttachment: widget.onDownloadAttachment,
               onViewSignatures: widget.onViewSignatures,
               requestAddendumSignature: widget.requestAddendumSignature,
             ),
