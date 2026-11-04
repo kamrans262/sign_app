@@ -20,6 +20,8 @@ import '../../../quotes/presentation/screens/quote_preview_screen.dart';
 import '../../../documents/presentation/screens/documents_screen.dart';
 import '../../../documents/presentation/screens/reports_screen.dart';
 import '../../../expenses/presentation/screens/expenses_screen.dart';
+import '../../../labour/presentation/screens/time_labour_screen.dart';
+import '../../../labour/presentation/widgets/m15_labour_summary.dart';
 import '../../../documents/domain/document_record.dart';
 import '../../../quotes/data/signed_quote_file_store.dart';
 import '../../../documents/data/remote_signed_document_repository.dart';
@@ -291,6 +293,16 @@ class JobDetailsScreen extends StatelessWidget {
       }
       if (!context.mounted) return;
     }
+    if (section == JobSection.time) {
+      await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+        builder: (_) => TimeLabourScreen(
+          jobId: int.tryParse(job.id) == null ? null : job.id,
+          initialJob: job,
+          onNavigationSelected: (index) => _selectTab(context,index),
+        ),
+      ));
+      return;
+    }
     if (section == JobSection.purchases) {
       await Navigator.of(context).push<void>(MaterialPageRoute<void>(
         builder: (_) => ExpensesScreen(
@@ -433,13 +445,15 @@ class JobDetailsScreen extends StatelessWidget {
                                   showAmount: data.financialsAvailable,
                                   icon: Icons.shopping_cart_outlined,
                                 ),
-                          2 => Sign2DigitalJobFinancialCard(
-                            label: 'Labour cost',
-                            amountChf: data.labourCostChf,
-                            showAmount: data.financialsAvailable,
-                            icon: Icons.groups_outlined,
-                            iconAsset: 'assets/icons/team_members.svg',
-                          ),
+                          2 => int.tryParse(job.id) != null
+                              ? M15LabourSummary(jobId: job.id, asFinancialCard: true)
+                              : Sign2DigitalJobFinancialCard(
+                                  label: 'Labour cost',
+                                  amountChf: data.labourCostChf,
+                                  showAmount: data.financialsAvailable,
+                                  icon: Icons.groups_outlined,
+                                  iconAsset: 'assets/icons/team_members.svg',
+                                ),
                           3 => Sign2DigitalJobFinancialCard(
                             label: 'Deposits',
                             amountChf: data.depositsChf,
