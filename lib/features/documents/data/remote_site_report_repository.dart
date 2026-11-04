@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'dart:io';
 import 'package:crypto/crypto.dart';
 
 import '../../../core/services/active_company_session.dart';
@@ -235,6 +236,36 @@ class RemoteSiteReportRepository implements DocumentRepository {
         actionItems: site.actionItems,
       ),
     );
+  }
+
+  /// Optional M12 dictation: text is never inserted or saved without user review.
+  Future<String> transcribeAudio(String jobId, String path) async {
+    final company = _company();
+    if (int.tryParse(jobId) == null) {
+      throw const SignApiException('Select a real company job before dictating.');
+    }
+    final file = File(path);
+    if (!await file.exists() || await file.length() == 0 ||
+        await file.length() > 25 * 1024 * 1024) {
+      throw const SignApiException('Recording is missing or exceeds 25 MB.');
+    }
+    final response = _data(await _api.postMultipart(
+      '/api/v1/reports/voice/transcribe',
+      filename: file.uri.pathSegments.last, bytes: await file.readAsBytes(),
+      companyScoped: true, maxBytes: 25 * 1024 * 1024,
+      fields: {'job_id': jobId},
+    ));
+    _check(company);
+    if (response['job_id'].toString() != jobId ||
+        response['applied'] != false || response['approved'] != false) {
+      throw const SignApiException('Invalid dictation response.');
+    }
+    final transcript = response['transcript'];
+    if (transcript is! String || transcript.trim().isEmpty ||
+        transcript.length > 20000) {
+      throw const SignApiException('Voice transcription was empty.');
+    }
+    return transcript.trim();
   }
 
   Future<DocumentRecord> saveDraft(DocumentRecord draft) async {
