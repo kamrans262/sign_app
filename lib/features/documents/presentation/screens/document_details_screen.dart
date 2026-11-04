@@ -551,7 +551,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
             ),
           if (record.category == DocumentCategory.addends &&
               record.status.toLowerCase() == 'draft' &&
-              record.id.startsWith('addendum-') &&
+              RegExp(r'^addendum-[1-9][0-9]*$').hasMatch(record.id) &&
               widget.onApproveAddendum != null)
             ListTile(
               key: const Key('addendum-approve'),
@@ -565,7 +565,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
           if (record.category == DocumentCategory.addends &&
               AddendumDraftSession.load(record.addendumDraftId ?? '')
                   ?.isCreatedLocally == true &&
-              (!record.id.startsWith('addendum-') ||
+              (!RegExp(r'^addendum-[1-9][0-9]*$').hasMatch(record.id) ||
                   ['approved','sent'].contains(record.status.toLowerCase())))
             ListTile(
               key: const Key('addendum-send-for-signature'),
