@@ -503,10 +503,7 @@ class _AddLabourEntryScreenState extends State<AddLabourEntryScreen> {
             onBack: _cancel,
           ),
           Expanded(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 720),
-                child: ListView(
+            child: ListView(
                   key: const Key('labour-entry-form-scroll'),
                   keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 25),
@@ -654,8 +651,6 @@ class _AddLabourEntryScreenState extends State<AddLabourEntryScreen> {
                     ]),
                   ],
                 ),
-              ),
-            ),
           ),
         ]),
       ),
