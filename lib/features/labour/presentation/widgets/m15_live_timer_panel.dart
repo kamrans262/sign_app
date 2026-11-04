@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/services/active_company_session.dart';
 import '../../../jobs/domain/job_model.dart';
 import '../../data/remote_labour_repository.dart';
 
@@ -30,11 +31,27 @@ class _M15LiveTimerPanelState extends State<M15LiveTimerPanel>
   final _task=TextEditingController();
   int _displaySeconds=0;
   DateTime? _syncedAt;
+  int _refreshSerial=0;
+
+  void _onCompanyChanged() {
+    if(!mounted)return;
+    // Hide previous-company timer immediately; never flash its details during
+    // an in-flight request or when the next company has no timer.
+    _refreshSerial++;
+    setState(() {
+      _timer=null;
+      _displaySeconds=0;
+      _syncedAt=null;
+      _error=null;
+    });
+    _refresh();
+  }
 
   @override
   void initState(){
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    ActiveCompanySession.selected.addListener(_onCompanyChanged);
     _ticker=Timer.periodic(const Duration(seconds:1),(_){
       final timer=_timer;
       if(!mounted||timer==null||timer.status!='running')return;
@@ -52,6 +69,7 @@ class _M15LiveTimerPanelState extends State<M15LiveTimerPanel>
   @override
   void dispose(){
     WidgetsBinding.instance.removeObserver(this);
+    ActiveCompanySession.selected.removeListener(_onCompanyChanged);
     _ticker?.cancel();
     _rate.dispose();
     _task.dispose();
@@ -60,9 +78,21 @@ class _M15LiveTimerPanelState extends State<M15LiveTimerPanel>
 
   Future<void> _refresh() async {
     if(!mounted)return;
+    final serial=++_refreshSerial;
+    final company=ActiveCompanySession.companyId;
+    if(company==null){
+      setState((){
+        _timer=null;
+        _displaySeconds=0;
+        _syncedAt=null;
+        _error='Select a company before tracking work.';
+      });
+      return;
+    }
     try{
       final timer=await widget.repository.timerCurrent();
-      if(!mounted)return;
+      if(!mounted||serial!=_refreshSerial||
+          ActiveCompanySession.companyId!=company)return;
       setState((){
         _timer=timer;
         _displaySeconds=timer.elapsedSeconds;
@@ -70,7 +100,9 @@ class _M15LiveTimerPanelState extends State<M15LiveTimerPanel>
         _error=null;
       });
     }catch(_){
-      if(mounted)setState(()=>_error='Unable to verify current timer. Retry.');
+      if(mounted&&serial==_refreshSerial){
+        setState(()=>_error='Unable to verify current timer. Retry.');
+      }
     }
   }
 
