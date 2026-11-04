@@ -59,11 +59,13 @@ class _M15LabourSummaryState extends State<M15LabourSummary> {
   @override
   Widget build(BuildContext context){
     final future=_summary;
-    if(future==null)return widget.asFinancialCard
-      ? const Sign2DigitalJobFinancialCard(
-          label:'Labour cost',amountChf:0,showAmount:false,
-          icon:Icons.groups_outlined)
-      : const SizedBox.shrink();
+    if(future==null) {
+      return widget.asFinancialCard
+        ? const Sign2DigitalJobFinancialCard(
+            label:'Labour cost',amountChf:0,showAmount:false,
+            icon:Icons.groups_outlined)
+        : const SizedBox.shrink();
+    }
     return FutureBuilder<Map<String,dynamic>>(
       future:future,builder:(context,state){
         final d=state.data;
@@ -77,10 +79,12 @@ class _M15LabourSummaryState extends State<M15LabourSummary> {
             iconAsset:'assets/icons/team_members.svg',
           );
         }
-        if(state.hasError)return TextButton(
-          key:const Key('m15-summary-retry'),
-          onPressed:()=>setState(_load),
-          child:const Text('Unable to load job cost summary. Retry.'));
+        if(state.hasError) {
+          return TextButton(
+            key:const Key('m15-summary-retry'),
+            onPressed:()=>setState(_load),
+            child:const Text('Unable to load job cost summary. Retry.'));
+        }
         if(d==null) {
           return const Center(child:CircularProgressIndicator());
         }
