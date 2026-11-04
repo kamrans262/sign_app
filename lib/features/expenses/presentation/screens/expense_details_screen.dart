@@ -67,6 +67,19 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
     if (widget.loadExpense != null || _repository is RemoteExpenseRepository) _reload();
   }
 
+  @override
+  void didUpdateWidget(covariant ExpenseDetailsScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.expense != widget.expense) {
+      _record = widget.expense;
+      _tab = 0;
+      if (widget.loadExpense != null ||
+          _repository is RemoteExpenseRepository) {
+        _reload();
+      }
+    }
+  }
+
   Future<void> _reload() async {
     final load = widget.loadExpense ?? (_repository is RemoteExpenseRepository
         ? _repository.getExpense : null);
