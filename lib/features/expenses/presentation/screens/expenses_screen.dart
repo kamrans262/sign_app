@@ -10,6 +10,7 @@ import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import '../../data/demo_expense_repository.dart';
 import '../../data/remote_expense_repository.dart';
 import '../../../../core/services/active_company_session.dart';
+import '../../../../core/services/sign_api_client.dart';
 import '../../../auth/data/mobile_auth_repository.dart';
 import '../../domain/expense_record.dart';
 import '../../../jobs/domain/job_model.dart';
@@ -168,6 +169,16 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(_repository is RemoteExpenseRepository
               ? 'Expense saved for review.' : 'Expense saved locally for review.')));
+      }
+    } on SignApiException catch (error) {
+      // A receipt may fail after the expense itself was committed.
+      // Refresh the list and display the actual server-side outcome.
+      if (mounted) {
+        await _load();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(error.message)));
+        }
       }
     } catch (_) {
       if (mounted) {
