@@ -50,7 +50,7 @@ class RemoteExpenseRepository implements ExpenseRepository {
   }
 
   static int idOf(ExpenseRecord r) {
-    final match = RegExp(r'^expense-([1-9]\\d*)$').firstMatch(r.id);
+    final match = RegExp(r'^expense-([1-9]\d*)$').firstMatch(r.id);
     if (match == null) {
       throw const SignApiException('Invalid expense identifier.');
     }
@@ -58,7 +58,7 @@ class RemoteExpenseRepository implements ExpenseRepository {
   }
 
   static int _receiptId(String sourceKey) {
-    final match = RegExp(r'^remote-receipt-([1-9]\\d*)$').firstMatch(sourceKey);
+    final match = RegExp(r'^remote-receipt-([1-9]\d*)$').firstMatch(sourceKey);
     return match == null ? 0 : int.parse(match.group(1)!);
   }
 
@@ -141,7 +141,7 @@ class RemoteExpenseRepository implements ExpenseRepository {
   }
 
   Future<ExpenseRecord> getExpense(String expenseId) async {
-    final match = RegExp(r'^expense-([1-9]\\d*)$').firstMatch(expenseId);
+    final match = RegExp(r'^expense-([1-9]\d*)$').firstMatch(expenseId);
     if (match == null) throw const SignApiException('Invalid expense ID.');
     final id = int.parse(match.group(1)!);
     final company = _company();
