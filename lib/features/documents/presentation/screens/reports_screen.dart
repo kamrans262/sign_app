@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/services/active_company_session.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
 import '../../../../core/widgets/sign2digital_dashboard_header.dart';
 import '../../../../core/widgets/sign2digital_input_field.dart';
@@ -9,9 +10,12 @@ import '../../../../core/widgets/sign2digital_search_field.dart';
 import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import '../../../quotes/presentation/widgets/sign2digital_quote_summary_card.dart';
 import '../../data/demo_report_repository.dart';
+import '../../data/remote_site_report_repository.dart';
 import '../../domain/document_record.dart';
 import 'document_details_screen.dart';
 import 'site_report_wizard_screen.dart';
+import 'meeting_minutes_editor_screen.dart';
+import 'report_review_screen.dart';
 import 'work_acceptance_screen.dart';
 
 /// Report library using the same list layout and document models as Documents.
@@ -54,7 +58,10 @@ class _ReportsScreenState extends State<ReportsScreen> {
   @override
   void initState() {
     super.initState();
-    _repository = widget.repository ?? const DemoReportRepository();
+    _repository = widget.repository ??
+        (ActiveCompanySession.companyId == null
+          ? const DemoReportRepository()
+          : RemoteSiteReportRepository.shared);
     _load();
   }
 
@@ -117,11 +124,26 @@ class _ReportsScreenState extends State<ReportsScreen> {
   }
 
   Future<void> _openSiteWizard(DocumentRecord? existing) async {
+    final remote = _repository is RemoteSiteReportRepository;
+    DocumentRecord? initial = existing;
+    if (remote && existing != null) {
+      try {
+        initial = await (_repository as RemoteSiteReportRepository)
+            .details(existing.id);
+      } catch (error) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Unable to load saved site report: $error')));
+        return;
+      }
+    }
+    if (!mounted) return;
+    final generator = widget.reportGenerator ??
+        (remote ? (_repository as RemoteSiteReportRepository).saveDraft : null);
     final report = await Navigator.of(context).push<DocumentRecord>(
       MaterialPageRoute<DocumentRecord>(
         builder: (_) => SiteReportWizardScreen(
-          initial: existing,
-          reportGenerator: widget.reportGenerator,
+          initial: initial,
+          reportGenerator: generator,
           selectedNavigationIndex: widget.selectedNavigationIndex,
           onNavigationSelected: _navigation,
         ),
@@ -133,10 +155,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
       await _load();
       if (mounted) {
         await Navigator.of(context).push<void>(MaterialPageRoute<void>(
-          builder: (_) => DocumentDetailsScreen(
-            documentId: report.id, document: report,
-          ),
+          builder: (_) => ReportReviewScreen(report: report,
+            repository: _repository is RemoteSiteReportRepository
+              ? _repository as RemoteSiteReportRepository : null),
         ));
+        if (mounted) await _load();
       }
       return;
     }
@@ -157,15 +180,44 @@ class _ReportsScreenState extends State<ReportsScreen> {
     }
   }
 
+  Future<void> _openMinutes(DocumentRecord? existing) async {
+    final remote = _repository is RemoteSiteReportRepository;
+    final repository = remote ? _repository as RemoteSiteReportRepository : null;
+    final DocumentRecord? initial;
+    try {
+      initial = remote && existing != null
+          ? await repository!.details(existing.id)
+          : existing;
+    } catch (error) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Unable to load meeting minutes: $error')));
+      return;
+    }
+    if (!mounted) return;
+    final result = await Navigator.of(context).push<DocumentRecord>(
+      MaterialPageRoute(builder: (_) => MeetingMinutesEditorScreen(
+        initial: initial,
+        reportGenerator: widget.reportGenerator ??
+            (remote ? repository!.saveDraft : null),
+      )),
+    );
+    if (!mounted || result == null) return;
+    if (result.demoOnly) {
+      DemoReportDraftSession.save(result);
+    }
+    await _load();
+    if (mounted && !result.demoOnly) {
+      await Navigator.of(context).push<void>(MaterialPageRoute(
+        builder: (_) => ReportReviewScreen(
+          report: result, repository: repository),
+      ));
+      if (mounted) await _load();
+    }
+  }
+
   Future<void> _create() async {
     if (widget.onCreateReport != null) {
       widget.onCreateReport!();
-      return;
-    }
-    if (_repository is! DemoReportRepository) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Connect the report creation service before creating reports.'),
-      ));
       return;
     }
     final kind = await showModalBottomSheet<ReportKind>(
@@ -180,6 +232,12 @@ class _ReportsScreenState extends State<ReportsScreen> {
             onTap: () => Navigator.of(sheet).pop(ReportKind.siteReport),
           ),
           ListTile(
+            key: const Key('create-meeting-minutes'),
+            leading: const Icon(Icons.groups_outlined),
+            title: const Text('Meeting Minutes'),
+            onTap: () => Navigator.of(sheet).pop(ReportKind.meetingMinutes),
+          ),
+          ListTile(
             key: const Key('create-work-acceptance'),
             leading: const Icon(Icons.fact_check_outlined),
             title: const Text('Work acceptance'),
@@ -190,14 +248,41 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
     if (kind == ReportKind.siteReport && mounted) {
       await _openSiteWizard(null);
+    } else if (kind == ReportKind.meetingMinutes && mounted) {
+      await _openMinutes(null);
     } else if (kind != null && mounted) {
-      await _editLocalDraft(null, kind);
+      if (_repository is RemoteSiteReportRepository) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Work Acceptance is a separate module.'),
+        ));
+      } else {
+        await _editLocalDraft(null, kind);
+      }
     }
   }
 
   Future<void> _openReport(DocumentRecord report) async {
     if (widget.onReportTap != null) {
       widget.onReportTap!(report);
+      return;
+    }
+    if (_repository is RemoteSiteReportRepository) {
+      if (report.status.toLowerCase() == 'draft' &&
+          report.reportKind == ReportKind.siteReport) {
+        await _openSiteWizard(report);
+      } else if (report.status.toLowerCase() == 'draft' &&
+          report.reportKind == ReportKind.meetingMinutes) {
+        await _openMinutes(report);
+      } else {
+        final latest = await (_repository as RemoteSiteReportRepository)
+            .details(report.id);
+        if (!mounted) return;
+        await Navigator.of(context).push<void>(MaterialPageRoute(
+          builder: (_) => ReportReviewScreen(report: latest,
+              repository: _repository as RemoteSiteReportRepository),
+        ));
+        if (mounted) await _load();
+      }
       return;
     }
     final editable = _repository is DemoReportRepository
@@ -207,6 +292,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
       if (editable.reportKind == ReportKind.siteReport &&
           editable.siteReportDetails != null) {
         await _openSiteWizard(editable);
+      } else if (editable.reportKind == ReportKind.meetingMinutes) {
+        await _openMinutes(editable);
       } else {
         await _editLocalDraft(editable, editable.reportKind!);
       }
@@ -255,7 +342,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     color: AppColors.lightBorder),
                 ),
                 Sign2DigitalDetailsTabs(
-                  labels: const ['All Report', 'Site Report', 'Work acceptance'],
+                  labels: const ['All Report', 'Site Report', 'Work acceptance', 'Meeting Minutes'],
                   selectedIndex: _selectedKind == null
                       ? 0 : _selectedKind!.index + 1,
                   onSelected: _selectTab,

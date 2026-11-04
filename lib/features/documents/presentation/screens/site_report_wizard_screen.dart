@@ -16,6 +16,8 @@ import '../../../../core/widgets/sign2digital_selection_field.dart';
 import '../../../../core/widgets/sign2digital_wizard_stepper.dart';
 import '../../../jobs/data/local_job_photo_source.dart';
 import '../../../jobs/data/mock_jobs.dart';
+import '../../../jobs/data/remote_job_repository.dart';
+import '../../../../core/services/active_company_session.dart';
 import '../../../jobs/domain/job_model.dart';
 import '../../../jobs/presentation/widgets/sign2digital_photo_preview.dart';
 import '../../domain/document_record.dart';
@@ -380,6 +382,18 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
   }
 
   Future<void> _chooseJob() async {
+    List<JobModel> choices = MockJobsData.jobs;
+    if (widget.reportGenerator != null &&
+        ActiveCompanySession.companyId != null) {
+      try {
+        choices = await RemoteJobRepository.shared.listJobs();
+      } catch (error) {
+        if (mounted) setState(() => _error =
+            'Unable to load saved company jobs: $error');
+        return;
+      }
+    }
+    if (!mounted) return;
     final selected = await Sign2DigitalSelectionSheet.showCustom<JobModel>(
       title: 'Select Job / Project',
       icon: Icons.work_outline_rounded,
@@ -393,7 +407,7 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
         child: ListView(
           shrinkWrap: true,
           children: [
-            for (final job in MockJobsData.jobs)
+            for (final job in choices)
               ListTile(
                 key: Key('review-report-job-${job.id}'),
                 selected: _selectedJob?.id == job.id,
@@ -451,6 +465,7 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
       updatedAt: now,
       createdBy: data.preparedBy,
       siteReportDetails: data,
+      jobId: _selectedJob?.id ?? widget.initial?.jobId,
     );
   }
 
