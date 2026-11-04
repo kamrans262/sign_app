@@ -182,7 +182,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
         final picker = widget.photoSource ?? DeviceJobPhotoSource();
         if (source == 'camera') {
           final photo = await picker.camera();
-          chosen = [if (photo != null) photo];
+          chosen = [?photo];
         } else {
           chosen = await picker.upload();
         }
