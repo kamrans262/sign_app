@@ -115,12 +115,12 @@ void main() {
     final api=client((req) async {
       if(req.url.path.endsWith('/pdf/signed')) {
         return http.Response.bytes(pdf,200,headers:{
-          'Content-Type':'application/pdf',
+          'content-type':'application/pdf',
         });
       }
       if(req.url.path.endsWith('/signature')) {
         return http.Response.bytes(png,200,headers:{
-          'Content-Type':'image/png',
+          'content-type':'image/png',
         });
       }
       return http.Response(jsonEncode({'data':{
