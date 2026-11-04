@@ -15,6 +15,7 @@ import '../../../jobs/data/local_job_photo_source.dart';
 import '../../../jobs/data/mock_jobs.dart';
 import '../../../jobs/data/remote_job_repository.dart';
 import '../../../../core/services/active_company_session.dart';
+import '../../../auth/data/mobile_auth_repository.dart';
 import '../../../jobs/domain/job_model.dart';
 import '../../../jobs/presentation/widgets/ai_voice_flow_dialog.dart';
 import '../../../jobs/presentation/widgets/sign2digital_photo_preview.dart';
@@ -143,7 +144,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   Future<void> _chooseJob() async {
     final search = TextEditingController();
     try {
-      final jobs = ActiveCompanySession.companyId == null
+      final jobs = ActiveCompanySession.companyId == null &&
+          !MobileAuthRepository.shared.isSignedIn
           ? MockJobsData.jobs : await RemoteJobRepository.shared.listJobs();
       if (!mounted) return;
       final chosen = await Sign2DigitalSelectionSheet.showCustom<JobModel>(
