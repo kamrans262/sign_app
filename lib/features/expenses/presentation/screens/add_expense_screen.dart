@@ -92,7 +92,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   bool get _dirty {
     final original = widget.initialExpense;
     if (original != null) {
-      return _job?.id != original.jobId ||
+      return (_job?.id ?? original.jobId) != original.jobId ||
           _category != original.category ||
           _date != original.date ||
           _amount.text.trim() != original.amount.toStringAsFixed(2) ||
@@ -431,7 +431,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         id: 'expense-event-${now.microsecondsSinceEpoch}',
         title: previous == null ? 'Expense Created' : 'Expense Updated',
         occurredAt: now,
-        description: 'Saved locally on this device.',
+        description: 'Pending server confirmation.',
       );
       final saved = previous == null
           ? ExpenseRecord(
@@ -500,7 +500,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     : '${_job!.title} (${_job!.referenceNumber})',
                 trailing: const Icon(Icons.keyboard_arrow_down_rounded,
                   color: AppColors.secondaryText),
-                onTap: _chooseJob),
+                onTap: widget.initialExpense == null ? _chooseJob : null),
               const SizedBox(height: 20),
               Sign2DigitalSelectionField(
                 key: const Key('expense-add-category'), label: 'Expense Type',
