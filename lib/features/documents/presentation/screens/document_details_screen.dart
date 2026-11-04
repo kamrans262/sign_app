@@ -10,6 +10,7 @@ import '../../../../core/widgets/sign2digital_information_table.dart';
 import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import '../../../quotes/presentation/widgets/sign2digital_quote_summary_card.dart';
 import '../../../quotes/presentation/widgets/sign2digital_signature_action_card.dart';
+import '../../../quotes/domain/quote_review_models.dart' show quoteMoney;
 import '../../../quotes/services/quote_pdf_service.dart';
 import '../../../quotes/presentation/widgets/sign2digital_financial_document_sections.dart';
 import '../../../quotes/presentation/screens/send_quote_screen.dart';
@@ -312,13 +313,11 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
       builder: (sheet) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20),
-          child: StatefulBuilder(builder: (sheet, update) {
-            // Explicit affirmation is required; merely viewing is not approval.
-            return _AddendumApprovalConfirmation(
-              draft: draft,
-              onConfirmed: () => Navigator.pop(sheet, true),
-            );
-          }),
+          // Viewing the sheet is not approval; the user must check consent.
+          child: _AddendumApprovalConfirmation(
+            draft: draft,
+            onConfirmed: () => Navigator.pop(sheet, true),
+          ),
         ),
       ),
     );
