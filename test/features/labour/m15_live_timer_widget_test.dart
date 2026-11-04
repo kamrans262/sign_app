@@ -122,11 +122,13 @@ void main(){
     await tester.tap(find.byKey(const Key('m15-timer-refresh')));
     await tester.pump();
     ActiveCompanySession.set(8);
-    await tester.pump(const Duration(milliseconds:150));
+    // Let the asynchronous token and HTTP pipeline settle before inspecting
+    // the new-company server response.
+    await tester.pumpAndSettle(const Duration(milliseconds:100));
     expect(find.text('Status: STOPPED'),findsOneWidget);
     expect(find.text('Status: RUNNING'),findsNothing);
     oldReply.complete(timer('running',999));
-    await tester.pump(const Duration(milliseconds:150));
+    await tester.pumpAndSettle(const Duration(milliseconds:100));
     expect(find.text('Status: STOPPED'),findsOneWidget);
     expect(find.byKey(const Key('m15-timer-start')),findsOneWidget);
     ActiveCompanySession.clear();
