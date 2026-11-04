@@ -406,6 +406,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     key: Key('report-card-${report.id}'),
                     quoteNumber: report.number,
                     titleOverride: report.title,
+                    alignListBadgeTop: true,
                     projectName: report.project,
                     customerName: report.customer,
                     documentDate: report.timestamp,

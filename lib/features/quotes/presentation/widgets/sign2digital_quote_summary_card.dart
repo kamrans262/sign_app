@@ -21,6 +21,7 @@ class Sign2DigitalQuoteSummaryCard extends StatelessWidget {
     this.aiDocumentStyle = false,
     this.detailsStyle = false,
     this.linkedStyle = false,
+    this.alignListBadgeTop = false,
     this.onRemoveLink,
   });
 
@@ -38,6 +39,8 @@ class Sign2DigitalQuoteSummaryCard extends StatelessWidget {
   final bool aiDocumentStyle;
   final bool detailsStyle;
   final bool linkedStyle;
+  /// Keep wrapped report titles and their status badges top-aligned.
+  final bool alignListBadgeTop;
   final VoidCallback? onRemoveLink;
 
   String _shortDate(DateTime date) {
@@ -136,7 +139,10 @@ class Sign2DigitalQuoteSummaryCard extends StatelessWidget {
               ],
             );
           }
-          return Row(children: [
+          return Row(
+            crossAxisAlignment: alignListBadgeTop
+                ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+            children: [
             Expanded(child: name),
             const SizedBox(width: 8),
             Transform.translate(
