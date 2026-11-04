@@ -1,3 +1,4 @@
+import '../../../core/services/active_company_session.dart';
 import 'job_note_model.dart';
 
 /// A draft prepared from a specific private note; local approval never sends it.
@@ -37,7 +38,8 @@ class NoteDocumentDraftSession {
   static final Map<String, NoteDocumentDraft> _drafts = {};
 
   static String _key(String noteId, String documentType) =>
-      '$noteId::$documentType';
+      (ActiveCompanySession.companyId?.toString() ?? 'demo') +
+      '::' + noteId + '::' + documentType;
 
   static NoteDocumentDraft? forNote(String id, String type) =>
       _drafts[_key(id, type)];
