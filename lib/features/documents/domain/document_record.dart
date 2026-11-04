@@ -53,7 +53,7 @@ class SiteReportDetails {
 /// must supply only verified source events; UI-only fixtures stay in demo mode.
 enum DocumentHistoryType {
   created, edited, sent, emailOpened, viewed, signed,
-  downloaded, versionChanged,
+  downloaded, versionChanged, approved, archived, attachmentAdded,
 }
 
 class DocumentHistoryEvent {
@@ -82,6 +82,9 @@ class DocumentHistoryEvent {
     DocumentHistoryType.edited => 'Document Edited',
     DocumentHistoryType.downloaded => 'Document Downloaded',
     DocumentHistoryType.versionChanged => 'Document Version Changed',
+    DocumentHistoryType.approved => 'Document Approved',
+    DocumentHistoryType.archived => 'Document Archived',
+    DocumentHistoryType.attachmentAdded => 'Attachment Added',
     DocumentHistoryType.sent => 'Document Sent',
     DocumentHistoryType.emailOpened => 'E-mail Opened',
     DocumentHistoryType.viewed => 'Viewed by Customers',
@@ -107,6 +110,7 @@ class DocumentRecord {
     this.demoOnly = false,
     this.verifiedSignedPdfAvailable = false,
     this.version = 1,
+    this.jobId,
     this.attachmentNames = const [],
     this.createdBy,
     this.createdAt,
@@ -133,6 +137,8 @@ class DocumentRecord {
   final bool verifiedSignedPdfAvailable;
   /// Local record revision; backend audit versions remain authoritative.
   final int version;
+  /// Authoritative linked job for company-scoped document records.
+  final String? jobId;
   final List<String> attachmentNames;
   final String? createdBy;
   final DateTime? createdAt;
@@ -161,6 +167,7 @@ class DocumentRecord {
     demoOnly: demoOnly,
     verifiedSignedPdfAvailable: verifiedSignedPdfAvailable,
     version: version,
+    jobId: jobId,
     attachmentNames: attachmentNames,
     createdBy: createdBy,
     createdAt: createdAt,
@@ -181,7 +188,7 @@ class DocumentRecord {
       id, number, title, project, customer,
       category.name, status, quote?.jobId ?? '', reportKind?.label ?? '',
       quote?.clientId ?? '', quote?.clientEmail ?? '',
-      'v$version', ...attachmentNames,
+      'v$version', jobId ?? '', ...attachmentNames,
     ].any((field) => field.toLowerCase().contains(needle));
   }
 }
