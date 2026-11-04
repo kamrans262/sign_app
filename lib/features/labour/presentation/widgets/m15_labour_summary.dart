@@ -31,7 +31,9 @@ class _M15LabourSummaryState extends State<M15LabourSummary> {
   void didUpdateWidget(covariant M15LabourSummary oldWidget){
     super.didUpdateWidget(oldWidget);
     if(widget.jobId!=oldWidget.jobId||
-        widget.refreshKey!=oldWidget.refreshKey)_load();
+        widget.refreshKey!=oldWidget.refreshKey) {
+      _load();
+    }
   }
 
   void _load(){
@@ -40,7 +42,9 @@ class _M15LabourSummaryState extends State<M15LabourSummary> {
   }
 
   static int? _integer(Object? raw) {
-    if(raw==null)return null;
+    if(raw==null) {
+      return null;
+    }
     return raw is int?raw:int.tryParse('$raw');
   }
 
@@ -77,7 +81,9 @@ class _M15LabourSummaryState extends State<M15LabourSummary> {
           key:const Key('m15-summary-retry'),
           onPressed:()=>setState(_load),
           child:const Text('Unable to load job cost summary. Retry.'));
-        if(d==null)return const Center(child:CircularProgressIndicator());
+        if(d==null) {
+          return const Center(child:CircularProgressIndicator());
+        }
         final approved=_integer(d['approved_minutes'])??0;
         final pending=_integer(d['pending_minutes'])??0;
         final actual=_integer(d['overall_actual_cost_minor']);
