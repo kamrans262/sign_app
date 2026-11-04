@@ -8,6 +8,7 @@ class AddendumVoiceSuggestion {
   const AddendumVoiceSuggestion({
     this.number, this.title, this.description,
     this.effectiveDate, this.documentReference,
+    this.additionalWork, this.quantity, this.unitPrice, this.vatPercent,
   });
 
   final String? number;
@@ -15,6 +16,10 @@ class AddendumVoiceSuggestion {
   final String? description;
   final DateTime? effectiveDate;
   final String? documentReference;
+  final String? additionalWork;
+  final String? quantity;
+  final String? unitPrice;
+  final String? vatPercent;
 
   static String? _clean(Object? value) =>
       value is String && value.trim().isNotEmpty ? value.trim() : null;
@@ -37,6 +42,10 @@ class AddendumVoiceSuggestion {
       description: _clean(json['description']),
       effectiveDate: date,
       documentReference: _clean(json['documentReference']),
+      additionalWork: _clean(json['additionalWork']),
+      quantity: _clean(json['quantity']),
+      unitPrice: _clean(json['unitPrice']),
+      vatPercent: _clean(json['vatPercent']),
     );
   }
 }
