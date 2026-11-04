@@ -58,6 +58,13 @@ void main() {
     await tester.pumpWidget(const MaterialApp(home: ClientsScreen()));
     await tester.tap(find.byKey(const Key('dashboard-tab-4')));
     await tester.pump(const Duration(milliseconds: 600));
+    // Expenses is below the fold in the existing More list.
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('open-expenses')), 200,
+      scrollable: find.descendant(
+        of: find.byKey(const Key('more-menu-scroll')),
+        matching: find.byType(Scrollable)).first,
+    );
     await tester.tap(find.byKey(const Key('open-expenses')));
     await tester.pump(const Duration(milliseconds: 600));
     expect(find.byType(ExpensesScreen), findsOneWidget);
@@ -96,7 +103,10 @@ void main() {
     FocusManager.instance.primaryFocus?.unfocus();
     await tester.ensureVisible(find.byKey(const Key('expenses-sort')));
     await tester.pump();
-    await tester.tap(find.byKey(const Key('expenses-sort')));
+    // Tap the real InkWell, not its full-width Align wrapper.
+    await tester.tap(find.descendant(
+      of: find.byKey(const Key('expenses-sort')),
+      matching: find.byType(InkWell)));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('expense-sort-highest')));
     await tester.pumpAndSettle();
@@ -157,14 +167,20 @@ void main() {
     await tester.tap(find.byKey(const Key('expense-save-draft')));
     await tester.pump();
     expect(find.byKey(const Key('expense-add-error')), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const Key('expense-add-job')));
+    await tester.pump();
     await tester.tap(find.byKey(const Key('expense-add-job')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('expense-job-demo-active-1')));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('expense-add-category')));
+    await tester.pump();
     await tester.tap(find.byKey(const Key('expense-add-category')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('expense-type-fuel')));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('expense-add-date')));
+    await tester.pump();
     await tester.tap(find.byKey(const Key('expense-add-date')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('OK'));
