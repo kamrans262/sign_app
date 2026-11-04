@@ -1,0 +1,27 @@
+name: M12 Stage 1 Flutter report integration verification
+on:
+  push:
+    branches: [feature/m12-site-reports-meeting-minutes-2026-11-04]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: sign2digital-m12-stage1-flutter
+  cancel-in-progress: true
+jobs:
+  focused:
+    runs-on: ubuntu-latest
+    timeout-minutes: 17
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Analyze M12 source and tests
+        run: |
+          dart analyze lib/features/documents/domain/document_record.dart lib/features/documents/data/remote_site_report_repository.dart lib/features/documents/presentation/screens/reports_screen.dart lib/features/documents/presentation/screens/site_report_wizard_screen.dart lib/features/documents/presentation/screens/meeting_minutes_editor_screen.dart lib/features/documents/presentation/screens/report_review_screen.dart test/features/documents/m12_remote_site_report_repository_test.dart
+      - name: Existing reports and new tenant API regressions
+        run: |
+          flutter test --no-pub --concurrency=2 --reporter=expanded test/features/documents/reports_screen_test.dart test/features/documents/site_report_wizard_screen_test.dart test/features/documents/m12_remote_site_report_repository_test.dart test/features/documents/m9_remote_document_repository_test.dart test/features/jobs/m11_remote_job_media_repository_test.dart
