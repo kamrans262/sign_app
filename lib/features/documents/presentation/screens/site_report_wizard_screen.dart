@@ -71,6 +71,13 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
   final _scroll = ScrollController();
   final _preparer = TextEditingController();
   final _customTitle = TextEditingController();
+  final _location = TextEditingController();
+  final _attendees = TextEditingController();
+  final _absentees = TextEditingController();
+  final _decisions = TextEditingController();
+  final _outstanding = TextEditingController();
+  final _nextSteps = TextEditingController();
+  final _actions = TextEditingController();
   final _contents = <SiteReportSection, TextEditingController>{};
   final _selectedSections = <SiteReportSection>{
     SiteReportSection.siteProgress,
@@ -118,6 +125,13 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
         _reportDate = details.reportDate;
         _preparer.text = details.preparedBy;
         _weather = details.weatherCondition;
+        _location.text = details.location;
+        _attendees.text = details.attendees.join('\n');
+        _absentees.text = details.absentees.join('\n');
+        _decisions.text = details.decisions.join('\n');
+        _outstanding.text = details.outstandingPoints.join('\n');
+        _nextSteps.text = details.nextSteps.join('\n');
+        _actions.text = details.actionItems.map((item) => item.description).join('\n');
         _selectedSections
           ..clear()
           ..addAll(details.selectedSections);
@@ -168,6 +182,7 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
     _scroll.dispose();
     _preparer.dispose();
     _customTitle.dispose();
+    for (final controller in [_location,_attendees,_absentees,_decisions,_outstanding,_nextSteps,_actions]) { controller.dispose(); }
     for (final controller in _contents.values) {
       controller.dispose();
     }
