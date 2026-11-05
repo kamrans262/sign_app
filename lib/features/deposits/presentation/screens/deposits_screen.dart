@@ -47,7 +47,7 @@ class DepositsScreen extends StatefulWidget {
 
 class _DepositsScreenState extends State<DepositsScreen> {
   final _search = TextEditingController();
-  late final DepositRepository _repository;
+  late DepositRepository _repository;
   List<DepositRecord> _all = [];
   bool _loading = true;
   String? _error;
@@ -57,6 +57,11 @@ class _DepositsScreenState extends State<DepositsScreen> {
 
   void _companyChanged() {
     if(!mounted)return;
+    if(widget.repository==null){
+      _repository=(!MobileAuthRepository.shared.isSignedIn &&
+          ActiveCompanySession.companyId==null)
+          ?const DemoDepositRepository():RemoteDepositRepository.shared;
+    }
     setState((){_all=[];_loading=true;_error=null;});
     _load();
   }
