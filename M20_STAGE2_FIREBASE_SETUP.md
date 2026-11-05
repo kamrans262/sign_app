@@ -13,14 +13,15 @@ to the GitHub connector; they must be added from the workstation before an actua
 release. `firebase_options.dart` contains non-secret Firebase app identifiers, not
 server admin credentials.
 
-Stage 2 adds `firebase_core`, `firebase_messaging`, runtime permission and registration,
+Stage 2 adds `firebase_core` 5.x, `firebase_messaging` 17.x with Installation IDs (FID), runtime permission and registration,
 per-company preference toggles, foreground inbox refresh, notification-open routing,
 logout token revocation and token refresh listeners.
 
 The development branch's `main.dart` uses native Firebase default configuration as an
-optional bootstrap while project-generated options are not yet committed. Before iOS
-device testing, initialize with `DefaultFirebaseOptions.currentPlatform` from the
-FlutterFire-generated file and configure Xcode Push Notifications + Background Modes.
+optional bootstrap while project-generated options are not yet committed. Xcode Push Notifications, Debug/Release aps-environment entitlements, and Background Modes
+are now configured in the development branch. Apple Developer provisioning and an APNs
+.p8 key upload are still required before real iOS push testing. Native iOS Firebase
+initialization requires GoogleService-Info.plist or explicit generated options.
 The FlutterFire-generated Android google-services.json must be present at build time.
 
 Never put the Firebase service-account JSON in this Flutter repository.
@@ -59,3 +60,19 @@ Remote Notifications background capability plus correct signing/provisioning.
 - Admin may edit English/French push title and body using the already published
   `/admin/notifications/templates` UI. Future push delivery batches use those revisions.
 - No production deployment, cron, APNs upload or real FCM sends occurred during code work.
+
+## Stage 2 verified code and release boundary
+
+- Laravel M20 Stage 2 dedicated CI: SQLite, MySQL 8.4, M19/M17/M18 regressions.
+- Flutter Stage 2 CI: strict analysis, API registration, original reminders/equipment UI,
+  and native iOS entitlement metadata checks.
+- The server always re-checks company membership, user activity, event state, push
+  opt-in and device revocation immediately before attempting an external send.
+- The server never automatically retries an uncertain provider timeout; a documented
+  submission only shows that Firebase accepted the request, not device display.
+- The app can be run locally from the Windows generated configuration, but that
+  configuration is not in the GitHub development branch until deliberately added.
+- The existing example Android/iOS package ID is still com.example.sign2digital.
+  Finalize your production bundle ID BEFORE registering a production app in Firebase.
+- No live push or device delivery can be claimed without the private server credentials,
+  user opt-in, real installed application, and (iOS) an APNs authentication key.

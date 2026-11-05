@@ -75,6 +75,11 @@
 	<string>Read the contacts you select for review before importing them into your Sign2Digital company.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Choose job photos from your photo library.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>remote-notification</string>
+	</array>
 	<key>FirebaseMessagingInstallationIdEnabled</key>
 	<true/>
 </dict>

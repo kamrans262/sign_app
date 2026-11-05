@@ -29,3 +29,30 @@ jobs:
         run: timeout --signal=TERM --kill-after=10s 220s flutter test --no-pub --concurrency=2 --timeout=60s --reporter=expanded test/features/reminders/m20_push_api_test.dart test/features/reminders/m20_remote_reminders_notifications_test.dart
       - name: Existing Reminders and equipment UI regressions
         run: timeout --signal=TERM --kill-after=10s 230s flutter test --no-pub --concurrency=2 --timeout=60s --reporter=expanded test/features/reminders/reminders_module_test.dart test/features/equipment/m19_equipment_reminder_stage2_test.dart
+
+  ios-notification-capabilities:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate push entitlements and background modes without Apple credentials
+        run: |
+          python3 - <<'PY'
+          import plistlib
+          from pathlib import Path
+          base = Path("ios/Runner")
+          info = plistlib.loads((base / "Info.plist").read_bytes())
+          assert info["FirebaseMessagingInstallationIdEnabled"] is True
+          assert {"fetch", "remote-notification"} <= set(info["UIBackgroundModes"])
+          assert plistlib.loads((base / "RunnerDebug.entitlements").read_bytes())["aps-environment"] == "development"
+          assert plistlib.loads((base / "RunnerRelease.entitlements").read_bytes())["aps-environment"] == "production"
+          project = Path("ios/Runner.xcodeproj/project.pbxproj").read_text()
+          assert project.count("CODE_SIGN_ENTITLEMENTS = Runner/RunnerDebug.entitlements;") == 1
+          assert project.count("CODE_SIGN_ENTITLEMENTS = Runner/RunnerRelease.entitlements;") == 2
+          assert "com.apple.Push" in project
+          assert "com.apple.BackgroundModes" in project
+          android = Path("android/app/src/main/AndroidManifest.xml").read_text()
+          assert "firebase_messaging_installation_id_enabled" in android
+          assert "android.permission.POST_NOTIFICATIONS" in android
+          print("M20 Android/iOS push project capabilities validated")
+          PY

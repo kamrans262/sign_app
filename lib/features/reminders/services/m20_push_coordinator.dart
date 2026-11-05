@@ -45,6 +45,12 @@ class M20PushCoordinator with WidgetsBindingObserver {
     if (openInbox != null) { _openInbox = openInbox; }
     if (!_initialized || _started) { return; }
     _started = true;
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      unawaited(FirebaseMessaging.instance
+          .setForegroundNotificationPresentationOptions(
+            alert: true, badge: true, sound: true,
+          ).catchError((Object _) {}));
+    }
     WidgetsBinding.instance.addObserver(this);
     ActiveCompanySession.selected.addListener(_companyChanged);
     _refreshSubscription = FirebaseMessaging.instance.onRegistered.listen(

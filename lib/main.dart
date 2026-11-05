@@ -5,6 +5,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform;
 
 import 'core/theme/app_theme.dart';
@@ -16,6 +17,12 @@ import 'features/reminders/services/m20_push_coordinator.dart';
 import 'features/reminders/presentation/screens/notification_inbox_screen.dart';
 import 'features/quotes/presentation/screens/public_customer_signing_screen.dart';
 
+// System notifications are displayed by the OS. The authenticated inbox is
+// refreshed when the app resumes; background isolates must never access
+// logged-in tokens, company records or the private API.
+@pragma('vm:entry-point')
+Future<void> m20BackgroundMessage(RemoteMessage message) async {}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // Existing platforms with native Firebase configuration initialize here.
@@ -24,6 +31,7 @@ Future<void> main() async {
       defaultTargetPlatform == TargetPlatform.iOS)) {
     try {
       if (Firebase.apps.isEmpty) await Firebase.initializeApp();
+      FirebaseMessaging.onBackgroundMessage(m20BackgroundMessage);
       M20PushCoordinator.shared.attach(openInbox: () {
         final navigator = M20PushCoordinator.navigatorKey.currentState;
         if (navigator == null) return;
