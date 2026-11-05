@@ -97,6 +97,33 @@ class DemoDepositRepository extends DepositRepository {
   }
 
   @override
+  Future<DepositRecord> receiveDeposit(String id) async {
+    final records=await listDeposits();
+    DepositRecord? prior;
+    for(final record in records) {
+      if(record.id==id) {prior=record;break;}
+    }
+    if(prior==null||prior.status!=DepositStatus.pending) {
+      throw StateError('Only pending demo deposits can be marked received.');
+    }
+    final now=DateTime.now();
+    final saved=prior.copyWith(
+      status:DepositStatus.received,
+      receivedAt:now,receivedBy:'Demo user',
+      history:[
+        ...prior.history,
+        DepositHistoryEvent(
+          id:'received-'+now.microsecondsSinceEpoch.toString(),
+          title:'Deposit received',occurredAt:now,
+          description:'Demo only: no money was collected.',
+        ),
+      ],
+    );
+    _saved[id]=saved;
+    return saved;
+  }
+
+  @override
   Future<DepositRecord> refundDeposit(String id) async {
     final records = await listDeposits();
     DepositRecord? original;
