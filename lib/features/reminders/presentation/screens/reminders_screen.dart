@@ -7,6 +7,8 @@ import '../../../../core/widgets/sign2digital_entry_list_card.dart';
 import '../../../../core/widgets/sign2digital_search_field.dart';
 import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import '../../data/demo_reminder_repository.dart';
+import '../../data/remote_reminder_repository.dart';
+import '../../../auth/data/mobile_auth_repository.dart';
 import '../../domain/reminder_record.dart';
 import 'add_reminder_screen.dart';
 import 'notification_inbox_screen.dart';
@@ -42,7 +44,10 @@ class _RemindersScreenState extends State<RemindersScreen> {
   @override
   void initState() {
     super.initState();
-    _repository = widget.repository ?? const DemoReminderRepository();
+    _repository = widget.repository ??
+        (MobileAuthRepository.shared.isSignedIn
+            ? RemoteReminderRepository.shared
+            : const DemoReminderRepository());
     _load();
   }
 
@@ -145,9 +150,9 @@ class _RemindersScreenState extends State<RemindersScreen> {
       _search.clear();
       setState(() => _tab = ReminderFilter.all);
       await _load();
-      _notice(result.sendNotification
-          ? 'Reminder saved locally. Push delivery is not configured.'
-          : 'Reminder saved locally.');
+      _notice(_repository is DemoReminderRepository
+          ? 'Reminder saved locally (demo only).'
+          : 'Reminder saved.');
     } catch (_) {
       _notice('Unable to save reminder. Please try again.');
     }
