@@ -379,8 +379,8 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
     final yes=await showDialog<bool>(
       context:context,builder:(dialog)=>AlertDialog(
         title:const Text('Confirm deposit received?'),
-        content:Text('Confirm that '+_record.formattedAmount+
-          ' was actually received outside Sign2Digital? No card or bank charge will be made.'),
+        content:Text('Confirm that ${_record.formattedAmount} was actually '
+          'received outside Sign2Digital? No card or bank charge will be made.'),
         actions:[
           TextButton(onPressed:()=>Navigator.of(dialog).pop(false),
             child:const Text('Cancel')),
