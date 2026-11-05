@@ -322,7 +322,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
                         label: Text(_filters.active ? 'Filters applied' : 'Filters'),
                       ),
                       const Spacer(),
-                      Text('Company #\${ActiveCompanySession.companyId ?? 0}',
+                      Text('Company #${ActiveCompanySession.companyId ?? 0}',
                         style: const TextStyle(fontFamily: 'Inter', fontSize: 12,
                           color: AppColors.placeholder)),
                     ]),

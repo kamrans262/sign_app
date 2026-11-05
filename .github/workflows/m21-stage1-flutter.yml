@@ -1,0 +1,24 @@
+name: M21 Stage 1 Flutter Search
+on:
+  push:
+    branches: [fix/m20-android-live-reminder-integration-2026-11-06]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  global-search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Analyzer — M21 search and connected authoritative repositories
+        run: |
+          dart analyze --fatal-infos lib/features/global_search lib/features/clients/data/remote_client_repository.dart lib/features/jobs/data/remote_job_repository.dart lib/features/equipment/data/remote_equipment_repository.dart
+      - name: Search API mapping and approved original UI widget regression
+        run: |
+          timeout --signal=TERM --kill-after=10s 240s flutter test --no-pub --concurrency=2 --timeout=60s --reporter=expanded test/features/global_search
