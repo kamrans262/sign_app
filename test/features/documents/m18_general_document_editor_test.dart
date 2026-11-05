@@ -58,11 +58,18 @@ void main(){
     await tester.pumpWidget(MaterialApp(home:
       GeneralDocumentEditorScreen(
         repository:RemoteGeneralDocumentRepository(api:client))));
-    await tester.enterText(find.byType(TextField).first,'Business Letter');
+    await tester.enterText(
+      find.byKey(const Key('general-document-title')), 'Business Letter');
+    // The scrollable editor builds off-screen inputs lazily.
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('general-document-text-0')), 200,
+      scrollable: find.byType(Scrollable).first);
     await tester.enterText(
       find.byKey(const Key('general-document-text-0')),
       'A real business message.');
-    await tester.ensureVisible(find.byKey(const Key('general-document-save')));
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('general-document-save')), 200,
+      scrollable: find.byType(Scrollable).first);
     await tester.tap(find.byKey(const Key('general-document-save')));
     await tester.pumpAndSettle();
     expect(saves,1);
@@ -77,16 +84,30 @@ void main(){
     await tester.pumpWidget(MaterialApp(home:
       GeneralDocumentEditorScreen(
         repository:RemoteGeneralDocumentRepository(api:client))));
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('general-document-text-0')), 200,
+      scrollable: find.byType(Scrollable).first);
     await tester.enterText(
       find.byKey(const Key('general-document-text-0')),
       'Manual text stays here.');
-    await tester.enterText(find.byType(TextField).last,
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('general-document-instructions')), 200,
+      scrollable: find.byType(Scrollable).first);
+    await tester.enterText(
+      find.byKey(const Key('general-document-instructions')),
       'Suggest a professional document introduction.');
-    await tester.ensureVisible(find.text('Suggest with AI'));
+    await tester.scrollUntilVisible(
+      find.text('Suggest with AI'), 200,
+      scrollable: find.byType(Scrollable).first);
     await tester.tap(find.text('Suggest with AI'));
     await tester.pumpAndSettle();
-    expect(find.text('Manual text stays here.'),findsOneWidget);
     expect(find.byKey(const Key('general-document-error')),findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('general-document-text-0')), -200,
+      scrollable: find.byType(Scrollable).first);
+    expect(tester.widget<TextField>(
+      find.byKey(const Key('general-document-text-0'))
+    ).controller!.text, 'Manual text stays here.');
     client.dispose();
   });
 }

@@ -343,12 +343,12 @@ class _GeneralDocumentEditorScreenState extends State<GeneralDocumentEditorScree
     color:AppColors.dark));
 
   Widget _field(String label,TextEditingController controller,{
-    int lines=1})=>Column(
+    int lines=1,Key? fieldKey})=>Column(
     crossAxisAlignment:CrossAxisAlignment.stretch,children:[
       _label(label),const SizedBox(height:8),
       Sign2DigitalOutlinedContainer(
         padding:const EdgeInsets.all(16),
-        child:TextField(controller:controller,enabled:_editable&&!_busy,
+        child:TextField(key:fieldKey,controller:controller,enabled:_editable&&!_busy,
           minLines:lines,maxLines:lines==1?1:6,
           decoration:const InputDecoration(
             border:InputBorder.none,isCollapsed:true),
@@ -441,7 +441,8 @@ class _GeneralDocumentEditorScreenState extends State<GeneralDocumentEditorScree
                 if(mounted&&v!=null)setState(()=>_locale=v);
               }),
             const SizedBox(height:18),
-            _field('Document Title',_title),
+            _field('Document Title',_title,
+              fieldKey:const Key('general-document-title')),
             const SizedBox(height:18),
             Sign2DigitalSelectionField(
               key:const Key('general-document-client'),
@@ -466,7 +467,8 @@ class _GeneralDocumentEditorScreenState extends State<GeneralDocumentEditorScree
               }),
               icon:const Icon(Icons.add),label:const Text('Add Paragraph')),
             const SizedBox(height:20),
-            _field('AI Instructions (optional)',_instructions,lines:3),
+            _field('AI Instructions (optional)',_instructions,lines:3,
+              fieldKey:const Key('general-document-instructions')),
             const SizedBox(height:12),
             Sign2DigitalOutlinedButton(label:'Suggest with AI',
               enabled:_editable&&!_busy,onPressed:_suggest),
