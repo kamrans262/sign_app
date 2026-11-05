@@ -47,9 +47,10 @@ void main() {
       (tester) async {
     await tester.pumpWidget(const MaterialApp(home: ClientsScreen()));
     await tester.tap(find.byKey(const Key('dashboard-tab-4')));
-    await tester.pumpAndSettle();
+    // Dashboard updates continue asynchronously; a bounded pump is reliable.
+    await tester.pump(const Duration(milliseconds:600));
     await tester.tap(find.byKey(const Key('open-deposits')));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds:600));
     expect(find.byType(DepositsScreen), findsOneWidget);
     expect(find.byType(Sign2DigitalDashboardHeader), findsWidgets);
     expect(find.text('Search documents'), findsOneWidget);
