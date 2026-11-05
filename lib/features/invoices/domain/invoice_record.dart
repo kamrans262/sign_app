@@ -78,6 +78,7 @@ class InvoiceRecord {
     this.photos = const [],
     this.lockVersion = 0, this.invoiceType = 'final',
     this.sourceQuoteId, this.lifecycleStatus = 'draft',
+    this.sourceAddendaIds = const [],
   });
 
   final String id, number, project, clientName;
@@ -102,6 +103,7 @@ class InvoiceRecord {
   final int lockVersion;
   final String invoiceType, lifecycleStatus;
   final int? sourceQuoteId;
+  final List<int> sourceAddendaIds;
 
   int get receivedMinor => payments.where((p) =>
       p.status.toLowerCase() == 'paid').fold<int>(0,
@@ -144,6 +146,7 @@ class InvoiceRecord {
         photos: List<LocalJobPhotoSelection>.unmodifiable(next),
         lockVersion: lockVersion, invoiceType: invoiceType,
         sourceQuoteId: sourceQuoteId, lifecycleStatus: lifecycleStatus,
+        sourceAddendaIds: sourceAddendaIds,
       );
 
   InvoiceRecord withStatus(InvoiceStatus next, {DateTime? paidAt}) =>
