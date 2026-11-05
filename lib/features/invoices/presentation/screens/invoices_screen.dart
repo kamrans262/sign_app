@@ -111,7 +111,9 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
 
   List<InvoiceRecord> get _visible {
     final list = _all.where((item) =>
-        (_tab == 0 || item.status == InvoiceStatus.values[_tab - 1]) &&
+        (_tab == 0 || item.status == InvoiceStatus.values[_tab - 1] ||
+          // Pending includes partially settled invoices; keep six approved tabs.
+          (_tab == 3 && item.status == InvoiceStatus.partiallyPaid)) &&
         item.matches(_search.text)).toList();
     list.sort((a, b) {
       int result = switch (_sort) {
