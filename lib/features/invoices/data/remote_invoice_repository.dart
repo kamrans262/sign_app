@@ -141,16 +141,45 @@ class RemoteInvoiceRepository extends InvoiceRepository {
     return data;
   }
 
-  Future<int> availableDeposits(int job) async {
+  Future<Map<String,dynamic>> _availability(int job) async {
     final company=_company();
     final data=_data(await _api.get(
       '/api/v1/jobs/$job/invoice-deposits',companyScoped:true));
     _check(company);
     if(_int(data['job_id'])!=job||data['currency']!='CHF'||
-        data['allocation_policy']!='whole_deposits_once'){
+        data['allocation_policy']!='whole_deposits_once'||
+        _int(data['available_minor'])<0){
       throw const SignApiException('Invalid deposit credit summary.');
     }
-    return _int(data['available_minor']);
+    return data;
+  }
+
+  Future<int> availableDeposits(int job) async =>
+      _int((await _availability(job))['available_minor']);
+
+  /// Mirrors the server's whole-deposit, oldest-first allocation policy.
+  /// Total available is not the same as credit that fits an invoice.
+  Future<List<int>> availableDepositCandidates(int job) async {
+    final data=await _availability(job);
+    final raw=data['deposit_candidates'];
+    if(raw is! List){
+      throw const SignApiException('Missing deposit allocation candidates.');
+    }
+    final ids=<int>{},amounts=<int>[];
+    var total=0;
+    for(final item in raw){
+      final row=_map(item);
+      final id=_int(row['id']),amount=_int(row['amount_minor']);
+      if(id<1||amount<1||!ids.add(id)){
+        throw const SignApiException('Invalid invoice deposit allocation.');
+      }
+      amounts.add(amount);
+      total+=amount;
+    }
+    if(total!=_int(data['available_minor'])){
+      throw const SignApiException('Deposit allocation summary mismatch.');
+    }
+    return amounts;
   }
 
   @override
