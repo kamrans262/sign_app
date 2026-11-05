@@ -1,0 +1,30 @@
+name: M22 Stage 1 Flutter Profile and Support
+on:
+  push:
+    branches: [fix/m20-android-live-reminder-integration-2026-11-06]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: m22-stage1-flutter
+  cancel-in-progress: true
+jobs:
+  profile-support:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Analyze M22 and connected API changes
+        run: |
+          dart analyze --fatal-infos lib/features/profile lib/features/auth/data/remote_account_repository.dart lib/core/services/sign_api_client.dart
+      - name: Profile, support, security and legacy UI acceptance
+        run: |
+          timeout --signal=TERM --kill-after=10s 300s flutter test --no-pub --concurrency=2 --timeout=60s --reporter=expanded test/features/profile
+      - name: M2 session and M21 search regressions
+        run: |
+          timeout --signal=TERM --kill-after=10s 300s flutter test --no-pub --concurrency=2 --timeout=60s --reporter=expanded test/features/auth/mobile_auth_repository_test.dart test/features/global_search
