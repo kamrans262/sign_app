@@ -76,6 +76,7 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
   JobModel? _job;
   DateTime? _issueDate, _dueDate;
   int _depositPaidMinor = 0;
+  List<int> _availableDepositCandidates = [];
   bool _saving = false, _voiceOpen = false;
   late final String _draftId;
   late String _invoiceType;
@@ -94,8 +95,30 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
       : percentOfMinor(_subtotalMinor!, _vatBasisPoints);
   int? get _totalMinor => _subtotalMinor == null ? null
       : _subtotalMinor! + _vatMinor!;
+  int get _appliedDepositMinor {
+    if (_repository is! RemoteInvoiceRepository) return _depositPaidMinor;
+    if (_invoiceType!='final') return 0;
+    final total=_totalMinor;
+    if(total==null) return 0;
+    final original=widget.initialInvoice;
+    // Already reserved credits belong to this draft; only the exact
+    // unchanged total can be displayed until the server recalculates.
+    if(original!=null && original.jobId==_job?.id &&
+        original.invoiceType=='final' &&
+        original.totalMinor==total) {
+      return original.depositPaidMinor;
+    }
+    var remaining=total,applied=0;
+    for(final amount in _availableDepositCandidates) {
+      if(amount<=remaining) {
+        applied+=amount;
+        remaining-=amount;
+      }
+    }
+    return applied;
+  }
   int? get _dueMinor => _totalMinor == null ? null
-      : (_totalMinor! - _depositPaidMinor).clamp(0, _totalMinor!).toInt();
+      : (_totalMinor! - _appliedDepositMinor).clamp(0, _totalMinor!).toInt();
 
   @override
   void initState() {
@@ -256,7 +279,7 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
         final m=Map<String,dynamic>.from(item);
         m['kind']='completed_work';
         m['items']=[{
-          'description':m['description'],'quantity':1,
+          'description':m['description'],'quantity':0,
           'unit_price_minor':null,
         }];
         options.add(m);
@@ -310,13 +333,13 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
       for(final item in raw){
         if(item is! Map)continue;
         final description=(item['description']??'').toString().trim();
-        final qty=item['quantity'] is int?item['quantity'] as int:1;
+        final qty=item['quantity'] is int?item['quantity'] as int:0;
         final price=item['unit_price_minor'];
         if(description.isNotEmpty){
           lines.add(InvoiceLineItem(
             description:description.length>1000
                 ?description.substring(0,1000):description,
-            quantity:qty>0&&qty<=100000?qty:1,
+            quantity:qty>0&&qty<=100000?qty:0,
             unitPriceMinor:price is int&&price>=0?price:null,
           ));
         }
@@ -336,8 +359,8 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
       _sourceVatBasisPoints=vat is int?vat:null;
       _error=null;
     });
-    if(lines.any((x)=>x.unitPriceMinor==null)){
-      _notice('Some source prices are unavailable. Enter them before saving.');
+    if(lines.any((x)=>x.unitPriceMinor==null||x.quantity<=0)){
+      _notice('Source price or quantity is missing. Enter it before saving.');
     }
   }
 
@@ -383,6 +406,7 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
           _voiceJobHint = null;
           _error = null;
           _depositPaidMinor = 0;
+          _availableDepositCandidates=[];
           _sourceQuoteId=null;
           _sourceAddendaIds=[];
           _sourceVatBasisPoints=null;
@@ -403,7 +427,10 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
         }
         if(_invoiceType=='deposit'){
           if(mounted && _job?.id==jobId){
-            setState(()=>_depositPaidMinor=0);
+            setState((){
+              _depositPaidMinor=0;
+              _availableDepositCandidates=[];
+            });
           }
           return;
         }
@@ -417,9 +444,12 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
           }
           return;
         }
-        final value=await _repository.availableDeposits(id);
+        final candidates=await _repository.availableDepositCandidates(id);
         if(mounted&&_job?.id==jobId){
-          setState(()=>_depositPaidMinor=value);
+          setState((){
+            _availableDepositCandidates=candidates;
+            _depositPaidMinor=0;
+          });
         }
         return;
       }
@@ -788,7 +818,7 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
         notes: _notes.text.trim(),
         currency: widget.currency,
         vatBasisPoints: _vatBasisPoints,
-        depositPaidMinor: _depositPaidMinor,
+        depositPaidMinor: _appliedDepositMinor,
         items: List<InvoiceLineItem>.unmodifiable(_items),
         invoiceType:_invoiceType,
         lockVersion:initial?.lockVersion??0,
@@ -891,7 +921,7 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
             label: 'Total', value: _money(_totalMinor), highlight: true),
           const SizedBox(height: 15),
           Sign2DigitalDocumentAmountRow(
-            label: 'Deposit Paid', value: _money(_depositPaidMinor)),
+            label: 'Deposit Paid', value: _money(_appliedDepositMinor)),
           const SizedBox(height: 15),
           Sign2DigitalDocumentAmountRow(
             label: 'Amount Due', value: _money(_dueMinor),
