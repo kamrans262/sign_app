@@ -8,6 +8,9 @@ import '../../../../core/widgets/sign2digital_list_sort_control.dart';
 import '../../../../core/widgets/sign2digital_search_field.dart';
 import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import '../../data/demo_deposit_repository.dart';
+import '../../data/remote_deposit_repository.dart';
+import '../../../auth/data/mobile_auth_repository.dart';
+import '../../../../core/services/active_company_session.dart';
 import '../../domain/deposit_record.dart';
 import '../../../labour/data/demo_labour_repository.dart';
 import 'add_deposit_screen.dart';
@@ -50,29 +53,45 @@ class _DepositsScreenState extends State<DepositsScreen> {
   String? _error;
   int _tab = 0;
   DepositSort _sort = DepositSort.newest;
+  int _loadSerial=0;
+
+  void _companyChanged() {
+    if(!mounted)return;
+    setState((){_all=[];_loading=true;_error=null;});
+    _load();
+  }
 
   @override
   void initState() {
     super.initState();
-    _repository = widget.repository ?? const DemoDepositRepository();
+    _repository = widget.repository ??
+        (!MobileAuthRepository.shared.isSignedIn &&
+         ActiveCompanySession.companyId==null
+          ? const DemoDepositRepository() : RemoteDepositRepository.shared);
+    ActiveCompanySession.selected.addListener(_companyChanged);
     _load();
   }
 
   @override
   void dispose() {
+    ActiveCompanySession.selected.removeListener(_companyChanged);
     _search.dispose();
     super.dispose();
   }
 
   Future<void> _load() async {
+    final serial=++_loadSerial;
+    final company=ActiveCompanySession.companyId;
     if (!mounted) { return; }
     setState(() { _loading = true; _error = null; });
     try {
       final records = await _repository.listDeposits();
-      if (!mounted) { return; }
+      if (!mounted || serial!=_loadSerial ||
+          ActiveCompanySession.companyId!=company) { return; }
       setState(() { _all = records; _loading = false; });
     } catch (_) {
-      if (!mounted) { return; }
+      if (!mounted || serial!=_loadSerial ||
+          ActiveCompanySession.companyId!=company) { return; }
       setState(() {
         _error = 'Unable to load deposits';
         _loading = false;
@@ -131,10 +150,20 @@ class _DepositsScreenState extends State<DepositsScreen> {
       widget.onDepositTap!(deposit);
       return;
     }
+    DepositRecord selected=deposit;
+    if (_repository is RemoteDepositRepository) {
+      try {
+        selected=await (_repository as RemoteDepositRepository).detail(deposit.id);
+      } catch (_) {
+        _notice('Unable to load verified deposit details.');
+        return;
+      }
+    }
+    if(!mounted)return;
     await Navigator.of(context).push<bool>(
       MaterialPageRoute<bool>(
         builder: (_) => DepositDetailsScreen(
-          deposit: deposit, repository: _repository),
+          deposit: selected, repository: _repository),
       ),
     );
     if (mounted) { await _load(); }
@@ -145,10 +174,17 @@ class _DepositsScreenState extends State<DepositsScreen> {
       widget.onCreateDeposit!();
       return;
     }
+    var jobs=LabourDemoJobs.all;
+    if(_repository is RemoteDepositRepository) {
+      try {
+        jobs=await (_repository as RemoteDepositRepository).jobs();
+      }catch(_){_notice('Unable to load current jobs.');return;}
+    }
+    if(!mounted)return;
     final deposit = await Navigator.of(context).push<DepositRecord>(
       MaterialPageRoute<DepositRecord>(
         builder: (_) => AddDepositScreen(
-          jobs: LabourDemoJobs.all,
+          jobs: jobs,
           selectedNavigationIndex: widget.selectedNavigationIndex,
           onNavigationSelected: widget.onNavigationSelected,
         ),
@@ -161,7 +197,7 @@ class _DepositsScreenState extends State<DepositsScreen> {
       _search.clear();
       setState(() => _tab = 0);
       await _load();
-      _notice('Deposit saved locally as Pending.');
+      _notice('Deposit saved as Pending.');
     } catch (_) {
       _notice('Unable to save the deposit. Please try again.');
     }
