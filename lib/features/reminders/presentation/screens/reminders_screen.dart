@@ -27,6 +27,14 @@ class RemindersScreen extends StatefulWidget {
   final DateTime Function()? now;
   final int selectedNavigationIndex;
 
+  // Injected repositories remain authoritative for previews/tests. Production
+  // signed-in sessions must never silently fall back to session-local demo data.
+  static ReminderRepository repositoryForSession(bool signedIn,
+      [ReminderRepository? provided]) =>
+      provided ?? (signedIn
+          ? RemoteReminderRepository.shared
+          : const DemoReminderRepository());
+
   @override
   State<RemindersScreen> createState() => _RemindersScreenState();
 }
@@ -44,10 +52,8 @@ class _RemindersScreenState extends State<RemindersScreen> {
   @override
   void initState() {
     super.initState();
-    _repository = widget.repository ??
-        (MobileAuthRepository.shared.isSignedIn
-            ? RemoteReminderRepository.shared
-            : const DemoReminderRepository());
+    _repository = RemindersScreen.repositoryForSession(
+        MobileAuthRepository.shared.isSignedIn, widget.repository);
     _load();
   }
 
