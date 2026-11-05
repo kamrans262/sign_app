@@ -5,7 +5,7 @@ import 'package:sign2digital/features/invoices/domain/invoice_record.dart';
 import 'package:sign2digital/features/invoices/presentation/screens/add_invoice_screen.dart';
 import 'package:sign2digital/features/invoices/presentation/screens/invoice_details_screen.dart';
 import 'package:sign2digital/features/invoices/presentation/screens/invoices_screen.dart';
-import 'package:sign2digital/features/clients/presentation/screens/clients_screen.dart';
+import 'package:sign2digital/features/clients/presentation/screens/more_screen.dart';
 
 InvoiceRecord _invoice(String id, InvoiceStatus status, double amount,
     DateTime date, {String? client, String? project}) => InvoiceRecord(
@@ -97,9 +97,17 @@ void main() {
 
   testWidgets('More menu opens Invoices, retaining global header and navigation',
       (tester) async {
-    await tester.pumpWidget(const MaterialApp(home: ClientsScreen()));
-    await tester.tap(find.byKey(const Key('dashboard-tab-4')));
+    await tester.pumpWidget(const MaterialApp(
+      home:Scaffold(body:MoreScreen()),
+    ));
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('open-invoices')),200,
+      scrollable:find.descendant(
+        of:find.byKey(const Key('more-menu-scroll')),
+        matching:find.byType(Scrollable),
+      ),
+    );
     await tester.tap(find.byKey(const Key('open-invoices')));
     await tester.pumpAndSettle();
     expect(find.byType(InvoicesScreen), findsOneWidget);
@@ -161,6 +169,13 @@ void main() {
     await tester.tap(find.byKey(const Key('invoice-card-pending')));
     await tester.pumpAndSettle();
     expect(find.byType(InvoiceDetailsScreen), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('invoice-details-mark-paid')),120,
+      scrollable:find.descendant(
+        of:find.byKey(const Key('invoice-details-scroll')),
+        matching:find.byType(Scrollable),
+      ).first,
+    );
     expect(find.byKey(const Key('invoice-details-mark-paid')), findsOneWidget);
     expect(find.byKey(const Key('invoice-paid-confirm-heading')), findsNothing);
     await _openPaidDialog(tester);
