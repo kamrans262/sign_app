@@ -52,7 +52,7 @@ class _M16VerifiedJobDepositsState extends State<M16VerifiedJobDeposits> {
         icon:Icons.savings_outlined);
     }
     return FutureBuilder<Map<String,dynamic>>(
-      key:ValueKey('m16-deposits-'+_company.toString()+'-'+widget.jobId.toString()),
+      key:ValueKey(Object.hash(_company,widget.jobId)),
       future:request,builder:(context,snapshot){
         final row=snapshot.connectionState==ConnectionState.done?
           snapshot.data:null;
@@ -60,7 +60,7 @@ class _M16VerifiedJobDepositsState extends State<M16VerifiedJobDeposits> {
         final cents=amount is int?amount:int.tryParse('$amount');
         final valid=snapshot.hasData&&!snapshot.hasError&&
             cents!=null&&cents>=0;
-        final label=valid?'CHF '+(cents/100).toStringAsFixed(2):null;
+        final label=valid?'CHF ${(cents/100).toStringAsFixed(2)}':null;
         return Sign2DigitalJobFinancialCard(
           label:'Deposits',amountChf:0,
           showAmount:valid,amountLabel:label,
