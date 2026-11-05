@@ -37,10 +37,12 @@ class _NotificationInboxScreenState extends State<NotificationInboxScreen> {
         setState(() { _snapshot = result; _loading = false; });
       }
     } catch (_) {
-      if (mounted) setState(() {
-        _loading = false;
-        _error = 'Unable to load notifications. Tap to retry.';
-      });
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _error = 'Unable to load notifications. Tap to retry.';
+        });
+      }
     }
   }
 
