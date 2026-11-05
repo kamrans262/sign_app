@@ -18,6 +18,7 @@ import '../../../jobs/data/local_job_photo_source.dart';
 import '../../../jobs/presentation/widgets/sign2digital_photo_preview.dart';
 import '../../../labour/data/demo_labour_repository.dart';
 import '../../domain/deposit_record.dart';
+import '../../data/remote_deposit_repository.dart';
 import 'add_deposit_screen.dart';
 
 typedef DepositReceiptShare = Future<void> Function(
@@ -182,12 +183,12 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
                   icon: const Icon(Icons.close),
                 ),
               ),
-              Expanded(child: InteractiveViewer(
-                child: Image.memory(receipt.bytes,
-                  fit: BoxFit.contain,
-                  errorBuilder: (_, _, _) =>
-                      const Icon(Icons.broken_image_outlined)),
-              )),
+              Expanded(child: receipt.name.toLowerCase().endsWith('.pdf')
+                ? const Center(child: Text('PDF receipt: use Download or Share'))
+                : InteractiveViewer(child: Image.memory(receipt.bytes,
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, _, _) =>
+                        const Icon(Icons.broken_image_outlined))),
             ]),
           ),
         );
@@ -203,6 +204,9 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
       if (share) {
         if (widget.onReceiptShare != null) {
           await widget.onReceiptShare!(receipt);
+        } else if (receipt.name.toLowerCase().endsWith('.pdf')) {
+          await Printing.sharePdf(bytes: receipt.bytes,
+            filename: receipt.name);
         } else {
           final pdf = pw.Document();
           pdf.addPage(pw.Page(
@@ -243,7 +247,7 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
       return Sign2DigitalOutlinedContainer(
         child: InkWell(
           key: const Key('deposit-receipts-empty'),
-          onTap: _busy ? null : _edit,
+          onTap: _busy || _record.status!=DepositStatus.pending ? null : _edit,
           child: const SizedBox(height: 145,
             child: Center(child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -274,9 +278,13 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
                 InkWell(
                   key: Key('deposit-receipt-$i'),
                   onTap: () => _preview(i),
-                  child: Sign2DigitalPhotoPreview(
-                    bytes: photos[i].bytes, showDemo: false,
-                    showRemove: false, onRemove: () {}),
+                  child: photos[i].name.toLowerCase().endsWith('.pdf')
+                    ? const SizedBox(height:110,
+                        child: Center(child: Icon(Icons.picture_as_pdf_outlined,
+                          size:40,color:AppColors.primary)))
+                    : Sign2DigitalPhotoPreview(
+                        bytes: photos[i].bytes, showDemo: false,
+                        showRemove: false, onRemove: () {}),
                 ),
                 const SizedBox(height: 10),
                 Row(children: [
@@ -299,7 +307,7 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
         ],
         TextButton.icon(
           key: const Key('deposit-receipts-edit'),
-          onPressed: _busy ? null : _edit,
+          onPressed: _busy || _record.status!=DepositStatus.pending ? null : _edit,
           icon: const Icon(Icons.edit_outlined),
           label: const Text('Add or remove photos'),
         ),
@@ -337,7 +345,7 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
   }
 
   Future<void> _delete() async {
-    if (_busy) { return; }
+    if (_busy || _record.status!=DepositStatus.pending) { return; }
     final yes = await showDialog<bool>(
       context: context, builder: (dialog) => AlertDialog(
         title: const Text('Delete deposit?'),
@@ -366,13 +374,46 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
     }
   }
 
+  Future<void> _receive() async {
+    if (_busy || _record.status != DepositStatus.pending) { return; }
+    final yes=await showDialog<bool>(
+      context:context,builder:(dialog)=>AlertDialog(
+        title:const Text('Confirm deposit received?'),
+        content:Text('Confirm that '+_record.formattedAmount+
+          ' was actually received outside Sign2Digital? No card or bank charge will be made.'),
+        actions:[
+          TextButton(onPressed:()=>Navigator.of(dialog).pop(false),
+            child:const Text('Cancel')),
+          TextButton(key:const Key('deposit-confirm-receive'),
+            onPressed:()=>Navigator.of(dialog).pop(true),
+            child:const Text('Mark Received')),
+        ],
+      ),
+    );
+    if(yes!=true||!mounted)return;
+    setState(()=>_busy=true);
+    try {
+      final updated=await widget.repository.receiveDeposit(_record.id);
+      if(updated.id!=_record.id||updated.status!=DepositStatus.received){
+        throw StateError('Deposit receipt not confirmed.');
+      }
+      if(!mounted)return;
+      setState(()=>_record=updated);
+      _notice('Manual deposit receipt recorded.');
+    }catch(_){
+      _notice('Unable to confirm the deposit. Refresh and try again.');
+    }finally{
+      if(mounted)setState(()=>_busy=false);
+    }
+  }
+
   Future<void> _refund() async {
     if (_busy || _record.status != DepositStatus.received) { return; }
     final yes = await showDialog<bool>(
       context: context, builder: (dialog) => AlertDialog(
         title: const Text('Refund deposit?'),
-        content: Text('Mark ${_record.formattedAmount} as refunded locally? '
-          'This will not initiate a bank refund.'),
+        content: Text('Record ${_record.formattedAmount} as already refunded? '
+          'This does not initiate a bank transfer.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialog).pop(false),
@@ -394,7 +435,7 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
       }
       if (!mounted) { return; }
       setState(() => _record = updated);
-      _notice('Deposit marked refunded locally.');
+      _notice('Manual refund recorded; no bank transfer initiated.');
     } catch (_) {
       _notice('Refund status was not changed. Please try again.');
     } finally {
@@ -403,12 +444,19 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
   }
 
   Future<void> _edit() async {
-    if (_busy || _record.status == DepositStatus.refunded) { return; }
+    if (_busy || _record.status != DepositStatus.pending) { return; }
+    var jobs=LabourDemoJobs.all;
+    if(widget.repository is RemoteDepositRepository){
+      try{
+        jobs=await (widget.repository as RemoteDepositRepository).jobs();
+      }catch(_){_notice('Unable to load verified job options.');return;}
+    }
+    if(!mounted)return;
     final updated = await Navigator.of(context).push<DepositRecord>(
       MaterialPageRoute<DepositRecord>(
         builder: (_) => AddDepositScreen(
           initialDeposit: _record,
-          jobs: LabourDemoJobs.all,
+          jobs: jobs,
         ),
       ),
     );
@@ -425,7 +473,7 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
       }
       if (!mounted) { return; }
       setState(() => _record = saved);
-      _notice('Deposit updated locally.');
+      _notice('Deposit updated.');
     } catch (_) {
       _notice('Deposit update failed.');
     } finally {
@@ -439,14 +487,16 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
       Row(children: [
         Expanded(child: Sign2DigitalOutlinedButton(
           key: const Key('deposit-detail-delete'),
-          label: 'Delete', enabled: !_busy, primaryOutline: true,
+          label: 'Delete', enabled: !_busy && _record.status==DepositStatus.pending,
+          primaryOutline: true,
           onPressed: _delete)),
         const SizedBox(width: 10),
         Expanded(child: Sign2DigitalOutlinedButton(
           key: const Key('deposit-detail-refund'),
-          label: 'Refund', primaryOutline: true,
-          enabled: !_busy && _record.status == DepositStatus.received,
-          onPressed: _refund)),
+          label: _record.status==DepositStatus.pending ? 'Mark Received':'Refund',
+          primaryOutline: true,
+          enabled: !_busy && _record.status != DepositStatus.refunded,
+          onPressed: _record.status==DepositStatus.pending ? _receive : _refund)),
       ]),
       const SizedBox(height: 15),
       FractionallySizedBox(
@@ -454,7 +504,7 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
         child: Sign2DigitalPrimaryButton(
           key: const Key('deposit-detail-edit'),
           label: 'Edit',
-          enabled: !_busy && _record.status != DepositStatus.refunded,
+          enabled: !_busy && _record.status == DepositStatus.pending,
           onPressed: _edit)),
     ],
   );
