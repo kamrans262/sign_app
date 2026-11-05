@@ -56,6 +56,7 @@ void main(){
       expect(body['job_id'],34);
       expect(body['amount'],'123.45');
       expect(body['payment_method'],'bank_transfer');
+      expect(body['request_key'],'local-deposit-1');
       expect(body.containsKey('status'),false);
       expect(body.containsKey('paid'),false);
       return http.Response(jsonEncode({'data':{'deposit':deposit()}}),201);
@@ -66,6 +67,56 @@ void main(){
       status:DepositStatus.pending,jobId:'34',
       paymentMethod:'Bank Transfer',referenceNumber:'WIRE-123',
     ));
+    client.dispose();
+  });
+
+  test('retry after a lost create response keeps the same key and amount',
+      () async {
+    final keys=<String>[];
+    var attempts=0;
+    final client=api((request) async {
+      attempts++;
+      final body=jsonDecode(request.body) as Map<String,dynamic>;
+      keys.add(body['request_key'] as String);
+      expect(body['amount'],'123.45');
+      expect(body['job_id'],34);
+      if(attempts==1){
+        // The server may already have committed when a 503/timeout arrives.
+        return http.Response(jsonEncode({'message':'Temporary connection failure'}),503);
+      }
+      return http.Response(jsonEncode({'data':{'deposit':deposit()}}),201);
+    });
+    final draft=DepositRecord(
+      id:'local-deposit-9918',title:'Kitchen',
+      clientName:'Jean Dupont',amount:123.45,date:DateTime(2026,11,5),
+      status:DepositStatus.pending,jobId:'34',
+      paymentMethod:'Bank Transfer',referenceNumber:'WIRE-123',
+    );
+    final repo=RemoteDepositRepository(api:client);
+    await expectLater(repo.saveDeposit(draft),throwsA(isA<SignApiException>()));
+    await repo.saveDeposit(draft);
+    expect(attempts,2);
+    expect(keys,['local-deposit-9918','local-deposit-9918']);
+    client.dispose();
+  });
+
+  test('different draft identifiers create different request keys',
+      () async {
+    final keys=<String>[];
+    final client=api((request) async {
+      keys.add((jsonDecode(request.body) as Map<String,dynamic>)['request_key']
+          as String);
+      return http.Response(jsonEncode({'data':{'deposit':deposit()}}),201);
+    });
+    final repo=RemoteDepositRepository(api:client);
+    DepositRecord draft(String id)=>DepositRecord(
+      id:id,title:'Kitchen',clientName:'Jean Dupont',amount:123.45,
+      date:DateTime(2026,11,5),status:DepositStatus.pending,jobId:'34',
+      paymentMethod:'Bank Transfer',
+    );
+    await repo.saveDeposit(draft('local-deposit-100'));
+    await repo.saveDeposit(draft('local-deposit-101'));
+    expect(keys,['local-deposit-100','local-deposit-101']);
     client.dispose();
   });
 
