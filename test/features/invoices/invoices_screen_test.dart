@@ -121,6 +121,8 @@ void main() {
     final repo = _StubInvoices([
       _invoice('paid', InvoiceStatus.paid, 10, DateTime(2026, 8, 21)),
       _invoice('pending', InvoiceStatus.pending, 500, DateTime(2026, 8, 23)),
+      _invoice('partial', InvoiceStatus.partiallyPaid, 225,
+        DateTime(2026, 8, 24)),
       _invoice('draft', InvoiceStatus.draft, 120, DateTime(2026, 8, 20),
         client: 'Jean Dupont'),
       _invoice('overdue', InvoiceStatus.overdue, 20, DateTime(2026, 7, 21)),
@@ -135,6 +137,7 @@ void main() {
     await tester.tap(find.byKey(const Key('details-tab-3')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('invoice-card-pending')), findsOneWidget);
+    expect(find.byKey(const Key('invoice-card-partial')), findsOneWidget);
     expect(find.byKey(const Key('invoice-card-paid')), findsNothing);
     await tester.ensureVisible(find.byKey(const Key('details-tab-0')));
     await tester.tap(find.byKey(const Key('details-tab-0')));
