@@ -41,6 +41,7 @@ class _CreateEquipmentLoanScreenState extends State<CreateEquipmentLoanScreen> {
   String _borrowerType='external';
   late final String _retryKey;
   bool _loading=true,_saving=false,_voiceOpen=false;
+  bool _loanDateTouched=false,_returnDateTouched=false;
   String? _error;
 
   @override
@@ -174,7 +175,8 @@ class _CreateEquipmentLoanScreenState extends State<CreateEquipmentLoanScreen> {
       firstDate:DateTime(2000),
       lastDate:DateTime(2100));
     if(selected!=null&&mounted)setState((){
-      if(due){_returnDate=selected;}else{_loanDate=selected;}
+      if(due){_returnDate=selected;_returnDateTouched=true;}
+      else{_loanDate=selected;_loanDateTouched=true;}
     });
   }
 
@@ -229,6 +231,151 @@ class _CreateEquipmentLoanScreenState extends State<CreateEquipmentLoanScreen> {
               }
               if(_notes.text.trim().isEmpty){
                 _notes.text=(suggestion['notes']??'').toString();
+              }
+              final code=(suggestion['equipment_code']??'').toString();
+              if(_selectedAsset==null&&code.isNotEmpty){
+                final matches=_assets.where((a)=>a.id==code&&
+                  a.status!=EquipmentStatus.maintenance&&
+                  a.currentLoanId==null).toList();
+                if(matches.length==1)_selectedAsset=matches.single;
+              }
+              DateTime? date(Object? value){
+                if(value is! String||
+                    !RegExp(r'^\\d{4}-\\d{2}-\\d{2}
+            });
+          }));
+    }catch(_){
+      _notice('Voice extraction was unavailable. Manual fields are preserved.');
+    }finally{
+      _voiceOpen=false;
+    }
+  }
+
+  Future<void> _save() async{
+    if(_saving||_loading)return;
+    final selected=_selectedAsset;
+    final name=_borrower.text.trim();
+    if(selected==null||
+        (_equipment is RemoteEquipmentRepository&&selected.serverId==null)||
+        name.length<2||_returnDate.isBefore(_loanDate)||
+        (_borrowerType=='client'&&_selectedClient==null)){
+      setState(()=>_error='Choose an equipment asset, borrower and valid '
+        'loan/return dates.');
+      return;
+    }
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState((){
+      _saving=true;_error=null;
+    });
+    try{
+      final item=EquipmentLoanRecord(
+        assetId:selected.serverId??(_assets.indexOf(selected)+1),
+        equipmentCode:selected.id,equipmentName:selected.name,
+        borrowerName:name,borrowerType:_borrowerType,
+        borrowerEmail:_email.text.trim(),
+        clientId:_borrowerType=='client'
+          ?int.tryParse(_selectedClient!.id):null,
+        loanDate:_loanDate,expectedReturnDate:_returnDate,
+        notes:_notes.text.trim(),requestKey:_retryKey,
+      );
+      final saved=await widget.repository.createLoan(item);
+      if(mounted)Navigator.of(context).pop(saved);
+    }catch(_){
+      if(mounted)setState(()=>_error='Unable to save equipment loan. '
+        'Check that this equipment is available and dates are valid.');
+    }finally{
+      if(mounted)setState(()=>_saving=false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context)=>Scaffold(
+    backgroundColor:AppColors.white,
+    body:SafeArea(child:Column(children:[
+      Sign2DigitalHeader(title:'Equipment Loan',
+        onBack:()=>Navigator.of(context).maybePop()),
+      Expanded(child:Center(child:ConstrainedBox(
+        constraints:const BoxConstraints(maxWidth:720),
+        child:ListView(key:const Key('equipment-loan-form-scroll'),
+          padding:const EdgeInsets.fromLTRB(20,12,20,32),children:[
+          Sign2DigitalAiVoiceButton(
+            key:const Key('equipment-loan-ai-voice'),onPressed:_voice),
+          const SizedBox(height:20),
+          if(_loading)const LinearProgressIndicator(),
+          if(_error!=null)Padding(
+            padding:const EdgeInsets.symmetric(vertical:8),
+            child:Text(_error!,key:const Key('equipment-loan-form-error'),
+              style:const TextStyle(color:Color(0xFFB42318),fontSize:13))),
+          const Text('Equipment',style:TextStyle(
+            fontFamily:'Inter',fontWeight:FontWeight.w600,
+            fontSize:14,color:AppColors.dark)),
+          const SizedBox(height:8),
+          OutlinedButton(
+            key:const Key('equipment-loan-pick-asset'),
+            onPressed:_loading?null:_assetPicker,
+            child:Text(_selectedAsset==null?'Select Equipment':
+              _selectedAsset!.name+' · '+_selectedAsset!.id)),
+          const SizedBox(height:16),
+          const Text('Borrower',style:TextStyle(
+            fontFamily:'Inter',fontWeight:FontWeight.w600,
+            fontSize:14,color:AppColors.dark)),
+          const SizedBox(height:8),
+          OutlinedButton(
+            key:const Key('equipment-loan-pick-borrower-type'),
+            onPressed:_borrowerPicker,
+            child:Text(_borrowerType=='client'?'Existing Client':'Other Person')),
+          const SizedBox(height:14),
+          TextField(
+            key:const Key('equipment-loan-borrower-name'),
+            controller:_borrower,
+            decoration:const InputDecoration(labelText:'Borrower Full Name')),
+          const SizedBox(height:12),
+          TextField(
+            key:const Key('equipment-loan-borrower-email'),
+            controller:_email,keyboardType:TextInputType.emailAddress,
+            decoration:const InputDecoration(labelText:'Borrower Email (optional)')),
+          const SizedBox(height:18),
+          TextButton.icon(
+            key:const Key('equipment-loan-date'),
+            onPressed:()=>_pickDate(false),
+            icon:const Icon(Icons.calendar_today_outlined),
+            label:Text('Loan Date: '+_displayDate(_loanDate))),
+          TextButton.icon(
+            key:const Key('equipment-loan-return-date'),
+            onPressed:()=>_pickDate(true),
+            icon:const Icon(Icons.calendar_today_outlined),
+            label:Text('Expected Return: '+_displayDate(_returnDate))),
+          const SizedBox(height:12),
+          TextField(
+            key:const Key('equipment-loan-notes'),
+            controller:_notes,maxLines:4,
+            decoration:const InputDecoration(labelText:'Notes (optional)')),
+          const SizedBox(height:24),
+          Sign2DigitalPrimaryButton(
+            key:const Key('equipment-loan-save'),
+            label:'Create Equipment Loan',loading:_saving,
+            enabled:!_saving&&!_loading,onPressed:_save),
+        ])),
+      )),
+    ])),
+  );
+}
+).hasMatch(value)){
+                  return null;
+                }
+                final parsed=DateTime.tryParse(value);
+                if(parsed==null||
+                    !parsed.toIso8601String().startsWith(value))return null;
+                return parsed;
+              }
+              final start=date(suggestion['loan_date']);
+              final due=date(suggestion['expected_return_date']);
+              final proposedStart=(!_loanDateTouched&&start!=null)
+                ?start:_loanDate;
+              final proposedDue=(!_returnDateTouched&&due!=null)
+                ?due:_returnDate;
+              if(!proposedDue.isBefore(proposedStart)){
+                _loanDate=proposedStart;_returnDate=proposedDue;
               }
               _error=null;
             });

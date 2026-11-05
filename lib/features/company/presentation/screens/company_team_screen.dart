@@ -47,6 +47,7 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
     'reports.read', 'reports.write',
     'expenses.read', 'expenses.write',
     'labour.read', 'labour.write',
+    'equipment.read', 'equipment.write',
   ];
 
   bool get _isOwner => widget.role == 'owner';

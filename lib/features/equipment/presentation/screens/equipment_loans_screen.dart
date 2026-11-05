@@ -33,6 +33,7 @@ class _EquipmentLoansScreenState extends State<EquipmentLoansScreen> {
   bool _loading=true;
   String? _error;
   int _tab=0;
+  int _loadGeneration=0;
 
   @override
   void initState(){
@@ -66,16 +67,17 @@ class _EquipmentLoansScreenState extends State<EquipmentLoansScreen> {
 
   Future<void> _load() async{
     if(!mounted)return;
+    final generation=++_loadGeneration;
     setState((){
       _loading=true;_error=null;_rows=[];
     });
     try{
       final result=await _repository.listLoans();
-      if(mounted)setState((){
+      if(mounted&&generation==_loadGeneration)setState((){
         _rows=result;_loading=false;
       });
     }catch(_){
-      if(mounted)setState((){
+      if(mounted&&generation==_loadGeneration)setState((){
         _loading=false;
         _error='Unable to load equipment loans';
       });
@@ -104,7 +106,11 @@ class _EquipmentLoansScreenState extends State<EquipmentLoansScreen> {
       MaterialPageRoute(builder:(_)=>CreateEquipmentLoanScreen(
         repository:_repository)));
     if(result==null||!mounted)return;
-    setState(()=>_tab=0);
+    setState(()=>_tab=switch(result.status){
+      EquipmentLoanStatus.returned=>1,
+      EquipmentLoanStatus.overdue=>2,
+      EquipmentLoanStatus.active=>0,
+    });
     await _load();
     _notice('Equipment loan saved.');
   }
