@@ -39,6 +39,8 @@ class DepositRecord {
     this.receivedAt,
     this.refundedAt,
     this.demoOnly = true,
+    this.quoteId,
+    this.lockVersion = 0,
   });
 
   final String id;
@@ -58,6 +60,8 @@ class DepositRecord {
   final DateTime? receivedAt;
   final DateTime? refundedAt;
   final bool demoOnly;
+  final int? quoteId;
+  final int lockVersion;
 
   DepositRecord copyWith({
     String? title, String? clientName, double? amount, DateTime? date,
@@ -66,6 +70,7 @@ class DepositRecord {
     List<LocalJobPhotoSelection>? photos,
     List<DepositHistoryEvent>? history, String? receivedBy,
     DateTime? receivedAt, DateTime? refundedAt,
+    int? quoteId, int? lockVersion,
   }) => DepositRecord(
     id: id, title: title ?? this.title,
     clientName: clientName ?? this.clientName,
@@ -79,7 +84,8 @@ class DepositRecord {
     receivedBy: receivedBy ?? this.receivedBy,
     receivedAt: receivedAt ?? this.receivedAt,
     refundedAt: refundedAt ?? this.refundedAt,
-    demoOnly: demoOnly,
+    demoOnly: demoOnly, quoteId: quoteId ?? this.quoteId,
+    lockVersion: lockVersion ?? this.lockVersion,
   );
 
   String get formattedAmount => 'CHF ${amount.toStringAsFixed(2)}';
@@ -109,6 +115,9 @@ abstract class DepositRepository {
   Future<void> deleteDeposit(String id) =>
       Future<void>.error(
           UnsupportedError('Deposit deletion is unavailable.'));
+
+  Future<DepositRecord> receiveDeposit(String id) =>
+      Future<DepositRecord>.error(UnsupportedError('Manual confirmation unavailable.'));
 
   Future<DepositRecord> refundDeposit(String id) =>
       Future<DepositRecord>.error(
