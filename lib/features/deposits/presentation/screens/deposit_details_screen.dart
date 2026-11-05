@@ -188,7 +188,7 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
                 : InteractiveViewer(child: Image.memory(receipt.bytes,
                     fit: BoxFit.contain,
                     errorBuilder: (_, _, _) =>
-                        const Icon(Icons.broken_image_outlined))),
+                        const Icon(Icons.broken_image_outlined)))),
             ]),
           ),
         );
