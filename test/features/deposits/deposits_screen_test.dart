@@ -49,6 +49,10 @@ void main() {
     await tester.tap(find.byKey(const Key('dashboard-tab-4')));
     // Dashboard updates continue asynchronously; a bounded pump is reliable.
     await tester.pump(const Duration(milliseconds:600));
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('open-deposits')), 200,
+      scrollable: find.byKey(const Key('more-menu-scroll')),
+    );
     await tester.tap(find.byKey(const Key('open-deposits')));
     await tester.pump(const Duration(milliseconds:600));
     expect(find.byType(DepositsScreen), findsOneWidget);
