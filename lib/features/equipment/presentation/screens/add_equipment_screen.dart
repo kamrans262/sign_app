@@ -9,6 +9,8 @@ import '../../../../core/widgets/sign2digital_outlined_button.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../../../core/widgets/sign2digital_selection_field.dart';
 import '../../../expenses/presentation/widgets/sign2digital_expense_upload_tile.dart';
+import '../../../auth/data/mobile_auth_repository.dart';
+import '../../data/remote_equipment_repository.dart';
 import '../../../jobs/data/local_job_photo_source.dart';
 import '../../../jobs/presentation/widgets/ai_voice_flow_dialog.dart';
 import '../../../jobs/presentation/widgets/sign2digital_photo_preview.dart';
@@ -361,6 +363,16 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
           extraction: OpenAiVoiceJobExtractionService(),
           recordingTitle: 'Record Equipment Details',
           onAudioProcessed: (path) async {
+            // Authenticated M19 never collects an OpenAI API key on the phone.
+            // Keep the injected legacy seam for isolated signed-out UI previews.
+            if (MobileAuthRepository.shared.isSignedIn &&
+                widget.voiceExtractionService == null &&
+                widget.requestTemporaryApiKey == null) {
+              final suggestion = await RemoteEquipmentRepository.shared
+                  .prepareVoice(path);
+              await _applyVoice(suggestion);
+              return;
+            }
             final key = await (widget.requestTemporaryApiKey?.call(context) ??
                 _askApiKey(context));
             if (key == null || key.trim().isEmpty) {

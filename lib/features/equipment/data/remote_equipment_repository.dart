@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:crypto/crypto.dart';
 
 import '../../../core/services/active_company_session.dart';
@@ -5,6 +6,7 @@ import '../../../core/services/sign_api_client.dart';
 import '../../auth/data/mobile_auth_repository.dart';
 import '../../jobs/data/local_job_photo_source.dart';
 import '../domain/equipment_record.dart';
+import '../services/equipment_voice_extraction_service.dart';
 
 /// Company-scoped real equipment inventory. Never include demo rows once signed in.
 class RemoteEquipmentRepository extends EquipmentRepository {
@@ -113,6 +115,34 @@ class RemoteEquipmentRepository extends EquipmentRepository {
         ?null:_int(row['current_loan_id']),
       demoOnly:false,
     );
+  }
+
+  /// Authenticated voice suggestion only; OpenAI credentials remain in Laravel.
+  Future<EquipmentVoiceSuggestion> prepareVoice(String audioPath) async{
+    final company=_company();
+    final bytes=await File(audioPath).readAsBytes();
+    if(bytes.length<16||bytes.length>25*1024*1024){
+      throw const SignApiException('Invalid equipment voice recording size.');
+    }
+    final mp4=String.fromCharCodes(bytes.sublist(4,8))=='ftyp';
+    final wav=String.fromCharCodes(bytes.sublist(0,4))=='RIFF'&&
+      String.fromCharCodes(bytes.sublist(8,12))=='WAVE';
+    final aac=bytes[0]==255&&(bytes[1]&240)==240;
+    if(!mp4&&!wav&&!aac){
+      throw const SignApiException('Unsupported equipment voice recording.');
+    }
+    final result=_data(await _api.postMultipart('/api/v1/equipment/voice/prepare',
+      filename:mp4?'equipment.m4a':(wav?'equipment.wav':'equipment.aac'),
+      bytes:bytes,companyScoped:true,maxBytes:25*1024*1024));
+    _check(company);
+    if(result['saved']!=false||result['requires_user_review']!=true){
+      throw const SignApiException('Equipment voice needs human confirmation.');
+    }
+    final suggestion=EquipmentVoiceSuggestion.fromJson(_map(result['suggestion']));
+    if(!suggestion.hasData){
+      throw const SignApiException('Voice recording contained no equipment details.');
+    }
+    return suggestion;
   }
 
   @override
