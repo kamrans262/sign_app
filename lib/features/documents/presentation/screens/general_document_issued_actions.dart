@@ -59,8 +59,10 @@ class _GeneralDocumentIssuedActionsState
         _metadata=data;_error=null;
       });
     }catch(_){
-      if(mounted)setState(()=>_error=
-        'Unable to load official document. Check company access or integrity.');
+      if(mounted)setState((){
+        _metadata=null;
+        _error='Unable to load official document. Check company access or integrity.';
+      });
     }finally{
       if(mounted)setState(()=>_loading=false);
     }
@@ -226,11 +228,32 @@ class _GeneralDocumentIssuedActionsState
       final request=await widget.repository.requestSignature(
         widget.documentId,signerName:entry['name']??'',
         signerEmail:entry['email']??'');
-      await Clipboard.setData(
-        ClipboardData(text:request['signature_link'] as String));
+      final link=request['signature_link'] as String;
+      await Clipboard.setData(ClipboardData(text:link));
       await _refresh();
-      _notice('Private signing link copied. No email was sent. '
-        'Use Send Email separately if required.');
+      if(!mounted)return;
+      final email=await showDialog<bool>(context:context,
+        builder:(dialog)=>AlertDialog(
+          title:const Text('Email Signing Invitation?'),
+          content:Text('The private signing link was copied. '
+            'Send a separate invitation email to '+(entry['email']??'')+'?'),
+          actions:[
+            TextButton(onPressed:()=>Navigator.pop(dialog,false),
+              child:const Text('Copy Only')),
+            TextButton(onPressed:()=>Navigator.pop(dialog,true),
+              child:const Text('Send Email')),
+          ]));
+      if(email==true){
+        await widget.repository.send(widget.documentId,
+          recipientEmail:entry['email']??'',mode:'signature',
+          signatureLink:link,
+          signatureRequestId:(request['id'] as num).toInt());
+        await _refresh();
+        _notice('Signing invitation submitted to mail transport. '
+          'Recipient delivery is not confirmed.');
+      }else{
+        _notice('Private signing link copied. No email was sent.');
+      }
     }catch(_){
       if(mounted)setState(()=>_error=
         'Signature request failed. Verify signer details and permissions.');
@@ -335,7 +358,11 @@ class _GeneralDocumentIssuedActionsState
               ?TextButton(onPressed:_busy?null:()=>_pdf(
                     signature:(raw['id'] as num).toInt()),
                   child:const Text('Signed PDF'))
-              : const SizedBox.shrink(),
+              :const ['ready','viewed'].contains(raw['status'])
+                ?TextButton(onPressed:_busy?null:()=>_revoke(
+                    (raw['id'] as num).toInt(),signature:true),
+                  child:const Text('Revoke'))
+                :const SizedBox.shrink(),
           ),
         _heading('Email Delivery History'),
         for(final raw in (meta['deliveries'] as List))
