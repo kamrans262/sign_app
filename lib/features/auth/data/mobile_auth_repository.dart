@@ -2,6 +2,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../../core/services/sign_api_client.dart';
 import '../../../core/services/active_company_session.dart';
+import '../../../core/services/profile_photo_session.dart';
 import '../presentation/screens/create_account_screen.dart';
 import '../../reminders/services/m20_push_coordinator.dart';
 
@@ -87,6 +88,7 @@ class MobileAuthRepository {
       return true;
     } catch (error) {
       _sessionToken = null;
+      ProfilePhotoSession.setPhoto(null);
       ActiveCompanySession.clear();
       // Only permanently discard a token if the backend explicitly rejects it.
       // A network outage must not delete a still-valid remembered session.

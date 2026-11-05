@@ -267,6 +267,7 @@ class SignApiClient {
     bool companyScoped = false,
     int maxBytes = 2 * 1024 * 1024,
     Map<String, String>? fields,
+    String fieldName = 'file',
   }) async {
     if (maxBytes <= 0 || maxBytes > 25 * 1024 * 1024 ||
         bytes.isEmpty || bytes.length > maxBytes) {
@@ -278,7 +279,7 @@ class SignApiClient {
       authenticated: true, companyScoped: companyScoped,
     ));
     request.files.add(http.MultipartFile.fromBytes(
-      'file', bytes, filename: filename,
+      fieldName, bytes, filename: filename,
     ));
     if (fields != null) request.fields.addAll(fields);
     try {
