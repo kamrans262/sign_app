@@ -191,8 +191,124 @@ class RemoteDepositRepository extends DepositRepository {
     final company=_company();
     if(deposit.photos.length>10)throw const SignApiException('Maximum 10 receipts.');
     for(final p in deposit.photos){_validate(p);}
+    final fields=_fields(deposit);
+    // The form-generated draft ID stays stable for a retry after a lost reply.
+    // Never use a server record ID as a create idempotency key.
+    if(RegExp(r'^[A-Za-z0-9._-]{8,100}
+    _check(company);
+    final id=_id(_record(res['deposit'],company).id);
+    try{
+      for(final p in deposit.photos){
+        await _upload(id,p);
+        _check(company);
+      }
+    }catch(_){
+      throw SignApiException('Deposit #$id was saved but receipt upload failed. '
+        'Reopen the existing deposit rather than creating a duplicate.');
+    }
+  }
+
+  @override
+  Future<DepositRecord> updateDeposit(DepositRecord updated) async {
+    final company=_company(),id=_id(updated.id);
+    final before=await detail(updated.id);
+    _check(company);
+    if(before.status!=DepositStatus.pending||
+       updated.status!=DepositStatus.pending||
+       before.lockVersion!=updated.lockVersion||
+       before.jobId!=updated.jobId||before.quoteId!=updated.quoteId){
+      throw const SignApiException('Deposit changed or already received.');
+    }
+    final previous=before.photos.map((p)=>_receiptId(p.sourceKey))
+        .whereType<int>().toSet();
+    final kept=<int>{};
+    for(final p in updated.photos){
+      _validate(p);
+      final proof=_receiptId(p.sourceKey);
+      if(proof!=null){
+        if(!previous.contains(proof)){
+          throw const SignApiException('Receipt belongs to another deposit.');
+        }
+        kept.add(proof);
+      }
+    }
+    await _api.request('PATCH','/api/v1/deposits/$id',
+      companyScoped:true,data:_fields(updated));
+    _check(company);
+    for(final p in updated.photos){
+      if(_receiptId(p.sourceKey)==null)await _upload(id,p);
+      _check(company);
+    }
+    for(final proof in previous.difference(kept)){
+      await _api.delete('/api/v1/deposits/$id/receipts/$proof',
+        companyScoped:true);
+      _check(company);
+    }
+    return detail(updated.id);
+  }
+
+  @override
+  Future<DepositRecord> receiveDeposit(String id) async {
+    final company=_company(),r=await detail(id);
+    if(r.status!=DepositStatus.pending){
+      throw const SignApiException('Only pending deposits may be received.');
+    }
+    final data=_data(await _api.post(
+      '/api/v1/deposits/${_id(id)}/receive',
+      companyScoped:true,data:{
+        'confirm':true,'lock_version':r.lockVersion,
+      }));
+    _check(company);
+    if(_record(data['deposit'],company).status!=DepositStatus.received){
+      throw const SignApiException('Manual receipt not confirmed.');
+    }
+    return detail(id);
+  }
+
+  @override
+  Future<DepositRecord> refundDeposit(String id) async {
+    final company=_company(),r=await detail(id);
+    if(r.status!=DepositStatus.received){
+      throw const SignApiException('Only received deposits may be refunded.');
+    }
+    final data=_data(await _api.post(
+      '/api/v1/deposits/${_id(id)}/refund',
+      companyScoped:true,data:{
+        'confirm':true,'lock_version':r.lockVersion,
+        'reason':'Manual refund already completed outside Sign2Digital.',
+      }));
+    _check(company);
+    if(_record(data['deposit'],company).status!=DepositStatus.refunded){
+      throw const SignApiException('Manual refund not confirmed.');
+    }
+    return detail(id);
+  }
+
+  @override
+  Future<void> deleteDeposit(String id) async {
+    final company=_company();
+    await _api.delete('/api/v1/deposits/${_id(id)}',
+      companyScoped:true);
+    _check(company);
+  }
+
+  Future<Map<String,dynamic>> jobSummary(int job) async {
+    final company=_company();
+    final data=_data(await _api.get('/api/v1/jobs/$job/deposit-summary',
+      companyScoped:true));
+    _check(company);
+    if(_int(data['job_id'])!=job||data['currency']!='CHF'){
+      throw const SignApiException('Invalid job deposit summary.');
+    }
+    return data;
+  }
+}
+).hasMatch(deposit.id) &&
+        !deposit.id.startsWith('deposit-')){
+      fields['request_key']=deposit.id;
+    }
     final res=_data(await _api.post('/api/v1/deposits',
-      companyScoped:true,data:_fields(deposit)));
+      companyScoped:true,data:fields));
     _check(company);
     final id=_id(_record(res['deposit'],company).id);
     try{
