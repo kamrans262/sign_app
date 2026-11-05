@@ -16,7 +16,8 @@ import '../../jobs/data/mock_jobs.dart';
 import '../../jobs/domain/job_model.dart';
 
 enum GlobalSearchCategory {
-  jobs('Job'), clients('Client'), documents('Document'),
+  jobs('Job'), clients('Client'), quotes('Quote'),
+  documents('Document'), generalDocuments('Document'),
   invoices('Invoice'), expenses('Expense'), deposits('Deposit'),
   equipment('Equipment'), reports('Report'), reminders('Reminder');
 
@@ -24,7 +25,7 @@ enum GlobalSearchCategory {
   final String label;
 
   bool get isMore => switch (this) {
-    GlobalSearchCategory.expenses ||
+    GlobalSearchCategory.quotes || GlobalSearchCategory.expenses ||
     GlobalSearchCategory.deposits ||
     GlobalSearchCategory.equipment ||
     GlobalSearchCategory.reports ||
@@ -62,7 +63,8 @@ class GlobalSearchResult {
     GlobalSearchTab.all => true,
     GlobalSearchTab.jobs => category == GlobalSearchCategory.jobs,
     GlobalSearchTab.clients => category == GlobalSearchCategory.clients,
-    GlobalSearchTab.documents => category == GlobalSearchCategory.documents,
+    GlobalSearchTab.documents => category == GlobalSearchCategory.documents ||
+      category == GlobalSearchCategory.generalDocuments,
     GlobalSearchTab.invoices => category == GlobalSearchCategory.invoices,
     GlobalSearchTab.more => category.isMore,
   };

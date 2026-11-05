@@ -141,6 +141,23 @@ class RemoteClientRepository implements ClientRepository {
     return _parse(raw);
   }
 
+  /// Resolves a result using its original tenant-scoped API identity.
+  Future<ClientProfile> getClient(int id) async {
+    if (id <= 0) throw const SignApiException('Invalid client ID.');
+    final company = _company();
+    final data = _data(await _api.get('/api/v1/clients/$id',
+      companyScoped: true));
+    if (ActiveCompanySession.companyId != company ||
+        data['client'] is! Map<String, dynamic>) {
+      throw const SignApiException('Invalid client details.');
+    }
+    final raw = data['client'] as Map<String, dynamic>;
+    if (_id(raw['company_id']) != company || _id(raw['id']) != id) {
+      throw const SignApiException('Client belongs to another company.');
+    }
+    return _parse(raw);
+  }
+
   /// Caller must obtain permission, allow selection, and show explicit review
   /// before calling this method. Never silently sync the address book.
   Future<int> importReviewed(List<ClientDraft> drafts) async {

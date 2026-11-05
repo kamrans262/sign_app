@@ -163,6 +163,18 @@ class RemoteEquipmentRepository extends EquipmentRepository {
     throw const SignApiException('Equipment listing exceeded page limit.');
   }
 
+  Future<EquipmentRecord> getByServerId(int id) async {
+    if (id <= 0) throw const SignApiException('Invalid equipment ID.');
+    final company = _company();
+    final data = _data(await _api.get(_path(id), companyScoped: true));
+    _check(company);
+    final raw = _map(data['asset']);
+    if (_int(raw['id']) != id) {
+      throw const SignApiException('Equipment identity mismatch.');
+    }
+    return _record(raw, company);
+  }
+
   Future<EquipmentRecord> detail(EquipmentRecord item) async{
     final id=item.serverId;
     if(id==null||id<1){

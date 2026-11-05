@@ -131,6 +131,19 @@ class RemoteJobRepository {
     return List<JobModel>.unmodifiable(result);
   }
 
+  Future<JobModel> getJob(int id) async {
+    if (id <= 0) throw const SignApiException('Invalid job ID.');
+    final company = _company();
+    final data = _data(await _api.get('/api/v1/jobs/$id',
+      companyScoped: true));
+    _ensureCompany(company);
+    final raw = data['job'];
+    if (raw is! Map<String, dynamic> || _id(raw['id']) != id) {
+      throw const SignApiException('Invalid job detail response.');
+    }
+    return _parse(raw, company);
+  }
+
   static String _date(DateTime value) =>
       '${value.year.toString().padLeft(4, '0')}-'
       '${value.month.toString().padLeft(2, '0')}-'
