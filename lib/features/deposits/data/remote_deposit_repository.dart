@@ -192,9 +192,8 @@ class RemoteDepositRepository extends DepositRepository {
     if(deposit.photos.length>10)throw const SignApiException('Maximum 10 receipts.');
     for(final p in deposit.photos){_validate(p);}
     final fields=_fields(deposit);
-    // The form-generated draft ID stays stable for a retry after a lost reply.
-    // Never use a server record ID as a create idempotency key.
-    if(RegExp(r'^[A-Za-z0-9._-]{8,100}
+    // The same form draft ID identifies a retry after a lost response.
+    if(RegExp(r'^[A-Za-z0-9._-]{8,100}\
     _check(company);
     final id=_id(_record(res['deposit'],company).id);
     try{
@@ -304,7 +303,7 @@ class RemoteDepositRepository extends DepositRepository {
   }
 }
 ).hasMatch(deposit.id) &&
-        !deposit.id.startsWith('deposit-')){
+        !deposit.id.startsWith('deposit-')) {
       fields['request_key']=deposit.id;
     }
     final res=_data(await _api.post('/api/v1/deposits',
