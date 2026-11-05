@@ -106,7 +106,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
     setState(() { _loading = true; _error = null; _seeAll = false; });
     try {
       if (_provider is RemoteGlobalSearchProvider) {
-        final next = await (_provider as RemoteGlobalSearchProvider).search(
+        final next = await _provider.search(
           query: _search.text, tab: _tab, page: 1, filters: _filters);
         if (!mounted || request != _loadSequence) return;
         setState(() {

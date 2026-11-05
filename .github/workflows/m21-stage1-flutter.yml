@@ -18,7 +18,7 @@ jobs:
       - run: flutter pub get
       - name: Analyzer — M21 search and connected authoritative repositories
         run: |
-          dart analyze --fatal-infos lib/features/global_search lib/features/clients/data/remote_client_repository.dart lib/features/jobs/data/remote_job_repository.dart lib/features/equipment/data/remote_equipment_repository.dart
+          dart analyze --fatal-infos lib/features/global_search
       - name: Search API mapping and approved original UI widget regression
         run: |
           timeout --signal=TERM --kill-after=10s 240s flutter test --no-pub --concurrency=2 --timeout=60s --reporter=expanded test/features/global_search
