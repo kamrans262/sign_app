@@ -215,7 +215,7 @@ class _EquipmentLoanDetailsScreenState
                   label:'Extend Return Date',onPressed:_extend,
                   enabled:!_busy&&!_loading),
                 const SizedBox(height:12),
-                const Sign2DigitalOutlinedButton(
+                Sign2DigitalOutlinedButton(
                   label:'Send Reminder (Stage 2)',
                   enabled:false,
                   onPressed:(){}),
