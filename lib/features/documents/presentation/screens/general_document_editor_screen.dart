@@ -1,8 +1,10 @@
+import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
+import '../../../../core/widgets/sign2digital_ai_voice_button.dart';
 import '../../../../core/widgets/sign2digital_outlined_container.dart';
 import '../../../../core/widgets/sign2digital_outlined_button.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
@@ -12,6 +14,9 @@ import '../../../clients/data/remote_client_repository.dart';
 import '../../../clients/domain/client_profile.dart';
 import '../../../jobs/data/remote_job_repository.dart';
 import '../../../jobs/domain/job_model.dart';
+import '../../../jobs/presentation/widgets/ai_voice_flow_dialog.dart';
+import '../../../jobs/services/voice_recorder_service.dart';
+import '../../../jobs/services/voice_job_extraction_service.dart';
 import '../../data/remote_general_document_repository.dart';
 import '../../domain/general_document_draft.dart';
 
@@ -277,10 +282,45 @@ class _GeneralDocumentEditorScreenState extends State<GeneralDocumentEditorScree
       if(mounted)setState(()=>_busy=false);
     }
   }
+  Future<void> _voice() async{
+    if(_busy||!_editable)return;
+    try{
+      await showDialog<void>(context:context,
+        barrierDismissible:false,
+        builder:(_)=>AiVoiceFlowDialog(
+          recorder:LocalVoiceRecorderService(),
+          // This extraction dependency is never invoked in onAudioProcessed mode.
+          extraction:OpenAiVoiceJobExtractionService(),
+          rawAudioMode:true,recordingTitle:'Record Document Details',
+          onAudioProcessed:(path) async {
+            final file=File(path);
+            final transcript=await _repository.transcribe(
+              await file.readAsBytes(),'document.m4a');
+            if(!mounted)return;
+            setState((){
+              final first=_paragraphs.length==1 &&
+                  _paragraphs.first.text.trim().isEmpty;
+              if(first){
+                _paragraphs.first.text=transcript;
+              }else{
+                _paragraphs.add(TextEditingController(text:transcript));
+                _kinds.add('paragraph');_bold.add(false);_italic.add(false);
+              }
+              _error=null;
+            });
+            if(await file.exists())await file.delete();
+          },
+        ));
+    }catch(_){
+      if(mounted)setState(()=>_error=
+        'Voice input is unavailable. Continue typing manually.');
+    }
+  }
+
   Future<void> _attach() async{
     final id=_saved?.id;
     if(id==null||_busy||!_editable)return;
-    final picked=await FilePicker.platform.pickFiles(
+    final picked=await FilePicker.pickFiles(
       type:FileType.custom,allowedExtensions:['pdf','jpg','jpeg','png'],
       withData:true);
     if(picked==null||picked.files.isEmpty)return;
@@ -379,6 +419,10 @@ class _GeneralDocumentEditorScreenState extends State<GeneralDocumentEditorScree
                 style:const TextStyle(fontFamily:'Inter',
                   fontSize:12,color:AppColors.placeholder)),
               const SizedBox(height:16)],
+            Sign2DigitalAiVoiceButton(
+              key:const Key('general-document-voice'),
+              onPressed:_voice),
+            const SizedBox(height:18),
             Sign2DigitalSelectionField(
               key:const Key('general-document-type'),
               label:'Document Type',iconAsset:'assets/icons/description.svg',

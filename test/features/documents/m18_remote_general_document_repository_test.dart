@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -156,5 +157,22 @@ void main(){
       type:'letter',locale:'en',instructions:'Draft a letter'),
       throwsA(isA<SignApiException>()));
     c.dispose();
+  });  test('voice transcription returns unsaved user-review text',() async{
+    final c=api((request) async{
+      expect(request.url.path,'/api/v1/general-documents/voice/transcribe');
+      expect(request.headers['X-Company-Id'],'7');
+      expect(request.method,'POST');
+      return http.Response(jsonEncode({'data':{
+        'transcript':'Dictated business note.',
+        'saved':false,'approved':false,
+      }}),200);
+    });
+    final text=await RemoteGeneralDocumentRepository(api:c).transcribe(
+      Uint8List.fromList([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]),
+      'document.m4a');
+    expect(text,'Dictated business note.');
+    c.dispose();
   });
+
+
 }

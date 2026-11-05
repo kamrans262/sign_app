@@ -1,3 +1,4 @@
+import 'dart:io';
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -192,9 +193,56 @@ class _GenerateAiDocumentScreenState extends State<GenerateAiDocumentScreen> {
     }
   }
 
+  Future<void> _remoteVoice() async{
+    var transcript='';
+    try{
+      await showDialog<void>(
+        context:context,barrierDismissible:false,
+        builder:(_)=>AiVoiceFlowDialog(
+          recorder:widget.voiceRecorderFactory?.call()??
+            LocalVoiceRecorderService(),
+          extraction:OpenAiVoiceJobExtractionService(),
+          rawAudioMode:true,recordingTitle:'Record Document Details',
+          onAudioProcessed:(path) async {
+            final file=File(path);
+            transcript=await RemoteGeneralDocumentRepository.shared.transcribe(
+              await file.readAsBytes(),'project-document.m4a');
+            if(await file.exists())await file.delete();
+          },
+        ));
+      if(!mounted||transcript.isEmpty)return;
+      final accepted=await showDialog<bool>(context:context,
+        builder:(dialog)=>AlertDialog(
+          title:const Text('Use dictated document notes?'),
+          content:Text(transcript),
+          actions:[
+            TextButton(onPressed:()=>Navigator.pop(dialog,false),
+              child:const Text('Keep current notes')),
+            TextButton(onPressed:()=>Navigator.pop(dialog,true),
+              child:const Text('Use transcript')),
+          ]));
+      if(accepted==true&&mounted){
+        setState((){
+          _instructions.text=_instructions.text.trim().isEmpty
+              ?transcript:_instructions.text.trim()+'\n'+transcript;
+          _error=null;
+        });
+      }
+    }catch(_){
+      if(mounted)setState(()=>_error=
+        'Voice transcription is unavailable. Keep entering notes manually.');
+    }
+  }
+
   Future<void> _voice() async {
     if (_voiceOpen || _generating) { return; }
     setState(() => _voiceOpen = true);
+    if(MobileAuthRepository.shared.isSignedIn &&
+        widget.voiceExtractionService==null){
+      try{await _remoteVoice();}
+      finally{if(mounted)setState(()=>_voiceOpen=false);}
+      return;
+    }
     try {
       final result = await showDialog<ExtractedJobDetails>(
         context: context,

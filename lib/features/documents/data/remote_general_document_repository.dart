@@ -111,6 +111,24 @@ class RemoteGeneralDocumentRepository extends DocumentRepository {
   }
 
 
+
+  /// Authenticated dictation: byte stream goes only to Laravel, never to a
+  /// mobile-stored OpenAI key. Transcription is not an approved document.
+  Future<String> transcribe(Uint8List bytes,String filename) async {
+    final company=_company();
+    final data=_data(await _api.postMultipart(
+      '/api/v1/general-documents/voice/transcribe',
+      filename:filename,bytes:bytes,maxBytes:25*1024*1024,
+      companyScoped:true));
+    _check(company);
+    final text=data['transcript'];
+    if(text is! String||text.trim().isEmpty||text.length>20000||
+        data['saved']!=false||data['approved']!=false){
+      throw const SignApiException('Document voice transcript was not verified.');
+    }
+    return text.trim();
+  }
+
   Future<List<Map<String,dynamic>>> attachments(int id) async {
     final company=_company();
     final response=_data(await _api.get('/api/v1/general-documents/$id',
