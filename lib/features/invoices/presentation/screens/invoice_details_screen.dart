@@ -451,7 +451,9 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
   Widget _actions() => Column(
     key: const Key('invoice-details-actions'),
     children: [
-      Row(children: [
+      IntrinsicHeight(child:Row(
+        crossAxisAlignment:CrossAxisAlignment.stretch,
+        children: [
         Expanded(child: Sign2DigitalOutlinedButton(
           key: const Key('invoice-details-download'),
           label: 'Download', primaryOutline: true,
@@ -463,7 +465,7 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
           label: 'Send', primaryOutline: true,
           enabled: !_busy && _record.demoOnly,
           onPressed: () => _pdf(share: true))),
-      ]),
+      ])),
       const SizedBox(height: 15),
       IntrinsicHeight(
         child: Row(
