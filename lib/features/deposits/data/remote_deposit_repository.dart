@@ -192,7 +192,7 @@ class RemoteDepositRepository extends DepositRepository {
     if(deposit.photos.length>10)throw const SignApiException('Maximum 10 receipts.');
     for(final p in deposit.photos){_validate(p);}
     final res=_data(await _api.post('/api/v1/deposits',
-      companyScoped:true,data:_fields(r)));
+      companyScoped:true,data:_fields(deposit)));
     _check(company);
     final id=_id(_record(res['deposit'],company).id);
     try{
@@ -231,7 +231,7 @@ class RemoteDepositRepository extends DepositRepository {
       }
     }
     await _api.request('PATCH','/api/v1/deposits/$id',
-      companyScoped:true,data:_fields(next));
+      companyScoped:true,data:_fields(updated));
     _check(company);
     for(final p in updated.photos){
       if(_receiptId(p.sourceKey)==null)await _upload(id,p);
