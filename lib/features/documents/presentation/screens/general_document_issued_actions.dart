@@ -188,7 +188,7 @@ class _GeneralDocumentIssuedActionsState
               ]),
             )),
           ),
-        )),
+        ),
       );
     }finally{
       // Dispose after the bottom sheet has completed its closing transition.
