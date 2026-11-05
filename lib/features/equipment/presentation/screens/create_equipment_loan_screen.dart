@@ -240,8 +240,26 @@ class _CreateEquipmentLoanScreenState extends State<CreateEquipmentLoanScreen> {
                 if(matches.length==1)_selectedAsset=matches.single;
               }
               DateTime? date(Object? value){
-                if(value is! String||
-                    !RegExp(r'^\\d{4}-\\d{2}-\\d{2}
+                if(value is! String || value.length!=10 ||
+                    !RegExp(r'^[0-9]{4}-[0-9]{2}-[0-9]{2}').hasMatch(value)){
+                  return null;
+                }
+                final parsed=DateTime.tryParse(value);
+                if(parsed==null||
+                    !parsed.toIso8601String().startsWith(value))return null;
+                return parsed;
+              }
+              final startDate=date(suggestion['loan_date']);
+              final dueDate=date(suggestion['expected_return_date']);
+              final nextStart=(!_loanDateTouched&&startDate!=null)
+                ?startDate:_loanDate;
+              final nextDue=(!_returnDateTouched&&dueDate!=null)
+                ?dueDate:_returnDate;
+              if(!nextDue.isBefore(nextStart)){
+                _loanDate=nextStart;
+                _returnDate=nextDue;
+              }
+              _error=null;
             });
           }));
     }catch(_){
