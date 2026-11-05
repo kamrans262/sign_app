@@ -415,6 +415,8 @@ class _AddDepositScreenState extends State<AddDepositScreen> {
       amount: amount,
       date: _date!,
       status: original?.status ?? DepositStatus.pending,
+      quoteId: original?.quoteId,
+      lockVersion: original?.lockVersion ?? 0,
       jobId: _job!.id,
       jobReference: _job!.referenceNumber,
       paymentMethod: _method.text.trim(),
