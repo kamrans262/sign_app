@@ -137,6 +137,7 @@ class RemoteInvoiceRepository extends InvoiceRepository {
   }
 
   @override
+  // ignore: avoid_renaming_method_parameters
   Future<InvoiceRecord> invoiceDetail(String identifier) async {
     final company=_company(),id=_id(identifier);
     final data=_data(await _api.get('/api/v1/invoices/$id',
@@ -250,6 +251,7 @@ class RemoteInvoiceRepository extends InvoiceRepository {
   }
 
   @override
+  // ignore: avoid_renaming_method_parameters
   Future<InvoiceRecord> updateInvoice(InvoiceRecord invoice) async {
     final company=_company(),id=_id(invoice.id);
     if(invoice.lifecycleStatus!='draft'||invoice.status!=InvoiceStatus.draft){
@@ -265,6 +267,7 @@ class RemoteInvoiceRepository extends InvoiceRepository {
   }
 
   @override
+  // ignore: avoid_renaming_method_parameters
   Future<InvoiceRecord> approveInvoice(String identifier) async {
     final company=_company(),before=await invoiceDetail(identifier);
     _check(company);
@@ -319,6 +322,7 @@ class RemoteInvoiceRepository extends InvoiceRepository {
   }
 
   @override
+  // ignore: avoid_renaming_method_parameters
   Future<InvoiceRecord> updateAttachments(String identifier,
       List<LocalJobPhotoSelection> photos) async {
     final company=_company(),id=_id(identifier);
