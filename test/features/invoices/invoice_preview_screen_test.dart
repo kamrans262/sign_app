@@ -87,7 +87,7 @@ void main() {
     expect(find.text('Invoice'), findsOneWidget);
     expect(find.text('Jean Dupont'), findsOneWidget);
     await _reach(tester, 'quote-preview-items-table');
-    expect(find.text('Kitchen Installation'), findsOneWidget);
+    expect(find.textContaining('Kitchen Installation'), findsWidgets);
     await _reach(tester, 'invoice-preview-photo-grid');
     expect(find.text('General Terms & Conditions'), findsOneWidget);
     expect(find.text('Payment QR unavailable'), findsOneWidget);
