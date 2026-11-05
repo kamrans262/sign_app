@@ -43,11 +43,15 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
       final json = const JsonEncoder.withIndent('  ').convert(data);
       if (!mounted) return;
       await Clipboard.setData(ClipboardData(text: json));
-      if (mounted) setState(() => _message =
-        'Personal account data copied. Company documents are excluded.');
+      if (mounted) {
+        setState(() => _message =
+          'Personal account data copied. Company documents are excluded.');
+      }
     } catch (_) {
-      if (mounted) setState(() =>
-        _message = 'Unable to export your personal account data.');
+      if (mounted) {
+        setState(() =>
+          _message = 'Unable to export your personal account data.');
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -102,13 +106,17 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
         (_) => false,
       );
     } on SignApiException catch (error) {
-      if (mounted) setState(() => _message =
-        error.statusCode == 422
-          ? 'Check your password and transfer ownership of active companies first.'
-          : 'Unable to deactivate your account.');
+      if (mounted) {
+        setState(() => _message =
+          error.statusCode == 422
+            ? 'Check your password and transfer ownership of active companies first.'
+            : 'Unable to deactivate your account.');
+      }
     } catch (_) {
-      if (mounted) setState(() =>
-        _message = 'Unable to deactivate your account.');
+      if (mounted) {
+        setState(() =>
+          _message = 'Unable to deactivate your account.');
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
