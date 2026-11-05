@@ -51,7 +51,10 @@ void main() {
     await tester.pump(const Duration(milliseconds:600));
     await tester.scrollUntilVisible(
       find.byKey(const Key('open-deposits')), 200,
-      scrollable: find.byKey(const Key('more-menu-scroll')),
+      scrollable: find.descendant(
+        of: find.byKey(const Key('more-menu-scroll')),
+        matching: find.byType(Scrollable),
+      ),
     );
     await tester.tap(find.byKey(const Key('open-deposits')));
     await tester.pump(const Duration(milliseconds:600));
