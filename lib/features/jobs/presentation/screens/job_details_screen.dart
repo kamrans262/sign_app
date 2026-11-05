@@ -22,6 +22,8 @@ import '../../../documents/presentation/screens/reports_screen.dart';
 import '../../../expenses/presentation/screens/expenses_screen.dart';
 import '../../../labour/presentation/screens/time_labour_screen.dart';
 import '../../../labour/presentation/widgets/m15_labour_summary.dart';
+import '../../../deposits/presentation/widgets/m16_verified_job_deposits.dart';
+import '../../../../core/services/active_company_session.dart';
 import '../../../documents/domain/document_record.dart';
 import '../../../quotes/data/signed_quote_file_store.dart';
 import '../../../documents/data/remote_signed_document_repository.dart';
@@ -454,12 +456,15 @@ class JobDetailsScreen extends StatelessWidget {
                                   icon: Icons.groups_outlined,
                                   iconAsset: 'assets/icons/team_members.svg',
                                 ),
-                          3 => Sign2DigitalJobFinancialCard(
-                            label: 'Deposits',
-                            amountChf: data.depositsChf,
-                            showAmount: data.financialsAvailable,
-                            icon: Icons.savings_outlined,
-                          ),
+                          3 => int.tryParse(job.id) != null &&
+                                  ActiveCompanySession.companyId != null
+                              ? M16VerifiedJobDeposits(jobId: int.parse(job.id))
+                              : Sign2DigitalJobFinancialCard(
+                                  label: 'Deposits',
+                                  amountChf: data.depositsChf,
+                                  showAmount: data.financialsAvailable,
+                                  icon: Icons.savings_outlined,
+                                ),
                           4 => Sign2DigitalJobFinancialCard(
                             label: 'Invoiced',
                             amountChf: data.invoicedChf,
