@@ -57,6 +57,8 @@ class RemoteDocumentRepository implements DocumentRepository {
       'created' => DocumentHistoryType.created,
       'edited' => DocumentHistoryType.edited,
       'version_changed' => DocumentHistoryType.versionChanged,
+      'revised' => DocumentHistoryType.versionChanged,
+      'reviewed' => DocumentHistoryType.edited,
       'attachment_added' => DocumentHistoryType.attachmentAdded,
       'approved' => DocumentHistoryType.approved,
       'archived' => DocumentHistoryType.archived,
@@ -119,7 +121,7 @@ class RemoteDocumentRepository implements DocumentRepository {
     String? addendumDraftId,
   }) {
     final id = (raw['id'] ?? '').toString();
-    if (!RegExp(r'^(quote|signed|managed|addendum)-[1-9][0-9]*$').hasMatch(id)) {
+    if (!RegExp(r'^(quote|signed|managed|addendum|general)-[1-9][0-9]*$').hasMatch(id)) {
       throw const SignApiException('Invalid document identity.');
     }
     final created = DateTime.tryParse((raw['created_at'] ?? '').toString());

@@ -6,9 +6,12 @@ import '../../../../core/widgets/sign2digital_dashboard_header.dart';
 import '../../../../core/widgets/sign2digital_outlined_container.dart';
 import '../../../quotes/presentation/widgets/sign2digital_quote_summary_card.dart';
 import '../../data/demo_document_repository.dart';
+import '../../data/remote_general_document_repository.dart';
+import '../../../auth/data/mobile_auth_repository.dart';
 import '../../domain/document_record.dart';
 import 'document_details_screen.dart';
 import 'generate_ai_document_screen.dart';
+import 'general_document_editor_screen.dart';
 
 /// AI document hub reusing the dashboard chrome and existing document cards.
 /// Default examples are clearly local Figma fixtures, not generated AI output.
@@ -49,7 +52,10 @@ class _AiDocumentsScreenState extends State<AiDocumentsScreen> {
   @override
   void initState() {
     super.initState();
-    _repository = widget.repository ?? const DemoDocumentRepository();
+    _repository = widget.repository ?? (
+      MobileAuthRepository.shared.isSignedIn
+        ? RemoteGeneralDocumentRepository.shared
+        : const DemoDocumentRepository());
     _load();
   }
 
@@ -59,13 +65,15 @@ class _AiDocumentsScreenState extends State<AiDocumentsScreen> {
       final records = await _repository.listDocuments();
       final generated = records.where((record) =>
         record.status.toLowerCase() == 'generated' ||
-        record.id.startsWith('ai-document-')).toList();
+        record.id.startsWith('ai-document-') ||
+        record.id.startsWith('general-')).toList();
       generated.sort((a, b) => b.timestamp.compareTo(a.timestamp));
       if (!mounted) { return; }
       setState(() {
         // Only the built-in demo repository supplies visual Figma examples.
         // An injected empty repository correctly produces an empty state.
-        _documents = generated.isEmpty && widget.repository == null
+        _documents = generated.isEmpty && widget.repository == null &&
+            !MobileAuthRepository.shared.isSignedIn
             ? _figmaExamples() : generated;
         _loading = false;
       });
@@ -113,13 +121,38 @@ class _AiDocumentsScreenState extends State<AiDocumentsScreen> {
       widget.onCreateDocument!();
       return;
     }
-    await Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(
-        builder: (_) => GenerateAiDocumentScreen(
-          documentGenerator: widget.documentGenerator,
+    if(MobileAuthRepository.shared.isSignedIn){
+      final choice=await showModalBottomSheet<String>(
+        context:context,showDragHandle:true,
+        builder:(sheet)=>SafeArea(child:Column(
+          mainAxisSize:MainAxisSize.min,children:[
+            ListTile(
+              key:const Key('ai-documents-create-general'),
+              title:const Text('General Document'),
+              subtitle:const Text('Business letter, statement, acceptance or custom draft'),
+              onTap:()=>Navigator.pop(sheet,'general')),
+            ListTile(
+              key:const Key('ai-documents-create-project'),
+              title:const Text('Project Document'),
+              subtitle:const Text('Use the existing job and sections workflow'),
+              onTap:()=>Navigator.pop(sheet,'project')),
+          ])));
+      if(!mounted||choice==null)return;
+      await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+        builder:(_)=>choice=='general'
+          ? const GeneralDocumentEditorScreen()
+          : GenerateAiDocumentScreen(
+              documentGenerator:widget.documentGenerator),
+      ));
+    }else{
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute<void>(
+          builder: (_) => GenerateAiDocumentScreen(
+            documentGenerator: widget.documentGenerator,
+          ),
         ),
-      ),
-    );
+      );
+    }
     if (mounted) { await _load(); }
   }
 
@@ -178,11 +211,13 @@ class _AiDocumentsScreenState extends State<AiDocumentsScreen> {
       widget.onDocumentTap!(record);
       return;
     }
+    final id=record.id.startsWith('general-')
+        ? int.tryParse(record.id.substring('general-'.length)) : null;
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
-        builder: (_) => DocumentDetailsScreen(
-          documentId: record.id, document: record,
-        ),
+        builder: (_) => id!=null
+          ? GeneralDocumentEditorScreen(documentId:id)
+          : DocumentDetailsScreen(documentId:record.id,document:record),
       ),
     );
     if (mounted) { await _load(); }

@@ -10,6 +10,10 @@ import '../../../../core/widgets/sign2digital_outlined_container.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../../../core/widgets/sign2digital_selection_field.dart';
 import '../../../jobs/data/mock_jobs.dart';
+import '../../../jobs/data/remote_job_repository.dart';
+import '../../../auth/data/mobile_auth_repository.dart';
+import '../../data/remote_general_document_repository.dart';
+import 'general_document_editor_screen.dart';
 import '../../../jobs/domain/job_model.dart';
 import '../../../jobs/models/extracted_job_details.dart';
 import '../../../jobs/presentation/screens/job_notes_screen.dart';
@@ -83,13 +87,30 @@ class _GenerateAiDocumentScreenState extends State<GenerateAiDocumentScreen> {
   String? _error;
   bool _generating = false;
   bool _voiceOpen = false;
+  List<JobModel>? _liveJobs;
+  final _creationKey='m18-project-'+DateTime.now().microsecondsSinceEpoch.toString();
 
-  List<JobModel> get _jobs => widget.jobs ?? MockJobsData.jobs;
+  List<JobModel> get _jobs=>widget.jobs??_liveJobs??(
+    MobileAuthRepository.shared.isSignedIn?const <JobModel>[]
+      :MockJobsData.jobs);
+
+  Future<void> _loadLiveJobs() async{
+    try{
+      final jobs=await RemoteJobRepository.shared.listJobs();
+      if(mounted)setState(()=>_liveJobs=jobs.where(
+        (j)=>j.category!=JobCategory.archived).toList());
+    }catch(_){
+      if(mounted)setState(()=>_error='Unable to load current company jobs.');
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     _job = widget.initialJob;
+    if(widget.jobs==null&&MobileAuthRepository.shared.isSignedIn){
+      _loadLiveJobs();
+    }
   }
 
   @override
@@ -259,13 +280,47 @@ class _GenerateAiDocumentScreenState extends State<GenerateAiDocumentScreen> {
     );
   }
 
+  /// Project form is a human-reviewed AI suggestion, never an auto-approval.
+  Future<DocumentRecord> _generateLive(AiDocumentGenerationRequest request) async{
+    final repo=RemoteGeneralDocumentRepository.shared;
+    final job=int.tryParse(request.job.id);
+    final client=int.tryParse(request.job.clientId);
+    if(job==null||client==null)throw StateError('Select an authorized job.');
+    final sections=request.sections.map((s)=>s.label).join(', ');
+    final instructions='Prepare a project document draft with these requested '+
+      'sections: '+sections+'. Date requested: '+
+      request.documentDate.toIso8601String().substring(0,10)+
+      '. User notes: '+request.instructions+
+      '. Where no evidence is present, mark the section [Needs review].';
+    final suggestion=await repo.suggest(
+      type:'custom',locale:'en',instructions:instructions,
+      clientId:client,jobId:job);
+    if(!mounted)throw StateError('Editor is closed.');
+    final approved=await showDialog<bool>(context:context,
+      builder:(dialog)=>AlertDialog(
+        title:const Text('Review Document Suggestion'),
+        content:SizedBox(height:240,child:SingleChildScrollView(
+          child:Text(suggestion.title+'\n\n'+
+            suggestion.blocks.map((b)=>b.text).join('\n\n')))),
+        actions:[
+          TextButton(onPressed:()=>Navigator.pop(dialog,false),
+            child:const Text('Keep Editing')),
+          TextButton(onPressed:()=>Navigator.pop(dialog,true),
+            child:const Text('Save Draft')),
+        ]));
+    if(approved!=true)throw StateError('Suggestion was not accepted.');
+    final saved=await repo.save(suggestion,createRequestKey:_creationKey);
+    return saved.toDocumentRecord();
+  }
+
   Future<void> _generate() async {
     if (_generating) { return; }
     FocusManager.instance.primaryFocus?.unfocus();
     final issue = _validate();
     if (issue != null) { setState(() => _error = issue); return; }
 
-    final generator = widget.documentGenerator;
+    final generator=widget.documentGenerator??(
+      MobileAuthRepository.shared.isSignedIn?_generateLive:null);
     if (generator == null) {
       final openNotes = await showDialog<bool>(
         context: context,
@@ -297,17 +352,22 @@ class _GenerateAiDocumentScreenState extends State<GenerateAiDocumentScreen> {
     setState(() { _generating = true; _error = null; });
     try {
       final generated = await generator(_request());
+      final liveGeneral=generated.id.startsWith('general-') &&
+          generated.status.toLowerCase()=='draft';
       if (generated.id.trim().isEmpty || generated.demoOnly ||
-          generated.project.trim().isEmpty ||
-          generated.category != DocumentCategory.reports ||
-          generated.status.toLowerCase() != 'generated') {
+          (!liveGeneral && (generated.project.trim().isEmpty ||
+            generated.category != DocumentCategory.reports ||
+            generated.status.toLowerCase() != 'generated'))) {
         throw StateError('The AI service did not return a saved document.');
       }
       if (!mounted) { return; }
       await Navigator.of(context).push<void>(
         MaterialPageRoute<void>(
-          builder: (_) => DocumentDetailsScreen(
-            documentId: generated.id, document: generated),
+          builder: (_) => liveGeneral
+              ? GeneralDocumentEditorScreen(
+                  documentId:int.parse(generated.id.substring(8)))
+              : DocumentDetailsScreen(
+                  documentId:generated.id,document:generated),
         ),
       );
     } catch (_) {
