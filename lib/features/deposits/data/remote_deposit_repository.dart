@@ -73,7 +73,7 @@ class RemoteDepositRepository extends DepositRepository {
       paymentMethod:(r['payment_method']??'').toString(),
       referenceNumber:(r['reference_number']??'').toString(),
       notes:(r['notes']??'').toString(),photos:photos,history:history,
-      receivedBy:r['received_by']==null?null:'User #'+r['received_by'].toString(),
+      receivedBy:r['received_by']==null?null:'User #${r['received_by']}',
       receivedAt:r['received_at']==null?null:_date(r['received_at']),
       refundedAt:r['refunded_at']==null?null:_date(r['refunded_at']),
       demoOnly:false,
@@ -143,7 +143,7 @@ class RemoteDepositRepository extends DepositRepository {
           title:_map(raw)['type'].toString().replaceAll('_',' '),
           occurredAt:_date(_map(raw)['created_at']),
           description:_map(raw)['actor_user_id']==null?null:
-              'User #'+_map(raw)['actor_user_id'].toString(),
+              'User #${_map(raw)['actor_user_id']}',
         ),
     ]);
   }
@@ -187,16 +187,16 @@ class RemoteDepositRepository extends DepositRepository {
   }
 
   @override
-  Future<void> saveDeposit(DepositRecord r) async {
+  Future<void> saveDeposit(DepositRecord deposit) async {
     final company=_company();
-    if(r.photos.length>10)throw const SignApiException('Maximum 10 receipts.');
-    for(final p in r.photos)_validate(p);
+    if(deposit.photos.length>10)throw const SignApiException('Maximum 10 receipts.');
+    for(final p in deposit.photos){_validate(p);}
     final res=_data(await _api.post('/api/v1/deposits',
       companyScoped:true,data:_fields(r)));
     _check(company);
     final id=_id(_record(res['deposit'],company).id);
     try{
-      for(final p in r.photos){
+      for(final p in deposit.photos){
         await _upload(id,p);
         _check(company);
       }
@@ -207,20 +207,20 @@ class RemoteDepositRepository extends DepositRepository {
   }
 
   @override
-  Future<DepositRecord> updateDeposit(DepositRecord next) async {
-    final company=_company(),id=_id(next.id);
-    final before=await detail(next.id);
+  Future<DepositRecord> updateDeposit(DepositRecord updated) async {
+    final company=_company(),id=_id(updated.id);
+    final before=await detail(updated.id);
     _check(company);
     if(before.status!=DepositStatus.pending||
-       next.status!=DepositStatus.pending||
-       before.lockVersion!=next.lockVersion||
-       before.jobId!=next.jobId||before.quoteId!=next.quoteId){
+       updated.status!=DepositStatus.pending||
+       before.lockVersion!=updated.lockVersion||
+       before.jobId!=updated.jobId||before.quoteId!=updated.quoteId){
       throw const SignApiException('Deposit changed or already received.');
     }
     final previous=before.photos.map((p)=>_receiptId(p.sourceKey))
         .whereType<int>().toSet();
     final kept=<int>{};
-    for(final p in next.photos){
+    for(final p in updated.photos){
       _validate(p);
       final proof=_receiptId(p.sourceKey);
       if(proof!=null){
@@ -233,7 +233,7 @@ class RemoteDepositRepository extends DepositRepository {
     await _api.request('PATCH','/api/v1/deposits/$id',
       companyScoped:true,data:_fields(next));
     _check(company);
-    for(final p in next.photos){
+    for(final p in updated.photos){
       if(_receiptId(p.sourceKey)==null)await _upload(id,p);
       _check(company);
     }
@@ -242,17 +242,17 @@ class RemoteDepositRepository extends DepositRepository {
         companyScoped:true);
       _check(company);
     }
-    return detail(next.id);
+    return detail(updated.id);
   }
 
   @override
-  Future<DepositRecord> receiveDeposit(String raw) async {
-    final company=_company(),r=await detail(raw);
+  Future<DepositRecord> receiveDeposit(String id) async {
+    final company=_company(),r=await detail(id);
     if(r.status!=DepositStatus.pending){
       throw const SignApiException('Only pending deposits may be received.');
     }
     final data=_data(await _api.post(
-      '/api/v1/deposits/'+_id(raw).toString()+'/receive',
+      '/api/v1/deposits/${_id(id)}/receive',
       companyScoped:true,data:{
         'confirm':true,'lock_version':r.lockVersion,
       }));
@@ -260,17 +260,17 @@ class RemoteDepositRepository extends DepositRepository {
     if(_record(data['deposit'],company).status!=DepositStatus.received){
       throw const SignApiException('Manual receipt not confirmed.');
     }
-    return detail(raw);
+    return detail(id);
   }
 
   @override
-  Future<DepositRecord> refundDeposit(String raw) async {
-    final company=_company(),r=await detail(raw);
+  Future<DepositRecord> refundDeposit(String id) async {
+    final company=_company(),r=await detail(id);
     if(r.status!=DepositStatus.received){
       throw const SignApiException('Only received deposits may be refunded.');
     }
     final data=_data(await _api.post(
-      '/api/v1/deposits/'+_id(raw).toString()+'/refund',
+      '/api/v1/deposits/${_id(id)}/refund',
       companyScoped:true,data:{
         'confirm':true,'lock_version':r.lockVersion,
         'reason':'Manual refund already completed outside Sign2Digital.',
@@ -279,13 +279,13 @@ class RemoteDepositRepository extends DepositRepository {
     if(_record(data['deposit'],company).status!=DepositStatus.refunded){
       throw const SignApiException('Manual refund not confirmed.');
     }
-    return detail(raw);
+    return detail(id);
   }
 
   @override
-  Future<void> deleteDeposit(String raw) async {
+  Future<void> deleteDeposit(String id) async {
     final company=_company();
-    await _api.delete('/api/v1/deposits/'+_id(raw).toString(),
+    await _api.delete('/api/v1/deposits/${_id(id)}',
       companyScoped:true);
     _check(company);
   }
