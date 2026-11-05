@@ -54,9 +54,12 @@ class _DepositsScreenState extends State<DepositsScreen> {
   int _tab = 0;
   DepositSort _sort = DepositSort.newest;
   int _loadSerial=0;
+  DepositRecord? _retryDraft;
 
   void _companyChanged() {
     if(!mounted)return;
+    // A pending draft must never be retried against a different company.
+    _retryDraft=null;
     if(widget.repository==null){
       _repository=(!MobileAuthRepository.shared.isSignedIn &&
           ActiveCompanySession.companyId==null)
@@ -180,33 +183,50 @@ class _DepositsScreenState extends State<DepositsScreen> {
       widget.onCreateDeposit!();
       return;
     }
-    var jobs=LabourDemoJobs.all;
-    final remote=_repository;
-    if(remote is RemoteDepositRepository) {
-      try {
-        jobs=await remote.jobs();
-      }catch(_){_notice('Unable to load current jobs.');return;}
-    }
-    if(!mounted)return;
-    final deposit = await Navigator.of(context).push<DepositRecord>(
-      MaterialPageRoute<DepositRecord>(
-        builder: (_) => AddDepositScreen(
-          jobs: jobs,
-          selectedNavigationIndex: widget.selectedNavigationIndex,
-          onNavigationSelected: widget.onNavigationSelected,
+    // On an ambiguous network failure preserve the identical draft/key.
+    // Creating a new draft would risk two pending payment requests.
+    DepositRecord? deposit=_retryDraft;
+    if(deposit==null) {
+      var jobs=LabourDemoJobs.all;
+      final remote=_repository;
+      if(remote is RemoteDepositRepository) {
+        try {
+          jobs=await remote.jobs();
+        }catch(_){
+          _notice('Unable to load current jobs.');
+          return;
+        }
+      }
+      if(!mounted)return;
+      deposit=await Navigator.of(context).push<DepositRecord>(
+        MaterialPageRoute<DepositRecord>(
+          builder: (_) => AddDepositScreen(
+            jobs: jobs,
+            selectedNavigationIndex: widget.selectedNavigationIndex,
+            onNavigationSelected: widget.onNavigationSelected,
+          ),
         ),
-      ),
-    );
-    if (deposit == null || !mounted) { return; }
+      );
+    }
+    if(deposit==null||!mounted)return;
+    final company=ActiveCompanySession.companyId;
     try {
       await _repository.saveDeposit(deposit);
-      if (!mounted) { return; }
+      if(!mounted||ActiveCompanySession.companyId!=company)return;
+      _retryDraft=null;
       _search.clear();
       setState(() => _tab = 0);
       await _load();
       _notice('Deposit saved as Pending.');
-    } catch (_) {
-      _notice('Unable to save the deposit. Please try again.');
+    }catch(_) {
+      if(!mounted||ActiveCompanySession.companyId!=company)return;
+      if(_repository is RemoteDepositRepository) {
+        _retryDraft=deposit;
+        _notice('Unable to verify the deposit save. Tap + to retry the same '
+            'draft safely, or reopen Deposits to review existing requests.');
+      }else{
+        _notice('Unable to save the deposit. Please try again.');
+      }
     }
   }
 
