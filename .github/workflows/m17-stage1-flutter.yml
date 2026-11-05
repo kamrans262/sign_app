@@ -1,0 +1,33 @@
+name: M17 Stage 1 Flutter Invoices
+on:
+  push:
+    branches: [feature/m12-site-reports-meeting-minutes-2026-11-04]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: sign2digital-m17-invoice-flutter
+  cancel-in-progress: true
+jobs:
+  invoice-ui-and-repository:
+    runs-on: ubuntu-latest
+    timeout-minutes: 24
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Analyze M17 production files and UI tests
+        run: |
+          dart analyze lib/features/invoices test/features/invoices
+      - name: Verify invoice API, payment and company switch contracts
+        run: |
+          timeout --signal=TERM --kill-after=10s 170s flutter test --no-pub --concurrency=2 --timeout=55s --reporter=expanded test/features/invoices/m17_remote_invoice_repository_test.dart
+      - name: Preserve original invoice UI and document preview
+        run: |
+          timeout --signal=TERM --kill-after=10s 220s flutter test --no-pub --concurrency=2 --timeout=60s --reporter=expanded test/features/invoices/invoices_screen_test.dart test/features/invoices/add_invoice_screen_test.dart test/features/invoices/invoice_details_screen_test.dart test/features/invoices/invoice_details_visual_test.dart test/features/invoices/invoice_preview_screen_test.dart test/features/invoices/mark_invoice_paid_dialog_test.dart
+      - name: Earlier M14-M16 financial regressions
+        run: |
+          timeout --signal=TERM --kill-after=10s 175s flutter test --no-pub --concurrency=2 --timeout=60s --reporter=expanded test/features/deposits/m16_remote_deposit_repository_test.dart test/features/expenses/m14_remote_expense_repository_test.dart test/features/labour/m15_remote_labour_repository_test.dart test/features/jobs/job_details_screen_test.dart
