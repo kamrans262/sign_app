@@ -3,13 +3,15 @@ import '../../quotes/domain/quote_review_models.dart';
 
 enum InvoiceStatus {
   draft('Draft'), sent('Sent'), pending('Payment Pending'),
-  paid('Paid'), overdue('Overdue');
+  paid('Paid'), overdue('Overdue'),
+  partiallyPaid('Partially Paid'), voided('Voided');
 
   const InvoiceStatus(this.label);
   final String label;
   bool get canMarkPaid =>
       this == InvoiceStatus.sent || this == InvoiceStatus.pending ||
-      this == InvoiceStatus.overdue;
+      this == InvoiceStatus.overdue ||
+      this == InvoiceStatus.partiallyPaid;
 }
 
 /// Minor currency units for precise invoice calculations.
@@ -74,6 +76,8 @@ class InvoiceRecord {
     this.billingAddress = '', this.clientEmail = '',
     this.clientPhone = '', this.terms = '', this.payment,
     this.photos = const [],
+    this.lockVersion = 0, this.invoiceType = 'final',
+    this.sourceQuoteId, this.lifecycleStatus = 'draft',
   });
 
   final String id, number, project, clientName;
@@ -95,6 +99,9 @@ class InvoiceRecord {
   final String billingAddress, clientEmail, clientPhone, terms;
   final QuotePaymentDetails? payment;
   final List<LocalJobPhotoSelection> photos;
+  final int lockVersion;
+  final String invoiceType, lifecycleStatus;
+  final int? sourceQuoteId;
 
   int get receivedMinor => payments.where((p) =>
       p.status.toLowerCase() == 'paid').fold<int>(0,
@@ -135,6 +142,8 @@ class InvoiceRecord {
         billingAddress: billingAddress, clientEmail: clientEmail,
         clientPhone: clientPhone, terms: terms, payment: payment,
         photos: List<LocalJobPhotoSelection>.unmodifiable(next),
+        lockVersion: lockVersion, invoiceType: invoiceType,
+        sourceQuoteId: sourceQuoteId, lifecycleStatus: lifecycleStatus,
       );
 
   InvoiceRecord withStatus(InvoiceStatus next, {DateTime? paidAt}) =>
@@ -150,6 +159,8 @@ class InvoiceRecord {
         billingAddress: billingAddress, clientEmail: clientEmail,
         clientPhone: clientPhone, terms: terms, payment: payment,
         photos: photos,
+        lockVersion: lockVersion, invoiceType: invoiceType,
+        sourceQuoteId: sourceQuoteId, lifecycleStatus: lifecycleStatus,
       );
 }
 
@@ -157,6 +168,12 @@ abstract class InvoiceRepository {
   const InvoiceRepository();
   Future<List<InvoiceRecord>> listInvoices();
   Future<InvoiceRecord> markAsPaid(String invoiceId);
+  Future<InvoiceRecord> approveInvoice(String id) =>
+      Future<InvoiceRecord>.error(
+        UnsupportedError('Invoice approval is unavailable.'));
+  Future<InvoiceRecord> invoiceDetail(String id) =>
+      Future<InvoiceRecord>.error(
+        UnsupportedError('Invoice details are unavailable.'));
 
   Future<InvoiceRecord> updateAttachments(String invoiceId,
       List<LocalJobPhotoSelection> photos) =>
