@@ -414,7 +414,7 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
       return;
     }
     setState(() => _record = updated);
-    _notice('Invoice changes saved locally.');
+    _notice('Invoice draft updated.');
   }
 
   Future<void> _preview() async {
@@ -431,6 +431,11 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
     );
     if (!mounted) { return; }
     try {
+      if(widget.repository is RemoteInvoiceRepository){
+        final verified=await widget.repository.invoiceDetail(_record.id);
+        if(mounted)setState(()=>_record=verified);
+        return;
+      }
       final records = await widget.repository.listInvoices();
       for (final record in records) {
         if (record.id == _record.id) {
