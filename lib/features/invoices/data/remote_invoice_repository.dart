@@ -88,6 +88,10 @@ class RemoteInvoiceRepository extends InvoiceRepository {
       lockVersion:version,invoiceType:(row['type']??'final').toString(),
       lifecycleStatus:(row['lifecycle_status']??'draft').toString(),
       sourceQuoteId:row['quote_id']==null?null:_int(row['quote_id']),
+      sourceAddendaIds:[
+        if(row['source_addenda_ids'] is List)
+          for(final raw in row['source_addenda_ids'] as List)_int(raw),
+      ],
       sentAt:row['sent_at']==null?null:_date(row['sent_at']),
       items:items,payments:payments,history:history,photos:photos,
       payment:QuotePaymentDetails(iban:(row['iban']??'').toString()),
@@ -122,6 +126,19 @@ class RemoteInvoiceRepository extends InvoiceRepository {
     final rows=await RemoteJobRepository.shared.listJobs();
     _check(company);
     return rows.where((x)=>x.category!=JobCategory.archived).toList();
+  }
+
+  Future<Map<String,dynamic>> sources(int job) async {
+    final company=_company();
+    final data=_data(await _api.get('/api/v1/jobs/$job/invoice-sources',
+      companyScoped:true));
+    _check(company);
+    if(_int(data['job_id'])!=job||data['currency']!='CHF'||
+        data['quotes'] is! List||data['addenda'] is! List||
+        data['completed_work'] is! List){
+      throw const SignApiException('Invalid approved invoice sources.');
+    }
+    return data;
   }
 
   Future<int> availableDeposits(int job) async {
@@ -223,6 +240,7 @@ class RemoteInvoiceRepository extends InvoiceRepository {
     ].join('-');
     final result=<String,dynamic>{
       'job_id':job,'quote_id':draft.sourceQuoteId,
+      'addenda_ids':draft.sourceAddendaIds,
       'invoice_type':draft.invoiceType,
       'invoice_number':draft.number.trim(),
       'invoice_date':day(draft.date),'due_date':day(draft.dueDate!),
