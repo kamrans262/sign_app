@@ -156,9 +156,10 @@ class _DepositsScreenState extends State<DepositsScreen> {
       return;
     }
     DepositRecord selected=deposit;
-    if (_repository is RemoteDepositRepository) {
+    final remote=_repository;
+    if (remote is RemoteDepositRepository) {
       try {
-        selected=await _repository.detail(deposit.id);
+        selected=await remote.detail(deposit.id);
       } catch (_) {
         _notice('Unable to load verified deposit details.');
         return;
@@ -180,9 +181,10 @@ class _DepositsScreenState extends State<DepositsScreen> {
       return;
     }
     var jobs=LabourDemoJobs.all;
-    if(_repository is RemoteDepositRepository) {
+    final remote=_repository;
+    if(remote is RemoteDepositRepository) {
       try {
-        jobs=await _repository.jobs();
+        jobs=await remote.jobs();
       }catch(_){_notice('Unable to load current jobs.');return;}
     }
     if(!mounted)return;
