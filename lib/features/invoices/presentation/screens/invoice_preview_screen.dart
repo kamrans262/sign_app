@@ -134,7 +134,7 @@ class _InvoicePreviewScreenState extends State<InvoicePreviewScreen> {
     try {
       final selected = selection == 'gallery'
           ? await source.upload()
-          : [if (await source.camera() case final photo?) photo];
+          : [?await source.camera()];
       final next = [..._record.photos];
       final keys = next.map((photo) => photo.sourceKey).toSet();
       for (final photo in selected) {
