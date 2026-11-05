@@ -38,7 +38,7 @@ void main() {
       }}),200);
     });
     final records=await RemoteReminderRepository(api:client).listReminders();
-    expect(records,singleton);
+    expect(records,hasLength(1));
     expect(records.single.demoOnly,isFalse);
     expect(records.single.id,'11');
     expect(records.single.lockVersion,1);
@@ -78,9 +78,10 @@ void main() {
   test('M20 inbox is real, unread scoped, and action endpoints authenticated', () async {
     final calls=<String>[];
     final client=api((request) async {
-      calls.add(request.method+' '+request.url.path);
+      calls.add('${request.method} ${request.url.path}');
       expect(request.headers['X-Company-Id'],'7');
-      if (request.method=='GET') return http.Response(jsonEncode({'data':{
+      if (request.method=='GET') {
+        return http.Response(jsonEncode({'data':{
         'records':[{
           'id':54,'company_id':7,'recipient_user_id':42,
           'title':'Client-provided title','body':'Client-provided message',
@@ -89,6 +90,7 @@ void main() {
         }],
         'unread_count':1,'page':1,'last_page':1,
       }}),200);
+      }
       return http.Response(jsonEncode({'data':{'updated':true}}),200);
     });
     final inbox=RemoteNotificationRepository(api:client);
