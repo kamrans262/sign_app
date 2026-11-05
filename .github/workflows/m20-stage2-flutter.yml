@@ -1,0 +1,31 @@
+name: M20 Stage 2 Flutter Firebase Messaging and Tenant Safety
+on:
+  push:
+    branches: [feature/m12-site-reports-meeting-minutes-2026-11-04]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: sign2digital-m20-stage2-flutter
+  cancel-in-progress: true
+jobs:
+  firebase-messaging:
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: M20 Stage 2 strict static analysis
+        run: |
+          dart analyze --fatal-infos lib/main.dart
+          dart analyze --fatal-infos lib/features/reminders
+          dart analyze --fatal-infos lib/features/auth/data/mobile_auth_repository.dart
+          dart analyze --fatal-infos test/features/reminders/m20_push_api_test.dart
+      - name: Push registration and Stage 1 repository regressions
+        run: timeout --signal=TERM --kill-after=10s 220s flutter test --no-pub --concurrency=2 --timeout=60s --reporter=expanded test/features/reminders/m20_push_api_test.dart test/features/reminders/m20_remote_reminders_notifications_test.dart
+      - name: Existing Reminders and equipment UI regressions
+        run: timeout --signal=TERM --kill-after=10s 230s flutter test --no-pub --concurrency=2 --timeout=60s --reporter=expanded test/features/reminders/reminders_module_test.dart test/features/equipment/m19_equipment_reminder_stage2_test.dart

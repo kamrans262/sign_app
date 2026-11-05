@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
 import '../../data/remote_notification_repository.dart';
+import '../../data/m20_push_api.dart';
+import '../../services/m20_push_coordinator.dart';
+import '../../../profile/presentation/widgets/profile_notification_row.dart';
 import 'reminders_screen.dart';
 
 /// M20 inbox, using the existing Sign2Digital header/card dimensions and colors.
@@ -21,11 +24,54 @@ class _NotificationInboxScreenState extends State<NotificationInboxScreen> {
   NotificationInboxSnapshot? _snapshot;
   bool _loading = true, _busy = false;
   String? _error;
+  M20NotificationPreferences? _pushPreferences;
+  bool _changingPush = false;
 
   @override
   void initState() {
     super.initState();
     _load();
+    _loadPush();
+    M20PushCoordinator.shared.inboxChanges.addListener(_onNewPush);
+  }
+
+  @override
+  void dispose() {
+    M20PushCoordinator.shared.inboxChanges.removeListener(_onNewPush);
+    super.dispose();
+  }
+
+  void _onNewPush() {
+    if (mounted) _load();
+  }
+
+  Future<void> _loadPush() async {
+    try {
+      final preferences = await M20PushApi.shared.preferences();
+      if (mounted) setState(() => _pushPreferences = preferences);
+    } catch (_) {
+      // An older backend may not have Stage 2 installed yet.
+    }
+  }
+
+  Future<void> _togglePush(bool enabled) async {
+    final current = _pushPreferences;
+    if (current == null || _changingPush) return;
+    setState(() => _changingPush = true);
+    try {
+      final next = enabled
+          ? await M20PushCoordinator.shared.enable(current)
+          : await M20PushCoordinator.shared.disable(current);
+      if (mounted) setState(() => _pushPreferences = next);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Unable to change push notifications. Check device and server settings.'),
+        ));
+      }
+    } finally {
+      if (mounted) setState(() => _changingPush = false);
+    }
   }
 
   Future<void> _load() async {
@@ -85,6 +131,18 @@ class _NotificationInboxScreenState extends State<NotificationInboxScreen> {
         Sign2DigitalHeader(
           title: 'Notifications',
           onBack: () => Navigator.of(context).maybePop(),
+        ),
+        if (_pushPreferences != null) Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+          child: ProfileNotificationRow(
+            title: 'Push notifications',
+            description: _pushPreferences!.pushAvailable
+                ? 'Receive reminders on this device'
+                : 'Waiting for server Firebase configuration',
+            enabled: _pushPreferences!.pushEnabled,
+            onChanged: !_changingPush && _pushPreferences!.pushAvailable
+                ? _togglePush : (_) {},
+          ),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),

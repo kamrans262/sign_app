@@ -4,17 +4,37 @@ import 'features/auth/presentation/screens/company_entry_gate.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform;
 
 import 'core/theme/app_theme.dart';
 import 'features/profile/data/app_settings_repository.dart';
 import 'features/auth/data/mobile_auth_repository.dart';
 import 'features/auth/presentation/screens/mobile_auth_gateway.dart';
 import 'features/splash/presentation/splash_screen.dart';
+import 'features/reminders/services/m20_push_coordinator.dart';
+import 'features/reminders/presentation/screens/notification_inbox_screen.dart';
 import 'features/quotes/presentation/screens/public_customer_signing_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Existing platforms with native Firebase configuration initialize here.
+  // Missing configuration is nonfatal while M20 push delivery is disabled.
+  if (!kIsWeb && (defaultTargetPlatform == TargetPlatform.android ||
+      defaultTargetPlatform == TargetPlatform.iOS)) {
+    try {
+      if (Firebase.apps.isEmpty) await Firebase.initializeApp();
+      M20PushCoordinator.shared.attach(openInbox: () {
+        final navigator = M20PushCoordinator.navigatorKey.currentState;
+        if (navigator == null) return;
+        navigator.push(MaterialPageRoute<void>(
+          builder: (_) => const NotificationInboxScreen(),
+        ));
+      });
+    } catch (_) {
+      // The existing auth and other modules must keep working during setup.
+    }
+  }
   try {
     await LocalAppSettingsRepository.shared.load();
   } catch (_) {
@@ -41,6 +61,7 @@ class Sign2DigitalApp extends StatelessWidget {
     return ValueListenableBuilder<AppSettings>(
       valueListenable: AppSettingsSession.current,
       builder: (context, settings, child) => MaterialApp(
+        navigatorKey: M20PushCoordinator.navigatorKey,
       title: 'Sign2Digital',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,

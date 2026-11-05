@@ -3,6 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../core/services/sign_api_client.dart';
 import '../../../core/services/active_company_session.dart';
 import '../presentation/screens/create_account_screen.dart';
+import '../../reminders/services/m20_push_coordinator.dart';
 
 /// Passwords and OTP codes are never saved in Flutter preferences or logs.
 abstract class AuthTokenStorage {
@@ -150,6 +151,8 @@ class MobileAuthRepository {
     String code, {
     required bool rememberMe,
   }) async {
+    // Revoke this installation before switching accounts.
+    await M20PushCoordinator.shared.revokeBeforeLogout();
     // Remove any bearer from an older account *before* consuming this code.
     // If secure storage is inaccessible, leave OTP unused so it can be retried.
     await _tokenStorage.delete();
@@ -221,6 +224,7 @@ class MobileAuthRepository {
 
   Future<void> logout() async {
     try {
+      await M20PushCoordinator.shared.revokeBeforeLogout();
       if (isSignedIn) await _api.post('/api/v1/auth/logout');
     } finally {
       _sessionToken = null;
