@@ -18,6 +18,7 @@ import '../../../jobs/services/voice_job_extraction_service.dart';
 import '../../../jobs/services/voice_recorder_service.dart';
 import '../../domain/deposit_record.dart';
 import '../../services/deposit_voice_extraction_service.dart';
+import '../../services/remote_deposit_voice_extraction_service.dart';
 
 /// Create a deposit using the same inputs, photos and AI dialogs as Labour.
 /// Returns a typed pending deposit for the listing repository to save.
@@ -263,46 +264,6 @@ class _AddDepositScreenState extends State<AddDepositScreen> {
     ),
   );
 
-  Future<String?> _askApiKey(BuildContext parent) {
-    String value = '';
-    return showDialog<String>(
-      context: parent,
-      builder: (dialog) => AlertDialog(
-        title: const Text('Connect Deposit AI'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'For personal testing, enter a temporary OpenAI API key. '
-              'The key is not saved. A production app needs a secure backend.',
-            ),
-            TextField(
-              key: const Key('deposit-ai-key'),
-              obscureText: true,
-              onChanged: (text) => value = text,
-              decoration: const InputDecoration(labelText: 'OpenAI API key'),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialog).pop(),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            key: const Key('deposit-ai-extract'),
-            onPressed: () {
-              if (value.trim().isNotEmpty) {
-                Navigator.of(dialog).pop(value.trim());
-              }
-            },
-            child: const Text('Process recording'),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _applyVoice(DepositVoiceSuggestion suggestion) {
     if (!mounted) { return; }
     JobModel? matched;
@@ -362,13 +323,9 @@ class _AddDepositScreenState extends State<AddDepositScreen> {
           extraction: OpenAiVoiceJobExtractionService(),
           recordingTitle: 'Record Deposit Details',
           onAudioProcessed: (path) async {
-            final key = await (widget.requestTemporaryApiKey?.call(context) ??
-                _askApiKey(context));
-            if (key == null) {
-              throw StateError('AI processing was cancelled.');
-            }
+            final key = await widget.requestTemporaryApiKey?.call(context) ?? '';
             final result = await (widget.voiceExtractionService ??
-                const OpenAiDepositVoiceExtractionService()).extract(path, key);
+                RemoteDepositVoiceExtractionService()).extract(path, key);
             _applyVoice(result);
           },
         ),
