@@ -10,6 +10,9 @@ import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import '../../../clients/presentation/widgets/sign2digital_status_badge.dart';
 import '../../../documents/presentation/widgets/sign2digital_document_history.dart';
 import '../../domain/equipment_record.dart';
+import '../../data/remote_equipment_loan_repository.dart';
+import 'equipment_loan_details_screen.dart';
+import 'equipment_loans_screen.dart';
 import 'add_equipment_screen.dart';
 
 /// Shared Details screen layout with Equipment-specific real local activity.
@@ -359,6 +362,28 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
         enabled: !_busy, onPressed: _logUsage)),
     ]),
     const SizedBox(height: 15),
+    if(_record.serverId!=null)
+      Sign2DigitalOutlinedButton(
+        key:const Key('equipment-details-loan-history'),
+        label:_record.currentLoanId==null?'Loan History':'Current Equipment Loan',
+        enabled:!_busy,onPressed:() async {
+          if(_record.currentLoanId==null){
+            await Navigator.of(context).push<void>(
+              MaterialPageRoute(builder:(_)=>const EquipmentLoansScreen()));
+            return;
+          }
+          try{
+            final repository=RemoteEquipmentLoanRepository.shared;
+            final loan=await repository.detail(_record.currentLoanId!);
+            if(!mounted)return;
+            await Navigator.of(context).push<void>(
+              MaterialPageRoute(builder:(_)=>EquipmentLoanDetailsScreen(
+                loan:loan,repository:repository)));
+          }catch(_){
+            _notice('Unable to load loan history for equipment.');
+          }
+        }),
+    if(_record.serverId!=null)const SizedBox(height:15),
     FractionallySizedBox(
       widthFactor: .6,
       child: Sign2DigitalPrimaryButton(

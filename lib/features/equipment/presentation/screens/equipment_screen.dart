@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/services/active_company_session.dart';
+import '../../../auth/data/mobile_auth_repository.dart';
+
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
 import '../../../../core/widgets/sign2digital_dashboard_header.dart';
@@ -8,9 +11,11 @@ import '../../../../core/widgets/sign2digital_entry_list_card.dart';
 import '../../../../core/widgets/sign2digital_search_field.dart';
 import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import '../../data/demo_equipment_repository.dart';
+import '../../data/remote_equipment_repository.dart';
 import '../../domain/equipment_record.dart';
 import 'add_equipment_screen.dart';
 import 'equipment_details_screen.dart';
+import 'equipment_loans_screen.dart';
 
 enum EquipmentSort {
   newest('Date (newest)'), oldest('Date (oldest)'),
@@ -45,28 +50,36 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
   int _tab = 0;
   bool _loading = true;
   String? _error;
+  int _loadGeneration=0;
 
   @override
   void initState() {
     super.initState();
-    _repository = widget.repository ?? const DemoEquipmentRepository();
+    _repository = widget.repository ??
+      (MobileAuthRepository.shared.isSignedIn
+        ?RemoteEquipmentRepository.shared:const DemoEquipmentRepository());
+    ActiveCompanySession.selected.addListener(_companyChanged);
     _load();
   }
 
+  void _companyChanged(){if(mounted)_load();}
+
   @override
   void dispose() {
+    ActiveCompanySession.selected.removeListener(_companyChanged);
     _search.dispose();
     super.dispose();
   }
 
   Future<void> _load() async {
     if (!mounted) return;
-    setState(() { _loading = true; _error = null; });
+    final generation=++_loadGeneration;
+    setState(() { _loading = true; _error = null; _records=[]; });
     try {
       final all = await _repository.listEquipment();
-      if (mounted) setState(() { _records = all; _loading = false; });
+      if (mounted&&generation==_loadGeneration) setState(() { _records = all; _loading = false; });
     } catch (_) {
-      if (mounted) {
+      if (mounted&&generation==_loadGeneration) {
         setState(() {
           _loading = false;
           _error = 'Unable to load equipment';
@@ -121,9 +134,19 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
       widget.onEquipmentTap!(record);
       return;
     }
+    EquipmentRecord current=record;
+    if(_repository is RemoteEquipmentRepository){
+      try{
+        current=await (_repository as RemoteEquipmentRepository).detail(record);
+      }catch(_){
+        _notice('Unable to load verified equipment details.');
+        return;
+      }
+    }
+    if(!mounted)return;
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(builder: (_) => EquipmentDetailsScreen(
-        equipment: record, repository: _repository)),
+        equipment: current, repository: _repository)),
     );
     if (mounted) await _load();
   }
@@ -146,7 +169,8 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
       _search.clear();
       setState(() => _tab = 0);
       await _load();
-      _notice('Equipment saved locally.');
+      _notice(_repository is RemoteEquipmentRepository
+        ?'Equipment saved to company records.':'Equipment saved in demo preview.');
     } catch (_) {
       _notice('Unable to save equipment. Check for an existing Equipment ID.');
     }
@@ -215,7 +239,17 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
                         onChanged: (_) => setState(() {}),
                         onTrailingTap: () =>
                           FocusManager.instance.primaryFocus?.unfocus()),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 12),
+                      Align(alignment:Alignment.centerRight,
+                        child:TextButton.icon(
+                          key:const Key('equipment-open-loans'),
+                          onPressed:()=>Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder:(_)=>const EquipmentLoansScreen())),
+                          icon:const Icon(Icons.swap_horiz,
+                            color:AppColors.primary),
+                          label:const Text('Equipment Loans'))),
+                      const SizedBox(height: 8),
                       Stack(children: [
                         const Positioned(left: 0, right: 0, bottom: 0,
                           child: Divider(height: 1, thickness: 1,

@@ -45,6 +45,7 @@ class EquipmentRecord {
     this.initialHours = 0, this.usage = const [],
     this.maintenance = const [], this.history = const [],
     this.createdAt, this.demoOnly = true,
+    this.serverId, this.lockVersion=1, this.currentLoanId,
   });
   final String id, name, category, brand, model, location, notes;
   final DateTime purchaseDate;
@@ -56,6 +57,8 @@ class EquipmentRecord {
   final List<EquipmentEvent> history;
   final DateTime? createdAt;
   final bool demoOnly;
+  final int? serverId, currentLoanId;
+  final int lockVersion;
 
   double get hours => initialHours +
       usage.fold<double>(0, (sum, item) => sum + item.hours);
@@ -73,6 +76,7 @@ class EquipmentRecord {
     EquipmentStatus? status, List<LocalJobPhotoSelection>? photos,
     List<EquipmentUsage>? usage, List<EquipmentMaintenance>? maintenance,
     List<EquipmentEvent>? history,
+    int? lockVersion, int? currentLoanId,
   }) => EquipmentRecord(
     id: id, name: name ?? this.name,
     category: category ?? this.category,
@@ -87,7 +91,9 @@ class EquipmentRecord {
     maintenance: maintenance ?? this.maintenance,
     history: history ?? this.history,
     initialHours: initialHours, createdAt: createdAt,
-    demoOnly: demoOnly,
+    demoOnly: demoOnly,serverId:serverId,
+    lockVersion:lockVersion??this.lockVersion,
+    currentLoanId:currentLoanId??this.currentLoanId,
   );
 }
 

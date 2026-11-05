@@ -406,6 +406,8 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
       maintenance: old?.maintenance ?? const [],
       history: old?.history ?? const [],
       createdAt: old?.createdAt ?? DateTime.now(),
+      serverId: old?.serverId,lockVersion:old?.lockVersion??1,
+      currentLoanId:old?.currentLoanId,
     ));
   }
 
