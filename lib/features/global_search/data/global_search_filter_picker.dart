@@ -197,10 +197,9 @@ abstract final class GlobalSearchFilterPicker {
     var jobLabel = jobId.isEmpty ? 'All jobs' : 'Job #$jobId';
     var kind = current.documentType ?? '';
     var status = current.status ?? '';
-    final from = TextEditingController(text: current.dateFrom ?? '');
-    final to = TextEditingController(text: current.dateTo ?? '');
-    try {
-      final selected = await Sign2DigitalSelectionSheet.showCustom<_SelectedFilters>(
+    var from = current.dateFrom ?? '';
+    var to = current.dateTo ?? '';
+    final selected = await Sign2DigitalSelectionSheet.showCustom<_SelectedFilters>(
         context: context,
         title: 'Global Search Filters',
         icon: Icons.tune_rounded,
@@ -228,11 +227,12 @@ abstract final class GlobalSearchFilterPicker {
             });
           }
 
-          Widget dateField(TextEditingController controller, String label) =>
+          Widget dateField(String initial, ValueChanged<String> changed, String label) =>
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: TextField(
-                controller: controller,
+              child: TextFormField(
+                initialValue: initial,
+                onChanged: changed,
                 key: Key(label == 'From date' ? 'search-date-from' : 'search-date-to'),
                 keyboardType: TextInputType.datetime,
                 style: const TextStyle(fontFamily: 'Inter',
@@ -320,8 +320,8 @@ abstract final class GlobalSearchFilterPicker {
                 onChanged: (value) => update(() => status = value ?? ''),
               ),
               const SizedBox(height: 12),
-              dateField(from, 'From date'),
-              dateField(to, 'To date'),
+              dateField(from, (value) => from = value, 'From date'),
+              dateField(to, (value) => to = value, 'To date'),
               Row(children: [
                 TextButton(
                   key: const Key('search-clear-filters'),
@@ -335,7 +335,7 @@ abstract final class GlobalSearchFilterPicker {
                     _SelectedFilters(GlobalSearchFilters(
                       clientId: clientId, jobId: jobId,
                       documentType: kind, status: status,
-                      dateFrom: from.text.trim(), dateTo: to.text.trim(),
+                      dateFrom: from.trim(), dateTo: to.trim(),
                     ), companyId)),
                   child: const Text('Apply filters')),
               ]),
@@ -361,9 +361,5 @@ abstract final class GlobalSearchFilterPicker {
         throw const SignApiException('Company changed during filter selection.');
       }
       return filters;
-    } finally {
-      from.dispose();
-      to.dispose();
-    }
   }
 }

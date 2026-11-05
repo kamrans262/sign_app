@@ -97,6 +97,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
       _filters = const GlobalSearchFilters();
       _remoteTotal = 0;
       _hasMore = false;
+      _paging = false;
     });
     _reload();
   }
@@ -162,9 +163,22 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
         entry.inTab(_tab) && entry.matches(_search.text)).toList();
 
   void _onQueryChanged(String _) {
-    setState(() => _seeAll = false);
-    if (!_isRemote) return;
+    if (!_isRemote) {
+      setState(() => _seeAll = false);
+      return;
+    }
+    // Invalidate pending requests immediately, not after the debounce.
+    ++_loadSequence;
     _debounce?.cancel();
+    setState(() {
+      _seeAll = false;
+      _loading = true;
+      _error = null;
+      _records = const [];
+      _remoteTotal = 0;
+      _hasMore = false;
+      _paging = false;
+    });
     _debounce = Timer(const Duration(milliseconds: 350), _reload);
   }
 
@@ -295,7 +309,9 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
           onNotificationTap: widget.onNotificationTap,
           onProfileTap: widget.onProfileTap),
         Expanded(child: Center(child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 720),
+          constraints: BoxConstraints(maxWidth:
+            MediaQuery.orientationOf(context) == Orientation.landscape
+              ? double.infinity : 720),
           child: CustomScrollView(
             key: const Key('global-search-scroll'),
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -306,6 +322,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
                   Sign2DigitalSearchField(
                     controller: _search,
                     hintText: 'Search across the app',
+                    maxLength: 120,
                     onChanged: _onQueryChanged,
                     onTrailingTap: () {
                       FocusManager.instance.primaryFocus?.unfocus();
@@ -388,7 +405,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
                 SliverFillRemaining(
                   hasScrollBody: false,
                   child: Center(child: Text(
-                    _search.text.trim().isEmpty
+                    _search.text.trim().isEmpty && !_filters.active
                       ? 'No records available to search'
                       : 'No results found',
                     key: const Key('global-search-empty'),

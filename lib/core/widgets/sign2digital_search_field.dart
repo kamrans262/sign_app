@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../assets/dashboard_assets.dart';
@@ -10,12 +11,14 @@ class Sign2DigitalSearchField extends StatelessWidget {
     required this.controller,
     required this.onChanged,
     this.onTrailingTap,
+    this.maxLength,
     this.hintText = 'Search jobs,clients, refrences',
   });
 
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
   final VoidCallback? onTrailingTap;
+  final int? maxLength;
   final String hintText;
 
   @override
@@ -38,6 +41,8 @@ class Sign2DigitalSearchField extends StatelessWidget {
               key: const Key('clients-search-input'),
               controller: controller,
               onChanged: onChanged,
+              inputFormatters: maxLength == null ? null :
+                [LengthLimitingTextInputFormatter(maxLength)],
               onTapOutside: (_) =>
                   FocusManager.instance.primaryFocus?.unfocus(),
               textInputAction: TextInputAction.search,

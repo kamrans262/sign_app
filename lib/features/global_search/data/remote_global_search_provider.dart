@@ -60,7 +60,7 @@ class RemoteGlobalSearchProvider implements GlobalSearchProvider {
     GlobalSearchTab.all => '',
     GlobalSearchTab.jobs => 'jobs',
     GlobalSearchTab.clients => 'clients',
-    GlobalSearchTab.documents => 'documents,general_documents',
+    GlobalSearchTab.documents => 'documents,general_documents,reports',
     GlobalSearchTab.invoices => 'invoices',
     GlobalSearchTab.more => 'quotes,expenses,equipment,deposits,reports,reminders',
   };

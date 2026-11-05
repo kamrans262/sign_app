@@ -64,7 +64,8 @@ class GlobalSearchResult {
     GlobalSearchTab.jobs => category == GlobalSearchCategory.jobs,
     GlobalSearchTab.clients => category == GlobalSearchCategory.clients,
     GlobalSearchTab.documents => category == GlobalSearchCategory.documents ||
-      category == GlobalSearchCategory.generalDocuments,
+      category == GlobalSearchCategory.generalDocuments ||
+      category == GlobalSearchCategory.reports,
     GlobalSearchTab.invoices => category == GlobalSearchCategory.invoices,
     GlobalSearchTab.more => category.isMore,
   };
