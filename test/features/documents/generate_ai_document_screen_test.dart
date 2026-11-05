@@ -179,7 +179,10 @@ void main() {
     // Voice is above the instructions in the lazy form.
     await _reach(tester, 'generate-ai-voice', up: true);
     await tester.tap(find.byKey(const Key('generate-ai-voice')));
-    await tester.pumpAndSettle();
+    // Recording waveform is intentionally animated indefinitely while open.
+    // pumpAndSettle must not be used until the dialog has been dismissed.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 250));
     expect(find.byType(AiVoiceFlowDialog), findsOneWidget);
     await tester.tap(find.byKey(const Key('voice-cancel')));
     await tester.pumpAndSettle();
