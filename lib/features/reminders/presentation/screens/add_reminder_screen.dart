@@ -372,6 +372,7 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
         ? original?.completedAt ?? DateTime.now() : null,
       createdAt: original?.createdAt ?? DateTime.now(),
       demoOnly: original?.demoOnly ?? false,
+      lockVersion: original?.lockVersion ?? 1,
     ));
   }
 
