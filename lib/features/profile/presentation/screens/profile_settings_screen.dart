@@ -17,6 +17,7 @@ import '../widgets/profile_settings_action_card.dart';
 import '../../data/remote_security_access_repository.dart';
 import '../../data/remote_profile_preferences_repository.dart';
 import 'help_support_screen.dart';
+import 'privacy_data_screen.dart';
 import '../../data/profile_preferences_repository.dart';
 import '../../data/security_access_repository.dart';
 import '../../data/app_settings_repository.dart';
@@ -257,6 +258,14 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                     },
                   ),
                   if (MobileAuthRepository.shared.isSignedIn) ...[
+                    const SizedBox(height: 20),
+                    ProfileSettingsActionCard(
+                      key: const Key('profile-action-privacy-data'),
+                      icon: Icons.privacy_tip_outlined,
+                      title: 'Privacy & Data',
+                      subtitle: 'Personal data and account access',
+                      onTap: () => _open(const PrivacyDataScreen()),
+                    ),
                     const SizedBox(height: 20),
                     ProfileSettingsActionCard(
                       key: const Key('profile-action-help-support'),
