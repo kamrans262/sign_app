@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import '../../../core/services/active_company_session.dart';
 import '../../../core/services/sign_api_client.dart';
 import '../../auth/data/mobile_auth_repository.dart';
@@ -83,6 +85,43 @@ class RemoteEquipmentLoanRepository extends EquipmentLoanRepository {
       lockVersion:version,notes:(r['notes']??'').toString(),
       events:history,
     );
+  }
+
+  Future<Map<String,dynamic>> prepareVoice(String audioPath) async{
+    final company=_company();
+    final file=File(audioPath);
+    final bytes=await file.readAsBytes();
+    if(bytes.length<16||bytes.length>25*1024*1024){
+      throw const SignApiException('Invalid equipment recording.');
+    }
+    final mp4=String.fromCharCodes(bytes.sublist(4,8))=='ftyp';
+    final wav=String.fromCharCodes(bytes.sublist(0,4))=='RIFF'&&
+      String.fromCharCodes(bytes.sublist(8,12))=='WAVE';
+    final aac=bytes[0]==255&&(bytes[1]&240)==240;
+    if(!mp4&&!wav&&!aac){
+      throw const SignApiException('Unsupported voice recording.');
+    }
+    final response=_data(await _api.postMultipart(
+      '/api/v1/equipment-loans/voice/prepare',
+      filename:mp4?'loan.m4a':(wav?'loan.wav':'loan.aac'),
+      bytes:bytes,companyScoped:true,maxBytes:25*1024*1024));
+    _check(company);
+    if(response['saved']!=false||response['requires_user_review']!=true){
+      throw const SignApiException('AI loan suggestion requires confirmation.');
+    }
+    final raw=_map(response['suggestion']);
+    final normalized=<String,dynamic>{};
+    for(final field in [
+      'equipment_code','borrower_name','borrower_email','loan_date',
+      'expected_return_date','notes'
+    ]){
+      final value=raw[field];
+      if(value!=null&&value is! String){
+        throw const SignApiException('Invalid AI voice suggestion.');
+      }
+      normalized[field]=value;
+    }
+    return normalized;
   }
 
   @override

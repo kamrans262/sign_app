@@ -218,7 +218,7 @@ class _EquipmentLoanDetailsScreenState
                 const Sign2DigitalOutlinedButton(
                   label:'Send Reminder (Stage 2)',
                   enabled:false,
-                  onPressed:null),
+                  onPressed:(){}),
               ],
               const SizedBox(height:22),
               const Text('Loan History',style:TextStyle(
