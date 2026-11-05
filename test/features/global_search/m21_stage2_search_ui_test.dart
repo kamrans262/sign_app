@@ -160,7 +160,13 @@ void main() {
     expect(find.text('Mina Works'), findsOneWidget);
     await tester.tap(find.text('Mina Works'));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.byKey(const Key('search-apply-filters')));
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('search-apply-filters')), 180,
+      scrollable: find.descendant(
+        of: find.byKey(const Key('global-search-filter-sheet')),
+        matching: find.byType(Scrollable),
+      ).first,
+    );
     await tester.tap(find.byKey(const Key('search-apply-filters')));
     await tester.pumpAndSettle();
     expect(selected?.clientId, '77');
