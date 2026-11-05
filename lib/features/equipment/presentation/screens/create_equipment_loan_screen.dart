@@ -244,7 +244,8 @@ class _CreateEquipmentLoanScreenState extends State<CreateEquipmentLoanScreen> {
     if(_saving||_loading)return;
     final selected=_selectedAsset;
     final name=_borrower.text.trim();
-    if(selected==null||selected.serverId==null||
+    if(selected==null||
+        (_equipment is RemoteEquipmentRepository&&selected.serverId==null)||
         name.length<2||_returnDate.isBefore(_loanDate)||
         (_borrowerType=='client'&&_selectedClient==null)){
       setState(()=>_error='Choose an equipment asset, borrower and valid '
@@ -257,7 +258,7 @@ class _CreateEquipmentLoanScreenState extends State<CreateEquipmentLoanScreen> {
     });
     try{
       final item=EquipmentLoanRecord(
-        assetId:selected.serverId!,
+        assetId:selected.serverId??(_assets.indexOf(selected)+1),
         equipmentCode:selected.id,equipmentName:selected.name,
         borrowerName:name,borrowerType:_borrowerType,
         borrowerEmail:_email.text.trim(),
