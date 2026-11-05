@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sign2digital/core/widgets/sign2digital_bottom_navigation_bar.dart';
 import 'package:sign2digital/core/widgets/sign2digital_dashboard_header.dart';
-import 'package:sign2digital/features/clients/presentation/screens/clients_screen.dart';
+import 'package:sign2digital/features/clients/presentation/screens/more_screen.dart';
 import 'package:sign2digital/features/clients/presentation/widgets/sign2digital_status_badge.dart';
 import 'package:sign2digital/features/deposits/data/demo_deposit_repository.dart';
 import 'package:sign2digital/features/deposits/domain/deposit_record.dart';
@@ -45,10 +45,10 @@ void main() {
 
   testWidgets('More opens Deposits with the existing global controls',
       (tester) async {
-    await tester.pumpWidget(const MaterialApp(home: ClientsScreen()));
-    await tester.tap(find.byKey(const Key('dashboard-tab-4')));
-    // Dashboard updates continue asynchronously; a bounded pump is reliable.
-    await tester.pump(const Duration(milliseconds:600));
+    await tester.pumpWidget(const MaterialApp(
+      home: Scaffold(body: MoreScreen()),
+    ));
+    await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
       find.byKey(const Key('open-deposits')), 200,
       scrollable: find.descendant(
@@ -56,8 +56,9 @@ void main() {
         matching: find.byType(Scrollable),
       ),
     );
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('open-deposits')));
-    await tester.pump(const Duration(milliseconds:600));
+    await tester.pumpAndSettle();
     expect(find.byType(DepositsScreen), findsOneWidget);
     expect(find.byType(Sign2DigitalDashboardHeader), findsWidgets);
     expect(find.text('Search documents'), findsOneWidget);
