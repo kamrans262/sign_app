@@ -345,7 +345,7 @@ class _CreateEquipmentLoanScreenState extends State<CreateEquipmentLoanScreen> {
             label:'Create Equipment Loan',loading:_saving,
             enabled:!_saving&&!_loading,onPressed:_save),
         ])),
-      ))),
+      )),
     ])),
   );
 }
