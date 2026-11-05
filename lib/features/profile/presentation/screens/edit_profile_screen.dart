@@ -16,6 +16,8 @@ import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../../../core/widgets/sign2digital_selection_field.dart';
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import '../../../auth/data/account_repository.dart';
+import '../../../auth/data/remote_account_repository.dart';
+import 'verified_email_change_screen.dart';
 import '../../../auth/domain/account_profile.dart';
 
 /// Edits the existing signup account, preserving its identifier and other data.
@@ -58,6 +60,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late Sign2DigitalCountry _country;
   String? _title;
   Uint8List? _photo;
+  bool _photoChanged = false;
+  bool _photoRemoved = false;
   bool _saving = false;
   String? _error;
 
@@ -98,7 +102,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     try {
       if (widget.pickPhotoBytes != null) {
         final bytes = await widget.pickPhotoBytes!();
-        if (mounted && bytes != null) setState(() => _photo = bytes);
+        if (mounted && bytes != null) setState(() {
+          _photo = bytes; _photoChanged = true; _photoRemoved = false;
+        });
         return;
       }
       final file = await (widget.imagePicker ?? ImagePicker()).pickImage(
@@ -108,7 +114,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       );
       if (file == null) return;
       final bytes = await file.readAsBytes();
-      if (mounted) setState(() => _photo = bytes);
+      if (mounted) setState(() {
+        _photo = bytes; _photoChanged = true; _photoRemoved = false;
+      });
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -171,12 +179,25 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
+  void _removePhotoDraft() {
+    setState(() { _photo = null; _photoChanged = true; _photoRemoved = true; });
+  }
+
   Future<void> _save() async {
     FocusManager.instance.primaryFocus?.unfocus();
     if (_saving || !(_form.currentState?.validate() ?? false)) return;
     setState(() { _saving = true; _error = null; });
     try {
       final original = widget.initialAccount;
+      final remote = widget.repository;
+      if (remote is RemoteAccountRepository && original != null &&
+          _email.text.trim().toLowerCase() != original.email.toLowerCase()) {
+        setState(() => _saving = false);
+        await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+          builder: (_) => VerifiedEmailChangeScreen(
+            newEmail: _email.text.trim(), repository: remote)));
+        return;
+      }
       await widget.repository.saveDraft(AccountProfile(
         id: original?.id ?? 'demo-current-account',
         fullName: '${_firstName.text.trim()} ${_lastName.text.trim()}',
@@ -186,7 +207,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         phoneNumber: _phone.text.trim(),
         title: _title,
       ));
-      ProfilePhotoSession.setPhoto(_photo);
+      if (remote is RemoteAccountRepository) {
+        if (_photoRemoved) {
+          await remote.removePhoto();
+        } else if (_photoChanged && _photo != null) {
+          await remote.uploadPhoto(_photo!);
+        }
+      } else {
+        ProfilePhotoSession.setPhoto(_photo);
+      }
       if (mounted) Navigator.of(context).pop(true);
     } catch (_) {
       if (mounted) {
@@ -277,6 +306,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   letterSpacing: -0.3,
                   color: AppColors.primary)),
               ),
+              if (_photo != null)
+                TextButton(key: const Key('m22-remove-photo'),
+                  onPressed: _removePhotoDraft,
+                  child: const Text('Remove Photo')),
             ])),
             const SizedBox(height: 25),
             Form(
