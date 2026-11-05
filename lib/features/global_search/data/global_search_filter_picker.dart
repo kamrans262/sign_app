@@ -24,8 +24,9 @@ class _RecordChoice {
 /// Searches server-side and pages results. Does not preload a whole customer
 /// or job database into an unbounded in-memory dropdown.
 class _SearchRecordPicker extends StatefulWidget {
-  const _SearchRecordPicker({required this.type});
+  const _SearchRecordPicker({required this.type, this.provider});
   final GlobalSearchTab type;
+  final RemoteGlobalSearchProvider? provider;
 
   @override
   State<_SearchRecordPicker> createState() => _SearchRecordPickerState();
@@ -33,7 +34,8 @@ class _SearchRecordPicker extends StatefulWidget {
 
 class _SearchRecordPickerState extends State<_SearchRecordPicker> {
   final _search = TextEditingController();
-  final _remote = RemoteGlobalSearchProvider();
+  late final RemoteGlobalSearchProvider _remote =
+      widget.provider ?? RemoteGlobalSearchProvider();
   Timer? _debounce;
   List<GlobalSearchResult> _records = const [];
   int _sequence = 0, _page = 1;
@@ -179,12 +181,16 @@ abstract final class GlobalSearchFilterPicker {
   }
 
   static Future<GlobalSearchFilters?> show(
-      BuildContext context, GlobalSearchFilters current) async {
+      BuildContext context, GlobalSearchFilters current, {
+      RemoteCompanyRepository? companyRepository,
+      RemoteGlobalSearchProvider? searchProvider,
+  }) async {
     final active = ActiveCompanySession.companyId;
     if (active == null) {
       throw const SignApiException('Select a company first.');
     }
-    final companies = await RemoteCompanyRepository.shared.list();
+    final repository = companyRepository ?? RemoteCompanyRepository.shared;
+    final companies = await repository.list();
     if (!context.mounted || ActiveCompanySession.companyId != active) return null;
     final selectedId = '$active';
     if (!companies.any((company) => company.id == selectedId)) {
@@ -213,7 +219,8 @@ abstract final class GlobalSearchFilterPicker {
               icon: tab == GlobalSearchTab.clients
                 ? Icons.people_outline : Icons.work_outline,
               subtitle: 'Search existing company records',
-              builder: (_) => _SearchRecordPicker(type: tab),
+              builder: (_) => _SearchRecordPicker(type: tab,
+                provider: searchProvider),
             );
             if (!sheet.mounted || choice == null) return;
             update(() {
@@ -269,13 +276,15 @@ abstract final class GlobalSearchFilterPicker {
                   DropdownMenuItem(value: company.id,
                     child: Text(company.companyName, overflow: TextOverflow.ellipsis))],
                 onChanged: (value) {
-                  if (value != null) update(() {
-                    companyId = value;
-                    clientId = '';
-                    jobId = '';
-                    clientLabel = 'All clients';
-                    jobLabel = 'All jobs';
-                  });
+                  if (value != null) {
+                    update(() {
+                      companyId = value;
+                      clientId = '';
+                      jobId = '';
+                      clientLabel = 'All clients';
+                      jobLabel = 'All jobs';
+                    });
+                  }
                 },
               ),
               const SizedBox(height: 8),
@@ -353,7 +362,7 @@ abstract final class GlobalSearchFilterPicker {
         throw const SignApiException('Invalid date range.');
       }
       if (selected.companyId != selectedId) {
-        await RemoteCompanyRepository.shared.switchTo(selected.companyId);
+        await repository.switchTo(selected.companyId);
         // Never reuse the previous company's Client/Job selections.
         return const GlobalSearchFilters();
       }
