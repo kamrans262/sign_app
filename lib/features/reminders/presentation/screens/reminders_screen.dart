@@ -9,6 +9,7 @@ import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import '../../data/demo_reminder_repository.dart';
 import '../../domain/reminder_record.dart';
 import 'add_reminder_screen.dart';
+import 'notification_inbox_screen.dart';
 
 class RemindersScreen extends StatefulWidget {
   const RemindersScreen({
@@ -187,7 +188,10 @@ class _RemindersScreenState extends State<RemindersScreen> {
       backgroundColor: AppColors.white,
       body: SafeArea(bottom: false, child: Column(children: [
         Sign2DigitalDashboardHeader(
-          onNotificationTap: widget.onNotificationTap,
+          onNotificationTap: widget.onNotificationTap ?? () {
+            Navigator.of(context).push(MaterialPageRoute<void>(
+              builder: (_) => const NotificationInboxScreen()));
+          },
           onProfileTap: widget.onProfileTap),
         Expanded(child: Center(child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 720),

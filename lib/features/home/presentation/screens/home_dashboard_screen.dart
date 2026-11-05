@@ -22,6 +22,7 @@ import '../../../jobs/domain/job_model.dart';
 import '../../../quotes/domain/quote_review_models.dart';
 import '../../../quotes/presentation/widgets/sign2digital_quote_shadow_panel.dart';
 import '../../../reminders/data/demo_reminder_repository.dart';
+import '../../../reminders/data/remote_reminder_repository.dart';
 import '../../../reminders/domain/reminder_record.dart';
 
 /// Dashboard actions are handled by the existing authenticated shell.
@@ -86,7 +87,7 @@ class HomeDashboardScreen extends StatefulWidget {
     this.companyRepository,
     this.documentRepository = const DemoDocumentRepository(),
     this.invoiceRepository = const DemoInvoiceRepository(),
-    this.reminderRepository = const DemoReminderRepository(),
+    this.reminderRepository,
     this.expenseRepository = const DemoExpenseRepository(),
     this.refreshRevision = 0,
     this.additionalActiveJobs = 0,
@@ -99,7 +100,7 @@ class HomeDashboardScreen extends StatefulWidget {
   final CompanyRepository? companyRepository;
   final DocumentRepository documentRepository;
   final InvoiceRepository invoiceRepository;
-  final ReminderRepository reminderRepository;
+  final ReminderRepository? reminderRepository;
   final ExpenseRepository expenseRepository;
   final int refreshRevision;
   final int additionalActiveJobs;
@@ -121,6 +122,10 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     letterSpacing: -0.3,
     color: AppColors.dark,
   );
+
+  ReminderRepository get _reminderRepo => widget.reminderRepository ??
+      (MobileAuthRepository.shared.isSignedIn
+          ? RemoteReminderRepository.shared : const DemoReminderRepository());
 
   HomeOverview? _overview;
   List<CompanyProfile> _companies = const [];
@@ -189,7 +194,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     } catch (_) {}
     try {
       reminders = HomeOverview.countUpcoming(
-        await widget.reminderRepository.listReminders(), DateTime.now());
+        await _reminderRepo.listReminders(), DateTime.now());
     } catch (_) {}
     try {
       expenses = HomeOverview.totalExpenses(

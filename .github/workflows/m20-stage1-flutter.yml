@@ -1,0 +1,30 @@
+name: M20 Stage 1 Flutter Reminders and Notifications
+on:
+  push:
+    branches: [feature/m12-site-reports-meeting-minutes-2026-11-04]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: sign2digital-m20-stage1-flutter
+  cancel-in-progress: true
+jobs:
+  reminders-notifications:
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: M20 and original dashboard analysis
+        run: |
+          dart analyze --fatal-infos lib/features/reminders
+          dart analyze --fatal-infos lib/features/home
+          dart analyze --fatal-infos test/features/reminders/m20_remote_reminders_notifications_test.dart
+      - name: Real M20 repository and inbox API tests
+        run: timeout --signal=TERM --kill-after=10s 210s flutter test --no-pub --concurrency=2 --timeout=60s --reporter=expanded test/features/reminders/m20_remote_reminders_notifications_test.dart
+      - name: Existing Reminders and Equipment screen regressions
+        run: timeout --signal=TERM --kill-after=10s 240s flutter test --no-pub --concurrency=2 --timeout=60s --reporter=expanded test/features/reminders/reminders_module_test.dart test/features/equipment/m19_equipment_reminder_stage2_test.dart

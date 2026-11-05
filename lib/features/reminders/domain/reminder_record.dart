@@ -23,7 +23,7 @@ class ReminderRecord {
     required this.id, required this.title, required this.type,
     required this.remindAt, this.relatedItem, this.notes = '',
     this.sendNotification = true, this.completedAt,
-    this.createdAt, this.demoOnly = false,
+    this.createdAt, this.demoOnly = false, this.lockVersion = 1,
   });
 
   final String id, title, notes;
@@ -33,6 +33,7 @@ class ReminderRecord {
   final bool sendNotification;
   final DateTime? completedAt, createdAt;
   final bool demoOnly;
+  final int lockVersion;
 
   bool get completed => completedAt != null;
 
@@ -62,7 +63,7 @@ class ReminderRecord {
     notes: notes ?? this.notes,
     sendNotification: sendNotification ?? this.sendNotification,
     completedAt: clearCompleted ? null : completedAt ?? this.completedAt,
-    createdAt: createdAt, demoOnly: demoOnly,
+    createdAt: createdAt, demoOnly: demoOnly, lockVersion: lockVersion,
   );
 }
 

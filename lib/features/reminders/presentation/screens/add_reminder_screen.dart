@@ -12,6 +12,8 @@ import '../../../jobs/presentation/widgets/ai_voice_flow_dialog.dart';
 import '../../../jobs/services/voice_job_extraction_service.dart';
 import '../../../jobs/services/voice_recorder_service.dart';
 import '../../data/existing_reminder_reference_source.dart';
+import '../../data/remote_reminder_reference_source.dart';
+import '../../../auth/data/mobile_auth_repository.dart';
 import '../../domain/reminder_record.dart';
 import '../../services/reminder_voice_extraction_service.dart';
 
@@ -48,7 +50,10 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
   @override
   void initState() {
     super.initState();
-    _references = widget.referenceSource ?? ExistingReminderReferenceSource();
+    _references = widget.referenceSource ??
+        (MobileAuthRepository.shared.isSignedIn
+          ? RemoteReminderReferenceSource()
+          : ExistingReminderReferenceSource());
     final original = widget.initialReminder;
     if (original != null) {
       _title.text = original.title;
