@@ -390,7 +390,7 @@ class _SecurityAccessScreenState extends State<SecurityAccessScreen> {
                   verticalPadding: 10,
                   horizontalPadding: 10,
                   title: snapshot.twoFactorEnabled == null
-                      ? 'Additional authenticator not configured'
+                      ? '2FA status unavailable'
                       : isTwoFactorOn
                           ? '2 FA is enabled'
                           : '2 FA is disabled',
