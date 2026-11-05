@@ -70,7 +70,7 @@ class _GeneralDocumentEditorScreenState extends State<GeneralDocumentEditorScree
     for(final c in _paragraphs)c.dispose();
     super.dispose();
   }
-  bool get _editable=>_saved==null||_saved!.editable;
+  bool get _editable=>_saved?.editable??widget.documentId==null;
   void _notice(String text){
     if(!mounted)return;
     ScaffoldMessenger.of(context)
