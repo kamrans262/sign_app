@@ -9,8 +9,12 @@ import '../../../../core/widgets/sign2digital_list_sort_control.dart';
 import '../../../../core/widgets/sign2digital_search_field.dart';
 import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import '../../data/demo_invoice_repository.dart';
+import '../../data/remote_invoice_repository.dart';
+import '../../../auth/data/mobile_auth_repository.dart';
+import '../../../../core/services/active_company_session.dart';
 import '../../domain/invoice_record.dart';
 import 'add_invoice_screen.dart';
+import '../../../jobs/domain/job_model.dart';
 import 'invoice_details_screen.dart';
 
 enum InvoiceSort {
@@ -44,35 +48,60 @@ class InvoicesScreen extends StatefulWidget {
 
 class _InvoicesScreenState extends State<InvoicesScreen> {
   final _search = TextEditingController();
-  late final InvoiceRepository _repository;
+  late InvoiceRepository _repository;
   List<InvoiceRecord> _all = [];
   bool _loading = true;
   String? _error;
   int _tab = 0;
   InvoiceSort _sort = InvoiceSort.newest;
+  int _loadSerial=0;
 
   @override
   void initState() {
     super.initState();
-    _repository = widget.repository ?? const DemoInvoiceRepository();
+    _repository = widget.repository ??
+        (!MobileAuthRepository.shared.isSignedIn &&
+            ActiveCompanySession.companyId==null
+            ? const DemoInvoiceRepository() : RemoteInvoiceRepository.shared);
+    ActiveCompanySession.selected.addListener(_companyChanged);
     _load();
   }
 
   @override
   void dispose() {
+    ActiveCompanySession.selected.removeListener(_companyChanged);
     _search.dispose();
     super.dispose();
   }
 
+  void _companyChanged() {
+    if(!mounted)return;
+    if(widget.repository==null){
+      _repository=(!MobileAuthRepository.shared.isSignedIn &&
+          ActiveCompanySession.companyId==null)
+          ?const DemoInvoiceRepository():RemoteInvoiceRepository.shared;
+    }
+    setState((){
+      _all=[];
+      _loading=true;
+      _error=null;
+    });
+    _load();
+  }
+
   Future<void> _load() async {
+    final serial=++_loadSerial;
+    final company=ActiveCompanySession.companyId;
     if (!mounted) { return; }
     setState(() { _loading = true; _error = null; });
     try {
       final records = await _repository.listInvoices();
-      if (!mounted) { return; }
+      if (!mounted||serial!=_loadSerial||
+          ActiveCompanySession.companyId!=company) { return; }
       setState(() { _all = records; _loading = false; });
     } catch (_) {
-      if (!mounted) { return; }
+      if (!mounted||serial!=_loadSerial||
+          ActiveCompanySession.companyId!=company) { return; }
       setState(() {
         _error = 'Unable to load invoices';
         _loading = false;
@@ -131,10 +160,21 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
       widget.onInvoiceTap!(invoice);
       return;
     }
+    var selected=invoice;
+    if(_repository is RemoteInvoiceRepository){
+      try{
+        selected=await (_repository as RemoteInvoiceRepository)
+            .invoiceDetail(invoice.id);
+      }catch(_){
+        _notice('Unable to load verified invoice details.');
+        return;
+      }
+    }
+    if(!mounted)return;
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
         builder: (_) => InvoiceDetailsScreen(
-          invoice: invoice,
+          invoice: selected,
           repository: _repository,
           selectedNavigationIndex: widget.selectedNavigationIndex,
           onNavigationSelected: widget.onNavigationSelected,
@@ -149,9 +189,21 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
       widget.onCreateInvoice!();
       return;
     }
+    final company=ActiveCompanySession.companyId;
+    List<JobModel>? jobs;
+    if(_repository is RemoteInvoiceRepository){
+      try{
+        jobs=await (_repository as RemoteInvoiceRepository).jobs();
+      }catch(_){
+        _notice('Unable to load current jobs.');
+        return;
+      }
+    }
+    if(!mounted||company!=ActiveCompanySession.companyId)return;
     final draft = await Navigator.of(context).push<InvoiceRecord>(
       MaterialPageRoute<InvoiceRecord>(
         builder: (_) => AddInvoiceScreen(
+          jobs:jobs,
           repository: _repository,
           selectedNavigationIndex: widget.selectedNavigationIndex,
           onNavigationSelected: widget.onNavigationSelected,
@@ -162,7 +214,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
     // The create route awaited repository.saveDraft before returning.
     // Do not save twice (or falsely report a duplicate as an error).
     await _load();
-    if (mounted) { _notice('Invoice draft saved locally.'); }
+    if (mounted) { _notice('Invoice draft saved.'); }
   }
 
   void _navigation(int index) {
@@ -251,7 +303,8 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                             color: AppColors.lightBorder)),
                         Sign2DigitalDetailsTabs(
                           labels: const [
-                            'All', 'Draft', 'Sent', 'Pending', 'Paid', 'Overdue'],
+                            'All', 'Draft', 'Sent', 'Pending', 'Paid', 'Overdue',
+                            'Partially Paid'],
                           horizontalPadding: 15,
                           selectedIndex: _tab,
                           onSelected: (index) => setState(() => _tab = index),
