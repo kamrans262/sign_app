@@ -4,6 +4,7 @@ import 'package:sign2digital/core/widgets/sign2digital_entry_list_card.dart';
 import 'package:sign2digital/core/widgets/sign2digital_input_field.dart';
 import 'package:sign2digital/features/clients/presentation/screens/more_screen.dart';
 import 'package:sign2digital/features/reminders/data/demo_reminder_repository.dart';
+import 'package:sign2digital/features/reminders/data/remote_reminder_repository.dart';
 import 'package:sign2digital/features/reminders/domain/reminder_record.dart';
 import 'package:sign2digital/features/reminders/presentation/screens/add_reminder_screen.dart';
 import 'package:sign2digital/features/reminders/presentation/screens/reminders_screen.dart';
@@ -76,6 +77,19 @@ Future<void> _reach(WidgetTester tester, String key, {bool up = false}) async {
 
 void main() {
   setUp(DemoReminderRepository.resetForTests);
+
+  test('M20 signed-in reminder screens use the real Laravel repository by default', () {
+    final selected = RemindersScreen.repositoryForSession(true);
+    expect(selected, isA<RemoteReminderRepository>());
+    expect(selected, isNot(isA<DemoReminderRepository>()));
+
+    final preview = RemindersScreen.repositoryForSession(false);
+    expect(preview, isA<DemoReminderRepository>());
+
+    const injected = DemoReminderRepository();
+    expect(RemindersScreen.repositoryForSession(true, injected), same(injected));
+  });
+
 
   test('Reminder status and JSON extraction do not invent data', () {
     final now = DateTime(2026, 10, 15, 12);
