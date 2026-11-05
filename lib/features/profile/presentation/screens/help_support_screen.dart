@@ -98,7 +98,7 @@ class _HelpSupportState extends State<HelpSupportScreen> {
                   child:CircularProgressIndicator()))
               else if(error!=null)
                 TextButton(key:const Key('m22-support-retry'),
-                  onPressed:refresh,child:Text(error!+' Tap to retry.'))
+                  onPressed:refresh,child:Text('${error!} Tap to retry.'))
               else ...[
                 if(faqs.isEmpty)
                   const Padding(padding:EdgeInsets.all(12),
@@ -107,7 +107,7 @@ class _HelpSupportState extends State<HelpSupportScreen> {
                 for(final faq in faqs)
                   Card(margin:const EdgeInsets.only(bottom:12),
                     child:ExpansionTile(
-                      key:Key('m22-faq-'+faq.id.toString()),
+                      key:Key('m22-faq-${faq.id}'),
                       title:Text(faq.question,style:const TextStyle(
                         fontFamily:'Inter',fontSize:14)),
                       children:[Padding(padding:const EdgeInsets.all(16),
@@ -116,7 +116,7 @@ class _HelpSupportState extends State<HelpSupportScreen> {
                             fontFamily:'Inter',color:AppColors.secondaryText))))],
                     )),
                 const SizedBox(height:22),
-                Text('My Tickets ('+tickets.length.toString()+')',
+                Text('My Tickets (${tickets.length})',
                   style:const TextStyle(fontFamily:'Inter',
                     fontSize:20,fontWeight:FontWeight.w600,color:AppColors.dark)),
                 const SizedBox(height:10),
@@ -125,10 +125,10 @@ class _HelpSupportState extends State<HelpSupportScreen> {
                     style:TextStyle(color:AppColors.placeholder)),
                 for(final ticket in tickets)
                   Card(margin:const EdgeInsets.only(bottom:12),child:ListTile(
-                    key:Key('m22-ticket-'+ticket.id.toString()),
+                    key:Key('m22-ticket-${ticket.id}'),
                     title:Text(ticket.subject,maxLines:1,
                       overflow:TextOverflow.ellipsis),
-                    subtitle:Text(ticket.reference+' · '+ticket.status),
+                    subtitle:Text('${ticket.reference} · ${ticket.status}'),
                     trailing:const Icon(Icons.chevron_right),
                     onTap:()=>openTicket(ticket))),
               ],
@@ -294,9 +294,9 @@ class _TicketDetailState extends State<SupportTicketDetailsScreen> {
           padding:const EdgeInsets.all(20),children:[
             if(loading)const Center(child:CircularProgressIndicator())
             else if(error!=null && data==null)
-              TextButton(onPressed:refresh,child:Text(error!+' Retry'))
+              TextButton(onPressed:refresh,child:Text('${error!} Retry'))
             else if(data!=null)...[
-              Text(data!.ticket.reference+' · '+data!.ticket.status,
+              Text('${data!.ticket.reference} · ${data!.ticket.status}',
                 style:const TextStyle(color:AppColors.primary)),
               const SizedBox(height:12),
               Text(data!.ticket.subject,style:const TextStyle(

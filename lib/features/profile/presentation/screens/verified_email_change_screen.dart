@@ -45,9 +45,11 @@ class _EmailChangeState extends State<VerifiedEmailChangeScreen> {
           (_) => false);
       }
     } catch (_) {
-      if(mounted) setState(() => error=challenge==null
-        ? 'Unable to start verification. Check your password.'
-        : 'Verification code invalid or expired.');
+      if(mounted) {
+        setState(() => error=challenge==null
+          ? 'Unable to start verification. Check your password.'
+          : 'Verification code invalid or expired.');
+      }
     } finally {
       if(mounted) setState(() => saving=false);
     }
@@ -60,7 +62,7 @@ class _EmailChangeState extends State<VerifiedEmailChangeScreen> {
       Expanded(child:Center(child:ConstrainedBox(
         constraints:const BoxConstraints(maxWidth:720),
         child:ListView(padding:const EdgeInsets.all(20),children:[
-          Text('New email: '+widget.newEmail,
+          Text('New email: ${widget.newEmail}',
             style:const TextStyle(fontFamily:'Inter',color:AppColors.dark)),
           const SizedBox(height:14),
           Text(challenge==null

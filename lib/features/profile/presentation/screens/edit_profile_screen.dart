@@ -102,9 +102,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     try {
       if (widget.pickPhotoBytes != null) {
         final bytes = await widget.pickPhotoBytes!();
-        if (mounted && bytes != null) setState(() {
-          _photo = bytes; _photoChanged = true; _photoRemoved = false;
-        });
+        if (mounted && bytes != null) {
+          setState(() {
+            _photo = bytes; _photoChanged = true; _photoRemoved = false;
+          });
+        }
         return;
       }
       final file = await (widget.imagePicker ?? ImagePicker()).pickImage(
@@ -114,9 +116,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       );
       if (file == null) return;
       final bytes = await file.readAsBytes();
-      if (mounted) setState(() {
-        _photo = bytes; _photoChanged = true; _photoRemoved = false;
-      });
+      if (mounted) {
+        setState(() {
+          _photo = bytes; _photoChanged = true; _photoRemoved = false;
+        });
+      }
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
