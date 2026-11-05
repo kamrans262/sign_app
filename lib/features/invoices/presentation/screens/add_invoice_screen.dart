@@ -256,8 +256,7 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
           }
           return;
         }
-        final value=await (_repository as RemoteInvoiceRepository)
-            .availableDeposits(id);
+        final value=await _repository.availableDeposits(id);
         if(mounted&&_job?.id==jobId){
           setState(()=>_depositPaidMinor=value);
         }
