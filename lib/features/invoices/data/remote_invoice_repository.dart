@@ -353,7 +353,7 @@ class RemoteInvoiceRepository extends InvoiceRepository {
           now.day.toString().padLeft(2,'0'),
         ].join('-'),
         'reference_number':'Manual payment confirmed in app',
-        'request_key':'invoice-paid-${_id(identifier)}-$due',
+        'request_key':'invoice-paid-${_id(identifier)}-$due-${before.history.length}',
       }));
     _check(company);
     if(_map(response['invoice'])['status']!='paid'){
