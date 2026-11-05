@@ -1,0 +1,34 @@
+name: M19 Stage 1 Flutter Equipment Loans
+on:
+  push:
+    branches: [feature/m12-site-reports-meeting-minutes-2026-11-04]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: sign2digital-m19-flutter-stage1
+  cancel-in-progress: true
+jobs:
+  equipment-loans:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Dart static analyzer for equipment and loan screens
+        run: |
+          dart analyze --no-fatal-warnings lib/features/equipment
+          dart analyze --no-fatal-warnings test/features/equipment
+      - name: M19 equipment loan integration tests
+        run: |
+          timeout --signal=TERM --kill-after=10s 210s flutter test --no-pub --concurrency=2 --timeout=60s --reporter=expanded test/features/equipment/m19_equipment_loan_integration_test.dart
+      - name: Original Equipment UI and layout acceptance
+        run: |
+          timeout --signal=TERM --kill-after=10s 210s flutter test --no-pub --concurrency=2 --timeout=60s --reporter=expanded test/features/equipment/equipment_module_test.dart
+      - name: Prior module Flutter regressions
+        run: |
+          timeout --signal=TERM --kill-after=10s 240s flutter test --no-pub --concurrency=2 --timeout=60s --reporter=expanded test/features/documents/m18_issued_document_repository_test.dart test/features/deposits test/features/invoices
