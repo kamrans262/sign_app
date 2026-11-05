@@ -75,5 +75,7 @@
 	<string>Read the contacts you select for review before importing them into your Sign2Digital company.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Choose job photos from your photo library.</string>
+	<key>FirebaseMessagingInstallationIdEnabled</key>
+	<true/>
 </dict>
 </plist>

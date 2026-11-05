@@ -12,7 +12,7 @@ import '../../auth/data/mobile_auth_repository.dart';
 import '../data/m20_push_api.dart';
 
 /// M20 Stage 2: one background-safe device registration coordinator. Never
-/// stores the registration token in preferences or logs, and never requests
+/// stores a Firebase Installation ID (FID) in preferences or logs, and never requests
 /// OS permission before the signed-in user explicitly enables push.
 class M20PushCoordinator with WidgetsBindingObserver {
   M20PushCoordinator({M20PushApi? api}) : _api = api ?? M20PushApi.shared;
@@ -42,13 +42,13 @@ class M20PushCoordinator with WidgetsBindingObserver {
       defaultTargetPlatform == TargetPlatform.iOS ? 'ios' : 'android';
 
   void attach({VoidCallback? openInbox}) {
-    if (openInbox != null) _openInbox = openInbox;
-    if (!_initialized || _started) return;
+    if (openInbox != null) { _openInbox = openInbox; }
+    if (!_initialized || _started) { return; }
     _started = true;
     WidgetsBinding.instance.addObserver(this);
     ActiveCompanySession.selected.addListener(_companyChanged);
-    _refreshSubscription = FirebaseMessaging.instance.onTokenRefresh.listen(
-      (token) { unawaited(_registerIfEnabled(token)); },
+    _refreshSubscription = FirebaseMessaging.instance.onRegistered.listen(
+      (fid) { unawaited(_registerIfEnabled(fid)); },
       onError: (Object _) {},
     );
     _messageSubscription = FirebaseMessaging.onMessage.listen((_) {
@@ -58,36 +58,36 @@ class M20PushCoordinator with WidgetsBindingObserver {
       _onOpened(message);
     });
     unawaited(FirebaseMessaging.instance.getInitialMessage().then((message) {
-      if (message != null) _onOpened(message);
+      if (message != null) { _onOpened(message); }
     }).catchError((Object _) {}));
     _companyChanged();
   }
 
   void _onOpened(RemoteMessage message) {
     final company = int.tryParse(message.data['company_id'] ?? '');
-    if (company == null || company < 1) return;
+    if (company == null || company < 1) { return; }
     _pendingOpenCompany = company;
     _tryOpen();
   }
 
   void _tryOpen() {
     if (_pendingOpenCompany != ActiveCompanySession.companyId ||
-        !MobileAuthRepository.shared.isSignedIn || _openInbox == null) return;
+        !MobileAuthRepository.shared.isSignedIn || _openInbox == null) { return; }
     _pendingOpenCompany = null;
     // Navigate only to our authenticated inbox, never directly to an
     // unvalidated record from a push data payload.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (navigatorKey.currentState != null) _openInbox?.call();
+      if (navigatorKey.currentState != null) { _openInbox?.call(); }
     });
   }
 
   void _companyChanged() {
-    if (!MobileAuthRepository.shared.isSignedIn) return;
+    if (!MobileAuthRepository.shared.isSignedIn) { return; }
     _tryOpen();
     unawaited(syncRegistration());
   }
 
-  /// Resume/reselect can restore an expired Firebase token or APNs mapping.
+  /// Resume/reselect can restore a rotated Firebase installation or APNs mapping.
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
@@ -106,37 +106,49 @@ class M20PushCoordinator with WidgetsBindingObserver {
 
   Future<String> _installationId() async {
     final existing = await _storage.read(key: _installationKey);
-    if (existing != null && existing.length == 36) return existing;
+    if (existing != null && existing.length == 36) { return existing; }
     final id = _uuid();
     await _storage.write(key: _installationKey, value: id);
     return id;
   }
 
-  Future<String?> _fcmToken() async {
-    if (!_initialized) return null;
+  Future<String?> _currentFid() async {
+    if (!_initialized) { return null; }
     if (defaultTargetPlatform == TargetPlatform.iOS) {
-      // iOS requires APNs to finish registration before getToken().
+      // iOS requires APNs to be ready before Firebase Messaging registration.
       final apns = await FirebaseMessaging.instance.getAPNSToken();
-      if (apns == null || apns.isEmpty) return null;
+      if (apns == null || apns.isEmpty) { return null; }
     }
-    return FirebaseMessaging.instance.getToken();
+    // 17.x emits the FID asynchronously through onRegistered.
+    final received = Completer<String?>();
+    final subscription = FirebaseMessaging.instance.onRegistered.listen((fid) {
+      if (!received.isCompleted) { received.complete(fid); }
+    });
+    try {
+      await FirebaseMessaging.instance.register();
+      return await received.future.timeout(
+        const Duration(seconds: 15), onTimeout: () => null,
+      );
+    } finally {
+      await subscription.cancel();
+    }
   }
 
-  Future<void> _registerIfEnabled(String token) async {
+  Future<void> _registerIfEnabled(String fid) async {
     if (_registering || !MobileAuthRepository.shared.isSignedIn ||
-        ActiveCompanySession.companyId == null || !_initialized) return;
+        ActiveCompanySession.companyId == null || !_initialized) { return; }
     _registering = true;
     try {
       final company = ActiveCompanySession.companyId;
       final preferences = await _api.preferences();
       if (!preferences.pushEnabled || !preferences.pushAvailable ||
-          company != ActiveCompanySession.companyId) return;
+          company != ActiveCompanySession.companyId) { return; }
       final settings = await FirebaseMessaging.instance.getNotificationSettings();
       if (settings.authorizationStatus != AuthorizationStatus.authorized &&
-          settings.authorizationStatus != AuthorizationStatus.provisional) return;
-      if (token.isNotEmpty) {
+          settings.authorizationStatus != AuthorizationStatus.provisional) { return; }
+      if (fid.isNotEmpty) {
         await _api.register(installationId: await _installationId(),
-            platform: _platform, token: token);
+            platform: _platform, fid: fid);
       }
     } catch (_) {
       // Push setup must never interrupt existing authenticated workflows.
@@ -147,15 +159,14 @@ class M20PushCoordinator with WidgetsBindingObserver {
 
   Future<void> syncRegistration() async {
     if (!_initialized || !MobileAuthRepository.shared.isSignedIn ||
-        ActiveCompanySession.companyId == null) return;
+        ActiveCompanySession.companyId == null) { return; }
     try {
       final preferences = await _api.preferences();
-      if (!preferences.pushEnabled || !preferences.pushAvailable) return;
+      if (!preferences.pushEnabled || !preferences.pushAvailable) { return; }
       final settings = await FirebaseMessaging.instance.getNotificationSettings();
       if (settings.authorizationStatus != AuthorizationStatus.authorized &&
-          settings.authorizationStatus != AuthorizationStatus.provisional) return;
-      final token = await _fcmToken();
-      if (token != null) await _registerIfEnabled(token);
+          settings.authorizationStatus != AuthorizationStatus.provisional) { return; }
+      await FirebaseMessaging.instance.register(); // onRegistered syncs FID
     } catch (_) {}
   }
 
@@ -174,12 +185,12 @@ class M20PushCoordinator with WidgetsBindingObserver {
       throw StateError('Notification permission was not granted.');
     }
     final company = ActiveCompanySession.companyId;
-    final token = await _fcmToken();
-    if (token == null || token.isEmpty || company == null) {
+    final fid = await _currentFid();
+    if (fid == null || fid.isEmpty || company == null) {
       throw StateError('Push device registration is not ready.');
     }
     await _api.register(installationId: await _installationId(),
-        platform: _platform, token: token);
+        platform: _platform, fid: fid);
     if (company != ActiveCompanySession.companyId) {
       throw StateError('Company changed while enabling notifications.');
     }
@@ -190,10 +201,10 @@ class M20PushCoordinator with WidgetsBindingObserver {
       _api.update(preferences, pushEnabled: false);
 
   Future<void> revokeBeforeLogout() async {
-    if (!_initialized || !MobileAuthRepository.shared.isSignedIn) return;
+    if (!_initialized || !MobileAuthRepository.shared.isSignedIn) { return; }
     try {
       final id = await _storage.read(key: _installationKey);
-      if (id != null) await _api.revoke(installationId: id);
+      if (id != null) { await _api.revoke(installationId: id); }
     } catch (_) {
       // Logout must remain available offline; this device's next login will
       // revoke registrations for previous users with the same installation.

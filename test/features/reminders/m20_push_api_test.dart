@@ -50,7 +50,7 @@ void main() {
     expect(current.pushAvailable, true);
     expect(current.locale, 'fr');
     await api.register(installationId: '56c74f2a-d7f7-4d34-b7cb-9e17f7d319f2',
-      platform: 'android', token: 'FCM_PRIVATE_TOKEN_DO_NOT_LOG');
+      platform: 'android', fid: 'FIREBASE_INSTALLATION_ID_PRIVATE');
     final next = await api.update(current, pushEnabled: true);
     expect(next.pushEnabled, true);
     await api.revoke(installationId: '56c74f2a-d7f7-4d34-b7cb-9e17f7d319f2');
@@ -63,7 +63,7 @@ void main() {
     expect(requests[2].headers['x-company-id'], '17');
     final payload = jsonDecode(requests[1].body) as Map<String, dynamic>;
     expect(payload['platform'], 'android');
-    expect(payload['token'], 'FCM_PRIVATE_TOKEN_DO_NOT_LOG');
+    expect(payload['fid'], 'FIREBASE_INSTALLATION_ID_PRIVATE');
     expect(jsonDecode(requests[2].body)['push_enabled'], true);
     expect(requests[3].headers.containsKey('x-company-id'), false);
     client.close();
@@ -84,7 +84,7 @@ void main() {
     ActiveCompanySession.clear();
     await expectLater(api.preferences(), throwsA(isA<SignApiException>()));
     await expectLater(api.register(installationId: '56c74f2a-d7f7-4d34-b7cb-9e17f7d319f2',
-      platform: 'ios', token: 'fcm'), throwsA(isA<SignApiException>()));
+      platform: 'ios', fid: 'firebase-installation-id'), throwsA(isA<SignApiException>()));
     expect(calls, 0);
     client.close();
   });

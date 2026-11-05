@@ -84,14 +84,14 @@ class M20PushApi {
   Future<void> register({
     required String installationId,
     required String platform,
-    required String token,
+    required String fid,
   }) async {
     final company = _company();
     final response = await _api.post('/api/v1/push-devices',
         companyScoped: true, data: {
           'installation_id': installationId,
           'platform': platform,
-          'token': token,
+          'fid': fid,
         });
     _check(company);
     if (_data(response)['registered'] != true) {
