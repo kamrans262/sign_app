@@ -7,6 +7,8 @@ import '../../../../core/widgets/sign2digital_info_banner.dart';
 import '../../../../core/widgets/sign2digital_input_field.dart';
 import '../../../../core/widgets/sign2digital_outlined_button.dart';
 import '../../data/security_access_repository.dart';
+import '../../data/remote_security_access_repository.dart';
+import 'change_account_password_screen.dart';
 import '../widgets/profile_notification_row.dart';
 import '../widgets/security_session_card.dart';
 
@@ -388,7 +390,7 @@ class _SecurityAccessScreenState extends State<SecurityAccessScreen> {
                   verticalPadding: 10,
                   horizontalPadding: 10,
                   title: snapshot.twoFactorEnabled == null
-                      ? '2FA status unavailable'
+                      ? 'Additional authenticator not configured'
                       : isTwoFactorOn
                           ? '2 FA is enabled'
                           : '2 FA is disabled',
@@ -396,7 +398,7 @@ class _SecurityAccessScreenState extends State<SecurityAccessScreen> {
                   textColor: AppColors.placeholder,
                   fontSize: 13,
                   message: snapshot.twoFactorEnabled == null
-                      ? 'Connect your authentication service to check security.'
+                      ? 'Sign-in already requires password and email OTP. A separate authenticator is not yet enrolled.'
                       : isTwoFactorOn
                           ? 'Your account is protected with two factor authentication'
                           : 'Enable verified two factor authentication for extra security',
@@ -411,6 +413,17 @@ class _SecurityAccessScreenState extends State<SecurityAccessScreen> {
                       fontSize: 11,
                       color: AppColors.placeholder,
                     ),
+                  ),
+                ],
+                if (widget.repository is RemoteSecurityAccessRepository) ...[
+                  const SizedBox(height: 12),
+                  TextButton.icon(
+                    key: const Key('m22-change-password'),
+                    onPressed: _busy ? null : () => Navigator.of(context).push<void>(
+                      MaterialPageRoute<void>(builder: (_) => ChangeAccountPasswordScreen(
+                        repository: widget.repository as RemoteSecurityAccessRepository))),
+                    icon: const Icon(Icons.lock_reset_outlined),
+                    label: const Text('Change Password'),
                   ),
                 ],
                 const SizedBox(height: 20),

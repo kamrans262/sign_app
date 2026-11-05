@@ -14,6 +14,9 @@ import '../../../auth/presentation/screens/mobile_auth_gateway.dart';
 import '../../../auth/domain/account_profile.dart';
 import '../../../quotes/presentation/widgets/sign2digital_quote_shadow_panel.dart';
 import '../widgets/profile_settings_action_card.dart';
+import '../../data/remote_security_access_repository.dart';
+import '../../data/remote_profile_preferences_repository.dart';
+import 'help_support_screen.dart';
 import '../../data/profile_preferences_repository.dart';
 import '../../data/security_access_repository.dart';
 import '../../data/app_settings_repository.dart';
@@ -203,7 +206,9 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                       } else {
                         _open(ProfilePreferencesScreen(
                           repository: widget.preferencesRepository ??
-                              LocalProfilePreferencesRepository.shared,
+                              (MobileAuthRepository.shared.isSignedIn
+                                  ? RemoteProfilePreferencesRepository()
+                                  : LocalProfilePreferencesRepository.shared),
                           onNavigationSelected: _navigate,
                         ));
                       }
@@ -222,7 +227,9 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                       } else {
                         _open(SecurityAccessScreen(
                           repository: widget.securityRepository ??
-                              const PreviewSecurityAccessRepository(),
+                              (MobileAuthRepository.shared.isSignedIn
+                                  ? RemoteSecurityAccessRepository()
+                                  : const PreviewSecurityAccessRepository()),
                           onNavigationSelected: _navigate,
                         ));
                       }
@@ -250,6 +257,14 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                     },
                   ),
                   if (MobileAuthRepository.shared.isSignedIn) ...[
+                    const SizedBox(height: 20),
+                    ProfileSettingsActionCard(
+                      key: const Key('profile-action-help-support'),
+                      icon: Icons.help_outline_rounded,
+                      title: 'Help & Support',
+                      subtitle: 'FAQs, support tickets and report a problem',
+                      onTap: () => _open(const HelpSupportScreen()),
+                    ),
                     const SizedBox(height: 20),
                     ProfileSettingsActionCard(
                       key: const Key('profile-action-sign-out'),
