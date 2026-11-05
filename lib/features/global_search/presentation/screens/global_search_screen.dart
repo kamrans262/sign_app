@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/services/active_company_session.dart';
 import '../../../../core/widgets/sign2digital_dashboard_header.dart';
 import '../../../../core/widgets/sign2digital_entry_list_card.dart';
 import '../../../../core/widgets/sign2digital_search_field.dart';
@@ -25,6 +28,9 @@ import '../../../invoices/presentation/screens/invoice_details_screen.dart';
 import '../../../jobs/domain/job_model.dart';
 import '../../../jobs/presentation/screens/job_details_screen.dart';
 import '../../data/global_search_source.dart';
+import '../../data/remote_global_search_provider.dart';
+import '../../data/global_search_navigation.dart';
+import '../../data/global_search_filter_picker.dart';
 
 /// Existing listing widgets adapted to search every connected UI repository.
 /// Screen has no bottom bar, as in the Search Across the App Figma design.
@@ -53,6 +59,11 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
   String? _error;
   bool _loading = true, _seeAll = false;
   int _loadSequence = 0;
+  int _remoteTotal = 0, _page = 1;
+  bool _hasMore = false, _paging = false;
+  Timer? _debounce;
+  GlobalSearchFilters _filters = const GlobalSearchFilters();
+  bool get _isRemote => _provider is RemoteGlobalSearchProvider;
 
   static const _tabs = [
     'All', 'Jobs', 'Clients', 'Documents', 'Invoices', 'More',
@@ -61,7 +72,9 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
   @override
   void initState() {
     super.initState();
-    _provider = widget.provider ?? ExistingGlobalSearchProvider();
+    // No demo records in the production Global Search path.
+    _provider = widget.provider ?? RemoteGlobalSearchProvider();
+    if (_isRemote) ActiveCompanySession.selected.addListener(_companyChanged);
     _search = TextEditingController(text: widget.initialQuery);
     _reload();
   }
@@ -69,48 +82,117 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
   @override
   void dispose() {
     ++_loadSequence; // Invalidates any late future completion.
+    _debounce?.cancel();
+    if (_isRemote) ActiveCompanySession.selected.removeListener(_companyChanged);
     _search.dispose();
     super.dispose();
   }
 
+  void _companyChanged() {
+    if (!mounted) return;
+    ++_loadSequence;
+    _debounce?.cancel();
+    setState(() {
+      _records = const [];
+      _filters = const GlobalSearchFilters();
+      _remoteTotal = 0;
+      _hasMore = false;
+    });
+    _reload();
+  }
+
   Future<void> _reload() async {
     final request = ++_loadSequence;
-    if (mounted) {
-      setState(() { _loading = true; _error = null; });
-    }
+    setState(() { _loading = true; _error = null; _seeAll = false; });
     try {
-      final all = await _provider.loadAll();
-      if (!mounted || request != _loadSequence) return;
-      setState(() {
-        _records = all;
-        _loading = false;
-      });
+      if (_provider is RemoteGlobalSearchProvider) {
+        final next = await (_provider as RemoteGlobalSearchProvider).search(
+          query: _search.text, tab: _tab, page: 1, filters: _filters);
+        if (!mounted || request != _loadSequence) return;
+        setState(() {
+          _records = next.records;
+          _remoteTotal = next.total;
+          _page = next.page;
+          _hasMore = next.hasMore;
+          _loading = false;
+        });
+      } else {
+        final all = await _provider.loadAll();
+        if (!mounted || request != _loadSequence) return;
+        setState(() { _records = all; _loading = false; });
+      }
     } catch (_) {
       if (!mounted || request != _loadSequence) return;
       setState(() {
+        _records = const [];
+        _remoteTotal = 0;
+        _hasMore = false;
         _loading = false;
         _error = 'Unable to load search results';
       });
     }
   }
 
-  List<GlobalSearchResult> get _matches => _records.where((entry) =>
-    entry.inTab(_tab) && entry.matches(_search.text)).toList();
+  Future<void> _loadMore() async {
+    if (!_isRemote || _loading || _paging || !_hasMore) return;
+    final request = _loadSequence;
+    setState(() => _paging = true);
+    try {
+      final next = await (_provider as RemoteGlobalSearchProvider).search(
+        query: _search.text, tab: _tab, page: _page + 1,
+        filters: _filters);
+      if (!mounted || request != _loadSequence) return;
+      setState(() {
+        _records = [..._records, ...next.records];
+        _remoteTotal = next.total;
+        _page = next.page;
+        _hasMore = next.hasMore;
+      });
+    } catch (_) {
+      if (mounted && request == _loadSequence) {
+        _notice('Unable to load more records. Please retry.');
+      }
+    } finally {
+      if (mounted) setState(() => _paging = false);
+    }
+  }
+
+  List<GlobalSearchResult> get _matches => _isRemote ? _records :
+      _records.where((entry) =>
+        entry.inTab(_tab) && entry.matches(_search.text)).toList();
 
   void _onQueryChanged(String _) {
     setState(() => _seeAll = false);
+    if (!_isRemote) return;
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 350), _reload);
   }
 
   void _selectTab(int index) {
     FocusManager.instance.primaryFocus?.unfocus();
+    _debounce?.cancel();
     setState(() {
       _tab = GlobalSearchTab.values[index];
       _seeAll = false;
     });
+    if (_isRemote) _reload();
+  }
+
+  Future<void> _chooseFilters() async {
+    try {
+      final selected = await GlobalSearchFilterPicker.show(context, _filters);
+      if (!mounted || selected == null) return;
+      setState(() => _filters = selected);
+      _reload();
+    } catch (_) {
+      _notice('Unable to apply filters. Check your values and company.');
+    }
   }
 
   IconData _icon(GlobalSearchCategory category) => switch (category) {
     GlobalSearchCategory.jobs => Icons.account_balance_outlined,
+    GlobalSearchCategory.quotes => Icons.request_quote_outlined,
+    GlobalSearchCategory.generalDocuments => Icons.description_outlined,
     GlobalSearchCategory.clients => Icons.people_outline,
     GlobalSearchCategory.documents => Icons.description_outlined,
     GlobalSearchCategory.invoices => Icons.receipt_long_outlined,
@@ -132,6 +214,17 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
     FocusManager.instance.primaryFocus?.unfocus();
     if (widget.onResultTap != null) {
       widget.onResultTap!(entry);
+      return;
+    }
+
+    if (entry.record case final GlobalSearchHit hit) {
+      try {
+        final destination = await GlobalSearchNavigation.resolve(hit);
+        if (!mounted) return;
+        await Navigator.of(context).push<void>(
+          MaterialPageRoute<void>(builder: (_) => destination));
+        if (mounted) _reload();
+      } catch (_) { _notice('Unable to open this record.'); }
       return;
     }
 
@@ -191,7 +284,9 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
   Widget build(BuildContext context) {
     final matching = _matches;
     final limit = widget.previewLimit > 0 ? widget.previewLimit : 10;
-    final visible = _seeAll ? matching : matching.take(limit).toList();
+    final visible = _isRemote || _seeAll
+        ? matching : matching.take(limit).toList();
+    final total = _isRemote ? _remoteTotal : matching.length;
     return Scaffold(
       backgroundColor: AppColors.white,
       resizeToAvoidBottomInset: true,
@@ -217,6 +312,21 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
                       _reload();
                     },
                   ),
+                  if (_isRemote) ...[
+                    const SizedBox(height: 6),
+                    Row(children: [
+                      TextButton.icon(
+                        key: const Key('global-search-filters'),
+                        onPressed: _chooseFilters,
+                        icon: const Icon(Icons.tune_rounded, size: 18),
+                        label: Text(_filters.active ? 'Filters applied' : 'Filters'),
+                      ),
+                      const Spacer(),
+                      Text('Company #\${ActiveCompanySession.companyId ?? 0}',
+                        style: const TextStyle(fontFamily: 'Inter', fontSize: 12,
+                          color: AppColors.placeholder)),
+                    ]),
+                  ],
                   const SizedBox(height: 20),
                   Stack(children: [
                     const Positioned(left: 0, right: 0, bottom: 0,
@@ -237,7 +347,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Flexible(child: Text(
-                      'Results (${_loading ? '…' : matching.length})',
+                      'Results (${_loading ? '…' : total})',
                       key: const Key('global-search-count'),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -250,8 +360,12 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
                     TextButton(
                       key: const Key('global-search-see-all'),
                       onPressed: _loading || _error != null
-                          ? null : () => setState(() => _seeAll = !_seeAll),
-                      child: Text(_seeAll ? 'Show less' : 'See all',
+                          ? null : (_isRemote
+                            ? (_hasMore && !_paging ? _loadMore : null)
+                            : () => setState(() => _seeAll = !_seeAll)),
+                      child: Text(_isRemote
+                        ? (_paging ? 'Loading…' : (_hasMore ? 'Load more' : 'All shown'))
+                        : (_seeAll ? 'Show less' : 'See all'),
                         style: const TextStyle(fontFamily: 'Inter',
                           fontSize: 14, fontWeight: FontWeight.w500,
                           color: AppColors.primary)),
