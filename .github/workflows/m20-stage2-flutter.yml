@@ -54,5 +54,10 @@ jobs:
           android = Path("android/app/src/main/AndroidManifest.xml").read_text()
           assert "firebase_messaging_installation_id_enabled" in android
           assert "android.permission.POST_NOTIFICATIONS" in android
+          settings = Path("android/settings.gradle.kts").read_text()
+          module = Path("android/app/build.gradle.kts").read_text()
+          assert 'id("com.google.gms.google-services") version "4.5.0" apply false' in settings
+          assert 'id("com.google.gms.google-services")' in module
+          assert "minSdk = maxOf(24, flutter.minSdkVersion)" in module
           print("M20 Android/iOS push project capabilities validated")
           PY

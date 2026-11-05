@@ -22,7 +22,7 @@ optional bootstrap while project-generated options are not yet committed. Xcode 
 are now configured in the development branch. Apple Developer provisioning and an APNs
 .p8 key upload are still required before real iOS push testing. Native iOS Firebase
 initialization requires GoogleService-Info.plist or explicit generated options.
-The FlutterFire-generated Android google-services.json must be present at build time.
+The Android Google Services Gradle plugin is enabled in this branch. The FlutterFire-generated Android google-services.json must be present at build time. Minimum supported Android API is 24 due to Firebase Messaging 17.
 
 Never put the Firebase service-account JSON in this Flutter repository.
 
@@ -76,3 +76,12 @@ Remote Notifications background capability plus correct signing/provisioning.
   Finalize your production bundle ID BEFORE registering a production app in Firebase.
 - No live push or device delivery can be claimed without the private server credentials,
   user opt-in, real installed application, and (iOS) an APNs authentication key.
+
+## Windows local checkout safety
+
+The FlutterFire-generated files on the Windows workstation are currently untracked,
+and there are local tracked Gradle/pubspec/main edits. Do not run `git reset --hard`
+or an unconditional `git stash pop`: retain a named stash, fast-forward the
+M20 branch, and restore only the generated Firebase files from the stash's
+third (untracked) parent. The committed Gradle and Flutter implementation
+takes precedence over stale local edits.
