@@ -1,0 +1,33 @@
+name: M16 Stage 2 Flutter Deposit Retry and Regression
+on:
+  push:
+    branches: [feature/m12-site-reports-meeting-minutes-2026-11-04]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: sign2digital-m16-stage2-flutter
+  cancel-in-progress: true
+jobs:
+  deposit-retry-and-tenant-isolation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Analyze existing Deposit UI and safe-retry integration
+        run: |
+          dart analyze lib/features/deposits lib/features/jobs/presentation/screens/job_details_screen.dart test/features/deposits
+      - name: Verify request keys, voice safety and company switching
+        run: |
+          timeout --signal=TERM --kill-after=10s 180s flutter test --no-pub --concurrency=2 --timeout=60s --reporter=expanded test/features/deposits/m16_remote_deposit_repository_test.dart test/features/deposits/m16_remote_deposit_voice_test.dart
+      - name: Verify existing Deposit screens at multiple device sizes
+        run: |
+          timeout --signal=TERM --kill-after=10s 220s flutter test --no-pub --concurrency=2 --timeout=60s --reporter=expanded test/features/deposits/deposits_screen_test.dart test/features/deposits/add_deposit_screen_test.dart test/features/deposits/deposit_details_screen_test.dart
+      - name: Verify job financial cards, M15 labour and M14 purchase regressions
+        run: |
+          timeout --signal=TERM --kill-after=10s 190s flutter test --no-pub --concurrency=2 --timeout=60s --reporter=expanded test/features/jobs/job_details_screen_test.dart test/features/labour/m15_remote_labour_repository_test.dart test/features/expenses/m14_remote_expense_repository_test.dart
