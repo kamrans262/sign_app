@@ -13,6 +13,8 @@ import '../../../documents/presentation/widgets/sign2digital_document_history.da
 import '../../../quotes/domain/quote_review_models.dart';
 import '../../../quotes/presentation/widgets/sign2digital_document_items_table.dart';
 import '../../domain/invoice_record.dart';
+import '../../data/remote_invoice_repository.dart';
+import '../../../jobs/domain/job_model.dart';
 import '../../services/invoice_pdf_service.dart';
 import 'add_invoice_screen.dart';
 import 'invoice_preview_screen.dart';
@@ -302,13 +304,48 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
     );
   }
 
+  Future<void> _approve() async {
+    if(_busy||_record.demoOnly||_record.lifecycleStatus!='draft')return;
+    final confirmed=await showDialog<bool>(
+      context:context,
+      builder:(dialog)=>AlertDialog(
+        title:const Text('Approve Invoice?'),
+        content:Text('Approve and lock invoice ${_record.number}? '
+          'This confirms the reviewed invoice; no payment will be charged '
+          'and no customer email will be sent.'),
+        actions:[
+          TextButton(onPressed:()=>Navigator.of(dialog).pop(false),
+            child:const Text('Cancel')),
+          TextButton(key:const Key('invoice-approve-confirm'),
+            onPressed:()=>Navigator.of(dialog).pop(true),
+            child:const Text('Approve Invoice')),
+        ],
+      ),
+    );
+    if(confirmed!=true||!mounted)return;
+    setState(()=>_busy=true);
+    try{
+      final approved=await widget.repository.approveInvoice(_record.id);
+      if(!mounted)return;
+      if(approved.id!=_record.id||approved.lifecycleStatus!='approved'){
+        throw StateError('Invoice approval was not verified.');
+      }
+      setState(()=>_record=approved);
+      _notice('Invoice approved. Delivery is a separate action.');
+    }catch(_){
+      _notice('Unable to approve. Refresh invoice and try again.');
+    }finally{
+      if(mounted)setState(()=>_busy=false);
+    }
+  }
+
   Future<void> _markPaid() async {
     if (_busy || !_record.status.canMarkPaid) { return; }
     final updated = await MarkInvoicePaidDialog.show(
       context, invoice: _record, repository: widget.repository);
     if (!mounted || updated == null) { return; }
     setState(() => _record = updated);
-    _notice('Invoice manually marked paid in local records.');
+    _notice('Manual payment recorded; no bank transaction initiated.');
   }
 
   Future<void> _pdf({required bool share}) async {
@@ -347,14 +384,26 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
 
   Future<void> _edit() async {
     if (_busy) { return; }
-    if (_record.status == InvoiceStatus.paid) {
-      _notice('Paid invoices cannot be edited.');
+    if (_record.status == InvoiceStatus.paid ||
+        (!_record.demoOnly&&_record.lifecycleStatus!='draft')) {
+      _notice('Approved invoices cannot be edited.');
       return;
     }
+    List<JobModel>? jobs;
+    if(widget.repository is RemoteInvoiceRepository){
+      try{
+        jobs=await (widget.repository as RemoteInvoiceRepository).jobs();
+      }catch(_){
+        _notice('Unable to load current jobs.');
+        return;
+      }
+    }
+    if(!mounted)return;
     final updated = await Navigator.of(context).push<InvoiceRecord>(
       MaterialPageRoute<InvoiceRecord>(
         builder: (_) => AddInvoiceScreen(
           initialInvoice: _record,
+          jobs:jobs,
           repository: widget.repository,
         ),
       ),
@@ -401,12 +450,14 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
         Expanded(child: Sign2DigitalOutlinedButton(
           key: const Key('invoice-details-download'),
           label: 'Download', primaryOutline: true,
-          enabled: !_busy, onPressed: () => _pdf(share: false))),
+          enabled: !_busy && _record.demoOnly,
+          onPressed: () => _pdf(share: false))),
         const SizedBox(width: 10),
         Expanded(child: Sign2DigitalOutlinedButton(
           key: const Key('invoice-details-send'),
           label: 'Send', primaryOutline: true,
-          enabled: !_busy, onPressed: () => _pdf(share: true))),
+          enabled: !_busy && _record.demoOnly,
+          onPressed: () => _pdf(share: true))),
       ]),
       const SizedBox(height: 15),
       IntrinsicHeight(
@@ -426,6 +477,16 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
           ],
         ),
       ),
+      if (!_record.demoOnly && _record.lifecycleStatus=='draft') ...[
+        const SizedBox(height:15),
+        FractionallySizedBox(
+          widthFactor:.5,
+          child:Sign2DigitalPrimaryButton(
+            key:const Key('invoice-details-approve'),
+            label:'Approve Invoice',
+            enabled:!_busy,onPressed:_approve),
+        ),
+      ],
       if (_record.status.canMarkPaid) ...[
         const SizedBox(height: 15),
         FractionallySizedBox(
