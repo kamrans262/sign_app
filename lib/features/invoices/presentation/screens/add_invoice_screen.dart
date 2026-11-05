@@ -157,6 +157,40 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
       SnackBar(content: Text(value)));
   }
 
+  Future<void> _chooseInvoiceItemAction() async {
+    final selected=await Sign2DigitalSelectionSheet.showCustom<String>(
+      title:'Invoice Items',
+      subtitle:'Add an item or import verified work.',
+      icon:Icons.receipt_long_outlined,
+      context:context,
+      builder:(sheet)=>SafeArea(child:Column(
+        mainAxisSize:MainAxisSize.min,
+        children:[
+          ListTile(
+            key:const Key('invoice-item-action-manual'),
+            title:const Text('Add Invoice Item'),
+            onTap:()=>Navigator.of(sheet).pop('manual'),
+          ),
+          ListTile(
+            key:const Key('invoice-item-action-import'),
+            title:const Text('Import Approved Work'),
+            onTap:()=>Navigator.of(sheet).pop('import'),
+          ),
+          ListTile(
+            key:const Key('invoice-item-action-type'),
+            title:Text(_invoiceType=='final'
+                ?'Type: Final Invoice':'Type: Deposit Invoice'),
+            onTap:()=>Navigator.of(sheet).pop('type'),
+          ),
+        ],
+      )),
+    );
+    if(!mounted)return;
+    if(selected=='manual')await _editItem();
+    if(selected=='import')await _chooseInvoiceSource();
+    if(selected=='type')await _chooseInvoiceType();
+  }
+
   Future<void> _chooseInvoiceType() async {
     final chosen=await Sign2DigitalSelectionSheet.showCustom<String>(
       title:'Invoice Type',
@@ -820,7 +854,8 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
       Align(alignment: Alignment.centerRight,
         child: TextButton.icon(
           key: const Key('invoice-add-item'),
-          onPressed: () => _editItem(),
+          onPressed: _repository is RemoteInvoiceRepository
+              ? _chooseInvoiceItemAction : () => _editItem(),
           icon: const Icon(Icons.add),
           label: const Text('Add item'),
         )),
@@ -881,16 +916,6 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
             Sign2DigitalAiVoiceButton(onPressed: _voice),
             const SizedBox(height: 20),
             Sign2DigitalSelectionField(
-              key:const Key('invoice-create-type'),
-              label:'Invoice Type',
-              hintText:'Final Invoice',
-              iconAsset:'assets/icons/description.svg',
-              value:_invoiceType=='final'?'Final Invoice':'Deposit Invoice',
-              onTap:_chooseInvoiceType,
-              trailing:const Icon(Icons.keyboard_arrow_down_rounded,
-                color:AppColors.secondaryText)),
-            const SizedBox(height: 20),
-            Sign2DigitalSelectionField(
               key: const Key('invoice-create-job'),
               label: 'Job / Project',
               hintText: _voiceJobHint ?? 'e.g, Site renovation',
@@ -899,17 +924,6 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
               trailing: const Icon(Icons.keyboard_arrow_down_rounded,
                 color: AppColors.secondaryText)),
             const SizedBox(height: 20),
-            if(_repository is RemoteInvoiceRepository) ...[
-              Sign2DigitalSelectionField(
-                key:const Key('invoice-create-import-source'),
-                label:'Approved Quote / Addendum / Completed Work',
-                hintText:'Import verified work items',
-                iconAsset:'assets/icons/description.svg',
-                onTap:_chooseInvoiceSource,
-                trailing:const Icon(Icons.keyboard_arrow_down_rounded,
-                  color:AppColors.secondaryText)),
-              const SizedBox(height:20),
-            ],
             Sign2DigitalInputField(
               key: const Key('invoice-create-client'),
               label: 'Client',
