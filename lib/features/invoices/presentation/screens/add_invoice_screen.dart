@@ -79,11 +79,14 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
   bool _saving = false, _voiceOpen = false;
   late final String _draftId;
   late String _invoiceType;
+  int? _sourceQuoteId;
+  List<int> _sourceAddendaIds=[];
+  int? _sourceVatBasisPoints;
   String? _error, _voiceJobHint;
 
   List<JobModel> get _jobs => widget.jobs ?? LabourDemoJobs.all;
-  int get _vatBasisPoints => widget.initialInvoice?.vatBasisPoints ??
-      widget.vatBasisPoints;
+  int get _vatBasisPoints => _sourceVatBasisPoints ??
+      widget.initialInvoice?.vatBasisPoints ?? widget.vatBasisPoints;
   int? get _subtotalMinor => _items.isEmpty ||
       _items.any((item) => !item.valid || item.totalMinor == null)
       ? null : _items.fold<int>(0, (sum, item) => sum + item.totalMinor!);
@@ -108,6 +111,8 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
     _draftId=initial?.id ??
         'local-invoice-${DateTime.now().microsecondsSinceEpoch}';
     _invoiceType=initial?.invoiceType??'final';
+    _sourceQuoteId=initial?.sourceQuoteId;
+    _sourceAddendaIds=[...?initial?.sourceAddendaIds];
     _iban.text = initial?.iban ?? widget.initialIban;
     _items.addAll(initial?.items ?? widget.initialItems);
     _number.text = initial?.number ??
@@ -176,10 +181,129 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
     if(chosen!=null&&mounted){
       setState((){
         _invoiceType=chosen;
-        if(chosen=='deposit')_depositPaidMinor=0;
+        if(chosen=='deposit'){
+          _depositPaidMinor=0;
+          _sourceAddendaIds=[];
+        }
       });
       final job=_job;
       if(job!=null&&chosen=='final')await _refreshDeposits(job.id);
+    }
+  }
+
+  Future<void> _chooseInvoiceSource() async {
+    final job=_job;
+    final remote=_repository;
+    if(job==null||remote is! RemoteInvoiceRepository){
+      _notice('Select a saved job to import verified work items.');
+      return;
+    }
+    final id=int.tryParse(job.id);
+    if(id==null)return;
+    Map<String,dynamic> result;
+    try{
+      result=await remote.sources(id);
+    }catch(_){
+      _notice('Unable to load approved invoice sources.');
+      return;
+    }
+    if(!mounted||_job?.id!=job.id)return;
+    final options=<Map<String,dynamic>>[];
+    for(final item in result['quotes'] as List){
+      if(item is Map)options.add(Map<String,dynamic>.from(item));
+    }
+    for(final item in result['addenda'] as List){
+      if(item is Map&&item['already_invoiced']!=true){
+        options.add(Map<String,dynamic>.from(item));
+      }
+    }
+    for(final item in result['completed_work'] as List){
+      if(item is Map){
+        final m=Map<String,dynamic>.from(item);
+        m['kind']='completed_work';
+        m['items']=[{
+          'description':m['description'],'quantity':1,
+          'unit_price_minor':null,
+        }];
+        options.add(m);
+      }
+    }
+    if(options.isEmpty){
+      _notice('No approved quotes, signed addenda or accepted work found.');
+      return;
+    }
+    final selected=await Sign2DigitalSelectionSheet.showCustom<Map<String,dynamic>>(
+      title:'Import Approved Work',
+      subtitle:'Only verified source descriptions and prices are offered.',
+      icon:Icons.receipt_long_outlined,
+      context:context,
+      isScrollControlled:true,
+      builder:(sheet)=>SafeArea(child:SizedBox(
+        height:MediaQuery.sizeOf(sheet).height*.55,
+        child:ListView(children:[
+          for(final item in options)
+            ListTile(
+              title:Text((item['number']??'Source').toString()),
+              subtitle:Text(item['kind']=='approved_quote'
+                  ?'Approved quote':item['kind']=='signed_addendum'
+                  ?'Signed addendum':'Completed work (price not provided)'),
+              onTap:()=>Navigator.of(sheet).pop(item),
+            ),
+        ]),
+      )),
+    );
+    if(selected==null||!mounted||_job?.id!=job.id)return;
+    if(_items.isNotEmpty){
+      final replace=await showDialog<bool>(
+        context:context,
+        builder:(dialog)=>AlertDialog(
+          title:const Text('Replace invoice items?'),
+          content:const Text('Current invoice line items will be replaced. '
+              'Review all amounts after importing.'),
+          actions:[
+            TextButton(onPressed:()=>Navigator.of(dialog).pop(false),
+              child:const Text('Cancel')),
+            TextButton(onPressed:()=>Navigator.of(dialog).pop(true),
+              child:const Text('Replace Items')),
+          ],
+        ),
+      );
+      if(replace!=true||!mounted)return;
+    }
+    final lines=<InvoiceLineItem>[];
+    final raw=selected['items'];
+    if(raw is List){
+      for(final item in raw){
+        if(item is! Map)continue;
+        final description=(item['description']??'').toString().trim();
+        final qty=item['quantity'] is int?item['quantity'] as int:1;
+        final price=item['unit_price_minor'];
+        if(description.isNotEmpty){
+          lines.add(InvoiceLineItem(
+            description:description.length>1000
+                ?description.substring(0,1000):description,
+            quantity:qty>0&&qty<=100000?qty:1,
+            unitPriceMinor:price is int&&price>=0?price:null,
+          ));
+        }
+      }
+    }
+    if(lines.isEmpty){
+      _notice('Source has no priced work items. Add invoice items manually.');
+      return;
+    }
+    setState((){
+      _items..clear()..addAll(lines);
+      final kind=selected['kind'];
+      _sourceQuoteId=kind=='approved_quote'?selected['id'] as int:null;
+      _sourceAddendaIds=kind=='signed_addendum'
+          ?[selected['id'] as int]:[];
+      final vat=selected['vat_basis_points'];
+      _sourceVatBasisPoints=vat is int?vat:null;
+      _error=null;
+    });
+    if(lines.any((x)=>x.unitPriceMinor==null)){
+      _notice('Some source prices are unavailable. Enter them before saving.');
     }
   }
 
@@ -225,6 +349,9 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
           _voiceJobHint = null;
           _error = null;
           _depositPaidMinor = 0;
+          _sourceQuoteId=null;
+          _sourceAddendaIds=[];
+          _sourceVatBasisPoints=null;
         });
         await _refreshDeposits(job.id);
       }
@@ -632,7 +759,8 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
         invoiceType:_invoiceType,
         lockVersion:initial?.lockVersion??0,
         lifecycleStatus:initial?.lifecycleStatus??'draft',
-        sourceQuoteId:initial?.sourceQuoteId,
+        sourceQuoteId:_sourceQuoteId,
+        sourceAddendaIds:_sourceAddendaIds,
       );
       if (initial == null) {
         await _repository.saveDraft(draft);
@@ -771,6 +899,17 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
               trailing: const Icon(Icons.keyboard_arrow_down_rounded,
                 color: AppColors.secondaryText)),
             const SizedBox(height: 20),
+            if(_repository is RemoteInvoiceRepository) ...[
+              Sign2DigitalSelectionField(
+                key:const Key('invoice-create-import-source'),
+                label:'Approved Quote / Addendum / Completed Work',
+                hintText:'Import verified work items',
+                iconAsset:'assets/icons/description.svg',
+                onTap:_chooseInvoiceSource,
+                trailing:const Icon(Icons.keyboard_arrow_down_rounded,
+                  color:AppColors.secondaryText)),
+              const SizedBox(height:20),
+            ],
             Sign2DigitalInputField(
               key: const Key('invoice-create-client'),
               label: 'Client',
