@@ -24,7 +24,7 @@ jobs:
           dart analyze lib/features/deposits lib/features/jobs/presentation/screens/job_details_screen.dart test/features/deposits
       - name: API contracts, security and tenant isolation
         run: |
-          timeout --signal=TERM --kill-after=10s 150s flutter test --no-pub --concurrency=2 --timeout=50s --reporter=expanded test/features/deposits/m16_remote_deposit_repository_test.dart
+          timeout --signal=TERM --kill-after=10s 150s flutter test --no-pub --concurrency=2 --timeout=50s --reporter=expanded test/features/deposits/m16_remote_deposit_repository_test.dart test/features/deposits/m16_remote_deposit_voice_test.dart
       - name: Existing deposit screens and responsive behaviour
         run: |
           timeout --signal=TERM --kill-after=10s 200s flutter test --no-pub --concurrency=2 --timeout=50s --reporter=expanded test/features/deposits/deposits_screen_test.dart test/features/deposits/add_deposit_screen_test.dart test/features/deposits/deposit_details_screen_test.dart
