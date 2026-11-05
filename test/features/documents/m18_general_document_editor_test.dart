@@ -73,6 +73,9 @@ void main(){
     await tester.tap(find.byKey(const Key('general-document-save')));
     await tester.pumpAndSettle();
     expect(saves,1);
+    // The review action is below Save Draft and may be lazily built.
+    await tester.scrollUntilVisible(find.text('Mark Reviewed'), 160,
+      scrollable: find.byType(Scrollable).first);
     expect(find.text('Mark Reviewed'),findsOneWidget);
     client.dispose();
   });
