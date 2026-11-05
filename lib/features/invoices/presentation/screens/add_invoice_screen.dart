@@ -10,6 +10,9 @@ import '../../../../core/widgets/sign2digital_outlined_button.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../../../core/widgets/sign2digital_selection_field.dart';
 import '../../../deposits/data/demo_deposit_repository.dart';
+import '../../../deposits/data/remote_deposit_repository.dart';
+import '../../../auth/data/mobile_auth_repository.dart';
+import '../../../../core/services/active_company_session.dart';
 import '../../../deposits/domain/deposit_record.dart';
 import '../../../jobs/domain/job_model.dart';
 import '../../../jobs/presentation/widgets/ai_voice_flow_dialog.dart';
@@ -19,6 +22,7 @@ import '../../../labour/data/demo_labour_repository.dart';
 import '../../../quotes/domain/quote_review_models.dart';
 import '../../../quotes/presentation/widgets/sign2digital_document_items_table.dart';
 import '../../data/demo_invoice_repository.dart';
+import '../../data/remote_invoice_repository.dart';
 import '../../domain/invoice_record.dart';
 import '../../services/invoice_voice_extraction_service.dart';
 
@@ -73,6 +77,8 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
   DateTime? _issueDate, _dueDate;
   int _depositPaidMinor = 0;
   bool _saving = false, _voiceOpen = false;
+  late final String _draftId;
+  late String _invoiceType;
   String? _error, _voiceJobHint;
 
   List<JobModel> get _jobs => widget.jobs ?? LabourDemoJobs.all;
@@ -91,9 +97,17 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
   @override
   void initState() {
     super.initState();
-    _repository = widget.repository ?? const DemoInvoiceRepository();
-    _deposits = widget.depositRepository ?? const DemoDepositRepository();
+    _repository = widget.repository ??
+        (!MobileAuthRepository.shared.isSignedIn &&
+            ActiveCompanySession.companyId==null
+        ? const DemoInvoiceRepository():RemoteInvoiceRepository.shared);
+    _deposits = widget.depositRepository ??
+        (_repository is RemoteInvoiceRepository
+            ? RemoteDepositRepository.shared:const DemoDepositRepository());
     final initial = widget.initialInvoice;
+    _draftId=initial?.id ??
+        'local-invoice-${DateTime.now().microsecondsSinceEpoch}';
+    _invoiceType=initial?.invoiceType??'final';
     _iban.text = initial?.iban ?? widget.initialIban;
     _items.addAll(initial?.items ?? widget.initialItems);
     _number.text = initial?.number ??
@@ -136,6 +150,37 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
     if (!mounted) { return; }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(value)));
+  }
+
+  Future<void> _chooseInvoiceType() async {
+    final chosen=await Sign2DigitalSelectionSheet.showCustom<String>(
+      title:'Invoice Type',
+      subtitle:'Choose the appropriate billing document.',
+      icon:Icons.receipt_long_outlined,
+      context:context,
+      builder:(sheet)=>SafeArea(child:Column(
+        mainAxisSize:MainAxisSize.min,
+        children:[
+          for(final type in const ['final','deposit'])
+            ListTile(
+              key:Key('invoice-type-$type'),
+              title:Text(type=='final'?'Final Invoice':'Deposit Invoice'),
+              trailing:_invoiceType==type?
+                const Icon(Icons.check_circle_rounded,color:AppColors.primary)
+                :null,
+              onTap:()=>Navigator.of(sheet).pop(type),
+            ),
+        ],
+      )),
+    );
+    if(chosen!=null&&mounted){
+      setState((){
+        _invoiceType=chosen;
+        if(chosen=='deposit')_depositPaidMinor=0;
+      });
+      final job=_job;
+      if(job!=null&&chosen=='final')await _refreshDeposits(job.id);
+    }
   }
 
   Future<void> _chooseJob() async {
@@ -190,6 +235,34 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
 
   Future<void> _refreshDeposits(String jobId) async {
     try {
+      if(_repository is RemoteInvoiceRepository){
+        final id=int.tryParse(jobId);
+        if(id==null||id<1){
+          throw StateError('Saved job reference is required.');
+        }
+        if(_invoiceType=='deposit'){
+          if(mounted && _job?.id==jobId){
+            setState(()=>_depositPaidMinor=0);
+          }
+          return;
+        }
+        final saved=widget.initialInvoice;
+        // An existing draft's allocations are reserved by its own invoice;
+        // they are excluded from the general available-deposit endpoint.
+        if(saved!=null && saved.jobId==jobId &&
+            saved.sourceQuoteId==widget.initialInvoice?.sourceQuoteId){
+          if(mounted&&_job?.id==jobId){
+            setState(()=>_depositPaidMinor=saved.depositPaidMinor);
+          }
+          return;
+        }
+        final value=await (_repository as RemoteInvoiceRepository)
+            .availableDeposits(id);
+        if(mounted&&_job?.id==jobId){
+          setState(()=>_depositPaidMinor=value);
+        }
+        return;
+      }
       final data = await _deposits.listDeposits();
       final amount = data.where((deposit) =>
           deposit.jobId == jobId &&
@@ -538,8 +611,7 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
     try {
       final initial = widget.initialInvoice;
       final draft = InvoiceRecord(
-        id: initial?.id ??
-            'local-invoice-${DateTime.now().microsecondsSinceEpoch}',
+        id: _draftId,
         number: _number.text.trim(),
         project: job.title, jobId: job.id,
         clientName: _client.text.trim(),
@@ -550,13 +622,18 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
         sentAt: initial?.sentAt,
         history: initial?.history ?? const [],
         payments: initial?.payments ?? const [],
-        demoOnly: initial?.demoOnly ?? true,
+        demoOnly: initial?.demoOnly ??
+            (_repository is! RemoteInvoiceRepository),
         iban: _iban.text.trim(),
         notes: _notes.text.trim(),
         currency: widget.currency,
         vatBasisPoints: _vatBasisPoints,
         depositPaidMinor: _depositPaidMinor,
         items: List<InvoiceLineItem>.unmodifiable(_items),
+        invoiceType:_invoiceType,
+        lockVersion:initial?.lockVersion??0,
+        lifecycleStatus:initial?.lifecycleStatus??'draft',
+        sourceQuoteId:initial?.sourceQuoteId,
       );
       if (initial == null) {
         await _repository.saveDraft(draft);
@@ -675,6 +752,16 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
           children: [
             Sign2DigitalAiVoiceButton(onPressed: _voice),
+            const SizedBox(height: 20),
+            Sign2DigitalSelectionField(
+              key:const Key('invoice-create-type'),
+              label:'Invoice Type',
+              hintText:'Final Invoice',
+              iconAsset:'assets/icons/description.svg',
+              value:_invoiceType=='final'?'Final Invoice':'Deposit Invoice',
+              onTap:_chooseInvoiceType,
+              trailing:const Icon(Icons.keyboard_arrow_down_rounded,
+                color:AppColors.secondaryText)),
             const SizedBox(height: 20),
             Sign2DigitalSelectionField(
               key: const Key('invoice-create-job'),
