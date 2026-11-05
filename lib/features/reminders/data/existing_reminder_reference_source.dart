@@ -2,6 +2,10 @@ import '../../clients/data/demo_client_repository.dart';
 import '../../documents/data/demo_document_repository.dart';
 import '../../invoices/data/demo_invoice_repository.dart';
 import '../../jobs/data/mock_jobs.dart';
+import '../../auth/data/mobile_auth_repository.dart';
+import '../../equipment/data/remote_equipment_loan_repository.dart';
+import '../../equipment/data/demo_equipment_loan_repository.dart';
+import '../../equipment/domain/equipment_loan_record.dart';
 import '../domain/reminder_record.dart';
 
 /// Reads selectable demo records from existing feature data sources; linked
@@ -39,6 +43,18 @@ class ExistingReminderReferenceSource implements ReminderReferenceSource {
           for (final client in clients)
             ReminderRelatedItem(type: type, id: client.id,
               title: client.companyName),
+        ];
+      case ReminderType.equipment:
+        // M19 authoritative loan links for M20 selection. This does not
+        // enable reminder push/email or convert the M20 demo repository.
+        final loans=await (MobileAuthRepository.shared.isSignedIn
+          ?RemoteEquipmentLoanRepository.shared
+          :const DemoEquipmentLoanRepository()).listLoans();
+        return [
+          for(final loan in loans.where(
+              (item)=>item.status!=EquipmentLoanStatus.returned))
+            ReminderRelatedItem(type:type,id:loan.id.toString(),
+              title:loan.equipmentName,project:loan.borrowerName),
         ];
       case ReminderType.other:
         return [];

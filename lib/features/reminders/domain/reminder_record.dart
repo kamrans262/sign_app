@@ -1,6 +1,6 @@
 enum ReminderType {
   invoice('Invoice'), job('Job'), client('Client'),
-  document('Document'), other('Other');
+  document('Document'), equipment('Equipment'), other('Other');
 
   const ReminderType(this.label);
   final String label;

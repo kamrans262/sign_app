@@ -6,6 +6,7 @@ import '../../../../core/widgets/sign2digital_information_table.dart';
 import '../../../../core/widgets/sign2digital_outlined_button.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../domain/equipment_loan_record.dart';
+import 'equipment_loan_reminder_actions.dart';
 
 /// Original Q62: immutable loan history, confirmed return and extension.
 class EquipmentLoanDetailsScreen extends StatefulWidget {
@@ -214,12 +215,11 @@ class _EquipmentLoanDetailsScreenState
                   key:const Key('equipment-loan-extend-action'),
                   label:'Extend Return Date',onPressed:_extend,
                   enabled:!_busy&&!_loading),
-                const SizedBox(height:12),
-                Sign2DigitalOutlinedButton(
-                  label:'Send Reminder (Stage 2)',
-                  enabled:false,
-                  onPressed:(){}),
               ],
+              EquipmentLoanReminderActions(
+                key:ValueKey('loan-reminders-'+r.id.toString()),
+                loan:r,repository:widget.repository,
+                onLoanUpdated:_load),
               const SizedBox(height:22),
               const Text('Loan History',style:TextStyle(
                 fontFamily:'Inter',fontSize:17,

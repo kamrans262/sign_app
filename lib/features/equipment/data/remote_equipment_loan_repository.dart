@@ -6,6 +6,7 @@ import '../../auth/data/mobile_auth_repository.dart';
 import '../../clients/data/remote_client_repository.dart';
 import '../../clients/domain/client_profile.dart';
 import '../domain/equipment_loan_record.dart';
+import '../domain/equipment_reminder_record.dart';
 
 /// M19 company-authoritative lending ledger; no client-side overdue authority.
 class RemoteEquipmentLoanRepository extends EquipmentLoanRepository {
@@ -122,6 +123,61 @@ class RemoteEquipmentLoanRepository extends EquipmentLoanRepository {
       normalized[field]=value;
     }
     return normalized;
+  }
+
+
+  /// Read authoritative recipient/due/policy/history before any user sends.
+  Future<EquipmentReminderPreview> reminderPreview(int loanId) async {
+    final company=_company();
+    if(loanId<1)throw const SignApiException('Invalid loan identifier.');
+    final data=_data(await _api.get(
+      _path(loanId)+'/reminders/preview',companyScoped:true));
+    _check(company);
+    final preview=EquipmentReminderPreview.fromJson(data);
+    if(preview.loanId!=loanId){
+      throw const SignApiException('Reminder response loan does not match.');
+    }
+    return preview;
+  }
+
+  /// Real send requires an explicit confirmation by the borrower-contact
+  /// manager. Request key is stable across an uncertain network retry.
+  Future<EquipmentReminderReceipt> sendReminder(
+      int loanId,{required int lockVersion,required String requestKey}) async {
+    final company=_company();
+    if(loanId<1||lockVersion<1||requestKey.length<8){
+      throw const SignApiException('Invalid reminder request.');
+    }
+    final data=_data(await _api.post(
+      _path(loanId)+'/reminders/send',companyScoped:true,data:{
+        'lock_version':lockVersion,'request_key':requestKey,
+        'confirm':true,'recipient_confirmed':true,
+      }));
+    _check(company);
+    return EquipmentReminderReceipt.fromJson(_map(data['reminder']));
+  }
+
+  Future<EquipmentReminderPreview> updateReminderPolicy(
+      int loanId,{required int lockVersion,required bool enabled,
+      required bool recipientConfirmed,int frequencyDays=7}) async {
+    final company=_company();
+    if(loanId<1||lockVersion<1||frequencyDays<1||frequencyDays>30){
+      throw const SignApiException('Invalid loan reminder settings.');
+    }
+    final data=_data(await _api.request('PUT',
+      _path(loanId)+'/reminders/policy',
+      companyScoped:true,data:{
+        'lock_version':lockVersion,
+        'automatic_enabled':enabled,
+        'recipient_confirmed':recipientConfirmed,
+        'frequency_days':frequencyDays,
+      }));
+    _check(company);
+    final result=EquipmentReminderPreview.fromJson(data);
+    if(result.loanId!=loanId){
+      throw const SignApiException('Reminder policy loan mismatch.');
+    }
+    return result;
   }
 
   @override
