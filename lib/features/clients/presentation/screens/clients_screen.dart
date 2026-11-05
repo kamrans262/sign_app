@@ -48,9 +48,13 @@ import '../widgets/sign2digital_client_card.dart';
 /// A temporary UI-only destination after demo Login.
 /// Replace this landing route with Home after the Home UI has been completed.
 class ClientsScreen extends StatefulWidget {
-  const ClientsScreen({super.key, this.repository, this.initialTab = 2});
+  const ClientsScreen({super.key, this.repository,
+    this.documentRepository, this.initialTab = 2});
 
   final ClientRepository? repository;
+  /// Optional injected catalog for deterministic UI tests and embedded flows.
+  /// Production retains the existing automatically selected repository.
+  final DocumentRepository? documentRepository;
   /// The real login route starts on Home (0). Existing clients-only embed
   /// points keep their original initial tab (2) for backwards compatibility.
   final int initialTab;
@@ -488,6 +492,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                         setState(() => _selectedIndex = index),
                   ),
                   DocumentsScreen(
+                    repository: widget.documentRepository,
                     initialCategory: _documentsCategory,
                     refreshRevision: _documentsRevision,
                   ),

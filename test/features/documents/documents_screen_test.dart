@@ -17,6 +17,17 @@ class _DocumentSource implements DocumentRepository {
   Future<List<DocumentRecord>> listDocuments() => load();
 }
 
+Future<DocumentRepository> _fixtureRepository(WidgetTester tester) async {
+  // Read the authentic demo fixtures outside FakeAsync. Native private-file
+  // cache IO cannot be awaited by pumpAndSettle's virtual-frame loop.
+  final records = await tester.runAsync(
+    () => const DemoDocumentRepository().listDocuments());
+  if (records == null || records.length < 5) {
+    throw StateError('Demo document fixtures could not be loaded.');
+  }
+  return _DocumentSource(() async => records);
+}
+
 void main() {
   test('five independent UI fixtures preserve the selected quote IDs',
       () async {
@@ -39,7 +50,9 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(const MaterialApp(home: ClientsScreen()));
+    final repository = await _fixtureRepository(tester);
+    await tester.pumpWidget(MaterialApp(
+      home: ClientsScreen(documentRepository: repository)));
     await tester.tap(find.byKey(const Key('dashboard-tab-3')));
     await tester.pumpAndSettle();
 
@@ -60,8 +73,9 @@ void main() {
 
   testWidgets('search and category filters retain their selected state',
       (tester) async {
-    await tester.pumpWidget(const MaterialApp(
-      home: Scaffold(body: DocumentsScreen()),
+    final repository = await _fixtureRepository(tester);
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(body: DocumentsScreen(repository: repository)),
     ));
     await tester.pumpAndSettle();
     // SliverList.builder lazily mounts only visible cards at 800x600.
@@ -106,8 +120,9 @@ void main() {
 
   testWidgets('selected demo document opens the corresponding quote preview',
       (tester) async {
-    await tester.pumpWidget(const MaterialApp(
-      home: Scaffold(body: DocumentsScreen()),
+    final repository = await _fixtureRepository(tester);
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(body: DocumentsScreen(repository: repository)),
     ));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('document-card-documents-figma-quote-1')));
@@ -150,6 +165,7 @@ void main() {
       (tester) async {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
+    final repository = await _fixtureRepository(tester);
     for (final size in [
       const Size(320, 650),
       const Size(720, 390),
@@ -157,8 +173,8 @@ void main() {
     ]) {
       tester.view.physicalSize = size;
       tester.view.devicePixelRatio = 1;
-      await tester.pumpWidget(const MaterialApp(
-        home: Scaffold(body: DocumentsScreen()),
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(body: DocumentsScreen(repository: repository)),
       ));
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('documents-scroll')), findsOneWidget);

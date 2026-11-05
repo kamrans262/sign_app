@@ -89,6 +89,7 @@ void main() {
     await _reach(tester, 'ai-document-card-ai-document-test-1', up: true);
     expect(find.text('Generated Document 1'), findsOneWidget);
     await _screen(tester, repository: _Repository([]));
+    await _reach(tester, 'ai-documents-empty');
     expect(find.byKey(const Key('ai-documents-empty')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });

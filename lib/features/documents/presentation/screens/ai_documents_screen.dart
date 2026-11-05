@@ -60,6 +60,19 @@ class _AiDocumentsScreenState extends State<AiDocumentsScreen> {
   }
 
   Future<void> _load() async {
+    // A signed-out Figma preview only displays the three local demo cards.
+    // Do not open the unrelated signed-quote PDF cache just to show them.
+    // Authenticated users still load actual tenant-scoped M18 documents.
+    if (widget.repository == null &&
+        !MobileAuthRepository.shared.isSignedIn) {
+      if (!mounted) return;
+      setState(() {
+        _documents = _figmaExamples();
+        _error = null;
+        _loading = false;
+      });
+      return;
+    }
     setState(() { _loading = true; _error = null; });
     try {
       final records = await _repository.listDocuments();
