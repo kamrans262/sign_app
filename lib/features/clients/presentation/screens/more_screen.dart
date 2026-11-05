@@ -9,6 +9,7 @@ import '../../../deposits/presentation/screens/deposits_screen.dart';
 import '../../../equipment/presentation/screens/equipment_screen.dart';
 import '../../../global_search/presentation/screens/global_search_screen.dart';
 import '../../../reminders/presentation/screens/reminders_screen.dart';
+import '../../../reminders/presentation/screens/notification_inbox_screen.dart';
 import '../../../invoices/presentation/screens/invoices_screen.dart';
 import '../../../labour/presentation/screens/time_labour_screen.dart';
 import '../../../quotes/presentation/screens/quote_ui_demo_screen.dart';
@@ -130,7 +131,7 @@ class MoreScreen extends StatelessWidget {
             icon: Icons.notifications_active_outlined,
             onTap: () => _open(context, RemindersScreen(
               onNavigationSelected: onTabSelected,
-              onNotificationTap: () => onNotReady?.call('Notifications'),
+              onNotificationTap: () => _open(context, const NotificationInboxScreen()),
               onProfileTap: () => _openProfile(context),
             ))),
           const SizedBox(height: 15),
