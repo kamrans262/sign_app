@@ -31,7 +31,7 @@ class _Repository extends DepositRepository {
   _Repository(this.record);
   DepositRecord? record;
   bool fail = false;
-  int deletes = 0, refunds = 0, updates = 0;
+  int deletes = 0, refunds = 0, updates = 0, receives = 0;
   @override
   Future<List<DepositRecord>> listDeposits() async =>
       record == null ? [] : [record!];
@@ -42,6 +42,16 @@ class _Repository extends DepositRepository {
     if (fail) { throw StateError('Unsuccessful deletion'); }
     if (record?.id != id) { throw StateError('Not found'); }
     record = null;
+  }
+
+  @override
+  Future<DepositRecord> receiveDeposit(String id) async {
+    receives++;
+    if(fail||record?.id!=id||record?.status!=DepositStatus.pending){
+      throw StateError('Manual confirmation failed');
+    }
+    record=record!.copyWith(status:DepositStatus.received);
+    return record!;
   }
 
   @override
@@ -158,7 +168,7 @@ void main() {
 
   testWidgets('Delete requires confirmation and updates repository only then',
       (tester) async {
-    final record = _record();
+    final record = _record(status:DepositStatus.pending);
     final repo = _Repository(record);
     await _show(tester, record, repo);
     await _reach(tester, 'deposit-detail-delete');
@@ -174,6 +184,27 @@ void main() {
     expect(repo.deletes, 1);
     expect(repo.record, isNull);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Pending deposit requires explicit manual receipt confirmation',
+      (tester) async {
+    final original=_record(status:DepositStatus.pending);
+    final repo=_Repository(original);
+    await _show(tester,original,repo);
+    await _reach(tester,'deposit-detail-refund');
+    expect(find.text('Mark Received'),findsOneWidget);
+    await tester.tap(find.byKey(const Key('deposit-detail-refund')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Cancel').last);
+    await tester.pumpAndSettle();
+    expect(repo.receives,0);
+    await tester.tap(find.byKey(const Key('deposit-detail-refund')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('deposit-confirm-receive')));
+    await tester.pumpAndSettle();
+    expect(repo.record!.status,DepositStatus.received);
+    expect(repo.receives,1);
+    expect(tester.takeException(),isNull);
   });
 
   testWidgets('Refund only after confirmation and successful update',
@@ -204,7 +235,7 @@ void main() {
 
   testWidgets('Edit opens existing Create Deposit populated without ID change',
       (tester) async {
-    final record = _record();
+    final record = _record(status:DepositStatus.pending);
     await _show(tester, record, _Repository(record));
     await _reach(tester, 'deposit-detail-edit');
     await tester.tap(find.byKey(const Key('deposit-detail-edit')));
