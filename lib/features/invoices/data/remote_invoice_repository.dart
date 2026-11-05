@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 
 import '../../../core/services/active_company_session.dart';
@@ -96,6 +97,78 @@ class RemoteInvoiceRepository extends InvoiceRepository {
       items:items,payments:payments,history:history,photos:photos,
       payment:QuotePaymentDetails(iban:(row['iban']??'').toString()),
     );
+  }
+
+
+  /// Server-issued PDF is the only official version for authenticated invoices.
+  Future<Map<String,dynamic>> _ensureIssued(String identifier) async {
+    final company=_company(),id=_id(identifier);
+    final data=_data(await _api.post('/api/v1/invoices/$id/issue',
+      companyScoped:true,data:{'confirm':true}));
+    _check(company);
+    final document=_map(data['document']);
+    final hash=(document['sha256']??'').toString();
+    if(_int(document['invoice_id'])!=id ||
+        _int(document['revision'])<1 ||
+        _int(document['byte_size'])<12 ||
+        _int(document['byte_size'])>5*1024*1024 ||
+        !RegExp(r'^[a-f0-9]{64}$').hasMatch(hash)){
+      throw const SignApiException('Invalid issued invoice PDF metadata.');
+    }
+    return document;
+  }
+
+  Future<Uint8List> issuedPdf(String identifier) async {
+    final company=_company(),id=_id(identifier);
+    final document=await _ensureIssued(identifier);
+    final bytes=await _api.getPrivateAttachment(
+      '/api/v1/invoices/$id/pdf',mimeType:'application/pdf',
+      maxBytes:5*1024*1024);
+    _check(company);
+    if(bytes.length!=_int(document['byte_size']) ||
+        sha256.convert(bytes).toString()!=document['sha256']){
+      throw const SignApiException('Issued invoice PDF SHA-256 mismatch.');
+    }
+    return bytes;
+  }
+
+  Future<String> customerLink(String identifier) async {
+    final company=_company(),id=_id(identifier);
+    await _ensureIssued(identifier);
+    final data=_data(await _api.post(
+      '/api/v1/invoices/$id/customer-link',companyScoped:true));
+    _check(company);
+    final url=(data['secure_link']??'').toString();
+    final parsed=Uri.tryParse(url);
+    if(parsed==null||parsed.scheme!='https'||
+        !RegExp(r'^/invoice-view/[a-f0-9]{64}$').hasMatch(parsed.path)||
+        data['delivered']!=false){
+      throw const SignApiException('Invalid secure invoice link.');
+    }
+    return url;
+  }
+
+  Future<void> sendIssuedInvoice(String identifier,{
+    required String recipientEmail,String mode='pdf',
+  }) async {
+    final company=_company(),id=_id(identifier);
+    final email=recipientEmail.trim();
+    if(!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)||
+        !const ['pdf','link'].contains(mode)){
+      throw const SignApiException('Enter a valid invoice recipient.');
+    }
+    final document=await _ensureIssued(identifier);
+    final key='invoice-send-$id-${DateTime.now().microsecondsSinceEpoch}';
+    final data=_data(await _api.post('/api/v1/invoices/$id/send',
+      companyScoped:true,data:{
+        'recipient_email':email,'mode':mode,'request_key':key,
+      }));
+    _check(company);
+    if(data['delivered']!=true ||
+        data['pdf_attached']!=(mode=='pdf') ||
+        data['pdf_sha256']!=document['sha256']){
+      throw const SignApiException('Invoice delivery could not be confirmed.');
+    }
   }
 
   @override

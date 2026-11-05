@@ -348,37 +348,87 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
     _notice('Manual payment recorded; no bank transaction initiated.');
   }
 
+
+  Future<bool> _confirmLiveSend() async {
+    if (_record.clientEmail.trim().isEmpty) {
+      _notice('Add a customer email address before sending the invoice.');
+      return false;
+    }
+    return await showModalBottomSheet<bool>(
+      context:context,showDragHandle:true,
+      builder:(sheetContext)=>SafeArea(child:Padding(
+        padding:const EdgeInsets.all(20),
+        child:Column(mainAxisSize:MainAxisSize.min,
+          crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+          const Text('Send Invoice',style:TextStyle(
+            fontFamily:'Inter',fontSize:20,fontWeight:FontWeight.w600,
+            color:AppColors.dark)),
+          const SizedBox(height:12),
+          Text('Send the verified issued invoice PDF to ${_record.clientEmail}?',
+            style:const TextStyle(fontFamily:'Inter',fontSize:14,
+              color:AppColors.dark)),
+          const SizedBox(height:20),
+          Sign2DigitalPrimaryButton(label:'Confirm Send',
+            onPressed:()=>Navigator.of(sheetContext).pop(true)),
+          const SizedBox(height:8),
+        ]),
+      )),
+    )??false;
+  }
+
   Future<void> _pdf({required bool share}) async {
     if (_busy) { return; }
+    if (!_record.demoOnly && share && !await _confirmLiveSend())return;
     setState(() => _busy = true);
     try {
       final invoice = _record;
-      final bytes = await const Sign2DigitalInvoicePdfBuilder()
-          .build(invoice);
-      if (bytes.isEmpty) { throw StateError('PDF generation failed'); }
-      if (share) {
-        if (widget.onSend != null) {
-          await widget.onSend!(invoice, bytes);
-        } else {
-          await Printing.sharePdf(bytes: bytes, filename: _filename);
+      if (!invoice.demoOnly) {
+        if(widget.repository is! RemoteInvoiceRepository){
+          throw StateError('Official invoice API unavailable.');
+        }
+        final remote=widget.repository as RemoteInvoiceRepository;
+        if(share){
+          await remote.sendIssuedInvoice(invoice.id,
+            recipientEmail:invoice.clientEmail,mode:'pdf');
+          final updated=await remote.invoiceDetail(invoice.id);
+          if(mounted)setState(()=>_record=updated);
+          _notice('Invoice email delivery confirmed.');
+          return;
+        }
+        final verified=await remote.issuedPdf(invoice.id);
+        if(widget.onDownload!=null){
+          await widget.onDownload!(invoice,verified);
+        }else{
+          final opened=await Printing.layoutPdf(
+            name:_filename,onLayout:(_) async=>verified);
+          if(!opened)throw StateError('PDF print/save cancelled');
+        }
+        _notice('Verified issued invoice PDF opened.');
+        return;
+      }
+      final bytes=await const Sign2DigitalInvoicePdfBuilder().build(invoice);
+      if(bytes.isEmpty)throw StateError('PDF generation failed');
+      if(share){
+        if(widget.onSend!=null){
+          await widget.onSend!(invoice,bytes);
+        }else{
+          await Printing.sharePdf(bytes:bytes,filename:_filename);
         }
         _notice('Share sheet opened; invoice delivery is not confirmed.');
-      } else {
-        if (widget.onDownload != null) {
-          await widget.onDownload!(invoice, bytes);
-        } else {
-          final opened = await Printing.layoutPdf(
-            name: _filename, onLayout: (_) async => bytes);
-          if (!opened) {
-            throw StateError('PDF print/save dialog was cancelled');
-          }
+      }else{
+        if(widget.onDownload!=null){
+          await widget.onDownload!(invoice,bytes);
+        }else{
+          final opened=await Printing.layoutPdf(
+            name:_filename,onLayout:(_) async=>bytes);
+          if(!opened)throw StateError('PDF print/save cancelled');
         }
         _notice('PDF print/save workflow opened.');
       }
-    } catch (_) {
-      _notice('Unable to prepare the invoice PDF. Please try again.');
-    } finally {
-      if (mounted) { setState(() => _busy = false); }
+    }catch(_){
+      _notice('Invoice action failed. Check delivery history before retrying.');
+    }finally{
+      if(mounted)setState(()=>_busy=false);
     }
   }
 
@@ -457,13 +507,15 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
         Expanded(child: Sign2DigitalOutlinedButton(
           key: const Key('invoice-details-download'),
           label: 'Download', primaryOutline: true,
-          enabled: !_busy && _record.demoOnly,
+          enabled: !_busy && (_record.demoOnly ||
+             const ['approved','sent'].contains(_record.lifecycleStatus)),
           onPressed: () => _pdf(share: false))),
         const SizedBox(width: 10),
         Expanded(child: Sign2DigitalOutlinedButton(
           key: const Key('invoice-details-send'),
           label: 'Send', primaryOutline: true,
-          enabled: !_busy && _record.demoOnly,
+          enabled: !_busy && (_record.demoOnly ||
+             const ['approved','sent'].contains(_record.lifecycleStatus)),
           onPressed: () => _pdf(share: true))),
       ])),
       const SizedBox(height: 15),

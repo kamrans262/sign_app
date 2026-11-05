@@ -15,6 +15,7 @@ import '../../../jobs/presentation/widgets/sign2digital_photo_preview.dart';
 import '../../../quotes/domain/quote_review_models.dart';
 import '../../../quotes/presentation/widgets/sign2digital_financial_document_sections.dart';
 import '../../domain/invoice_record.dart';
+import '../../data/remote_invoice_repository.dart';
 import '../../services/invoice_pdf_service.dart';
 
 typedef InvoicePreviewPdfAction = Future<void> Function(
@@ -208,43 +209,41 @@ class _InvoicePreviewScreenState extends State<InvoicePreviewScreen> {
     ),
   );
 
+
   Future<void> _pdf({required bool share}) async {
-    if (_busy) { return; }
-    if(!_record.demoOnly){
-      _notice('Official invoice PDF issuance and delivery is reserved for Stage 2.');
-      return;
-    }
-    setState(() => _busy = true);
-    try {
-      final record = _record;
-      final bytes = await const Sign2DigitalInvoicePdfBuilder().build(record);
-      if (bytes.isEmpty) { throw StateError('PDF is empty'); }
-      if (share) {
-        if (widget.onShare != null) {
-          await widget.onShare!(record, bytes);
-        } else {
-          await Printing.sharePdf(bytes: bytes, filename: _filename);
+    if(_busy)return;
+    setState(()=>_busy=true);
+    try{
+      final record=_record;
+      final bytes=record.demoOnly
+          ? await const Sign2DigitalInvoicePdfBuilder().build(record)
+          : await (widget.repository is RemoteInvoiceRepository
+              ? (widget.repository as RemoteInvoiceRepository).issuedPdf(record.id)
+              : Future<Uint8List>.error(
+                  StateError('Official invoice API unavailable')));
+      if(bytes.isEmpty)throw StateError('PDF is empty');
+      if(share){
+        if(widget.onShare!=null){
+          await widget.onShare!(record,bytes);
+        }else{
+          await Printing.sharePdf(bytes:bytes,filename:_filename);
         }
-        _notice('Share sheet opened; delivery has not been confirmed.');
-      } else {
-        if (widget.onDownload != null) {
-          await widget.onDownload!(record, bytes);
-        } else {
-          final path = await FilePicker.saveFile(
-            dialogTitle: 'Save Invoice PDF',
-            fileName: _filename,
-            type: FileType.custom,
-            allowedExtensions: ['pdf'],
-            bytes: bytes,
-          );
-          if (path == null) { return; }
+        _notice('Share sheet opened; email delivery is not confirmed.');
+      }else{
+        if(widget.onDownload!=null){
+          await widget.onDownload!(record,bytes);
+        }else{
+          final path=await FilePicker.saveFile(
+            dialogTitle:'Save Invoice PDF',fileName:_filename,
+            type:FileType.custom,allowedExtensions:['pdf'],bytes:bytes);
+          if(path==null)return;
         }
         _notice('Invoice PDF saved.');
       }
-    } catch (_) {
+    }catch(_){
       _notice('Could not ${share ? 'share' : 'save'} invoice PDF.');
-    } finally {
-      if (mounted) { setState(() => _busy = false); }
+    }finally{
+      if(mounted)setState(()=>_busy=false);
     }
   }
 
@@ -307,13 +306,15 @@ class _InvoicePreviewScreenState extends State<InvoicePreviewScreen> {
                   Expanded(child: Sign2DigitalOutlinedButton(
                     key: const Key('invoice-preview-share'),
                     label: 'Share', primaryOutline: true,
-                    enabled: !_busy && _record.demoOnly,
+                    enabled: !_busy && (_record.demoOnly ||
+                      const ['approved','sent'].contains(_record.lifecycleStatus)),
           onPressed: () => _pdf(share: true))),
                   const SizedBox(width: 10),
                   Expanded(child: Sign2DigitalPrimaryButton(
                     key: const Key('invoice-preview-download'),
                     label: 'Download PDF',
-                    enabled: !_busy && _record.demoOnly,
+                    enabled: !_busy && (_record.demoOnly ||
+                      const ['approved','sent'].contains(_record.lifecycleStatus)),
           onPressed: () => _pdf(share: false))),
                 ]),
               ],
