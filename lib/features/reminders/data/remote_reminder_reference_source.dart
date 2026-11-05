@@ -59,7 +59,7 @@ class RemoteReminderReferenceSource implements ReminderReferenceSource {
         ].whereType<String>().where((s) => s.trim().isNotEmpty);
         result.add(ReminderRelatedItem(
           type:type, id:id.toString(),
-          title:label.isEmpty ? type.label + ' #' + id.toString()
+          title:label.isEmpty ? '${type.label} #$id'
               : label.first,
           project: (value['project'] ?? value['title'] ?? '').toString(),
         ));

@@ -33,7 +33,9 @@ class _NotificationInboxScreenState extends State<NotificationInboxScreen> {
     setState(() { _loading = true; _error = null; });
     try {
       final result = await _repository.list();
-      if (mounted) setState(() { _snapshot = result; _loading = false; });
+      if (mounted) {
+        setState(() { _snapshot = result; _loading = false; });
+      }
     } catch (_) {
       if (mounted) setState(() {
         _loading = false;
@@ -49,9 +51,11 @@ class _NotificationInboxScreenState extends State<NotificationInboxScreen> {
       await action();
       await _load();
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Unable to update notifications.')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Unable to update notifications.')),
+        );
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -84,7 +88,7 @@ class _NotificationInboxScreenState extends State<NotificationInboxScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           child: Row(children: [
             Expanded(child: Text(
-              (_snapshot?.unreadCount ?? 0).toString() + ' unread',
+              '${_snapshot?.unreadCount ?? 0} unread',
               style: const TextStyle(fontFamily: 'Inter', fontSize: 14,
                   fontWeight: FontWeight.w600, color: AppColors.dark),
             )),
@@ -117,14 +121,14 @@ class _NotificationInboxScreenState extends State<NotificationInboxScreen> {
                       child: ListView.separated(
                         padding: const EdgeInsets.fromLTRB(20, 12, 20, 30),
                         itemCount: rows.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        separatorBuilder: (_, index) => const SizedBox(height: 12),
                         itemBuilder: (context, index) {
                           final item = rows[index];
                           return Material(
                             color: AppColors.white,
                             borderRadius: BorderRadius.circular(10),
                             child: ListTile(
-                              key: Key('notification-' + item.id.toString()),
+                              key: Key('notification-${item.id}'),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
                                 side: BorderSide(color:
@@ -147,8 +151,7 @@ class _NotificationInboxScreenState extends State<NotificationInboxScreen> {
                                     fontFamily: 'Inter', fontSize: 13)),
                               onTap: () => _open(item),
                               trailing: IconButton(
-                                key: Key('notification-dismiss-' +
-                                    item.id.toString()),
+                                key: Key('notification-dismiss-${item.id}'),
                                 tooltip: 'Dismiss',
                                 onPressed: _busy ? null : () => _change(
                                     () => _repository.dismiss(item.id)),

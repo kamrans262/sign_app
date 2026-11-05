@@ -44,7 +44,7 @@ class RemoteReminderRepository implements ReminderRepository {
     final parsed = DateTime.tryParse(
       raw.contains('Z') || raw.contains('+')
           ? raw
-          : raw.replaceFirst(' ', 'T') + 'Z',
+          : "${raw.replaceFirst(' ', 'T')}Z",
     );
     if (parsed == null || parsed.year < 2000 || parsed.year > 2100) {
       throw const SignApiException('Invalid reminder date.');
@@ -60,7 +60,7 @@ class RemoteReminderRepository implements ReminderRepository {
     if (parsed == null || parsed < 1) {
       throw const SignApiException('Invalid saved reminder ID.');
     }
-    return '/api/v1/reminders/' + parsed.toString();
+    return '/api/v1/reminders/$parsed';
   }
 
   ReminderRecord _parse(Object? raw, int company) {
@@ -86,7 +86,7 @@ class RemoteReminderRepository implements ReminderRepository {
       related = ReminderRelatedItem(
         type: matching.first,
         id: relatedId.toString(),
-        title: 'Linked ' + matching.first.label,
+        title: 'Linked ${matching.first.label}',
       );
     }
     return ReminderRecord(
@@ -112,7 +112,7 @@ class RemoteReminderRepository implements ReminderRepository {
       'title': item.title.trim(),
       'type': item.type.name,
       'due_at': item.remindAt.toUtc().toIso8601String(),
-      'timezone': DateTime.now().timeZoneName == 'UTC' ? 'UTC' : 'UTC',
+      'timezone': 'UTC',
       'notes': item.notes,
       'send_notification': item.sendNotification,
     };
@@ -193,7 +193,7 @@ class RemoteReminderRepository implements ReminderRepository {
     _check(company);
     final current = _parse(details['reminder'], company);
     final response = _data(await _api.post(
-      path + '/status',
+      '$path/status',
       companyScoped: true,
       data: {
         'lock_version': current.lockVersion,

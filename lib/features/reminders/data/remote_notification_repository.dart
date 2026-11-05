@@ -56,7 +56,7 @@ class RemoteNotificationRepository {
 
   Future<NotificationInboxSnapshot> list() async {
     final company = _company(), records = <InAppNotification>[];
-    int? unreadCount;
+    var unreadCount = 0;
     for (var page = 1; page <= 100; page++) {
       final response = await _api.get('/api/v1/notifications',
         companyScoped: true, queryParameters: {
@@ -69,7 +69,7 @@ class RemoteNotificationRepository {
       if (rows is! List || lastPage < page || lastPage > 100) {
         throw const SignApiException('Invalid notification list.');
       }
-      unreadCount ??= _int(data['unread_count']);
+      if (page == 1) unreadCount = _int(data['unread_count']);
       for (final raw in rows) {
         final row = _map(raw);
         final id = _int(row['id']);
@@ -96,7 +96,7 @@ class RemoteNotificationRepository {
         ));
       }
       if (page == lastPage) {
-        return NotificationInboxSnapshot(records, unreadCount ?? 0);
+        return NotificationInboxSnapshot(records, unreadCount);
       }
     }
     throw const SignApiException('Notification pagination limit exceeded.');
@@ -105,7 +105,7 @@ class RemoteNotificationRepository {
   Future<void> markRead(int id) async {
     if (id < 1) throw const SignApiException('Invalid notification.');
     final company = _company();
-    await _api.post('/api/v1/notifications/' + id.toString() + '/read',
+    await _api.post('/api/v1/notifications/$id/read',
       companyScoped: true);
     _check(company);
   }
@@ -119,7 +119,7 @@ class RemoteNotificationRepository {
   Future<void> dismiss(int id) async {
     if (id < 1) throw const SignApiException('Invalid notification.');
     final company = _company();
-    await _api.delete('/api/v1/notifications/' + id.toString(),
+    await _api.delete('/api/v1/notifications/$id',
       companyScoped: true);
     _check(company);
   }

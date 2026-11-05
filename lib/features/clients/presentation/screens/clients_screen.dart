@@ -21,6 +21,7 @@ import '../../../labour/presentation/screens/add_labour_entry_screen.dart';
 import '../../../labour/data/demo_labour_repository.dart';
 import '../../../labour/domain/labour_entry.dart';
 import '../../../reminders/presentation/screens/reminders_screen.dart';
+import '../../../reminders/presentation/screens/notification_inbox_screen.dart';
 import '../../../documents/presentation/screens/documents_screen.dart';
 import '../../../quotes/domain/quote_tracking_home_session.dart';
 import '../../../quotes/presentation/screens/signature_request_screen.dart';
@@ -161,7 +162,17 @@ class _ClientsScreenState extends State<ClientsScreen> {
     if (_usesRemoteJobs) _loadJobs();
   }
 
+  void _openNotifications() {
+    Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(builder: (_) => const NotificationInboxScreen()),
+    );
+  }
+
   void _showNotReady(String action) {
+    if (action == 'Notifications') {
+      _openNotifications();
+      return;
+    }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('$action is not connected yet. This is a UI preview.'),
@@ -292,19 +303,19 @@ class _ClientsScreenState extends State<ClientsScreen> {
         _openHomeRoute(InvoicesScreen(
           selectedNavigationIndex: 0,
           onNavigationSelected: _selectDashboardTab,
-          onNotificationTap: () => _showNotReady('Notifications'),
+          onNotificationTap: _openNotifications,
         ));
       case HomeAction.reminders:
         _openHomeRoute(RemindersScreen(
           selectedNavigationIndex: 0,
           onNavigationSelected: _selectDashboardTab,
-          onNotificationTap: () => _showNotReady('Notifications'),
+          onNotificationTap: _openNotifications,
         ));
       case HomeAction.expenses:
         _openHomeRoute(ExpensesScreen(
           selectedNavigationIndex: 0,
           onNavigationSelected: _selectDashboardTab,
-          onNotificationTap: () => _showNotReady('Notifications'),
+          onNotificationTap: _openNotifications,
         ));
       case HomeAction.createQuote:
         _openHomeRoute(CreateQuoteScreen(companyId: _selectedCompanyId));
@@ -444,11 +455,11 @@ class _ClientsScreenState extends State<ClientsScreen> {
         child: Column(
           children: [
             Sign2DigitalDashboardHeader(
-              onNotificationTap: () => _showNotReady('Notifications'),
+              onNotificationTap: _openNotifications,
               onProfileTap: () => Navigator.of(context).push<void>(
                 MaterialPageRoute<void>(
                   builder: (_) => ProfileSettingsScreen(
-                    onNotificationTap: () => _showNotReady('Notifications'),
+                    onNotificationTap: _openNotifications,
                     onNavigationSelected: (index) {
                       if (mounted) setState(() => _selectedIndex = index);
                     },
