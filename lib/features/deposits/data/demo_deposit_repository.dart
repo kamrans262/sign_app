@@ -113,7 +113,7 @@ class DemoDepositRepository extends DepositRepository {
       history:[
         ...prior.history,
         DepositHistoryEvent(
-          id:'received-'+now.microsecondsSinceEpoch.toString(),
+          id:'received-${now.microsecondsSinceEpoch}',
           title:'Deposit received',occurredAt:now,
           description:'Demo only: no money was collected.',
         ),
