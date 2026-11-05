@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import '../../../core/services/sign_api_client.dart';
 import '../../auth/data/mobile_auth_repository.dart';
 
@@ -143,5 +145,18 @@ class RemoteSupportRepository {
             authorUserId:_int(_map(raw)['author_user_id'])),
       ],
     );
+  }
+
+  Future<void> uploadScreenshot(int ticketId, Uint8List jpegBytes) async {
+    if(ticketId<=0) throw const SignApiException('Invalid ticket.');
+    final response=await _api.postMultipart(
+      '/api/v1/support/tickets/$ticketId/attachments',
+      filename:'screenshot.jpg',bytes:jpegBytes,
+      maxBytes:5*1024*1024,
+    );
+    final data=response['data'];
+    if(data is! Map<String,dynamic> || data['id'] is! num) {
+      throw const SignApiException('Attachment could not be saved.');
+    }
   }
 }
