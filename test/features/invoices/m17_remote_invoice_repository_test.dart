@@ -193,7 +193,7 @@ void main(){
       expect(request['confirm'],true);
       expect(request['amount'],'270.25');
       expect(request['method'],'other');
-      expect(request['request_key'],'invoice-paid-31-27025');
+      expect(request['request_key'],'invoice-paid-31-27025-0');
       paid=true;
       return http.Response(jsonEncode({'data':{
         'invoice':serverInvoice(status:'paid',version:2),
@@ -207,15 +207,72 @@ void main(){
     c.dispose();
   });
 
+  test('a voided manual payment can be recorded again without replaying the old key',
+      () async {
+    var paymentRecorded=false,historyVersion=0;
+    final keys=<String>[];
+    final c=api((r) async {
+      if(r.method=='GET'){
+        final row=serverInvoice(
+          status:paymentRecorded?'paid':'pending',version:2);
+        return http.Response(jsonEncode({'data':{
+          'invoice':row,'items':detailed()['data']['items'],
+          'payments':paymentRecorded?[{
+            'id':92,'amount_minor':27025,'paid_at':'2026-11-05',
+            'method':'other','status':'paid',
+          }]:[],
+          'history':[
+            for(var i=0;i<historyVersion;i++)
+              {'id':i+1,'type':'payment_voided',
+               'created_at':'2026-11-05T12:00:00Z'},
+          ],
+          'attachments':[],
+        }}),200);
+      }
+      final body=jsonDecode(r.body) as Map<String,dynamic>;
+      keys.add(body['request_key'] as String);
+      paymentRecorded=true;
+      return http.Response(jsonEncode({'data':{
+        'invoice':serverInvoice(status:'paid',version:2),
+      }}),201);
+    });
+    final repo=RemoteInvoiceRepository(api:c);
+    await repo.markAsPaid('invoice-31');
+    paymentRecorded=false;
+    historyVersion=2; // Payment recorded then voided in server audit.
+    await repo.markAsPaid('invoice-31');
+    expect(keys,[
+      'invoice-paid-31-27025-0',
+      'invoice-paid-31-27025-2',
+    ]);
+    c.dispose();
+  });
+
+  test('deposit candidates reject mismatched aggregate totals',() async {
+    final c=api((r) async=>http.Response(jsonEncode({'data':{
+      'job_id':34,'currency':'CHF','available_minor':15000,
+      'deposit_candidates':[{'id':5,'amount_minor':10000}],
+      'allocation_policy':'whole_deposits_once',
+    }}),200));
+    await expectLater(
+      RemoteInvoiceRepository(api:c).availableDepositCandidates(34),
+      throwsA(isA<SignApiException>()),
+    );
+    c.dispose();
+  });
+
   test('only unallocated received money qualifies for invoice credit',() async{
     final c=api((r) async {
       expect(r.url.path,'/api/v1/jobs/34/invoice-deposits');
       return http.Response(jsonEncode({'data':{
         'job_id':34,'currency':'CHF','available_minor':10000,
-        'deposit_ids':[5],'allocation_policy':'whole_deposits_once',
+        'deposit_ids':[5],
+        'deposit_candidates':[{'id':5,'amount_minor':10000}],
+        'allocation_policy':'whole_deposits_once',
       }}),200);
     });
     expect(await RemoteInvoiceRepository(api:c).availableDeposits(34),10000);
+    expect(await RemoteInvoiceRepository(api:c).availableDepositCandidates(34),[10000]);
     c.dispose();
   });
 }
