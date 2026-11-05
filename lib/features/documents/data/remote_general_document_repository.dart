@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:crypto/crypto.dart';
 import '../../../core/services/active_company_session.dart';
 import '../../../core/services/sign_api_client.dart';
 import '../../auth/data/mobile_auth_repository.dart';
@@ -127,6 +128,193 @@ class RemoteGeneralDocumentRepository extends DocumentRepository {
       throw const SignApiException('Document voice transcript was not verified.');
     }
     return text.trim();
+  }
+
+
+  static int _documentId(int id){
+    if(id<1)throw const SignApiException('Invalid document identifier.');
+    return id;
+  }
+
+  static Map<String,dynamic> _issueInfo(Object? raw,int id){
+    final row=_map(raw),hash=(row['sha256']??'').toString();
+    if(_int(row['document_id'])!=id||_int(row['revision'])<1||
+        _int(row['byte_size'])<12||_int(row['byte_size'])>5*1024*1024||
+        !RegExp(r'^[a-f0-9]{64}$').hasMatch(hash)){
+      throw const SignApiException('Invalid official general document metadata.');
+    }
+    return row;
+  }
+
+  Future<Map<String,dynamic>> issue(int id) async{
+    final company=_company();
+    final result=_data(await _api.post(
+      '/api/v1/general-documents/'+_documentId(id).toString()+'/issue',
+      companyScoped:true,data:{'confirm':true}));
+    _check(company);
+    return _issueInfo(result,id);
+  }
+
+  Future<Map<String,dynamic>?> issuedMetadata(int id) async{
+    final company=_company();
+    try{
+      final data=_data(await _api.get(
+        '/api/v1/general-documents/'+_documentId(id).toString()+'/issued',
+        companyScoped:true));
+      _check(company);
+      _issueInfo(data['issue'],id);
+      for(final field in ['signatures','deliveries','links']){
+        if(data[field] is! List){
+          throw const SignApiException('Incomplete document delivery history.');
+        }
+      }
+      return data;
+    }on SignApiException catch(error){
+      _check(company);
+      if(error.statusCode==404)return null;
+      rethrow;
+    }
+  }
+
+  Future<Uint8List> issuedPdf(int id) async{
+    final company=_company();
+    final metadata=await issuedMetadata(_documentId(id));
+    if(metadata==null){
+      throw const SignApiException('Issue this approved document first.');
+    }
+    final issue=_issueInfo(metadata['issue'],id);
+    final bytes=await _api.getPrivateAttachment(
+      '/api/v1/general-documents/'+id.toString()+'/pdf',
+      mimeType:'application/pdf',maxBytes:5*1024*1024);
+    _check(company);
+    if(bytes.length!=_int(issue['byte_size'])||
+        sha256.convert(bytes).toString()!=issue['sha256']){
+      throw const SignApiException('Official PDF SHA-256 mismatch.');
+    }
+    return bytes;
+  }
+
+  static String _link(Object? value,String expected){
+    if(value is! String)throw const SignApiException('Missing secure link.');
+    final uri=Uri.tryParse(value);
+    if(uri==null||uri.scheme!='https'||uri.host.isEmpty||
+        uri.hasFragment||uri.hasQuery||
+        !RegExp(expected).hasMatch(uri.path)){
+      throw const SignApiException('Invalid private document link.');
+    }
+    return value;
+  }
+
+  Future<String> customerLink(int id) async{
+    final company=_company();
+    final result=_data(await _api.post(
+      '/api/v1/general-documents/'+_documentId(id).toString()+'/customer-link',
+      companyScoped:true));
+    _check(company);
+    if(result['delivered']!=false){
+      throw const SignApiException('Unable to verify customer link.');
+    }
+    return _link(result['secure_link'],r'^/general-document/[a-f0-9]{64}$');
+  }
+
+  Future<Map<String,dynamic>> requestSignature(int id,{
+    required String signerName,required String signerEmail,
+  }) async {
+    final company=_company();
+    if(signerName.trim().length<2||
+        !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(signerEmail.trim())){
+      throw const SignApiException('Enter a signer name and email.');
+    }
+    final result=_data(await _api.post(
+      '/api/v1/general-documents/'+_documentId(id).toString()+
+        '/signature-requests',companyScoped:true,data:{
+          'signer_name':signerName.trim(),'signer_email':signerEmail.trim(),
+          'confirm':true,
+        }));
+    _check(company);
+    final link=_link(result['signature_link'],r'^/general-sign/[a-f0-9]{64}$');
+    if(_int(result['id'])<1||result['status']!='ready'){
+      throw const SignApiException('Signature request was not confirmed.');
+    }
+    return {...result,'signature_link':link};
+  }
+
+  Future<void> revokeSignature(int id,int signature) async{
+    final company=_company();
+    await _api.delete('/api/v1/general-documents/'+_documentId(id).toString()+
+      '/signature-requests/'+_documentId(signature).toString(),
+      companyScoped:true);
+    _check(company);
+  }
+
+  Future<void> revokeLink(int id,int linkId) async {
+    final company=_company();
+    await _api.delete('/api/v1/general-documents/'+_documentId(id).toString()+
+      '/customer-links/'+_documentId(linkId).toString(),
+      companyScoped:true);
+    _check(company);
+  }
+
+  Future<Uint8List> signedPdf(int id,int signature) async {
+    final company=_company();
+    final metadata=await issuedMetadata(_documentId(id));
+    final signatures=metadata?['signatures'];
+    if(signatures is! List){
+      throw const SignApiException('Signed document records unavailable.');
+    }
+    Map<String,dynamic>? found;
+    for(final entry in signatures){
+      final row=_map(entry);
+      if(_int(row['id'])==signature){found=row;break;}
+    }
+    final hash=(found?['signed_pdf_sha256']??'').toString();
+    if(found?['status']!='signed'||!RegExp(r'^[a-f0-9]{64}$').hasMatch(hash)){
+      throw const SignApiException('No signed PDF for this signature request.');
+    }
+    final bytes=await _api.getPrivateAttachment(
+      '/api/v1/general-documents/'+id.toString()+'/signatures/'+
+        signature.toString()+'/signed-pdf',
+      mimeType:'application/pdf',maxBytes:10*1024*1024);
+    _check(company);
+    if(sha256.convert(bytes).toString()!=hash){
+      throw const SignApiException('Signed general document PDF checksum failed.');
+    }
+    return bytes;
+  }
+
+  Future<void> send(int id,{
+    required String recipientEmail,String mode='pdf',
+    String? signatureLink,int? signatureRequestId,
+  }) async {
+    final company=_company();
+    if(!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(recipientEmail.trim())||
+        !const ['pdf','link','signature'].contains(mode)){
+      throw const SignApiException('Enter a valid recipient email.');
+    }
+    if(mode=='signature'){
+      _link(signatureLink,r'^/general-sign/[a-f0-9]{64}$');
+      if(signatureRequestId==null||signatureRequestId<1){
+        throw const SignApiException('Select an active signature invitation.');
+      }
+    }
+    final metadata=await issuedMetadata(_documentId(id));
+    if(metadata==null)throw const SignApiException('Issue the document first.');
+    final issue=_issueInfo(metadata['issue'],id);
+    final key='general-send-'+id.toString()+'-'+
+      DateTime.now().microsecondsSinceEpoch.toString();
+    final response=_data(await _api.post(
+      '/api/v1/general-documents/'+id.toString()+'/send',
+      companyScoped:true,data:{
+        'recipient_email':recipientEmail.trim(),'mode':mode,
+        'request_key':key,
+        if(mode=='signature')'signature_request_id':signatureRequestId,
+        if(mode=='signature')'signature_link':signatureLink,
+      }));
+    _check(company);
+    if(response['email_submitted']!=true||
+        response['mode']!=mode||response['sha256']!=issue['sha256']){
+      throw const SignApiException('Email handoff was not confirmed.');
+    }
   }
 
   Future<List<Map<String,dynamic>>> attachments(int id) async {

@@ -1,0 +1,31 @@
+name: M18 Stage 2 Flutter General Document Issuance
+on:
+  push:
+    branches: [feature/m12-site-reports-meeting-minutes-2026-11-04]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: sign2digital-m18-stage2-flutter
+  cancel-in-progress: true
+jobs:
+  verify-general-issuance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Analyze M18 code
+        run: |
+          dart analyze --no-fatal-warnings lib/features/documents
+          dart analyze --no-fatal-warnings test/features/documents
+      - name: M18 Stage 1 + Stage 2 repository, widget and PDF checks
+        run: |
+          timeout --signal=TERM --kill-after=10s 210s flutter test --no-pub --concurrency=2 --timeout=60s --reporter=expanded test/features/documents/m18_remote_general_document_repository_test.dart test/features/documents/m18_general_document_editor_test.dart test/features/documents/m18_issued_document_repository_test.dart test/features/documents/m18_issued_document_actions_test.dart
+      - name: Original AI Documents, M9 catalog and M11 conversion regressions
+        run: |
+          timeout --signal=TERM --kill-after=10s 240s flutter test --no-pub --concurrency=2 --timeout=60s --reporter=expanded test/features/documents/ai_documents_screen_test.dart test/features/documents/generate_ai_document_screen_test.dart test/features/documents/documents_screen_test.dart test/features/documents/m9_remote_document_repository_test.dart test/features/jobs/convert_document_screen_test.dart

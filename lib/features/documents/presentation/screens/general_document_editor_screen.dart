@@ -18,6 +18,7 @@ import '../../../jobs/presentation/widgets/ai_voice_flow_dialog.dart';
 import '../../../jobs/services/voice_recorder_service.dart';
 import '../../../jobs/services/voice_job_extraction_service.dart';
 import '../../data/remote_general_document_repository.dart';
+import 'general_document_issued_actions.dart';
 import '../../domain/general_document_draft.dart';
 
 /// M18 authoring inside the established Sign2Digital document UI system.
@@ -500,12 +501,26 @@ class _GeneralDocumentEditorScreenState extends State<GeneralDocumentEditorScree
               const SizedBox(height:12),
               Sign2DigitalPrimaryButton(label:'Approve Document',
                 enabled:!_busy,onPressed:()=>_transition('approve'))],
-            if(_saved?.status=='approved')const Padding(
-              padding:EdgeInsets.symmetric(vertical:20),
-              child:Text('Approved revision is locked. Official PDF, signing '
-                'and customer delivery are Stage 2 actions.',
-                style:TextStyle(fontFamily:'Inter',fontSize:12,
-                  color:AppColors.placeholder))),
+            if(_saved?.status=='approved'&&_saved?.id!=null)...[
+              const Padding(
+                padding:EdgeInsets.only(top:16,bottom:8),
+                child:Text('Approved source is immutable. Electronic '
+                  'signatures may require additional legal formalities.',
+                  style:TextStyle(fontFamily:'Inter',fontSize:12,
+                    color:AppColors.placeholder))),
+              GeneralDocumentIssuedActions(
+                key:ValueKey('general-issuance-'+_saved!.id.toString()),
+                documentId:_saved!.id!,
+                documentNumber:_saved!.number,
+                repository:_repository,
+                suggestedSignerName:_clients
+                  .where((c)=>c.id=='$_clientId')
+                  .map((c)=>c.fullName.isNotEmpty?c.fullName:c.companyName)
+                  .firstOrNull??'',
+                suggestedSignerEmail:_clients
+                  .where((c)=>c.id=='$_clientId')
+                  .map((c)=>c.email).firstOrNull??''),
+            ],
           ]),
         ))),
       ])));
