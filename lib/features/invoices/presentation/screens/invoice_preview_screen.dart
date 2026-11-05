@@ -166,6 +166,9 @@ class _InvoicePreviewScreenState extends State<InvoicePreviewScreen> {
     }
   }
 
+  bool get _editableAttachments =>
+      _record.demoOnly || _record.lifecycleStatus=='draft';
+
   Widget _photos() => LayoutBuilder(
     builder: (context, bounds) => GridView.builder(
       key: const Key('invoice-preview-photo-grid'),
@@ -177,18 +180,28 @@ class _InvoicePreviewScreenState extends State<InvoicePreviewScreen> {
         crossAxisSpacing: 15,
         mainAxisExtent: 120,
       ),
-      itemCount: _record.photos.length + 1,
+      itemCount: _record.photos.length + (_editableAttachments ? 1 : 0),
       itemBuilder: (context, index) {
         if (index == _record.photos.length) {
           return Sign2DigitalExpenseUploadTile(
             key: const Key('invoice-preview-add-photo'),
             enabled: !_busy, onTap: _addPhoto);
         }
+        final file=_record.photos[index];
+        if(file.name.toLowerCase().endsWith('.pdf')){
+          return SizedBox(
+            key:Key('invoice-preview-photo-$index'),
+            height:120,
+            child:Center(child:Icon(Icons.picture_as_pdf_outlined,
+              size:40,color:AppColors.primary)),
+          );
+        }
         return Sign2DigitalPhotoPreview(
           key: Key('invoice-preview-photo-$index'),
-          bytes: _record.photos[index].bytes,
+          bytes: file.bytes,
           showDemo: false,
           compactTile: true,
+          showRemove: _editableAttachments,
           onRemove: () => _removePhoto(index),
         );
       },
@@ -197,6 +210,10 @@ class _InvoicePreviewScreenState extends State<InvoicePreviewScreen> {
 
   Future<void> _pdf({required bool share}) async {
     if (_busy) { return; }
+    if(!_record.demoOnly){
+      _notice('Official invoice PDF issuance and delivery is reserved for Stage 2.');
+      return;
+    }
     setState(() => _busy = true);
     try {
       final record = _record;
@@ -290,12 +307,14 @@ class _InvoicePreviewScreenState extends State<InvoicePreviewScreen> {
                   Expanded(child: Sign2DigitalOutlinedButton(
                     key: const Key('invoice-preview-share'),
                     label: 'Share', primaryOutline: true,
-                    enabled: !_busy, onPressed: () => _pdf(share: true))),
+                    enabled: !_busy && _record.demoOnly,
+          onPressed: () => _pdf(share: true))),
                   const SizedBox(width: 10),
                   Expanded(child: Sign2DigitalPrimaryButton(
                     key: const Key('invoice-preview-download'),
                     label: 'Download PDF',
-                    enabled: !_busy, onPressed: () => _pdf(share: false))),
+                    enabled: !_busy && _record.demoOnly,
+          onPressed: () => _pdf(share: false))),
                 ]),
               ],
             ),
