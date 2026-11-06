@@ -190,8 +190,10 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
           : 'Unable to delete this account. No changes were confirmed.');
       }
     } catch (_) {
-      if (mounted) setState(() => _message =
-        'Unable to delete this account. No changes were confirmed.');
+      if (mounted) {
+        setState(() => _message =
+          'Unable to delete this account. No changes were confirmed.');
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
