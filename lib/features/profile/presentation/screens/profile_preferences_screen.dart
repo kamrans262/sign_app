@@ -203,6 +203,13 @@ class _ProfilePreferencesScreenState extends State<ProfilePreferencesScreen> {
                 onSelected: (value) =>
                     _draft = _draft.copyWith(language: value),
               ),
+              const SizedBox(height: 8),
+              const Text(
+                'Available help articles follow this choice. '
+                'Notification templates currently support English and French.',
+                style: TextStyle(fontFamily: 'Inter', fontSize: 12,
+                  color: AppColors.secondaryText),
+              ),
               const SizedBox(height: 20),
               _selection(
                 key: const Key('preferences-date-format'),
@@ -256,6 +263,7 @@ class _ProfilePreferencesScreenState extends State<ProfilePreferencesScreen> {
               ProfileNotificationRow(
                 key: const Key('preferences-email'),
                 title: 'Email Notification',
+                description: 'Save your email preference for supported messages',
                 enabled: _draft.emailNotifications,
                 onChanged: (value) => setState(() =>
                     _draft = _draft.copyWith(emailNotifications: value)),
@@ -264,9 +272,10 @@ class _ProfilePreferencesScreenState extends State<ProfilePreferencesScreen> {
               ProfileNotificationRow(
                 key: const Key('preferences-sms'),
                 title: 'SMS Notification',
-                enabled: _draft.smsNotifications,
-                onChanged: (value) => setState(() =>
-                    _draft = _draft.copyWith(smsNotifications: value)),
+                description: 'Unavailable until SMS delivery is configured',
+                enabled: false,
+                onChanged: (_) => _showMessage(
+                    'SMS notifications are unavailable until configured.'),
               ),
               const SizedBox(height: 45),
               Sign2DigitalPrimaryButton(
