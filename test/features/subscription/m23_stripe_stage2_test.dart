@@ -90,6 +90,15 @@ void main(){
     expect(completed.status,'active');
   });
 
+  test('Untrusted server checkout host is rejected before browser launch',() async {
+    final fake=_FakeStripeApi(checkoutHost:'evil.example');
+    final repository=RemoteSubscriptionRepository(api:fake.api);
+    await expectLater(repository.startCheckout(7,
+      requestId:'11111111-1111-4111-8111-111111111111'),
+      throwsA(isA<SignApiException>()));
+    expect(fake.requests,contains('POST /api/v1/billing/checkout'));
+  });
+
   test('Stripe-hosted URLs are restricted to official HTTPS domains',(){
     expect(()=>RemoteSubscriptionRepository.hostedUrl(
       'https://checkout.stripe.com/c/pay/session'),returnsNormally);
