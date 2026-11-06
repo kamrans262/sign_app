@@ -36,6 +36,8 @@ class SubscriptionOverview {
     this.freeDocumentsRemaining,
     this.enforcementEnabled = false,
     this.canCheckout = false,
+    this.canManageBilling = false,
+    this.cancelAtPeriodEnd = false,
     this.demoOnly = false,
   });
 
@@ -52,6 +54,8 @@ class SubscriptionOverview {
   final int? freeDocumentsRemaining;
   final bool enforcementEnabled;
   final bool canCheckout;
+  final bool canManageBilling;
+  final bool cancelAtPeriodEnd;
 
   /// Every preview-only billing field and statistic must be identified as demo.
   final bool demoOnly;
