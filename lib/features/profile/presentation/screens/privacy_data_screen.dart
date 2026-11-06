@@ -122,6 +122,81 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
     }
   }
 
+  Future<void> _deleteAccount() async {
+    if (_busy) return;
+    var confirmation = '';
+    var password = '';
+    final approved = await showDialog<String>(
+      context: context,
+      builder: (dialog) => StatefulBuilder(
+        builder: (context, refresh) => AlertDialog(
+          title: const Text('Permanently Delete Account?'),
+          content: SingleChildScrollView(child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Your personal profile and private support data will '
+                'be erased and every session revoked. Issued company records '
+                'and signed documents are retained for legal integrity. '
+                'Transfer company ownership and administrator access first.'),
+              const SizedBox(height: 12),
+              TextFormField(
+                key: const Key('m22-delete-type'),
+                onChanged: (value) => refresh(() => confirmation = value),
+                decoration: const InputDecoration(
+                  labelText: 'Type DELETE', border: OutlineInputBorder()),
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                key: const Key('m22-delete-password'),
+                obscureText: true,
+                onChanged: (value) => refresh(() => password = value),
+                decoration: const InputDecoration(
+                  labelText: 'Confirm your password',
+                  border: OutlineInputBorder()),
+              ),
+            ],
+          )),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(dialog).pop(),
+              child: const Text('Keep Account')),
+            TextButton(
+              key: const Key('m22-delete-confirm'),
+              onPressed: confirmation == 'DELETE' && password.isNotEmpty
+                ? () => Navigator.of(dialog).pop(password) : null,
+              child: const Text('Delete Account')),
+          ],
+        ),
+      ),
+    );
+    if (!mounted || approved == null) return;
+    setState(() { _busy = true; _message = null; });
+    try {
+      final response = await _api.post('/api/v1/me/delete',
+        data: {'password': approved});
+      if (response['data'] is! Map<String, dynamic> ||
+          response['data']['deleted'] != true ||
+          response['data']['requires_login'] != true) {
+        throw const SignApiException('Deletion was not confirmed.');
+      }
+      try { await MobileAuthRepository.shared.logout(); } catch (_) {}
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute<void>(builder: (_) => const MobileAuthGateway()),
+        (_) => false);
+    } on SignApiException catch (error) {
+      if (mounted) {
+        setState(() => _message = error.statusCode == 422
+          ? 'Check your password and transfer all company ownership first.'
+          : 'Unable to delete this account. No changes were confirmed.');
+      }
+    } catch (_) {
+      if (mounted) setState(() => _message =
+        'Unable to delete this account. No changes were confirmed.');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: AppColors.white,
@@ -140,7 +215,7 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
                 fontWeight: FontWeight.w600, color: AppColors.dark)),
             const SizedBox(height: 12),
             const Text('View a copy of your own profile, preferences and '
-              'support-ticket references. Company records, invoices and '
+              'support-ticket conversations. Company records, invoices and '
               'signed documents are not included in this personal export.',
               style: TextStyle(fontFamily: 'Inter', fontSize: 14,
                 color: AppColors.secondaryText)),
@@ -166,6 +241,22 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
               onPressed: _busy ? null : _deactivate,
               icon: const Icon(Icons.person_off_outlined),
               label: const Text('Deactivate Account')),
+            const SizedBox(height: 28),
+            const Text('Delete Personal Account',
+              style: TextStyle(fontFamily: 'Inter', fontSize: 20,
+                fontWeight: FontWeight.w600, color: AppColors.dark)),
+            const SizedBox(height: 10),
+            const Text('Permanently erase personal profile and private support '
+              'data, while retaining legally necessary company records. '
+              'This cannot be undone.',
+              style: TextStyle(fontFamily: 'Inter', fontSize: 14,
+                color: AppColors.secondaryText)),
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              key: const Key('m22-privacy-delete'),
+              onPressed: _busy ? null : _deleteAccount,
+              icon: const Icon(Icons.delete_forever_outlined),
+              label: const Text('Delete Account')),
             if (_message != null) ...[
               const SizedBox(height: 16),
               Text(_message!, key: const Key('m22-privacy-message'),
