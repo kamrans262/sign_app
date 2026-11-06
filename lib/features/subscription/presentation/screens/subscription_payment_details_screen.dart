@@ -61,6 +61,9 @@ class _SubscriptionPaymentDetailsScreenState
         if (amount is! num || currency is! String) {
           throw const FormatException('Provider preview was incomplete.');
         }
+        // Stop the loading animation while the user decides in the dialog.
+        // The modal itself prevents duplicate purchase taps.
+        setState(()=>_working=false);
         final confirm=await showDialog<bool>(context:context,
           builder:(dialog)=>AlertDialog(
             title:const Text('Confirm Plan Change'),
@@ -78,6 +81,7 @@ class _SubscriptionPaymentDetailsScreenState
           ),
         );
         if(confirm!=true || !mounted)return;
+        setState(()=>_working=true);
         _requestId ??= RemoteSubscriptionRepository.newRequestId();
         final result=await _repository.changePlan(
             planId,requestId:_requestId!);
