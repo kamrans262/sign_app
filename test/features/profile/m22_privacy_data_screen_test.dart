@@ -82,7 +82,10 @@ void main() {
       }),
     );
     await tester.pumpWidget(MaterialApp(home: PrivacyDataScreen(api: api)));
-    await tester.ensureVisible(find.byKey(const Key('m22-privacy-delete')));
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('m22-privacy-delete')), 150,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.tap(find.byKey(const Key('m22-privacy-delete')));
     await tester.pumpAndSettle();
     expect(find.text('Permanently Delete Account?'), findsOneWidget);
