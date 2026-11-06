@@ -154,7 +154,7 @@ class RemoteSubscriptionRepository implements SubscriptionOverviewRepository {
         !RegExp(r'^[A-Fa-f0-9-]+').hasMatch(intentId)) {
       throw const SignApiException('Invalid Checkout confirmation reference.');
     }
-    final status = await _get('/api/v1/billing/checkout/' + intentId + '/status');
+    final status = await _get('/api/v1/billing/checkout/$intentId/status');
     return M23CheckoutVerification(
       status: _string(status['status']) ?? 'pending',
       verified: status['verified'] == true,
