@@ -25,10 +25,19 @@ class SupportReply {
   final String body, createdAt;
 }
 
+class SupportAttachment {
+  const SupportAttachment({required this.id, required this.originalName,
+    required this.mimeType, required this.byteSize});
+  final int id, byteSize;
+  final String originalName, mimeType;
+}
+
 class SupportTicketDetail {
-  const SupportTicketDetail({required this.ticket, required this.replies});
+  const SupportTicketDetail({required this.ticket, required this.replies,
+    this.attachments = const []});
   final SupportTicket ticket;
   final List<SupportReply> replies;
+  final List<SupportAttachment> attachments;
 }
 
 class RemoteSupportRepository {
@@ -59,6 +68,37 @@ class RemoteSupportRepository {
       status: _text(row['status']),
       category: _text(row['category']),
       createdAt: _text(row['created_at']),
+    );
+  }
+
+  static List<SupportAttachment> _attachments(Map<String, dynamic> data) {
+    final rows = data['attachments'];
+    if (rows == null) return const [];
+    if (rows is! List) throw const SignApiException('Invalid attachment list.');
+    return [
+      for (final raw in rows)
+        SupportAttachment(
+          id: _int(_map(raw)['id']),
+          originalName: _text(_map(raw)['original_name']),
+          mimeType: _text(_map(raw)['mime_type']),
+          byteSize: _int(_map(raw)['byte_size']),
+        ),
+    ];
+  }
+
+  Future<Uint8List> downloadAttachment(int ticketId,
+      SupportAttachment attachment) async {
+    if (ticketId <= 0 || attachment.id <= 0 ||
+        attachment.byteSize <= 0 || attachment.byteSize > 5 * 1024 * 1024 ||
+        !['image/jpeg','image/png','application/pdf']
+            .contains(attachment.mimeType)) {
+      throw const SignApiException('Invalid support attachment.');
+    }
+    return _api.getPrivateAttachment(
+      '/api/v1/support/tickets/$ticketId/attachments/${attachment.id}',
+      mimeType: attachment.mimeType,
+      companyScoped: false,
+      maxBytes: 5 * 1024 * 1024,
     );
   }
 
@@ -101,6 +141,7 @@ class RemoteSupportRepository {
     if (rows is! List) throw const SignApiException('Invalid conversation.');
     return SupportTicketDetail(
       ticket: _ticket(data['ticket']),
+      attachments: _attachments(data),
       replies: [
         for (final raw in rows)
           SupportReply(
@@ -137,6 +178,7 @@ class RemoteSupportRepository {
     if (rows is! List) throw const SignApiException('Invalid reply response.');
     return SupportTicketDetail(
       ticket:_ticket(data['ticket']),
+      attachments:_attachments(data),
       replies:[
         for(final raw in rows)
           SupportReply(id:_int(_map(raw)['id']),
