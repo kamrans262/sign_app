@@ -69,4 +69,35 @@ void main() {
     expect(writes, 0);
     expect(find.byKey(const Key('m22-privacy-scroll')), findsOneWidget);
   });
+
+  testWidgets('account deletion requires explicit phrase and password',
+      (tester) async {
+    var writes = 0;
+    final api = SignApiClient(
+      baseUrl: Uri.parse('https://example.test'),
+      tokenProvider: () async => 'test-token',
+      httpClient: MockClient((request) async {
+        writes++;
+        return http.Response('{}', 403);
+      }),
+    );
+    await tester.pumpWidget(MaterialApp(home: PrivacyDataScreen(api: api)));
+    await tester.ensureVisible(find.byKey(const Key('m22-privacy-delete')));
+    await tester.tap(find.byKey(const Key('m22-privacy-delete')));
+    await tester.pumpAndSettle();
+    expect(find.text('Permanently Delete Account?'), findsOneWidget);
+    TextButton button = tester.widget<TextButton>(
+        find.byKey(const Key('m22-delete-confirm')));
+    expect(button.onPressed, isNull);
+    await tester.enterText(find.byKey(const Key('m22-delete-type')), 'DELETE');
+    await tester.enterText(find.byKey(const Key('m22-delete-password')),
+      'sample-password');
+    await tester.pumpAndSettle();
+    button = tester.widget<TextButton>(
+        find.byKey(const Key('m22-delete-confirm')));
+    expect(button.onPressed, isNotNull);
+    await tester.tap(find.text('Keep Account'));
+    await tester.pumpAndSettle();
+    expect(writes, 0);
+  });
 }
