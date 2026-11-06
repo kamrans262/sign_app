@@ -178,7 +178,9 @@ class _ProfilePreferencesScreenState extends State<ProfilePreferencesScreen> {
     body: SafeArea(bottom: false, child: Column(children: [
       const Sign2DigitalHeader(title: 'Preferences'),
       Expanded(child: Center(child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 720),
+        constraints: BoxConstraints(maxWidth:
+            MediaQuery.orientationOf(context) == Orientation.landscape
+                ? double.infinity : 720),
         child: ListView(
           key: const Key('preferences-scroll'),
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),

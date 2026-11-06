@@ -333,7 +333,9 @@ class _SecurityAccessScreenState extends State<SecurityAccessScreen> {
       body: SafeArea(bottom: false, child: Column(children: [
         const Sign2DigitalHeader(title: 'Security'),
         Expanded(child: Center(child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 720),
+          constraints: BoxConstraints(maxWidth:
+            MediaQuery.orientationOf(context) == Orientation.landscape
+                ? double.infinity : 720),
           child: ListView(
             key: const Key('security-scroll'),
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
@@ -471,7 +473,9 @@ class _SecurityAccessScreenState extends State<SecurityAccessScreen> {
         ))),
         if (!_loading && _error == null) ...[
           Center(child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 720),
+            constraints: BoxConstraints(maxWidth:
+            MediaQuery.orientationOf(context) == Orientation.landscape
+                ? double.infinity : 720),
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
               child: Sign2DigitalOutlinedButton(
@@ -510,7 +514,9 @@ class _SecuritySessionsScreen extends StatelessWidget {
     body: SafeArea(bottom: false, child: Column(children: [
       const Sign2DigitalHeader(title: 'Active Sessions'),
       Expanded(child: Center(child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 720),
+        constraints: BoxConstraints(maxWidth:
+            MediaQuery.orientationOf(context) == Orientation.landscape
+                ? double.infinity : 720),
         child: ListView(
           key: const Key('security-all-sessions'),
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
