@@ -53,7 +53,9 @@ class _SubscriptionOverviewScreenState
 
   Future<void> _openManagePlan() async {
     await Navigator.of(context).push<void>(MaterialPageRoute<void>(
-      builder: (_) => ChoosePlanScreen(flowState: _planDraft),
+      builder: (_) => ChoosePlanScreen(flowState: _planDraft,
+        billingRepository: _repository is RemoteSubscriptionRepository
+            ? _repository as RemoteSubscriptionRepository : null),
     ));
   }
 
