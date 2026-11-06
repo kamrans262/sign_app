@@ -298,7 +298,7 @@ class _TicketDetailState extends State<SupportTicketDetailsScreen> {
         await showDialog<void>(context: context, builder: (dialog) =>
           AlertDialog(
             content: Image.memory(bytes, fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) =>
+              errorBuilder: (context, error, stackTrace) =>
                 const Text('Could not display this attachment.')),
             actions: [TextButton(
               onPressed: () => Navigator.of(dialog).pop(),
@@ -306,8 +306,10 @@ class _TicketDetailState extends State<SupportTicketDetailsScreen> {
           ));
       }
     } catch (_) {
-      if (mounted) setState(() =>
-        error = 'Unable to open the private support attachment.');
+      if (mounted) {
+        setState(() =>
+          error = 'Unable to open the private support attachment.');
+      }
     } finally {
       if (mounted) setState(() => saving = false);
     }
