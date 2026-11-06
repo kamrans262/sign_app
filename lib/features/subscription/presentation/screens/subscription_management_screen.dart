@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/services/active_company_session.dart';
+import '../../../auth/data/mobile_auth_repository.dart';
+import '../../data/remote_subscription_repository.dart';
+
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
@@ -57,9 +61,22 @@ class _SubscriptionManagementScreenState
   void initState() {
     super.initState();
     _repository = widget.repository ??
-        const DemoSubscriptionOverviewRepository();
+        (MobileAuthRepository.shared.isSignedIn
+            ? RemoteSubscriptionRepository()
+            : const DemoSubscriptionOverviewRepository());
+    if (_repository is RemoteSubscriptionRepository) {
+      ActiveCompanySession.selected.addListener(_load);
+    }
     _flowState = widget.flowState ?? SubscriptionPlanFlowState();
     _load();
+  }
+
+  @override
+  void dispose() {
+    if (_repository is RemoteSubscriptionRepository) {
+      ActiveCompanySession.selected.removeListener(_load);
+    }
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -95,13 +112,53 @@ class _SubscriptionManagementScreenState
   void _paymentMethod() {
     final handler = widget.onPaymentMethod;
     if (handler != null) { handler(); return; }
-    _notice('Payment Method is not connected yet.');
+    _notice(_repository is RemoteSubscriptionRepository
+        ? 'Stripe payment methods are unavailable until billing is configured.'
+        : 'Payment Method is not connected yet.');
   }
 
-  void _billingHistory() {
+  Future<void> _billingHistory() async {
     final handler = widget.onBillingHistory;
     if (handler != null) { handler(); return; }
-    _notice('Subscription billing history is not connected yet.');
+    if (_repository is! RemoteSubscriptionRepository) {
+      _notice('Subscription billing history is not connected yet.');
+      return;
+    }
+    try {
+      final result = await (_repository as RemoteSubscriptionRepository).history();
+      if (!mounted) return;
+      final records = result['invoices'];
+      if (records is! List) throw const FormatException();
+      await showModalBottomSheet<void>(context: context, useSafeArea: true,
+        builder: (sheet) => Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
+          child: Column(mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Text('Billing History', style: _sectionStyle),
+              const SizedBox(height: 18),
+              if (records.isEmpty)
+                const Text('No verified subscription invoices yet.',
+                  key: Key('m23-no-billing-history'),
+                  style: TextStyle(color: AppColors.placeholder))
+              else
+                for (final record in records.take(15))
+                  Padding(padding: const EdgeInsets.only(bottom: 10),
+                    child: Text(_billingLine(record))),
+            ]),
+        ),
+      );
+    } catch (_) {
+      _notice('Unable to load verified billing history.');
+    }
+  }
+
+  String _billingLine(Object? record) {
+    if (record is! Map<String, dynamic>) return 'Invalid billing record';
+    final amount = record['amount_due_minor'];
+    final currency = record['currency'] ?? '';
+    final status = record['status'] ?? 'unknown';
+    if (amount is! num) return 'Billing record unavailable';
+    return '$currency ${(amount / 100).toStringAsFixed(2)} · $status';
   }
 
   void _usage() {
@@ -125,6 +182,14 @@ class _SubscriptionManagementScreenState
           _usageLine('Clients', usage.clients),
           const SizedBox(height: 12),
           _usageLine('Equipments', usage.equipment),
+          if (data.freeDocumentLimit != null) ...[
+            const SizedBox(height:12),
+            _usageLine('Free documents remaining', data.freeDocumentsRemaining),
+            if (!data.enforcementEnabled) const Text(
+              'Subscription quotas are not enforced yet.',
+              style: TextStyle(fontFamily:'Inter',fontSize:12,
+                color:AppColors.placeholder)),
+          ],
           if (data.demoOnly) ...[
             const SizedBox(height: 16),
             const Text('Demo preview · Usage values are samples.',
@@ -176,7 +241,9 @@ class _SubscriptionManagementScreenState
     if (approved != true || !mounted) return;
     final callback = widget.onConfirmCancellation;
     if (callback == null) {
-      _notice('Cancellation is not connected. No changes were made.');
+      _notice(_repository is RemoteSubscriptionRepository
+          ? 'Stripe cancellation is unavailable. No changes were made.'
+          : 'Cancellation is not connected. No changes were made.');
       return;
     }
     setState(() => _cancelling = true);
@@ -210,7 +277,9 @@ class _SubscriptionManagementScreenState
     body: SafeArea(bottom: false, child: Column(children: [
       const Sign2DigitalHeader(title: 'Subscription'),
       Expanded(child: Center(child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 720),
+        constraints: BoxConstraints(maxWidth:
+          MediaQuery.orientationOf(context) == Orientation.landscape
+              ? double.infinity : 720),
         child: RefreshIndicator(
           onRefresh: _load,
           child: ListView(
