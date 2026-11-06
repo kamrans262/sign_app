@@ -6,6 +6,7 @@ import 'package:sign2digital/features/clients/presentation/screens/more_screen.d
 import 'package:sign2digital/features/clients/presentation/widgets/sign2digital_status_badge.dart';
 import 'package:sign2digital/features/subscription/data/subscription_overview_repository.dart';
 import 'package:sign2digital/features/subscription/presentation/screens/subscription_overview_screen.dart';
+import 'package:sign2digital/features/subscription/presentation/screens/subscription_management_screen.dart';
 
 class _StubRepository implements SubscriptionOverviewRepository {
   _StubRepository(this.data);
@@ -105,15 +106,16 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Missing real billing destination is clearly unavailable',
+  testWidgets('View Billing opens the implemented subscription management screen',
       (tester) async {
     await tester.pumpWidget(const MaterialApp(
       home: SubscriptionOverviewScreen(),
     ));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('subscription-view-billing')));
-    await tester.pump();
-    expect(find.text('Billing is not connected yet.'), findsOneWidget);
+    await tester.pumpAndSettle();
+    expect(find.text('Current Plan'), findsOneWidget);
+    expect(find.byType(SubscriptionManagementScreen), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

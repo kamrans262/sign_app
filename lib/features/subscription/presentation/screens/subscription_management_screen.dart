@@ -125,7 +125,7 @@ class _SubscriptionManagementScreenState
       return;
     }
     try {
-      final result = await (_repository as RemoteSubscriptionRepository).history();
+      final result = await _repository.history();
       if (!mounted) return;
       final records = result['invoices'];
       if (records is! List) throw const FormatException();
