@@ -38,6 +38,7 @@ class SubscriptionOverview {
     this.canCheckout = false,
     this.canManageBilling = false,
     this.cancelAtPeriodEnd = false,
+    this.periodEndsAt,
     this.demoOnly = false,
   });
 
@@ -56,6 +57,7 @@ class SubscriptionOverview {
   final bool canCheckout;
   final bool canManageBilling;
   final bool cancelAtPeriodEnd;
+  final String? periodEndsAt;
 
   /// Every preview-only billing field and statistic must be identified as demo.
   final bool demoOnly;
