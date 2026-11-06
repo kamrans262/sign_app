@@ -283,10 +283,9 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
               ProfileNotificationRow(
                 key: const Key('app-settings-offline-mode'),
                 title: 'Offline Mode',
-                description: 'Offline access requires caching and sync setup',
-                enabled: false,
-                onChanged: (_) => _message(
-                  'Offline access is not yet configured. Online work is unchanged.'),
+                description: 'Allow offline access to recent data',
+                enabled: _settings.offlineMode,
+                onChanged: (v) => _persist(_settings.copyWith(offlineMode: v)),
               ),
               const SizedBox(height: 20),
               ProfileNotificationRow(
