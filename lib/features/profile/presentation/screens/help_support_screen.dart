@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:printing/printing.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
@@ -283,6 +284,35 @@ class _TicketDetailState extends State<SupportTicketDetailsScreen> {
     }catch(_){if(mounted)setState(()=>error='Could not send your reply.');}
     finally{if(mounted)setState(()=>saving=false);}
   }
+  Future<void> openAttachment(SupportAttachment attachment) async {
+    if (saving) return;
+    setState(() { saving = true; error = null; });
+    try {
+      final bytes = await widget.repository.downloadAttachment(
+        widget.ticketId, attachment);
+      if (!mounted) return;
+      if (attachment.mimeType == 'application/pdf') {
+        await Printing.sharePdf(bytes: bytes,
+          filename: 'Sign2Digital_Support_${attachment.id}.pdf');
+      } else {
+        await showDialog<void>(context: context, builder: (dialog) =>
+          AlertDialog(
+            content: Image.memory(bytes, fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) =>
+                const Text('Could not display this attachment.')),
+            actions: [TextButton(
+              onPressed: () => Navigator.of(dialog).pop(),
+              child: const Text('Close'))],
+          ));
+      }
+    } catch (_) {
+      if (mounted) setState(() =>
+        error = 'Unable to open the private support attachment.');
+    } finally {
+      if (mounted) setState(() => saving = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context)=>Scaffold(
     backgroundColor:AppColors.white,
@@ -311,6 +341,24 @@ class _TicketDetailState extends State<SupportTicketDetailsScreen> {
                 Card(child:ListTile(
                   title:Text(entry.body),
                   subtitle:Text(entry.createdAt))),
+              if(data!.attachments.isNotEmpty)...[
+                const SizedBox(height:16),
+                const Text('Attachments',style:TextStyle(
+                  fontFamily:'Inter',fontWeight:FontWeight.w600)),
+                const SizedBox(height:8),
+                for(final attachment in data!.attachments)
+                  Card(child:ListTile(
+                    key:Key('m22-attachment-${attachment.id}'),
+                    leading:Icon(attachment.mimeType=='application/pdf'
+                      ? Icons.picture_as_pdf_outlined
+                      : Icons.image_outlined),
+                    title:Text(attachment.originalName,
+                      maxLines:1,overflow:TextOverflow.ellipsis),
+                    subtitle:Text(attachment.mimeType),
+                    trailing:const Icon(Icons.open_in_new),
+                    onTap:saving ? null : () => openAttachment(attachment),
+                  )),
+              ],
               if(data!.ticket.status!='closed')...[
                 const SizedBox(height:14),
                 TextField(key:const Key('m22-ticket-reply'),
