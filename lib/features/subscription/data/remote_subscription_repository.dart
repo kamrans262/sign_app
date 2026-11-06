@@ -150,7 +150,53 @@ class RemoteSubscriptionRepository implements SubscriptionOverviewRepository {
   }
 
   Future<M23CheckoutVerification> checkoutStatus(String intentId) async {
-    if (!RegExp(r'^[a-fA-F0-9-]{36}
+    if (intentId.length != 36 ||
+        !RegExp(r'^[A-Fa-f0-9-]+').hasMatch(intentId)) {
+      throw const SignApiException('Invalid Checkout confirmation reference.');
+    }
+    final status = await _get('/api/v1/billing/checkout/' + intentId + '/status');
+    return M23CheckoutVerification(
+      status: _string(status['status']) ?? 'pending',
+      verified: status['verified'] == true,
+    );
+  }
+
+  Future<Uri> portal() async {
+    final result = await _write('/api/v1/billing/portal', {});
+    return hostedUrl(result['portal_url'], portal: true);
+  }
+
+  Future<Map<String, dynamic>> cancel() =>
+      _write('/api/v1/billing/cancel', {'confirm': true});
+
+  Future<Map<String, dynamic>> resume() =>
+      _write('/api/v1/billing/resume', {'confirm': true});
+
+  Future<Map<String, dynamic>> previewChange(int serverPlanId) =>
+      _write('/api/v1/billing/change-preview', {'plan_id': serverPlanId});
+
+  Future<Map<String, dynamic>> changePlan(int serverPlanId,
+          {required String requestId}) =>
+      _write('/api/v1/billing/change', {
+        'plan_id': serverPlanId,
+        'request_id': requestId,
+        'confirm': true,
+        'proration_behavior': 'none',
+      });
+}
+
+class M23CheckoutAttempt {
+  const M23CheckoutAttempt({required this.intentId, required this.url});
+  final String intentId;
+  final Uri url;
+}
+
+class M23CheckoutVerification {
+  const M23CheckoutVerification({required this.status,
+    required this.verified});
+  final String status;
+  final bool verified;
+}
 
 /// A server catalog is explicitly loaded; samples are never mixed into
 /// signed-in plan selection, even when the server returns no plans.
