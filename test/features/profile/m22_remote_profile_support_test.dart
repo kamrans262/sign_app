@@ -161,4 +161,57 @@ void main(){
     expect(find.byKey(const Key('m22-contact-support')),findsOneWidget);
     expect(tester.takeException(),isNull);
   });
+
+  test('private support attachment is listed and downloaded with bearer auth', () async {
+    final source = RemoteSupportRepository(api: api((req) async {
+      expect(req.headers['Authorization'], 'Bearer test-token');
+      if (req.url.path == '/api/v1/support/tickets/4') {
+        return success({
+          'ticket': {
+            'id': 4, 'reference': 'S2D-4', 'subject': 'Attachment test',
+            'description': 'Please review', 'status': 'open',
+            'category': 'bug', 'created_at': '2026-11-06',
+          },
+          'replies': <Object>[],
+          'attachments': [{
+            'id': 8, 'original_name': 'proof.jpg',
+            'mime_type': 'image/jpeg', 'byte_size': 4,
+          }],
+        });
+      }
+      if (req.url.path == '/api/v1/support/tickets/4/attachments/8') {
+        return http.Response.bytes([255, 216, 255, 217], 200,
+          headers: {'content-type': 'image/jpeg'});
+      }
+      throw StateError(req.url.path);
+    }));
+    final ticket = await source.details(4);
+    expect(ticket.attachments.single.originalName, 'proof.jpg');
+    final bytes = await source.downloadAttachment(4, ticket.attachments.single);
+    expect(bytes, [255, 216, 255, 217]);
+
+  });
+
+  testWidgets('ticket details show private attachments with original name',
+      (tester) async {
+    final source = RemoteSupportRepository(api: api((req) async =>
+      success({
+        'ticket': {
+          'id': 4, 'reference': 'S2D-4', 'subject': 'Attachment test',
+          'description': 'Please review', 'status': 'closed',
+          'category': 'bug', 'created_at': '2026-11-06',
+        },
+        'replies': <Object>[],
+        'attachments': [{
+          'id': 8, 'original_name': 'proof.jpg',
+          'mime_type': 'image/jpeg', 'byte_size': 4,
+        }],
+      })));
+    await tester.pumpWidget(MaterialApp(
+      home: SupportTicketDetailsScreen(ticketId: 4, repository: source)));
+    await tester.pumpAndSettle();
+    expect(find.text('Attachments'), findsOneWidget);
+    expect(find.text('proof.jpg'), findsOneWidget);
+    expect(find.byKey(const Key('m22-attachment-8')), findsOneWidget);
+  });
 }
