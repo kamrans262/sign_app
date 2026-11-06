@@ -80,6 +80,8 @@ class RemoteSubscriptionRepository implements SubscriptionOverviewRepository {
       freeDocumentsUsed: _integer(allowance['used']),
       enforcementEnabled: allowance['enforcement_enabled'] == true,
       canCheckout: result['can_checkout'] == true,
+      canManageBilling: result['can_manage_billing'] == true,
+      cancelAtPeriodEnd: result['cancel_at_period_end'] == true,
       demoOnly: false,
     );
   }
@@ -131,6 +133,8 @@ class RemoteSubscriptionPlanCatalog implements SubscriptionPlanCatalog {
         throw const SignApiException('Invalid configured plan.');
       }
       parsed.add(SubscriptionPlanOption(
+        serverPlanId: RemoteSubscriptionRepository._integer(row['id']),
+        canCheckout: row['can_checkout'] == true,
         id: code, name: name, period: period, priceLabel: price,
         description: RemoteSubscriptionRepository._string(row['description']) ?? '',
         featureLabels: List<String>.unmodifiable(featureLabels.cast<String>()),
