@@ -135,24 +135,27 @@ void main() {
 
   testWidgets('Unconnected billing actions do not manufacture payment records',
       (tester) async {
-    await tester.pumpWidget(const MaterialApp(
-      home: SubscriptionManagementScreen(),
+    var historyRequests = 0;
+    await tester.pumpWidget(MaterialApp(
+      home: SubscriptionManagementScreen(
+        onBillingHistory: () => historyRequests++,
+      ),
     ));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('subscription-action-payment-method')));
     await tester.pump();
     expect(find.text('Payment Method is not connected yet.'), findsOneWidget);
+    expect(historyRequests, 0);
     await _scrollTo(tester, const Key('subscription-action-billing-history'));
-    // The fixed bottom navigation sits on the edge of the scroll viewport;
-    // scroll the action above it before the actual pointer hit test.
+    // Tap above the fixed bottom navigation and verify the real callback,
+    // rather than timing a transient SnackBar on a separate action.
     await tester.drag(find.byKey(const Key('subscription-management-scroll')),
       const Offset(0, -140));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('subscription-action-billing-history')));
-    // The previous SnackBar must exit before the next one becomes visible.
-    await tester.pump(const Duration(milliseconds: 500));
-    expect(find.text('Subscription billing history is not connected yet.'),
-      findsOneWidget);
+    await tester.pump();
+    expect(historyRequests, 1);
+    expect(find.text('CHF 49 / month'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
