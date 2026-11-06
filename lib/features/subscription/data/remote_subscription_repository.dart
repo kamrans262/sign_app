@@ -84,6 +84,7 @@ class RemoteSubscriptionRepository implements SubscriptionOverviewRepository {
       canCheckout: result['can_checkout'] == true,
       canManageBilling: result['can_manage_billing'] == true,
       cancelAtPeriodEnd: result['cancel_at_period_end'] == true,
+      periodEndsAt: _string(result['period_ends_at']),
       demoOnly: false,
     );
   }
