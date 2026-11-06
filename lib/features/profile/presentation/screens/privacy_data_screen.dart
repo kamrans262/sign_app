@@ -212,6 +212,11 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
           key: const Key('m22-privacy-scroll'),
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
           children: [
+            if (_message != null) ...[
+              const SizedBox(height: 16),
+              Text(_message!, key: const Key('m22-privacy-message'),
+                style: const TextStyle(color: AppColors.secondaryText)),
+            ],
             const Text('Your Account Data',
               style: TextStyle(fontFamily: 'Inter', fontSize: 20,
                 fontWeight: FontWeight.w600, color: AppColors.dark)),
@@ -259,11 +264,6 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
               onPressed: _busy ? null : _deleteAccount,
               icon: const Icon(Icons.delete_forever_outlined),
               label: const Text('Delete Account')),
-            if (_message != null) ...[
-              const SizedBox(height: 16),
-              Text(_message!, key: const Key('m22-privacy-message'),
-                style: const TextStyle(color: AppColors.secondaryText)),
-            ],
           ],
         ),
       ))),
