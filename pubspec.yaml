@@ -33,6 +33,7 @@ dependencies:
   pdf: ^3.11.3
   image_picker: ^1.1.2
   http: ^1.2.2
+  url_launcher: ^6.3.2
   crypto: ^3.0.7
   flutter_secure_storage: ^9.2.4
   firebase_core: ^5.1.0
