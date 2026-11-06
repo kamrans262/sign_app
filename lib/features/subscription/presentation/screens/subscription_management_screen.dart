@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/services/active_company_session.dart';
 import '../../../auth/data/mobile_auth_repository.dart';
@@ -105,16 +106,34 @@ class _SubscriptionManagementScreenState
 
   Future<void> _changePlan() async {
     await Navigator.of(context).push<void>(MaterialPageRoute<void>(
-      builder: (_) => ChoosePlanScreen(flowState: _flowState),
+      builder: (_) => ChoosePlanScreen(
+        flowState: _flowState,
+        billingRepository: _repository is RemoteSubscriptionRepository
+            ? _repository as RemoteSubscriptionRepository : null,
+        changeExistingPlan: _data?.canManageBilling == true,
+      ),
     ));
   }
 
-  void _paymentMethod() {
+  Future<void> _paymentMethod() async {
     final handler = widget.onPaymentMethod;
     if (handler != null) { handler(); return; }
-    _notice(_repository is RemoteSubscriptionRepository
-        ? 'Stripe payment methods are unavailable until billing is configured.'
-        : 'Payment Method is not connected yet.');
+    if (_repository is! RemoteSubscriptionRepository ||
+        _data?.canManageBilling != true) {
+      _notice(_repository is RemoteSubscriptionRepository
+          ? 'Stripe payment methods are unavailable until billing is configured.'
+          : 'Payment Method is not connected yet.');
+      return;
+    }
+    try {
+      final url=await _repository.portal();
+      if(!mounted)return;
+      final opened=await launchUrl(url,mode:LaunchMode.externalApplication);
+      if(!opened)throw const FormatException('Secure portal not opened.');
+      if(mounted)_notice('Billing Portal opened. Refresh to verify updates.');
+    }catch(_){
+      if(mounted)_notice('Secure billing portal is currently unavailable.');
+    }
   }
 
   Future<void> _billingHistory() async {
@@ -175,7 +194,8 @@ class _SubscriptionManagementScreenState
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
         child: Column(mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('Usage This Month', style: _sectionStyle),
+          Text(data.demoOnly ? 'Usage This Month' : 'Document & Company Usage',
+            style: _sectionStyle),
           const SizedBox(height: 20),
           _usageLine('Documents', usage.documents),
           const SizedBox(height: 12),
@@ -220,10 +240,9 @@ class _SubscriptionManagementScreenState
       builder: (dialog) => AlertDialog(
         title: const Text('Cancel Subscription?'),
         content: const Text(
-          'The effective cancellation date is not available. '
-          'It depends on your subscription terms. '
-          'No cancellation takes place unless a connected service '
-          'confirms your request. Do you want to proceed?'),
+          'Cancellation will be requested for the end of your billing '
+          'period. No cancellation is applied unless Stripe confirms it. '
+          'Do you want to proceed?'),
         actions: [
           TextButton(
             key: const Key('subscription-keep-plan'),
@@ -240,20 +259,39 @@ class _SubscriptionManagementScreenState
     );
     if (approved != true || !mounted) return;
     final callback = widget.onConfirmCancellation;
-    if (callback == null) {
-      _notice(_repository is RemoteSubscriptionRepository
-          ? 'Stripe cancellation is unavailable. No changes were made.'
-          : 'Cancellation is not connected. No changes were made.');
+    if (callback == null && _repository is! RemoteSubscriptionRepository) {
+      _notice('Cancellation is not connected. No changes were made.');
       return;
     }
     setState(() => _cancelling = true);
     try {
-      await callback(_data!);
+      if (callback != null) {
+        await callback(_data!);
+      } else if (_data!.canManageBilling) {
+        await (_repository as RemoteSubscriptionRepository).cancel();
+      } else {
+        _notice('Stripe cancellation is unavailable. No changes were made.');
+        return;
+      }
       if (mounted) await _load();
     } catch (_) {
       _notice('Cancellation request could not be completed.');
     } finally {
       if (mounted) setState(() => _cancelling = false);
+    }
+  }
+
+  Future<void> _resumeSubscription() async {
+    if(_cancelling || _repository is! RemoteSubscriptionRepository ||
+        _data?.canManageBilling!=true)return;
+    setState(()=>_cancelling=true);
+    try {
+      await _repository.resume();
+      if(mounted)await _load();
+    }catch(_){
+      if(mounted)_notice('Unable to resume cancellation. Confirm in Stripe Billing.');
+    }finally {
+      if(mounted)setState(()=>_cancelling=false);
     }
   }
 
@@ -341,10 +379,14 @@ class _SubscriptionManagementScreenState
                 const SizedBox(height: 20),
                 SubscriptionManagementActionCard(
                   key: const Key('subscription-action-cancel'),
-                  title: 'Cancel Subscription',
-                  subtitle: 'Cancel your subscription anytime',
+                  title: _data!.cancelAtPeriodEnd
+                      ? 'Cancellation Scheduled' : 'Cancel Subscription',
+                  subtitle: _data!.cancelAtPeriodEnd
+                      ? 'Access continues until your verified period ends'
+                      : 'Cancel at the end of the billing period',
                   icon: Icons.cancel_outlined,
-                  onTap: _cancelling ? () {} : _cancelSubscription,
+                  onTap: _cancelling ? () {} : (_data!.cancelAtPeriodEnd
+                      ? _resumeSubscription : _cancelSubscription),
                 ),
               ],
             ],
