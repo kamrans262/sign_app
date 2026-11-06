@@ -143,6 +143,11 @@ void main() {
     await tester.pump();
     expect(find.text('Payment Method is not connected yet.'), findsOneWidget);
     await _scrollTo(tester, const Key('subscription-action-billing-history'));
+    // The fixed bottom navigation sits on the edge of the scroll viewport;
+    // scroll the action above it before the actual pointer hit test.
+    await tester.drag(find.byKey(const Key('subscription-management-scroll')),
+      const Offset(0, -140));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('subscription-action-billing-history')));
     // The previous SnackBar must exit before the next one becomes visible.
     await tester.pump(const Duration(milliseconds: 500));

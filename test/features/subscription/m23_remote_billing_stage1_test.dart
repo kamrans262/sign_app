@@ -181,6 +181,12 @@ void main() {
     await tester.pumpAndSettle();
     await tester.ensureVisible(
       find.byKey(const Key('subscription-action-billing-history')));
+    await tester.pumpAndSettle();
+    // Keep the tap above the fixed bottom navigation, which can occlude
+    // a card's center when ensureVisible only scrolls it to the viewport edge.
+    await tester.drag(find.byKey(const Key('subscription-management-scroll')),
+      const Offset(0, -180));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('subscription-action-billing-history')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('m23-no-billing-history')),findsOneWidget);
