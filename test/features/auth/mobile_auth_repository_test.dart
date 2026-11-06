@@ -1,10 +1,12 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
 import 'package:sign2digital/core/services/active_company_session.dart';
+import 'package:sign2digital/core/services/profile_photo_session.dart';
 import 'package:sign2digital/core/services/sign_api_client.dart';
 import 'package:sign2digital/features/auth/data/mobile_auth_repository.dart';
 import 'package:sign2digital/features/auth/data/remote_account_repository.dart';
@@ -250,9 +252,12 @@ void main() {
       rememberMe: true,
     );
     expect(storage.value, 'session-token');
+    ProfilePhotoSession.setPhoto(Uint8List.fromList([1, 2, 3]));
+    expect(ProfilePhotoSession.bytes.value, isNotNull);
     await auth.logout();
     expect(auth.isSignedIn, false);
     expect(storage.value, isNull);
+    expect(ProfilePhotoSession.bytes.value, isNull);
   });
 
   test('temporary server outage never reopens app but retains remembered bearer', () async {
