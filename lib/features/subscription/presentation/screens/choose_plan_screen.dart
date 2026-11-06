@@ -20,11 +20,15 @@ class ChoosePlanScreen extends StatefulWidget {
     this.catalog,
     this.flowState,
     this.onContinue,
+    this.billingRepository,
+    this.changeExistingPlan = false,
   });
 
   final SubscriptionPlanCatalog? catalog;
   final SubscriptionPlanFlowState? flowState;
   final ValueChanged<SubscriptionPlanOption>? onContinue;
+  final RemoteSubscriptionRepository? billingRepository;
+  final bool changeExistingPlan;
 
   @override
   State<ChoosePlanScreen> createState() => _ChoosePlanScreenState();
@@ -113,7 +117,11 @@ class _ChoosePlanScreenState extends State<ChoosePlanScreen> {
       return;
     }
     Navigator.of(context).push<void>(MaterialPageRoute<void>(
-      builder: (_) => SubscriptionPaymentDetailsScreen(plan: current),
+      builder: (_) => SubscriptionPaymentDetailsScreen(
+        plan: current,
+        repository: widget.billingRepository,
+        changeExistingPlan: widget.changeExistingPlan,
+      ),
     ));
   }
 
