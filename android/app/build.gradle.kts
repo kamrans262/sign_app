@@ -1,8 +1,22 @@
 plugins {
     id("com.android.application")
-    id("com.google.gms.google-services")
+    // Resolve the plugin, but apply it only after a real project config exists.
+    // M20 Firebase activation requires separate authorization.
+    id("com.google.gms.google-services") apply false
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+}
+
+// A fresh checkout must compile for QA without bundled Firebase credentials.
+// Normal Google Services processing is unchanged when the real app config is provided.
+val hasGoogleServicesConfig = listOf(
+    "google-services.json",
+    "src/debug/google-services.json",
+    "src/profile/google-services.json",
+    "src/release/google-services.json",
+).any { file(it).isFile }
+if (hasGoogleServicesConfig) {
+    apply(plugin = "com.google.gms.google-services")
 }
 
 android {
