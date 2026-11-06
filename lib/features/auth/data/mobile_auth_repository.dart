@@ -231,6 +231,7 @@ class MobileAuthRepository {
     } finally {
       _sessionToken = null;
       ActiveCompanySession.clear();
+      ProfilePhotoSession.setPhoto(null);
       await _tokenStorage.delete();
     }
   }
