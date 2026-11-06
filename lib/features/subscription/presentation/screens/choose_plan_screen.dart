@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../../auth/data/mobile_auth_repository.dart';
+import '../../data/remote_subscription_repository.dart';
+import 'subscription_payment_details_screen.dart';
+
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
@@ -13,12 +17,12 @@ import '../widgets/subscription_feature_list.dart';
 class ChoosePlanScreen extends StatefulWidget {
   const ChoosePlanScreen({
     super.key,
-    this.catalog = const DemoSubscriptionPlanCatalog(),
+    this.catalog,
     this.flowState,
     this.onContinue,
   });
 
-  final SubscriptionPlanCatalog catalog;
+  final SubscriptionPlanCatalog? catalog;
   final SubscriptionPlanFlowState? flowState;
   final ValueChanged<SubscriptionPlanOption>? onContinue;
 
@@ -28,16 +32,39 @@ class ChoosePlanScreen extends StatefulWidget {
 
 class _ChoosePlanScreenState extends State<ChoosePlanScreen> {
   late final SubscriptionPlanFlowState _draft;
+  late final SubscriptionPlanCatalog _catalog;
+  bool _loading = false;
+  String? _loadError;
 
   @override
   void initState() {
     super.initState();
     _draft = widget.flowState ?? SubscriptionPlanFlowState();
+    _catalog = widget.catalog ?? (MobileAuthRepository.shared.isSignedIn
+        ? RemoteSubscriptionPlanCatalog()
+        : const DemoSubscriptionPlanCatalog());
+    if (_catalog is RemoteSubscriptionPlanCatalog) _loadPlans();
+  }
+
+  Future<void> _loadPlans() async {
+    setState(() { _loading = true; _loadError = null; });
+    try {
+      await (_catalog as RemoteSubscriptionPlanCatalog).load();
+      if (!mounted) return;
+      setState(() => _loading = false);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() { _loading = false;
+        _loadError = 'Unable to load published subscription plans.'; });
+    }
   }
 
   SubscriptionPlanOption? _optionFor(SubscriptionBillingPeriod period) {
-    for (final plan in widget.catalog.options) {
-      if (plan.id == 'business' && plan.period == period) return plan;
+    for (final plan in _catalog.options) {
+      if (plan.period == period && _draft.selectedPlan?.id == plan.id) return plan;
+    }
+    for (final plan in _catalog.options) {
+      if (plan.period == period) return plan;
     }
     return null;
   }
@@ -71,17 +98,23 @@ class _ChoosePlanScreenState extends State<ChoosePlanScreen> {
       return;
     }
     if (!_isSelected(current)) {
-      _notice('Select the Business Plan to continue.');
+      _notice('Select the ${current.name} to continue.');
       return;
     }
     // Refresh the draft to the catalog value, preserving price and benefits
     // from the selected billing period across any downstream navigation.
     _draft.select(current);
-    if (widget.onContinue == null) {
+    if (widget.onContinue != null) {
+      widget.onContinue!(current);
+      return;
+    }
+    if (current.demoOnly) {
       _notice('Payment Details is not connected yet. Your selection is saved.');
       return;
     }
-    widget.onContinue!(current);
+    Navigator.of(context).push<void>(MaterialPageRoute<void>(
+      builder: (_) => SubscriptionPaymentDetailsScreen(plan: current),
+    ));
   }
 
   static const _sectionStyle = TextStyle(
@@ -102,7 +135,9 @@ class _ChoosePlanScreenState extends State<ChoosePlanScreen> {
         child: Column(children: [
           const Sign2DigitalHeader(title: 'Subscription'),
           Expanded(child: Center(child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 720),
+            constraints: BoxConstraints(maxWidth:
+              MediaQuery.orientationOf(context) == Orientation.landscape
+                  ? double.infinity : 720),
             child: ListView(
               key: const Key('choose-plan-scroll'),
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
@@ -127,7 +162,15 @@ class _ChoosePlanScreenState extends State<ChoosePlanScreen> {
                   ),
                 ]),
                 const SizedBox(height: 20),
-                if (option == null)
+                if (_loading)
+                  const Center(child: Padding(
+                    padding: EdgeInsets.all(32),
+                    child: CircularProgressIndicator(key: Key('m23-plans-loading')),
+                  ))
+                else if (_loadError != null)
+                  TextButton(key: const Key('m23-plans-retry'),
+                    onPressed: _loadPlans, child: Text(_loadError!))
+                else if (option == null)
                   const Padding(
                     padding: EdgeInsets.all(20),
                     child: Text(
