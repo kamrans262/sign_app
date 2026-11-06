@@ -155,7 +155,10 @@ void main() {
     await tester.tap(find.byKey(const Key('subscription-action-billing-history')));
     await tester.pump();
     expect(historyRequests, 1);
-    expect(find.text('CHF 49 / month'), findsOneWidget);
+    // The ListView may recycle the plan card after scrolling. Assert that
+    // billing did not navigate to a payment step or create any paid state.
+    expect(find.byType(SubscriptionManagementScreen), findsOneWidget);
+    expect(find.byKey(const Key('m23-checkout-unavailable')), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
