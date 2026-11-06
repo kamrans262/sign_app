@@ -67,10 +67,11 @@ class _SubscriptionPaymentDetailsScreenState
         final confirm=await showDialog<bool>(context:context,
           builder:(dialog)=>AlertDialog(
             title:const Text('Confirm Plan Change'),
-            content:Text('Stripe estimates $currency '
-                '${(amount/100).toStringAsFixed(2)} due for this change. '
-                'Proration is disabled. Your provider may require an '
-                'additional payment before activating the new plan.'),
+            content:Text('Estimated upcoming invoice: $currency '
+                '${(amount/100).toStringAsFixed(2)}. '
+                'Proration for this plan change is disabled. '
+                'This preview is not an immediate payment request; '
+                'any amount actually due is determined by Stripe.'),
             actions:[
               TextButton(onPressed:()=>Navigator.of(dialog).pop(false),
                 child:const Text('Keep Current Plan')),
