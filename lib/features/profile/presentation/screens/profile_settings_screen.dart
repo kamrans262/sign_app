@@ -160,7 +160,9 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
           onProfileTap: _edit,
         ),
         Expanded(child: Center(child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 720),
+          constraints: BoxConstraints(maxWidth:
+            MediaQuery.orientationOf(context) == Orientation.landscape
+                ? double.infinity : 720),
           child: RefreshIndicator(
             onRefresh: _load,
             child: ListView(
