@@ -134,7 +134,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Three notification rows toggle independently and save',
+  testWidgets('Push consent saves while unsupported SMS remains unavailable',
       (tester) async {
     final repo = _PreferencesRepo();
     await tester.pumpWidget(MaterialApp(
@@ -155,14 +155,15 @@ void main() {
     await tester.tap(find.byKey(const Key('preferences-sms')));
     await tester.pumpAndSettle();
     expect(tester.widget<ProfileNotificationRow>(
-      find.byKey(const Key('preferences-sms'))).enabled, isTrue);
+      find.byKey(const Key('preferences-sms'))).enabled, isFalse);
+    expect(find.textContaining('SMS notifications are unavailable'), findsOneWidget);
 
     await _scrollTo(tester, const Key('preferences-save'));
     await tester.tap(find.byKey(const Key('preferences-save')));
     await tester.pump();
     expect(repo.saved.pushNotifications, isFalse);
     expect(repo.saved.emailNotifications, isTrue);
-    expect(repo.saved.smsNotifications, isTrue);
+    expect(repo.saved.smsNotifications, isFalse);
     expect(repo.writes, 1);
     expect(tester.takeException(), isNull);
   });
