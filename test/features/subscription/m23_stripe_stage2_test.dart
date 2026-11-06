@@ -157,6 +157,10 @@ void main(){
     await tester.tap(find.byKey(const Key('m23-checkout-unavailable')));
     await tester.pumpAndSettle();
     expect(opened?.host,'checkout.stripe.com');
+    await tester.scrollUntilVisible(find.byKey(const Key('m23-provider-status')),
+      160,scrollable:find.descendant(
+        of:find.byKey(const Key('m23-payment-review-scroll')),
+        matching:find.byType(Scrollable)).first);
     expect(find.textContaining('Checkout opened securely'),findsOneWidget);
     expect(find.textContaining('Provider verified'),findsNothing);
     expect(find.byKey(const Key('m23-verify-checkout')),findsOneWidget);
@@ -205,6 +209,10 @@ void main(){
     await tester.tap(find.byKey(const Key('m23-confirm-plan-change')));
     await tester.pumpAndSettle();
     expect(fake.requests,contains('POST /api/v1/billing/change'));
+    await tester.scrollUntilVisible(find.byKey(const Key('m23-provider-status')),
+      150,scrollable:find.descendant(
+        of:find.byKey(const Key('m23-payment-review-scroll')),
+        matching:find.byType(Scrollable)).first);
     expect(find.textContaining('verified billing'),findsOneWidget);
     expect(tester.takeException(),isNull);
   });
