@@ -60,7 +60,9 @@ class _EmailChangeState extends State<VerifiedEmailChangeScreen> {
     body:SafeArea(child:Column(children:[
       const Sign2DigitalHeader(title:'Verify New Email'),
       Expanded(child:Center(child:ConstrainedBox(
-        constraints:const BoxConstraints(maxWidth:720),
+        constraints:BoxConstraints(maxWidth:
+          MediaQuery.orientationOf(context)==Orientation.landscape
+              ? double.infinity : 720),
         child:ListView(padding:const EdgeInsets.all(20),children:[
           Text('New email: ${widget.newEmail}',
             style:const TextStyle(fontFamily:'Inter',color:AppColors.dark)),

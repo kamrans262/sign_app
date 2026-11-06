@@ -46,7 +46,9 @@ class _PasswordChangeState extends State<ChangeAccountPasswordScreen> {
     body:SafeArea(child:Column(children:[
       const Sign2DigitalHeader(title:'Change Password'),
       Expanded(child:Center(child:ConstrainedBox(
-        constraints:const BoxConstraints(maxWidth:720),
+        constraints:BoxConstraints(maxWidth:
+          MediaQuery.orientationOf(context)==Orientation.landscape
+              ? double.infinity : 720),
         child:ListView(padding:const EdgeInsets.all(20),children:[
           const Text('Use upper and lower case letters, a number and a symbol.',
             style:TextStyle(color:AppColors.placeholder)),
