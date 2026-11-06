@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/services/active_company_session.dart';
+import '../../../auth/data/mobile_auth_repository.dart';
+import '../../data/remote_subscription_repository.dart';
+
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
@@ -66,8 +70,21 @@ class _SubscriptionOverviewScreenState
   @override
   void initState() {
     super.initState();
-    _repository = widget.repository ?? const DemoSubscriptionOverviewRepository();
+    _repository = widget.repository ?? (MobileAuthRepository.shared.isSignedIn
+        ? RemoteSubscriptionRepository()
+        : const DemoSubscriptionOverviewRepository());
+    if (_repository is RemoteSubscriptionRepository) {
+      ActiveCompanySession.selected.addListener(_load);
+    }
     _load();
+  }
+
+  @override
+  void dispose() {
+    if (_repository is RemoteSubscriptionRepository) {
+      ActiveCompanySession.selected.removeListener(_load);
+    }
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -129,7 +146,9 @@ class _SubscriptionOverviewScreenState
               () => _unavailable('Profile'),
         ),
         Expanded(child: Center(child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 720),
+          constraints: BoxConstraints(maxWidth:
+            MediaQuery.orientationOf(context) == Orientation.landscape
+                ? double.infinity : 720),
           child: RefreshIndicator(
             onRefresh: _load,
             child: ListView(
@@ -154,6 +173,20 @@ class _SubscriptionOverviewScreenState
                   ))
                 else if (_overview != null) ...[
                   _currentPlan(_overview!),
+                  if (_overview!.freeDocumentLimit != null) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      'Free documents remaining: '
+                      '${_overview!.freeDocumentsRemaining ?? 0} of '
+                      '${_overview!.freeDocumentLimit}',
+                      key: const Key('m23-free-document-allowance'),
+                      style: AppTextStyles.subtitle,
+                    ),
+                    if (!_overview!.enforcementEnabled)
+                      const Text('Subscription limits are not active yet.',
+                        key: Key('m23-enforcement-disabled'),
+                        style: AppTextStyles.subtitle),
+                  ],
                   const SizedBox(height: 20),
                   const Text('Plan Features', style: _sectionStyle),
                   const SizedBox(height: 20),
@@ -170,12 +203,12 @@ class _SubscriptionOverviewScreenState
                     ]),
                   const SizedBox(height: 20),
                   Row(children: [
-                    const Expanded(child: Text('Usage This Month',
+                    Expanded(child: Text(_overview!.demoOnly
+                        ? 'Usage This Month' : 'Document & Company Usage',
                       style: _sectionStyle)),
                     TextButton(
                       key: const Key('subscription-view-details'),
-                      onPressed: widget.onViewUsage ??
-                          () => _unavailable('Usage details'),
+                      onPressed: widget.onViewUsage ?? _openSubscriptionManagement,
                       style: TextButton.styleFrom(
                         foregroundColor: AppColors.primary,
                         padding: EdgeInsets.zero,
