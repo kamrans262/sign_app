@@ -282,8 +282,10 @@ class _SubscriptionManagementScreenState
   }
 
   Future<void> _resumeSubscription() async {
-    if(_cancelling || _repository is! RemoteSubscriptionRepository ||
-        _data?.canManageBilling!=true)return;
+    if (_cancelling || _repository is! RemoteSubscriptionRepository ||
+        _data?.canManageBilling != true) {
+      return;
+    }
     setState(()=>_cancelling=true);
     try {
       await _repository.resume();
