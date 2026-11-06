@@ -20,6 +20,8 @@ class SubscriptionPlanOption {
     required this.description,
     required this.featureLabels,
     this.demoOnly = false,
+    this.serverPlanId,
+    this.canCheckout = false,
   });
 
   final String id;
@@ -29,6 +31,9 @@ class SubscriptionPlanOption {
   final String description;
   final List<String> featureLabels;
   final bool demoOnly;
+  /// Numeric published plan ID verified by Laravel; never a hardcoded price.
+  final int? serverPlanId;
+  final bool canCheckout;
 }
 
 /// Plans can later be loaded from the billing catalog without changing UI.
