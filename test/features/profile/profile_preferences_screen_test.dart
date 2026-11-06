@@ -157,6 +157,9 @@ void main() {
     expect(tester.widget<ProfileNotificationRow>(
       find.byKey(const Key('preferences-sms'))).enabled, isFalse);
     expect(find.textContaining('SMS notifications are unavailable'), findsOneWidget);
+    // Dismiss the informational snackbar so it cannot cover the Save button.
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
 
     await _scrollTo(tester, const Key('preferences-save'));
     await tester.tap(find.byKey(const Key('preferences-save')));
