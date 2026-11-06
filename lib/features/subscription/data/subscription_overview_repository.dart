@@ -31,6 +31,11 @@ class SubscriptionOverview {
     this.billingDescription,
     this.features,
     this.usage = const SubscriptionUsage(),
+    this.freeDocumentLimit,
+    this.freeDocumentsUsed,
+    this.freeDocumentsRemaining,
+    this.enforcementEnabled = false,
+    this.canCheckout = false,
     this.demoOnly = false,
   });
 
@@ -42,6 +47,11 @@ class SubscriptionOverview {
   /// Null means entitlements are unknown; an empty set means none are granted.
   final Set<SubscriptionFeature>? features;
   final SubscriptionUsage usage;
+  final int? freeDocumentLimit;
+  final int? freeDocumentsUsed;
+  final int? freeDocumentsRemaining;
+  final bool enforcementEnabled;
+  final bool canCheckout;
 
   /// Every preview-only billing field and statistic must be identified as demo.
   final bool demoOnly;
