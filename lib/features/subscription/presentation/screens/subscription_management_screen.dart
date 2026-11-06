@@ -109,7 +109,7 @@ class _SubscriptionManagementScreenState
       builder: (_) => ChoosePlanScreen(
         flowState: _flowState,
         billingRepository: _repository is RemoteSubscriptionRepository
-            ? _repository as RemoteSubscriptionRepository : null,
+            ? _repository : null,
         changeExistingPlan: _data?.canManageBilling == true,
       ),
     ));
