@@ -204,6 +204,7 @@ void main() {
       tokenProvider: () async => 'test-auth',
       activeCompanyId: () => ActiveCompanySession.companyId,
       httpClient: MockClient((request) async {
+        debugPrint('Job media mocked request: method=${request.method}, path=${request.url.path}, headerKeys=${request.headers.keys.join(',')}, size=${request.bodyBytes.length}');
         expect(request.headers['Authorization'], 'Bearer test-auth');
         expect(request.headers['X-Company-Id'], '7');
         if (request.method == 'POST' &&
