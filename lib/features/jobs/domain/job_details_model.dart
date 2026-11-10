@@ -14,6 +14,7 @@ class JobDetailsModel {
     required this.remainingBalanceChf,
     required this.sections,
     this.financialsAvailable = true,
+    this.unavailableFinancialFields = const {},
   });
 
   final JobModel job;
@@ -26,6 +27,11 @@ class JobDetailsModel {
   final int remainingBalanceChf;
   final List<JobSectionDetails> sections;
   final bool financialsAvailable;
+  /// Do not display a zero when a verified amount is restricted or unknown.
+  final Set<String> unavailableFinancialFields;
+
+  bool financialAvailableFor(String field) =>
+      financialsAvailable && !unavailableFinancialFields.contains(field);
 
   /// Live jobs do not inherit any fictitious figures from screenshot demos.
   factory JobDetailsModel.liveUnconnected(JobModel job,
@@ -48,9 +54,63 @@ class JobDetailsModel {
                   ? '$siteReportCount reports'
                   : section == JobSection.acceptance && acceptanceCount != null
                     ? '$acceptanceCount acceptances'
-                    : 'Not connected yet'),
+                    : 'Tap to view'),
     ],
   );
+
+  /// All visible counts and CHF amounts are sourced from the authenticated
+  /// job detail API. A missing or unauthorized count is not misreported as 0.
+  factory JobDetailsModel.liveFromServer(
+    JobModel job, {
+    required Map<JobSection, int?> counts,
+    required Map<String, int?> amountsChf,
+  }) {
+    int value(String key) => amountsChf[key] ?? 0;
+    return JobDetailsModel(
+      job: job,
+      quoteAmountChf: value('quote_amount'),
+      expensesChf: value('expenses'),
+      labourCostChf: value('labour_cost'),
+      depositsChf: value('deposits'),
+      invoicedChf: value('invoiced'),
+      receivedChf: value('received'),
+      remainingBalanceChf: value('remaining_balance'),
+      financialsAvailable: true,
+      unavailableFinancialFields: {
+        for (final entry in amountsChf.entries)
+          if (entry.value == null) entry.key,
+      },
+      sections: [
+        for (final section in JobSection.values)
+          JobSectionDetails(section, _countSubtitle(section, counts[section])),
+      ],
+    );
+  }
+
+  static String _countSubtitle(JobSection section, int? count) {
+    if (count == null) return 'Tap to view';
+    if (section == JobSection.acceptance) {
+      return '$count ${count == 1 ? 'acceptance' : 'acceptances'}';
+    }
+    if (section == JobSection.time) {
+      return '$count ${count == 1 ? 'entry' : 'entries'}';
+    }
+    final noun = switch (section) {
+      JobSection.quotes => 'quote',
+      JobSection.addenda => 'addendum',
+      JobSection.documents => 'document',
+      JobSection.photos => 'photo',
+      JobSection.notes => 'note',
+      JobSection.purchases => 'expense',
+      JobSection.deposits => 'deposit',
+      JobSection.siteReports => 'report',
+      JobSection.invoices => 'invoice',
+      JobSection.time || JobSection.acceptance => 'item',
+    };
+    final plural = noun == 'addendum' ? 'addenda'
+        : noun == 'expense' ? 'expenses' : '${noun}s';
+    return '$count ${count == 1 ? noun : plural}';
+  }
 
   /// New local jobs must not inherit fictional financial amounts or files.
   /// Existing screenshot sample records retain their original demo details.
