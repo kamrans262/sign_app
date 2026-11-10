@@ -1,5 +1,6 @@
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
@@ -205,7 +206,7 @@ class _TimeLabourScreenState extends State<TimeLabourScreen> {
   }
 
   Future<void> _chooseSort() async {
-    final picked = await showModalBottomSheet<LabourSort>(
+    final picked = await showSign2DigitalBottomSheet<LabourSort>(
       context: context,
       builder: (sheet) => SafeArea(child: Column(
         mainAxisSize: MainAxisSize.min, children: [
