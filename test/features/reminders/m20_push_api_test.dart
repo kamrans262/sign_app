@@ -1,11 +1,16 @@
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:sign2digital/core/services/active_company_session.dart';
 import 'package:sign2digital/core/services/sign_api_client.dart';
 import 'package:sign2digital/features/reminders/data/m20_push_api.dart';
+import 'package:sign2digital/features/reminders/data/remote_notification_repository.dart';
+import 'package:sign2digital/features/reminders/presentation/screens/notification_inbox_screen.dart';
+import 'package:sign2digital/features/reminders/services/m20_push_coordinator.dart';
 
 void main() {
   setUp(() => ActiveCompanySession.set(17));
@@ -87,5 +92,82 @@ void main() {
       platform: 'ios', fid: 'firebase-installation-id'), throwsA(isA<SignApiException>()));
     expect(calls, 0);
     client.close();
+  });
+
+  test('M20 system notification permission is first-launch only', () {
+    expect(M20PushCoordinator.shouldRequestPermission(
+        AuthorizationStatus.notDetermined), isTrue);
+    expect(M20PushCoordinator.shouldRequestPermission(
+        AuthorizationStatus.denied), isFalse);
+    expect(M20PushCoordinator.shouldRequestPermission(
+        AuthorizationStatus.authorized), isFalse);
+    expect(M20PushCoordinator.shouldRequestPermission(
+        AuthorizationStatus.provisional), isFalse);
+    expect(M20PushCoordinator.hasPushPermission(
+        AuthorizationStatus.authorized), isTrue);
+    expect(M20PushCoordinator.hasPushPermission(
+        AuthorizationStatus.provisional), isTrue);
+    expect(M20PushCoordinator.hasPushPermission(
+        AuthorizationStatus.denied), isFalse);
+    expect(M20PushCoordinator.hasPushPermission(
+        AuthorizationStatus.notDetermined), isFalse);
+  });
+
+  testWidgets('M20 inbox has no manual push permission switch or demo rows',
+      (tester) async {
+    final requests = <http.Request>[];
+    final client = MockClient((request) async {
+      requests.add(request);
+      expect(request.url.path, '/api/v1/notifications');
+      expect(request.headers['x-company-id'], '17');
+      return http.Response(jsonEncode({'data': {
+        'records': [], 'unread_count': 0, 'page': 1, 'last_page': 1,
+      }}), 200);
+    });
+    final api = SignApiClient(baseUrl: Uri.parse('https://example.test'),
+        tokenProvider: () async => 'signed-in-token',
+        activeCompanyId: () => ActiveCompanySession.companyId,
+        httpClient: client);
+    await tester.pumpWidget(MaterialApp(home: NotificationInboxScreen(
+      repository: RemoteNotificationRepository(api: api),
+    )));
+    await tester.pumpAndSettle();
+    expect(find.text('Notifications'), findsOneWidget);
+    expect(find.text('No notifications'), findsOneWidget);
+    expect(find.text('0 unread'), findsOneWidget);
+    expect(find.text('Push notifications'), findsNothing);
+    expect(find.byType(Switch), findsNothing);
+    expect(find.byType(ListTile), findsNothing);
+    expect(requests, hasLength(1));
+    api.dispose();
+  });
+
+  testWidgets('M20 inbox displays genuine company notifications from the API only',
+      (tester) async {
+    final client = MockClient((request) async =>
+        http.Response(jsonEncode({'data': {
+          'records': [{
+            'id': 58, 'company_id': 17, 'recipient_user_id': 5,
+            'title': 'Real server notification',
+            'body': 'A document was signed.',
+            'created_at': '2026-11-10T12:00:00Z',
+            'read_at': null,
+          }],
+          'unread_count': 1, 'page': 1, 'last_page': 1,
+        }}), 200));
+    final api = SignApiClient(baseUrl: Uri.parse('https://example.test'),
+        tokenProvider: () async => 'signed-in-token',
+        activeCompanyId: () => ActiveCompanySession.companyId,
+        httpClient: client);
+    await tester.pumpWidget(MaterialApp(home: NotificationInboxScreen(
+      repository: RemoteNotificationRepository(api: api),
+    )));
+    await tester.pumpAndSettle();
+    expect(find.text('Real server notification'), findsOneWidget);
+    expect(find.text('A document was signed.'), findsOneWidget);
+    expect(find.byKey(const Key('notification-58')), findsOneWidget);
+    expect(find.text('Push notifications'), findsNothing);
+    expect(find.byType(Switch), findsNothing);
+    api.dispose();
   });
 }
