@@ -12,8 +12,8 @@ import '../../auth/data/mobile_auth_repository.dart';
 import '../data/m20_push_api.dart';
 
 /// M20 Stage 2: one background-safe device registration coordinator. Never
-/// stores a Firebase Installation ID (FID) in preferences or logs, and never requests
-/// OS permission before the signed-in user explicitly enables push.
+/// stores a Firebase Installation ID (FID) in preferences or logs. The OS permission
+/// is requested once on the first authenticated launch after company selection.
 class M20PushCoordinator with WidgetsBindingObserver {
   M20PushCoordinator({M20PushApi? api}) : _api = api ?? M20PushApi.shared;
 
@@ -30,6 +30,8 @@ class M20PushCoordinator with WidgetsBindingObserver {
   VoidCallback? _openInbox;
   bool _started = false;
   bool _registering = false;
+  bool _syncing = false;
+  bool _syncAgain = false;
   int? _pendingOpenCompany;
 
   static bool get _supported => !kIsWeb &&
@@ -88,9 +90,16 @@ class M20PushCoordinator with WidgetsBindingObserver {
   }
 
   void _companyChanged() {
-    if (!MobileAuthRepository.shared.isSignedIn) { return; }
+    if (!MobileAuthRepository.shared.isSignedIn ||
+        ActiveCompanySession.companyId == null) { return; }
     _tryOpen();
-    unawaited(syncRegistration());
+    // Wait for the authenticated company screen to appear before the OS dialog.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_started && MobileAuthRepository.shared.isSignedIn &&
+          ActiveCompanySession.companyId != null) {
+        unawaited(syncRegistration());
+      }
+    });
   }
 
   /// Resume/reselect can restore a rotated Firebase installation or APNs mapping.
@@ -141,7 +150,7 @@ class M20PushCoordinator with WidgetsBindingObserver {
   }
 
   Future<void> _registerIfEnabled(String fid) async {
-    if (_registering || !MobileAuthRepository.shared.isSignedIn ||
+    if (_syncing || _registering || !MobileAuthRepository.shared.isSignedIn ||
         ActiveCompanySession.companyId == null || !_initialized) { return; }
     _registering = true;
     try {
@@ -163,48 +172,69 @@ class M20PushCoordinator with WidgetsBindingObserver {
     }
   }
 
+  @visibleForTesting
+  static bool shouldRequestPermission(AuthorizationStatus status) =>
+      status == AuthorizationStatus.notDetermined;
+
+  @visibleForTesting
+  static bool hasPushPermission(AuthorizationStatus status) =>
+      status == AuthorizationStatus.authorized ||
+      status == AuthorizationStatus.provisional;
+
+  /// Automatically requests OS permission only once, after an authenticated
+  /// company is selected, then registers this installation with Laravel.
+  /// Subsequent launches refresh registration without asking again. A denial
+  /// is respected, and an unavailable server never triggers an OS prompt.
   Future<void> syncRegistration() async {
-    if (!_initialized || !MobileAuthRepository.shared.isSignedIn ||
+    if (!_initialized || !_started || !MobileAuthRepository.shared.isSignedIn ||
         ActiveCompanySession.companyId == null) { return; }
+    if (_syncing) {
+      _syncAgain = true;
+      return;
+    }
+    _syncing = true;
     try {
+      final company = ActiveCompanySession.companyId;
       final preferences = await _api.preferences();
-      if (!preferences.pushEnabled || !preferences.pushAvailable) { return; }
-      final settings = await FirebaseMessaging.instance.getNotificationSettings();
-      if (settings.authorizationStatus != AuthorizationStatus.authorized &&
-          settings.authorizationStatus != AuthorizationStatus.provisional) { return; }
-      await FirebaseMessaging.instance.register(); // onRegistered syncs FID
-    } catch (_) {}
-  }
+      if (!preferences.pushAvailable ||
+          company != ActiveCompanySession.companyId) { return; }
 
-  Future<M20NotificationPreferences> enable(M20NotificationPreferences preferences) async {
-    if (!preferences.pushAvailable) {
-      throw StateError('Push notifications are not enabled on the server.');
-    }
-    if (!_initialized) {
-      throw StateError('Firebase configuration is unavailable.');
-    }
-    final settings = await FirebaseMessaging.instance.requestPermission(
-      alert: true, badge: true, sound: true, provisional: false,
-    );
-    if (settings.authorizationStatus != AuthorizationStatus.authorized &&
-        settings.authorizationStatus != AuthorizationStatus.provisional) {
-      throw StateError('Notification permission was not granted.');
-    }
-    final company = ActiveCompanySession.companyId;
-    final fid = await _currentFid();
-    if (fid == null || fid.isEmpty || company == null) {
-      throw StateError('Push device registration is not ready.');
-    }
-    await _api.register(installationId: await _installationId(),
-        platform: _platform, fid: fid);
-    if (company != ActiveCompanySession.companyId) {
-      throw StateError('Company changed while enabling notifications.');
-    }
-    return _api.update(preferences, pushEnabled: true);
-  }
+      var settings = await FirebaseMessaging.instance.getNotificationSettings();
+      if (shouldRequestPermission(settings.authorizationStatus)) {
+        settings = await FirebaseMessaging.instance.requestPermission(
+          alert: true, badge: true, sound: true, provisional: false,
+        );
+      }
+      // Do not repeat denied prompts or register without device consent.
+      if (!hasPushPermission(settings.authorizationStatus) ||
+          !MobileAuthRepository.shared.isSignedIn ||
+          company != ActiveCompanySession.companyId) { return; }
 
-  Future<M20NotificationPreferences> disable(M20NotificationPreferences preferences) =>
-      _api.update(preferences, pushEnabled: false);
+      // Firebase emits the private installation ID through onRegistered.
+      // On Apple platforms registration waits until APNs has issued a token.
+      final fid = await _currentFid();
+      if (fid == null || fid.isEmpty ||
+          !MobileAuthRepository.shared.isSignedIn ||
+          company != ActiveCompanySession.companyId) { return; }
+
+      await _api.register(installationId: await _installationId(),
+          platform: _platform, fid: fid);
+      if (!preferences.pushEnabled &&
+          MobileAuthRepository.shared.isSignedIn &&
+          company == ActiveCompanySession.companyId) {
+        await _api.update(preferences, pushEnabled: true);
+      }
+    } catch (_) {
+      // A temporary Firebase/API failure must not interrupt other modules.
+      // Registration is retried when the app resumes or company changes.
+    } finally {
+      _syncing = false;
+      if (_syncAgain) {
+        _syncAgain = false;
+        unawaited(syncRegistration());
+      }
+    }
+  }
 
   Future<void> revokeBeforeLogout() async {
     if (!_initialized || !MobileAuthRepository.shared.isSignedIn) { return; }
