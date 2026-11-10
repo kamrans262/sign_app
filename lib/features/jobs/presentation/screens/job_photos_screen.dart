@@ -14,6 +14,8 @@ import '../../domain/job_model.dart';
 import '../../domain/job_photo_model.dart';
 import '../widgets/sign2digital_job_info_banner.dart';
 import '../widgets/sign2digital_job_photo_card.dart';
+import '../widgets/job_photo_gallery_dialog.dart';
+import '../../../../core/services/sign_api_client.dart';
 import 'add_photos_screen.dart';
 
 class JobPhotosScreen extends StatefulWidget {
@@ -23,12 +25,14 @@ class JobPhotosScreen extends StatefulWidget {
     this.source,
     this.store,
     this.onTabSelected,
+    this.remoteRepository,
   });
 
   final JobModel job;
   final JobPhotoSource? source;
   final JobPhotoLocalStore? store;
   final ValueChanged<int>? onTabSelected;
+  final RemoteJobMediaRepository? remoteRepository;
 
   @override
   State<JobPhotosScreen> createState() => _JobPhotosScreenState();
@@ -53,13 +57,17 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
   int _nextId = 0;
   bool _savingPhotos = false;
 
+  // Persisted jobs must never silently fall back to local demo storage.
   bool get _remote => widget.store == null &&
-      RemoteJobMediaRepository.isLiveJob(widget.job.id);
+      (int.tryParse(widget.job.id) ?? 0) > 0;
+
+  RemoteJobMediaRepository get _remoteRepository =>
+      widget.remoteRepository ?? RemoteJobMediaRepository.shared;
 
   Future<void> _loadRemotePhotos() async {
     if (!_remote) return;
     try {
-      final records = await RemoteJobMediaRepository.shared.listPhotos(widget.job.id);
+      final records = await _remoteRepository.listPhotos(widget.job.id);
       if (mounted) setState(() => _photos = records);
     } catch (error) {
       if (mounted) _message('Unable to load saved job photos: $error');
@@ -151,7 +159,7 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
       setState(() => _savingPhotos = true);
       try {
         for (final pending in List<_PendingPhoto>.of(_pending)) {
-          final stored = await RemoteJobMediaRepository.shared.uploadPhoto(
+          final stored = await _remoteRepository.uploadPhoto(
             widget.job.id, pending.value, pending.category, pending.caption);
           if (!mounted) return;
           setState(() {
@@ -160,9 +168,13 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
             _selectedTab = 0;
           });
         }
-        if (mounted) _message('Photos uploaded successfully.');
+        if (mounted) {
+          await _loadRemotePhotos();
+          if (mounted) _message('Photos saved to the company job.');
+        }
       } catch (error) {
-        if (mounted) _message('Could not upload photo: $error');
+        if (mounted) _message(error is SignApiException
+            ? error.message : 'Could not upload photo. Please retry.');
       } finally {
         if (mounted) setState(() => _savingPhotos = false);
       }
@@ -203,6 +215,7 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
           source: _source,
           initialSelection: staged?.value,
           initialCategory: staged?.category ?? JobPhotoCategory.during,
+          remoteRepository: widget.remoteRepository,
           onTabSelected: widget.onTabSelected,
         ),
       ),
@@ -229,78 +242,14 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
   }
 
   void _openPhoto(JobPhotoModel photo) {
+    // The preview pages only through photos visible in the selected tab.
+    final gallery = List<JobPhotoModel>.unmodifiable(_filteredPhotos);
     showDialog<void>(
       context: context,
       barrierColor: const Color(0x80000000),
-      builder: (dialogContext) => Dialog(
-        backgroundColor: AppColors.white,
-        insetPadding: const EdgeInsets.all(20),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: SafeArea(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return SizedBox(
-                width: constraints.maxWidth.clamp(0.0, 800.0).toDouble(),
-                height: (MediaQuery.sizeOf(context).height * 0.73)
-                    .clamp(180.0, 700.0)
-                    .toDouble(),
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              photo.title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.dark,
-                              ),
-                            ),
-                          ),
-                          IconButton(
-                            key: const Key('job-photo-close-preview'),
-                            tooltip: 'Close photo preview',
-                            onPressed: () => Navigator.of(dialogContext).pop(),
-                            icon: const Icon(Icons.close),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      child: InteractiveViewer(
-                        minScale: 0.8,
-                        maxScale: 4,
-                        child: Center(
-                          child: Sign2DigitalJobPhotoCard.picture(
-                            photo,
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Text(
-                        JobPhotoModel.formattedDate(photo.createdAt),
-                        style: const TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 12,
-                          color: AppColors.placeholder,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ),
+      builder: (_) => JobPhotoGalleryDialog(
+        photos: gallery,
+        initialPhotoId: photo.id,
       ),
     );
   }
