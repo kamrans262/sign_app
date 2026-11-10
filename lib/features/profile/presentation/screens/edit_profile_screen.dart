@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -197,7 +198,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       if (remote is RemoteAccountRepository && original != null &&
           _email.text.trim().toLowerCase() != original.email.toLowerCase()) {
         setState(() => _saving = false);
-        await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+        await Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
           builder: (_) => VerifiedEmailChangeScreen(
             newEmail: _email.text.trim(), repository: remote)));
         return;
