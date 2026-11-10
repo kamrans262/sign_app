@@ -9,6 +9,23 @@ abstract final class AppTheme {
     return ThemeData(
       useMaterial3: true,
       fontFamily: 'Inter',
+      // Default Flutter bottom sheets use the same chrome as Switch Company.
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: AppColors.white,
+        modalBackgroundColor: AppColors.white,
+        modalBarrierColor: Color(0x66000000),
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        modalElevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        clipBehavior: Clip.antiAlias,
+        showDragHandle: true,
+        dragHandleColor: AppColors.placeholder,
+        dragHandleSize: Size(36, 4),
+      ),
+
       scaffoldBackgroundColor: AppColors.white,
       colorScheme: ColorScheme.fromSeed(
         seedColor: AppColors.primary,
@@ -30,6 +47,21 @@ abstract final class AppTheme {
     useMaterial3: true,
     fontFamily: 'Inter',
     brightness: Brightness.dark,
+    bottomSheetTheme: const BottomSheetThemeData(
+      backgroundColor: AppColors.white,
+      modalBackgroundColor: AppColors.white,
+      modalBarrierColor: Color(0x66000000),
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      modalElevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      showDragHandle: true,
+      dragHandleColor: AppColors.placeholder,
+      dragHandleSize: Size(36, 4),
+    ),
     colorScheme: ColorScheme.fromSeed(
       seedColor: AppColors.primary,
       brightness: Brightness.dark,
