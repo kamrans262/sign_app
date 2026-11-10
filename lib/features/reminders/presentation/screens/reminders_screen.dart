@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -137,7 +138,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
   }
 
   Future<void> _edit(ReminderRecord? original) async {
-    final result = await Navigator.of(context).push<ReminderRecord>(
+    final result = await Sign2DigitalNavigation.push<ReminderRecord>(context,
       MaterialPageRoute<ReminderRecord>(
         builder: (_) => AddReminderScreen(
           initialReminder: original,
@@ -200,7 +201,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
       body: SafeArea(bottom: false, child: Column(children: [
         Sign2DigitalDashboardHeader(
           onNotificationTap: widget.onNotificationTap ?? () {
-            Navigator.of(context).push(MaterialPageRoute<void>(
+            Sign2DigitalNavigation.push(context,MaterialPageRoute<void>(
               builder: (_) => const NotificationInboxScreen()));
           },
           onProfileTap: widget.onProfileTap),
