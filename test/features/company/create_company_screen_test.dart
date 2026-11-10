@@ -26,6 +26,8 @@ void main() {
     configureSize(tester, const Size(430, 932));
     await tester.pumpWidget(const MaterialApp(home: CreateCompanyScreen()));
     expect(find.text('Create Your Company'), findsOneWidget);
+    expect(find.byKey(const Key('create-company-ai-voice')), findsOneWidget);
+    expect(find.text('Create with AI Voice'), findsOneWidget);
     expect(find.byType(Sign2DigitalInputField), findsNWidgets(9));
     expect(find.byType(Sign2DigitalImageUpload), findsOneWidget);
     expect(find.byType(Sign2DigitalDocumentUpload), findsOneWidget);
