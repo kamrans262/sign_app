@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import '../../../documents/data/document_activity_session.dart';
@@ -657,7 +658,7 @@ class _SendQuoteScreenState extends State<SendQuoteScreen> {
       const SizedBox(height: 8),
       Align(alignment: Alignment.centerRight, child: TextButton(
         key: const Key('send-view-tracking'),
-        onPressed: () => Navigator.of(context).push<void>(
+        onPressed: () => Sign2DigitalNavigation.push<void>(context,
           MaterialPageRoute<void>(builder: (_) => SignatureRequestScreen(
             quote: _quote.copy(),
             tracking: widget.tracking?.quoteId == _quote.id
