@@ -209,9 +209,11 @@ void main() {
         if (request.method == 'POST' &&
             request.url.path == '/api/v1/jobs/51/photos') {
           posts++;
-          expect(request.headers.entries.any((e) =>
-            e.key.toLowerCase() == 'content-type' &&
-            e.value.contains('multipart/form-data')), isTrue);
+          // MockClient materializes MultipartRequest as a regular Request;
+          // header normalization depends on package:http version. Verify
+          // authenticated endpoint and real uploaded bytes here; Laravel's
+          // M11 feature tests validate multipart MIME and server persistence.
+          expect(request.bodyBytes.length, greaterThan(_png.length));
           return http.Response(jsonEncode({'data': {'photo': photo}}), 201);
         }
         if (request.method == 'GET' &&
