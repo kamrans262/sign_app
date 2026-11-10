@@ -21,6 +21,7 @@ class M20PushCoordinator with WidgetsBindingObserver {
   static final navigatorKey = GlobalKey<NavigatorState>();
   static const _storage = FlutterSecureStorage();
   static const _installationKey = 's2d.m20.push.installation.id';
+  static const _permissionRequestedKey = 's2d.m20.push.permission.requested.v1';
   final M20PushApi _api;
   final ValueNotifier<int> inboxChanges = ValueNotifier<int>(0);
 
@@ -173,8 +174,13 @@ class M20PushCoordinator with WidgetsBindingObserver {
   }
 
   @visibleForTesting
-  static bool shouldRequestPermission(AuthorizationStatus status) =>
-      status == AuthorizationStatus.notDetermined;
+  static bool shouldRequestPermission(AuthorizationStatus status, {
+    required bool isAndroid,
+    required bool previouslyRequested,
+  }) =>
+      !previouslyRequested &&
+      (status == AuthorizationStatus.notDetermined ||
+       (isAndroid && status == AuthorizationStatus.denied));
 
   @visibleForTesting
   static bool hasPushPermission(AuthorizationStatus status) =>
@@ -200,7 +206,15 @@ class M20PushCoordinator with WidgetsBindingObserver {
           company != ActiveCompanySession.companyId) { return; }
 
       var settings = await FirebaseMessaging.instance.getNotificationSettings();
-      if (shouldRequestPermission(settings.authorizationStatus)) {
+      // On Android 13+, an unasked permission can report "denied" rather
+      // than "notDetermined". Persist the first request locally so a prior
+      // denial is never treated as permission to ask repeatedly.
+      final previouslyRequested =
+          await _storage.read(key: _permissionRequestedKey) == '1';
+      if (shouldRequestPermission(settings.authorizationStatus,
+          isAndroid: defaultTargetPlatform == TargetPlatform.android,
+          previouslyRequested: previouslyRequested)) {
+        await _storage.write(key: _permissionRequestedKey, value: '1');
         settings = await FirebaseMessaging.instance.requestPermission(
           alert: true, badge: true, sound: true, provisional: false,
         );
