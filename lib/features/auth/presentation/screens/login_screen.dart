@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 // Sign2Digital Login UI Package — UI-only Figma login composition.
 import 'dart:math' as math;
 
@@ -127,7 +128,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           onForgotPassword:
                               widget.onForgotPassword ??
                               () {
-                                Navigator.of(context).push(
+                                Sign2DigitalNavigation.push(context,
                                   MaterialPageRoute<void>(
                                     builder: (forgotContext) =>
                                         ForgotPasswordScreen(
@@ -154,7 +155,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           onCreateAccount:
                               widget.onCreateAccount ??
                               () {
-                                Navigator.of(context).push(
+                                Sign2DigitalNavigation.push(context,
                                   MaterialPageRoute<void>(
                                     builder: (_) => const CreateAccountScreen(),
                                   ),
