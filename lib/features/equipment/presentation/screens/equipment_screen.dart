@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 
@@ -145,7 +146,7 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
       }
     }
     if(!mounted)return;
-    await Navigator.of(context).push<void>(
+    await Sign2DigitalNavigation.push<void>(context,
       MaterialPageRoute<void>(builder: (_) => EquipmentDetailsScreen(
         equipment: current, repository: _repository)),
     );
@@ -157,7 +158,7 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
       widget.onCreateEquipment!();
       return;
     }
-    final result = await Navigator.of(context).push<EquipmentRecord>(
+    final result = await Sign2DigitalNavigation.push<EquipmentRecord>(context,
       MaterialPageRoute<EquipmentRecord>(
         builder: (_) => AddEquipmentScreen(
           availableNames: _records.map((r) => r.name).toSet().toList(),
@@ -244,7 +245,7 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
                       Align(alignment:Alignment.centerRight,
                         child:TextButton.icon(
                           key:const Key('equipment-open-loans'),
-                          onPressed:()=>Navigator.of(context).push(
+                          onPressed:()=>Sign2DigitalNavigation.push(context,
                             MaterialPageRoute<void>(
                               builder:(_)=>const EquipmentLoansScreen())),
                           icon:const Icon(Icons.swap_horiz,
