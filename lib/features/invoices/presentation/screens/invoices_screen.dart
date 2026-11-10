@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -128,7 +129,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
   }
 
   Future<void> _selectSort() async {
-    final choice = await showModalBottomSheet<InvoiceSort>(
+    final choice = await showSign2DigitalBottomSheet<InvoiceSort>(
       context: context,
       builder: (sheet) => SafeArea(child: Column(
         mainAxisSize: MainAxisSize.min,
