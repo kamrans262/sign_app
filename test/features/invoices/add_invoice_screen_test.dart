@@ -67,9 +67,8 @@ class _Recorder implements VoiceRecorderService {
 class _Voice implements InvoiceVoiceExtractionService {
   final completer = Completer<InvoiceVoiceSuggestion>();
   @override
-  Future<InvoiceVoiceSuggestion> extract(String path, String key) {
+  Future<InvoiceVoiceSuggestion> extract(String path) {
     expect(path, 'fake-invoice.m4a');
-    expect(key, 'temporary-invoice-key');
     return completer.future;
   }
 }
@@ -249,12 +248,12 @@ void main() {
     await _launch(tester, AddInvoiceScreen(
       voiceRecorderFactory: () => recorder,
       voiceExtractionService: voice,
-      requestTemporaryApiKey: (_) async => 'temporary-invoice-key',
     ));
     await tester.tap(find.byKey(const Key('create-with-ai-voice-button')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.text('Record Invoice Details'), findsOneWidget);
+    expect(find.byKey(const Key('invoice-ai-key')), findsNothing);
     expect(recorder.started, isTrue);
     await tester.tap(find.byKey(const Key('voice-save')));
     await tester.pump();
