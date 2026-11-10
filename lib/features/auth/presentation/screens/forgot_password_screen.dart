@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'otp_verification_screen.dart';
 
 // Sign2Digital Forgot Password UI Package — refined screen (2026-10).
@@ -51,7 +52,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       widget.onResetRequested!(email);
       return;
     }
-    Navigator.of(context).push(
+    Sign2DigitalNavigation.push(context,
       MaterialPageRoute<void>(builder: (_) => const OtpVerificationScreen()),
     );
     ScaffoldMessenger.of(context).showSnackBar(
