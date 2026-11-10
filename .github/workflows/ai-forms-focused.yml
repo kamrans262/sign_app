@@ -1,0 +1,39 @@
+name: Sign2Digital AI forms focused Flutter verification
+
+on:
+  push:
+    branches:
+      - fix/m20-android-live-reminder-integration-2026-11-06
+    paths:
+      - '.github/workflows/ai-forms-focused.yml'
+      - 'lib/features/jobs/services/remote_voice_job_extraction_service.dart'
+      - 'lib/features/jobs/presentation/screens/create_job_screen.dart'
+      - 'lib/features/jobs/presentation/widgets/ai_voice_flow_dialog.dart'
+      - 'lib/features/company/presentation/screens/create_company_screen.dart'
+      - 'test/features/jobs/remote_voice_job_extraction_service_test.dart'
+      - 'test/features/jobs/ai_voice_job_flow_test.dart'
+      - 'test/features/company/create_company_screen_test.dart'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: s2d-ai-form-flutter
+  cancel-in-progress: true
+
+jobs:
+  ai-forms:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Analyze AI paths
+        run: flutter analyze --no-pub lib/features/jobs/services/remote_voice_job_extraction_service.dart lib/features/jobs/presentation/screens/create_job_screen.dart lib/features/jobs/presentation/widgets/ai_voice_flow_dialog.dart lib/features/company/presentation/screens/create_company_screen.dart test/features/jobs/remote_voice_job_extraction_service_test.dart test/features/jobs/ai_voice_job_flow_test.dart test/features/company/create_company_screen_test.dart
+      - name: AI jobs, company form, quote and document tests
+        run: flutter test --no-pub --concurrency=2 test/features/jobs/remote_voice_job_extraction_service_test.dart test/features/jobs/ai_voice_job_flow_test.dart test/features/company/create_company_screen_test.dart test/features/quotes/m6_stage2_privacy_and_validation_test.dart test/features/documents/generate_ai_document_screen_test.dart
