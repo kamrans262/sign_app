@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -82,7 +83,7 @@ class _NotificationInboxScreenState extends State<NotificationInboxScreen> {
     if (!mounted || item.linkType != 'reminder' || item.linkId == null) return;
     // The reminder destination independently checks the active company and
     // signed-in user's ownership; link metadata never grants authorization.
-    await Navigator.of(context).push(MaterialPageRoute<void>(
+    await Sign2DigitalNavigation.push(context,MaterialPageRoute<void>(
       builder: (_) => const RemindersScreen(),
     ));
     if (mounted) _load();
