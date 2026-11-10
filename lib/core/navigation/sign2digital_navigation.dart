@@ -80,6 +80,9 @@ abstract final class Sign2DigitalNavigation {
     Route<T> route, {
     Object? destination,
   }) {
+    // Async callers can complete after their source screen is disposed.
+    // Never construct or mount a destination from an invalid context.
+    if (!context.mounted) return Future<T?>.value(null);
     final target = destination ??
         (route is MaterialPageRoute<T>
             ? route.builder(context).runtimeType
