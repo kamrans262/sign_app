@@ -1,5 +1,6 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -138,7 +139,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
 
   Future<void> _add() async {
     if (_busy || !_canEdit) return;
-    final source = await showModalBottomSheet<String>(
+    final source = await showSign2DigitalBottomSheet<String>(
       context: context,
       builder: (sheet) => SafeArea(child: Column(
         mainAxisSize: MainAxisSize.min, children: [
