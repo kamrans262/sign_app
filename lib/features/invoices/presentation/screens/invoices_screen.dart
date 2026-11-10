@@ -186,7 +186,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
       }
     }
     if(!mounted)return;
-    await Navigator.of(context).push<void>(
+    await Sign2DigitalNavigation.push<void>(context,
       MaterialPageRoute<void>(
         builder: (_) => InvoiceDetailsScreen(
           invoice: selected,
@@ -225,7 +225,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
       if (jobs.isEmpty) { _notice('Job is no longer available.'); return; }
     }
     if(!mounted||company!=ActiveCompanySession.companyId)return;
-    final draft = await Navigator.of(context).push<InvoiceRecord>(
+    final draft = await Sign2DigitalNavigation.push<InvoiceRecord>(context,
       MaterialPageRoute<InvoiceRecord>(
         builder: (_) => AddInvoiceScreen(
           jobs:jobs,
