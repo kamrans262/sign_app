@@ -1,5 +1,6 @@
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -221,7 +222,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
   Future<void> _addPhotos() async {
     if (_busy) return;
-    final camera = await showModalBottomSheet<bool>(context: context,
+    final camera = await showSign2DigitalBottomSheet<bool>(context: context,
       builder: (sheet) => SafeArea(child: Column(mainAxisSize: MainAxisSize.min,
         children: [
           ListTile(key: const Key('expense-choose-gallery'),
