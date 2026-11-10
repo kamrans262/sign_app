@@ -10,7 +10,6 @@ import 'package:flutter_test/flutter_test.dart';
 import '../../support/scroll_to_visible_action.dart';
 
 import 'package:sign2digital/core/services/sign_api_client.dart';
-import 'package:sign2digital/features/jobs/services/voice_recorder_service.dart';
 import '../../support/fake_voice_services.dart';
 import 'package:sign2digital/core/widgets/sign2digital_country_selector.dart';
 import 'package:sign2digital/core/widgets/sign2digital_document_upload.dart';
