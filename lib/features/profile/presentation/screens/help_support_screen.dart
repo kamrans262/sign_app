@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:printing/printing.dart';
@@ -53,7 +54,7 @@ class _HelpSupportState extends State<HelpSupportScreen> {
   }
 
   Future<void> newTicket() async {
-    final ticket=await Navigator.of(context).push<SupportTicket>(
+    final ticket=await Sign2DigitalNavigation.push<SupportTicket>(context,
       MaterialPageRoute<SupportTicket>(
         builder:(_)=>NewSupportTicketScreen(repository:repo)));
     if(!mounted)return;
@@ -64,7 +65,7 @@ class _HelpSupportState extends State<HelpSupportScreen> {
   }
 
   void openTicket(SupportTicket ticket) {
-    Navigator.of(context).push<void>(
+    Sign2DigitalNavigation.push<void>(context,
       MaterialPageRoute<void>(builder:(_)=>SupportTicketDetailsScreen(
         ticketId:ticket.id,repository:repo))).then((_) {
           if(mounted)refresh();
