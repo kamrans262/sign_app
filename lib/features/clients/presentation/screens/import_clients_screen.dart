@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -151,7 +152,7 @@ class _ImportClientsScreenState extends State<ImportClientsScreen> {
       widget.onReviewSelected!(List.unmodifiable(selected));
       return;
     }
-    showModalBottomSheet<void>(
+    showSign2DigitalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
