@@ -67,6 +67,7 @@ class CreateCompanyScreen extends StatefulWidget {
     this.onCompleted,
     this.aiClient,
     this.voiceRecorderFactory,
+    this.voiceSuggestionsLoader,
   });
 
   /// Existing optional hooks remain available to tests and demo previews.
@@ -81,6 +82,8 @@ class CreateCompanyScreen extends StatefulWidget {
   /// Override only for isolated integration tests.
   final SignApiClient? aiClient;
   final VoiceRecorderService Function()? voiceRecorderFactory;
+  /// Test seam: production always uploads to the authenticated Laravel API.
+  final Future<Map<String, dynamic>> Function(String path)? voiceSuggestionsLoader;
 
   @override
   State<CreateCompanyScreen> createState() => _CreateCompanyScreenState();
@@ -324,6 +327,11 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
           rawAudioMode: true,
           recordingTitle: 'Record Company Details',
           onAudioProcessed: (path) async {
+            if (widget.voiceSuggestionsLoader != null) {
+              final suggestions = await widget.voiceSuggestionsLoader!(path);
+              if (mounted) _applyAiCompany(suggestions);
+              return;
+            }
             final recording = File(path);
             if (!await recording.exists()) {
               throw const SignApiException('The recording is no longer available.');
