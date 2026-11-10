@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/assets/dashboard_assets.dart';
@@ -104,7 +105,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
   }
 
   Future<void> _edit() async {
-    final changed = await Navigator.of(context).push<bool>(
+    final changed = await Sign2DigitalNavigation.push<bool>(context,
       MaterialPageRoute<bool>(builder: (_) => EditProfileScreen(
         repository: _repository,
         initialAccount: _account,
@@ -115,7 +116,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
   }
 
   void _open(Widget destination) {
-    Navigator.of(context).push<void>(
+    Sign2DigitalNavigation.push<void>(context,
       MaterialPageRoute<void>(builder: (_) => destination));
   }
 
