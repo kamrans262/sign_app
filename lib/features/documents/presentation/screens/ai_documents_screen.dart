@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
@@ -101,7 +102,7 @@ class _AiDocumentsScreenState extends State<AiDocumentsScreen> {
       _notify('Sign in to generate company documents.');
       return;
     }
-    final choice = await showModalBottomSheet<String>(
+    final choice = await showSign2DigitalBottomSheet<String>(
       context: context,
       showDragHandle: true,
       builder: (sheet) => SafeArea(
