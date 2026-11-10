@@ -134,7 +134,7 @@ void main() {
     expect(details.financialsAvailable, isFalse);
     expect(details.job.formattedAmount, 'Budget not set');
     expect(details.sections.length, JobSection.values.length);
-    expect(details.sections.every((item) => item.subtitle == 'Not connected yet'),
+    expect(details.sections.every((item) => item.subtitle == 'Tap to view'),
         isTrue);
   });
 
