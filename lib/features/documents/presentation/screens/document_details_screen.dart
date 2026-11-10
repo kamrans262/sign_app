@@ -1,5 +1,6 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import 'package:flutter/services.dart';
 import 'package:printing/printing.dart';
 
@@ -326,7 +327,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
       _message('A saved server addendum draft is required for approval.');
       return;
     }
-    final approved = await showModalBottomSheet<bool>(
+    final approved = await showSign2DigitalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       builder: (sheet) => SafeArea(
@@ -391,7 +392,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
       AddendumSignatureRequestSession.remember(draft, sources.single, response);
       if (!mounted) return;
       final link = response.secureUrl.toString();
-      await showModalBottomSheet<void>(
+      await showSign2DigitalBottomSheet<void>(
         context: context,
         builder: (sheet) => SafeArea(child: Padding(
           padding: const EdgeInsets.all(20),
@@ -509,7 +510,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
         widget.onDownloadAttachment == null) {
       return;
     }
-    await showModalBottomSheet<void>(
+    await showSign2DigitalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       builder: (sheet) => SafeArea(
@@ -548,7 +549,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
     final record = _record;
     if (record == null) return;
     setState(() => _action = 3);
-    showModalBottomSheet<void>(
+    showSign2DigitalBottomSheet<void>(
       context: context,
       builder: (sheet) => SafeArea(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
