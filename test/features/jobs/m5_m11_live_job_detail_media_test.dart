@@ -142,6 +142,10 @@ void main() {
 
   testWidgets('Saved gallery pages horizontally through existing photos',
       (tester) async {
+    tester.view.physicalSize = const Size(430, 932);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     final images = [
       JobPhotoModel(
         id: '1', jobId: '51', title: 'Before',
@@ -241,6 +245,11 @@ void main() {
     await tester.tap(find.byKey(const Key('job-photos-confirm-pending')));
     await tester.pumpAndSettle();
     expect(posts, 1);
+    if (reads < 2) {
+      final labels = tester.widgetList<Text>(find.byType(Text))
+          .map((widget) => widget.data).whereType<String>().join(' | ');
+      debugPrint('Job photo upload diagnostic: reads=$reads, labels=$labels');
+    }
     expect(reads, greaterThanOrEqualTo(2));
     expect(find.byKey(const Key('photo-grid-23')), findsOneWidget);
     expect(find.byKey(const Key('job-photo-pending-panel')), findsNothing);
