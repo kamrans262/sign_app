@@ -75,7 +75,7 @@ class JobDetailsModel {
       invoicedChf: value('invoiced'),
       receivedChf: value('received'),
       remainingBalanceChf: value('remaining_balance'),
-      financialsAvailable: true,
+      financialsAvailable: amountsChf.values.any((v) => v != null),
       unavailableFinancialFields: {
         for (final entry in amountsChf.entries)
           if (entry.value == null) entry.key,
