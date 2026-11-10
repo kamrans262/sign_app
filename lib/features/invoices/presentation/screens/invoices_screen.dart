@@ -3,6 +3,7 @@ import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
 import '../../../../core/widgets/sign2digital_dashboard_header.dart';
 import '../../../../core/widgets/sign2digital_entry_list_card.dart';
@@ -162,6 +163,13 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
   }
 
   Future<void> _open(InvoiceRecord invoice) async {
+    await Sign2DigitalNavigation.runOnce<void>(
+      context, 'invoice-details:${invoice.id}',
+      () => _openInvoice(invoice),
+    );
+  }
+
+  Future<void> _openInvoice(InvoiceRecord invoice) async {
     FocusManager.instance.primaryFocus?.unfocus();
     if (widget.onInvoiceTap != null) {
       widget.onInvoiceTap!(invoice);
@@ -192,6 +200,12 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
   }
 
   Future<void> _create() async {
+    await Sign2DigitalNavigation.runOnce<void>(
+      context, 'invoice-create', _createInvoice,
+    );
+  }
+
+  Future<void> _createInvoice() async {
     if (widget.onCreateInvoice != null) {
       widget.onCreateInvoice!();
       return;
@@ -229,6 +243,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
   }
 
   void _navigation(int index) {
+    if (Sign2DigitalNavigation.selectDashboardTab(context, index)) return;
     if (widget.onNavigationSelected == null) {
       Navigator.of(context).maybePop();
       return;
