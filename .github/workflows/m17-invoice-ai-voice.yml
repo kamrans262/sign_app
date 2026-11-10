@@ -1,0 +1,36 @@
+name: Sign2Digital Invoice AI Voice Flutter Regression
+
+on:
+  push:
+    branches:
+      - fix/m20-android-live-reminder-integration-2026-11-06
+    paths:
+      - '.github/workflows/m17-invoice-ai-voice.yml'
+      - 'lib/features/invoices/services/invoice_voice_extraction_service.dart'
+      - 'lib/features/invoices/presentation/screens/add_invoice_screen.dart'
+      - 'test/features/invoices/m17_remote_invoice_voice_test.dart'
+      - 'test/features/invoices/add_invoice_screen_test.dart'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: s2d-m17-invoice-ai-flutter
+  cancel-in-progress: true
+
+jobs:
+  invoice-ai:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Analyze M17 voice paths
+        run: timeout 160s flutter analyze --no-pub lib/features/invoices/services/invoice_voice_extraction_service.dart lib/features/invoices/presentation/screens/add_invoice_screen.dart test/features/invoices/m17_remote_invoice_voice_test.dart test/features/invoices/add_invoice_screen_test.dart
+      - name: Verify keyless invoice AI and invoice UI
+        run: timeout 160s flutter test --no-pub --concurrency=2 --timeout=50s --reporter=expanded test/features/invoices/m17_remote_invoice_voice_test.dart test/features/invoices/add_invoice_screen_test.dart test/features/invoices/m17_remote_invoice_repository_test.dart
