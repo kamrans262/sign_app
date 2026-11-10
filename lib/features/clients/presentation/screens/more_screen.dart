@@ -1,6 +1,17 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../auth/data/remote_account_repository.dart';
+import '../../../deposits/data/remote_deposit_repository.dart';
+import '../../../documents/data/remote_general_document_repository.dart';
+import '../../../documents/data/remote_site_report_repository.dart';
+import '../../../equipment/data/remote_equipment_repository.dart';
+import '../../../expenses/data/remote_expense_repository.dart';
+import '../../../global_search/data/remote_global_search_provider.dart';
+import '../../../invoices/data/remote_invoice_repository.dart';
+import '../../../labour/data/remote_labour_repository.dart';
+import '../../../reminders/data/remote_reminder_repository.dart';
+import '../../../subscription/data/remote_subscription_repository.dart';
 import '../../../documents/presentation/screens/reports_screen.dart';
 import '../../../documents/presentation/screens/ai_documents_screen.dart';
 import '../../../documents/presentation/screens/generate_ai_document_screen.dart';
@@ -29,6 +40,7 @@ class MoreScreen extends StatelessWidget {
 
   void _openProfile(BuildContext context) => _open(context,
     ProfileSettingsScreen(
+      accountRepository: RemoteAccountRepository(),
       onNavigationSelected: onTabSelected,
       onNotificationTap: () => onNotReady?.call('Notifications'),
     ));
@@ -54,6 +66,7 @@ class MoreScreen extends StatelessWidget {
             title: 'Search Across the App',
             icon: Icons.search_rounded,
             onTap: () => _open(context, GlobalSearchScreen(
+              provider: RemoteGlobalSearchProvider(),
               onNotificationTap: () => onNotReady?.call('Notifications'),
               onProfileTap: () => _openProfile(context),
             ))),
@@ -63,6 +76,7 @@ class MoreScreen extends StatelessWidget {
             title: 'AI Documents',
             icon: Icons.auto_awesome_outlined,
             onTap: () => _open(context, AiDocumentsScreen(
+              repository: RemoteGeneralDocumentRepository.shared,
               documentGenerator: documentGenerator,
               onNavigationSelected: onTabSelected,
               onNotificationTap: () => onNotReady?.call('Notifications'),
@@ -74,6 +88,7 @@ class MoreScreen extends StatelessWidget {
             title: 'Reports',
             icon: Icons.assessment_outlined,
             onTap: () => _open(context, ReportsScreen(
+              repository: RemoteSiteReportRepository.shared,
               onNavigationSelected: onTabSelected,
               onNotificationTap: () => onNotReady?.call('Notifications'),
               onProfileTap: () => _openProfile(context),
@@ -84,6 +99,7 @@ class MoreScreen extends StatelessWidget {
             title: 'Time & Labour',
             icon: Icons.access_time_outlined,
             onTap: () => _open(context, TimeLabourScreen(
+              repository: RemoteLabourRepository.shared,
               onNavigationSelected: onTabSelected,
               onNotificationTap: () => onNotReady?.call('Notifications'),
               onProfileTap: () => _openProfile(context),
@@ -94,6 +110,7 @@ class MoreScreen extends StatelessWidget {
             title: 'Invoices',
             icon: Icons.description_outlined,
             onTap: () => _open(context, InvoicesScreen(
+              repository: RemoteInvoiceRepository.shared,
               onNavigationSelected: onTabSelected,
               onNotificationTap: () => onNotReady?.call('Notifications'),
               onProfileTap: () => _openProfile(context),
@@ -104,6 +121,7 @@ class MoreScreen extends StatelessWidget {
             title: 'Reminders',
             icon: Icons.notifications_active_outlined,
             onTap: () => _open(context, RemindersScreen(
+              repository: RemoteReminderRepository.shared,
               onNavigationSelected: onTabSelected,
               onNotificationTap: () => _open(context, const NotificationInboxScreen()),
               onProfileTap: () => _openProfile(context),
@@ -114,6 +132,7 @@ class MoreScreen extends StatelessWidget {
             title: 'Equipment',
             icon: Icons.construction_outlined,
             onTap: () => _open(context, EquipmentScreen(
+              repository: RemoteEquipmentRepository.shared,
               onNavigationSelected: onTabSelected,
               onNotificationTap: () => onNotReady?.call('Notifications'),
               onProfileTap: () => _openProfile(context),
@@ -124,6 +143,7 @@ class MoreScreen extends StatelessWidget {
             title: 'Deposits',
             icon: Icons.account_balance_outlined,
             onTap: () => _open(context, DepositsScreen(
+              repository: RemoteDepositRepository.shared,
               onNavigationSelected: onTabSelected,
               onNotificationTap: () => onNotReady?.call('Notifications'),
               onProfileTap: () => _openProfile(context),
@@ -134,6 +154,7 @@ class MoreScreen extends StatelessWidget {
             title: 'Expenses',
             icon: Icons.receipt_long_outlined,
             onTap: () => _open(context, ExpensesScreen(
+              repository: RemoteExpenseRepository.shared,
               onNavigationSelected: onTabSelected,
               onNotificationTap: () => onNotReady?.call('Notifications'),
               onProfileTap: () => _openProfile(context),
@@ -144,11 +165,11 @@ class MoreScreen extends StatelessWidget {
             title: 'Subscription',
             icon: Icons.workspace_premium_outlined,
             onTap: () => _open(context, SubscriptionOverviewScreen(
+              repository: RemoteSubscriptionRepository(),
               onNavigationSelected: onTabSelected,
               onNotificationTap: () => onNotReady?.call('Notifications'),
               onProfileTap: () => _openProfile(context),
             ))),
-          const SizedBox(height: 15),
         ],
       ),
     ),
