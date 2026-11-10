@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
+import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
@@ -102,9 +102,11 @@ class _AiDocumentsScreenState extends State<AiDocumentsScreen> {
       _notify('Sign in to generate company documents.');
       return;
     }
-    final choice = await showSign2DigitalBottomSheet<String>(
+    final choice = await Sign2DigitalSelectionSheet.showCustom<String>(
       context: context,
-      showDragHandle: true,
+      title: 'Generate Document',
+      icon: Icons.description_outlined,
+      subtitle: 'Choose the type of document to create',
       builder: (sheet) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
