@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -452,7 +453,7 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
       }catch(_){_notice('Unable to load verified job options.');return;}
     }
     if(!mounted)return;
-    final updated = await Navigator.of(context).push<DepositRecord>(
+    final updated = await Sign2DigitalNavigation.push<DepositRecord>(context,
       MaterialPageRoute<DepositRecord>(
         builder: (_) => AddDepositScreen(
           initialDeposit: _record,
