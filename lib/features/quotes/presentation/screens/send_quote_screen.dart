@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import '../../../documents/data/document_activity_session.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -315,7 +316,7 @@ class _SendQuoteScreenState extends State<SendQuoteScreen> {
   }
 
   Future<void> _chooseTemplate() async {
-    final choice = await showModalBottomSheet<String>(context: context,
+    final choice = await showSign2DigitalBottomSheet<String>(context: context,
       showDragHandle: true,
       builder: (ctx) => SafeArea(child: Column(mainAxisSize: MainAxisSize.min,
         children: [
