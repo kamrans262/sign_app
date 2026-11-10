@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -23,7 +24,7 @@ class QuoteUiDemoScreen extends StatelessWidget {
   const QuoteUiDemoScreen({super.key});
 
   Future<void> _push(BuildContext context, Widget screen) =>
-      Navigator.of(context).push<void>(
+      Sign2DigitalNavigation.push<void>(context,
         MaterialPageRoute<void>(builder: (_) => screen),
       );
 
@@ -31,7 +32,7 @@ class QuoteUiDemoScreen extends StatelessWidget {
       BuildContext context, QuoteReviewDraft quote) async {
     // This callback exists ONLY in the clearly labeled UI demo. It allows
     // exercising the UI without implying a real signing/audit service.
-    final draft = await Navigator.of(context).push<QuoteSignatureDraft>(
+    final draft = await Sign2DigitalNavigation.push<QuoteSignatureDraft>(context,
       MaterialPageRoute<QuoteSignatureDraft>(
         builder: (_) => Banner(
           message: 'UI DEMO',
