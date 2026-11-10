@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
@@ -260,7 +261,7 @@ class _SecurityAccessScreenState extends State<SecurityAccessScreen> {
 
   void _sessionDetails(SecurityDeviceSession session,
       {bool fromAll = false}) {
-    showModalBottomSheet<void>(
+    showSign2DigitalBottomSheet<void>(
       context: context,
       useSafeArea: true,
       builder: (sheet) => Padding(
