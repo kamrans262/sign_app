@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -235,7 +236,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
       try {
         final destination = await GlobalSearchNavigation.resolve(hit);
         if (!mounted) return;
-        await Navigator.of(context).push<void>(
+        await Sign2DigitalNavigation.push<void>(context,
           MaterialPageRoute<void>(builder: (_) => destination));
         if (mounted) _reload();
       } catch (_) { _notice('Unable to open this record.'); }
@@ -272,7 +273,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
       _notice('This category has no connected details screen.');
       return;
     }
-    await Navigator.of(context).push<void>(
+    await Sign2DigitalNavigation.push<void>(context,
       MaterialPageRoute<void>(builder: (_) => destination),
     );
     if (mounted) await _reload();
