@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
@@ -146,7 +147,7 @@ class _GeneralDocumentEditorScreenState extends State<GeneralDocumentEditorScree
     lockVersion:_saved?.lockVersion??0);
 
   Future<String?> _option(String title,Map<String,String> options) async=>
-    showModalBottomSheet<String>(context:context,showDragHandle:true,
+    showSign2DigitalBottomSheet<String>(context:context,showDragHandle:true,
       builder:(sheet)=>SafeArea(child:Column(mainAxisSize:MainAxisSize.min,children:[
         Padding(padding:const EdgeInsets.all(16),
           child:Text(title,style:const TextStyle(fontFamily:'Inter',
@@ -157,7 +158,7 @@ class _GeneralDocumentEditorScreenState extends State<GeneralDocumentEditorScree
 
   Future<void> _pickClient() async{
     if(!_editable||_clients.isEmpty)return;
-    final client=await showModalBottomSheet<ClientProfile>(
+    final client=await showSign2DigitalBottomSheet<ClientProfile>(
       context:context,showDragHandle:true,isScrollControlled:true,
       builder:(sheet)=>SafeArea(child:SizedBox(
         height:MediaQuery.sizeOf(sheet).height*.56,
@@ -177,7 +178,7 @@ class _GeneralDocumentEditorScreenState extends State<GeneralDocumentEditorScree
   }
   Future<void> _pickJob() async{
     if(!_editable||_jobs.isEmpty)return;
-    final job=await showModalBottomSheet<JobModel>(
+    final job=await showSign2DigitalBottomSheet<JobModel>(
       context:context,showDragHandle:true,isScrollControlled:true,
       builder:(sheet)=>SafeArea(child:SizedBox(
         height:MediaQuery.sizeOf(sheet).height*.56,
@@ -223,7 +224,7 @@ class _GeneralDocumentEditorScreenState extends State<GeneralDocumentEditorScree
         instructions:_instructions.text.trim(),
         clientId:_clientId,jobId:_jobId);
       if(!mounted)return;
-      final accept=await showModalBottomSheet<bool>(
+      final accept=await showSign2DigitalBottomSheet<bool>(
         context:context,showDragHandle:true,isScrollControlled:true,
         builder:(sheet)=>SafeArea(child:Padding(padding:const EdgeInsets.all(20),
           child:Column(mainAxisSize:MainAxisSize.min,
