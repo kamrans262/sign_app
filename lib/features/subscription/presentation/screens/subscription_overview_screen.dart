@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/services/active_company_session.dart';
@@ -52,7 +53,7 @@ class _SubscriptionOverviewScreenState
   final SubscriptionPlanFlowState _planDraft = SubscriptionPlanFlowState();
 
   Future<void> _openManagePlan() async {
-    await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+    await Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
       builder: (_) => ChoosePlanScreen(flowState: _planDraft,
         billingRepository: _repository is RemoteSubscriptionRepository
             ? _repository : null),
@@ -60,7 +61,7 @@ class _SubscriptionOverviewScreenState
   }
 
   Future<void> _openSubscriptionManagement() async {
-    await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+    await Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
       builder: (_) => SubscriptionManagementScreen(
         repository: _repository,
         flowState: _planDraft,
