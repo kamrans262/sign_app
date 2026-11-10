@@ -58,19 +58,20 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(AiDocumentsScreen), findsOneWidget);
     expect(find.text('Generate Document'), findsOneWidget);
-    expect(find.text('Summarize Document'), findsOneWidget);
-    expect(find.text('Translate Document'), findsOneWidget);
+    expect(find.text('Summarize Document'), findsNothing);
+    expect(find.text('Translate Document'), findsNothing);
     expect(find.byKey(const Key('ai-documents-create')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Demo examples are UI-only and See all opens full listing',
+  testWidgets('Only repository records appear; See all preserves them',
       (tester) async {
-    await _screen(tester);
+    await _screen(tester, repository: _Repository([_generated(1)]));
     expect(find.text('Recent AI Documents'), findsOneWidget);
-    await _reach(tester, 'ai-document-card-ai-document-figma-1');
-    expect(find.byKey(const Key('ai-document-card-ai-document-figma-1')),
+    await _reach(tester, 'ai-document-card-ai-document-test-1');
+    expect(find.byKey(const Key('ai-document-card-ai-document-test-1')),
       findsOneWidget);
+    expect(find.textContaining('AI-DEMO'), findsNothing);
     await _reach(tester, 'ai-documents-see-all', up: true);
     await tester.tap(find.byKey(const Key('ai-documents-see-all')));
     await tester.pumpAndSettle();
@@ -94,30 +95,21 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Generate action and FAB open the new AI Document form',
+  testWidgets('Unauthenticated generation cannot create fictional documents',
       (tester) async {
-    await _screen(tester);
+    await _screen(tester, repository: _Repository([]));
     await tester.tap(find.byKey(const Key('ai-documents-generate')));
     await tester.pumpAndSettle();
-    expect(find.byType(GenerateAiDocumentScreen), findsOneWidget);
-    expect(find.text('AI Document'), findsOneWidget);
-    await tester.tap(find.byIcon(Icons.arrow_back_ios_new_rounded));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('ai-documents-create')));
-    await tester.pumpAndSettle();
-    expect(find.byType(GenerateAiDocumentScreen), findsOneWidget);
+    expect(find.byType(GenerateAiDocumentScreen), findsNothing);
+    expect(find.textContaining('Sign in to generate'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Summarize selection never invents an AI output',
+  testWidgets('Unconnected summarize and translate buttons are absent',
       (tester) async {
     await _screen(tester, repository: _Repository([_generated(1)]));
-    await tester.tap(find.byKey(const Key('ai-documents-summarize')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(
-      const Key('ai-documents-select-ai-document-test-1')));
-    await tester.pumpAndSettle();
-    expect(find.textContaining('not connected yet'), findsOneWidget);
+    expect(find.byKey(const Key('ai-documents-summarize')), findsNothing);
+    expect(find.byKey(const Key('ai-documents-translate')), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -131,7 +123,7 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-      await _screen(tester);
+      await _screen(tester, repository: _Repository([]));
       final scroll = find.byKey(const Key('ai-documents-scroll'));
       await tester.drag(scroll, const Offset(0, -600));
       await tester.pumpAndSettle();
