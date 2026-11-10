@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:printing/printing.dart';
 
@@ -191,7 +192,7 @@ class JobDetailsScreen extends StatelessWidget {
             ));
             return;
           }
-          await showModalBottomSheet<void>(
+          await showSign2DigitalBottomSheet<void>(
             context: context,
             isScrollControlled: true,
             builder: (sheetContext) => SafeArea(
@@ -247,7 +248,7 @@ class JobDetailsScreen extends StatelessWidget {
         final signed = await SignedQuoteFileStore.shared.forJob(job.id);
         if (!context.mounted) return;
         if (signed.isNotEmpty) {
-          await showModalBottomSheet<void>(
+          await showSign2DigitalBottomSheet<void>(
             context: context,
             isScrollControlled: true,
             builder: (sheetContext) => SafeArea(
