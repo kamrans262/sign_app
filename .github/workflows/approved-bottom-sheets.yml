@@ -1,0 +1,52 @@
+name: Sign2Digital approved bottom sheet audit
+
+on:
+  push:
+    branches: [fix/m20-android-live-reminder-integration-2026-11-06]
+    paths:
+      - '.github/workflows/approved-bottom-sheets.yml'
+      - 'lib/core/theme/app_theme.dart'
+      - 'lib/core/widgets/sign2digital_styled_bottom_sheet.dart'
+      - 'lib/features/**/presentation/screens/*.dart'
+      - 'test/core/sign2digital_styled_bottom_sheet_test.dart'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: s2d-approved-bottom-sheets
+  cancel-in-progress: true
+
+jobs:
+  bottom-sheets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Check all direct sheets are standardized
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -Rnl 'showModalBottomSheet' lib/features --include='*.dart'; then
+            echo 'Direct sheet call remains in a feature'
+            exit 1
+          fi
+          count=$(grep -Roh 'showSign2DigitalBottomSheet' lib/features --include='*.dart' | wc -l)
+          test "$count" -eq 36
+          echo "Standardized feature sheets: 36 shared shells plus Generate Document using approved selection sheet"
+      - name: Analyze updated Flutter implementation
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t files < <(git diff --name-only ee6fdf880785faf56c22a9cbff1e0b914b8c361c HEAD | grep -E '^(lib|test)/.*\.dart$')
+          timeout 190s flutter analyze --no-pub "${files[@]}" lib/core/widgets/sign2digital_styled_bottom_sheet.dart
+      - name: Bottom sheet and module UI tests
+        run: timeout 225s flutter test --no-pub --concurrency=2 --timeout=55s --reporter=expanded test/core/sign2digital_styled_bottom_sheet_test.dart test/features/documents/ai_documents_screen_test.dart test/features/documents/documents_screen_test.dart test/features/deposits/deposits_screen_test.dart test/features/expenses/expenses_screen_test.dart test/features/invoices/invoices_screen_test.dart
