@@ -201,8 +201,8 @@ void main() {
             saved = await Navigator.of(context).push<ReminderRecord>(
               MaterialPageRoute(builder: (_) => AddReminderScreen(
                 referenceSource: _References(),
-                datePicker: (_, __) async => date,
-                timePicker: (_, __) async =>
+                datePicker: (_, _) async => date,
+                timePicker: (_, _) async =>
                     const TimeOfDay(hour: 19, minute: 30))));
           },
           child: const Text('Open')),
