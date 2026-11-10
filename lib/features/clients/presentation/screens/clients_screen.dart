@@ -13,6 +13,7 @@ import '../../../documents/domain/document_record.dart';
 import '../../../documents/presentation/screens/generate_ai_document_screen.dart';
 import '../../../quotes/presentation/screens/create_quote_screen.dart';
 import '../../../invoices/presentation/screens/invoices_screen.dart';
+import '../../../invoices/domain/invoice_record.dart';
 import '../../../expenses/presentation/screens/expenses_screen.dart';
 import '../../../expenses/presentation/screens/add_expense_screen.dart';
 import '../../../expenses/data/demo_expense_repository.dart';
@@ -51,12 +52,14 @@ import '../widgets/sign2digital_client_card.dart';
 /// Replace this landing route with Home after the Home UI has been completed.
 class ClientsScreen extends StatefulWidget {
   const ClientsScreen({super.key, this.repository,
-    this.documentRepository, this.initialTab = 2});
+    this.documentRepository, this.invoiceRepository, this.initialTab = 2});
 
   final ClientRepository? repository;
   /// Optional injected catalog for deterministic UI tests and embedded flows.
   /// Production retains the existing automatically selected repository.
   final DocumentRepository? documentRepository;
+  /// Explicit repository injection for isolated navigation tests only.
+  final InvoiceRepository? invoiceRepository;
   /// The real login route starts on Home (0). Existing clients-only embed
   /// points keep their original initial tab (2) for backwards compatibility.
   final int initialTab;
@@ -534,6 +537,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                     refreshRevision: _documentsRevision,
                   ),
                   MoreScreen(
+                    invoiceRepository: widget.invoiceRepository,
                     onTabSelected: (index) {
                       if (mounted) setState(() => _selectedIndex = index);
                     },
