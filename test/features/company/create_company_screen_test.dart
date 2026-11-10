@@ -133,7 +133,7 @@ void main() {
     configureSize(tester, const Size(430, 932));
     final temp = await Directory.systemTemp.createTemp('s2d-company-ai');
     addTearDown(() => temp.delete(recursive: true));
-    final voice = File(temp.path + '/company.m4a');
+    final voice = File('${temp.path}/company.m4a');
     await voice.writeAsBytes(List<int>.filled(24, 1));
     final recorder = _SavedCompanyVoiceRecorder(voice.path);
     var uploads = 0;
