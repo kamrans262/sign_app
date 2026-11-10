@@ -64,7 +64,6 @@ Future<T?> showSign2DigitalBottomSheet<T>({
     // app's BottomSheetThemeData: 36×4, placeholder color and rounded ends.
     backgroundColor: AppColors.white,
     elevation: 0,
-    shadowColor: material.Colors.transparent,
     barrierColor: const material.Color(0x66000000),
     shape: const material.RoundedRectangleBorder(
       borderRadius: material.BorderRadius.vertical(
