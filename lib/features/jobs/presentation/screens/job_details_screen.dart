@@ -21,6 +21,8 @@ import '../../../quotes/presentation/screens/quote_preview_screen.dart';
 import '../../../documents/presentation/screens/documents_screen.dart';
 import '../../../documents/presentation/screens/reports_screen.dart';
 import '../../../expenses/presentation/screens/expenses_screen.dart';
+import '../../../deposits/presentation/screens/deposits_screen.dart';
+import '../../../invoices/presentation/screens/invoices_screen.dart';
 import '../../../labour/presentation/screens/time_labour_screen.dart';
 import '../../../labour/presentation/widgets/m15_labour_summary.dart';
 import '../../../deposits/presentation/widgets/m16_verified_job_deposits.dart';
@@ -316,6 +318,24 @@ class JobDetailsScreen extends StatelessWidget {
       ));
       return;
     }
+    if (section == JobSection.deposits) {
+      await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+        builder: (_) => DepositsScreen(
+          jobId: int.tryParse(job.id) != null ? job.id : null,
+          onNavigationSelected: (index) => _selectTab(context, index),
+        ),
+      ));
+      return;
+    }
+    if (section == JobSection.invoices) {
+      await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+        builder: (_) => InvoicesScreen(
+          jobId: int.tryParse(job.id) != null ? job.id : null,
+          onNavigationSelected: (index) => _selectTab(context, index),
+        ),
+      ));
+      return;
+    }
     if (section == JobSection.acceptance) {
       await Navigator.of(context).push<void>(MaterialPageRoute<void>(
         builder: (_) => ReportsScreen(
@@ -436,7 +456,7 @@ class JobDetailsScreen extends StatelessWidget {
                           0 => Sign2DigitalJobFinancialCard(
                             label: 'Quote amount',
                             amountChf: data.quoteAmountChf,
-                            showAmount: data.financialsAvailable,
+                            showAmount: data.financialAvailableFor('quote_amount'),
                             icon: Icons.description_outlined,
                             iconAsset: 'assets/icons/description.svg',
                           ),
@@ -445,7 +465,7 @@ class JobDetailsScreen extends StatelessWidget {
                               : Sign2DigitalJobFinancialCard(
                                   label: 'Expenses',
                                   amountChf: data.expensesChf,
-                                  showAmount: data.financialsAvailable,
+                                  showAmount: data.financialAvailableFor('expenses'),
                                   icon: Icons.shopping_cart_outlined,
                                 ),
                           2 => int.tryParse(job.id) != null
@@ -453,7 +473,7 @@ class JobDetailsScreen extends StatelessWidget {
                               : Sign2DigitalJobFinancialCard(
                                   label: 'Labour cost',
                                   amountChf: data.labourCostChf,
-                                  showAmount: data.financialsAvailable,
+                                  showAmount: data.financialAvailableFor('labour_cost'),
                                   icon: Icons.groups_outlined,
                                   iconAsset: 'assets/icons/team_members.svg',
                                 ),
@@ -463,20 +483,20 @@ class JobDetailsScreen extends StatelessWidget {
                               : Sign2DigitalJobFinancialCard(
                                   label: 'Deposits',
                                   amountChf: data.depositsChf,
-                                  showAmount: data.financialsAvailable,
+                                  showAmount: data.financialAvailableFor('deposits'),
                                   icon: Icons.savings_outlined,
                                 ),
                           4 => Sign2DigitalJobFinancialCard(
                             label: 'Invoiced',
                             amountChf: data.invoicedChf,
-                            showAmount: data.financialsAvailable,
+                            showAmount: data.financialAvailableFor('invoiced'),
                             icon: Icons.description_outlined,
                             iconAsset: 'assets/icons/doc_numbering.svg',
                           ),
                           _ => Sign2DigitalJobFinancialCard(
                             label: 'Received',
                             amountChf: data.receivedChf,
-                            showAmount: data.financialsAvailable,
+                            showAmount: data.financialAvailableFor('received'),
                             icon: Icons.check_circle,
                           ),
                         },
@@ -484,7 +504,7 @@ class JobDetailsScreen extends StatelessWidget {
                       const SizedBox(height: 20),
                       Sign2DigitalRemainingBalanceCard(
                         balanceChf: data.remainingBalanceChf,
-                        showAmount: data.financialsAvailable,
+                        showAmount: data.financialAvailableFor('remaining_balance'),
                       ),
                       if (int.tryParse(job.id) != null) ...[
                         const SizedBox(height: 20),
