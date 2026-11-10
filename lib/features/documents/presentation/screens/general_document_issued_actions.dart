@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import 'package:flutter/services.dart';
 import 'package:printing/printing.dart';
 
@@ -146,7 +147,7 @@ class _GeneralDocumentIssuedActionsState
     final email=TextEditingController(text:widget.suggestedSignerEmail);
     var mode='pdf';
     try{
-      return await showModalBottomSheet<Map<String,String>>(
+      return await showSign2DigitalBottomSheet<Map<String,String>>(
         context:context,isScrollControlled:true,showDragHandle:true,
         builder:(sheet)=>StatefulBuilder(builder:(sheet,setSheet)=>SafeArea(
           child:Padding(padding:EdgeInsets.only(left:20,right:20,top:6,
