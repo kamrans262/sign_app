@@ -43,6 +43,7 @@ class ReminderVoiceSuggestion {
       'job' || 'project' => ReminderType.job,
       'client' => ReminderType.client,
       'document' => ReminderType.document,
+      'equipment' => ReminderType.equipment,
       'other' => ReminderType.other,
       _ => null,
     };
