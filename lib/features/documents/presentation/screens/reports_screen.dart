@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import 'package:printing/printing.dart';
@@ -156,7 +157,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     if (!mounted) return;
     final generator = widget.reportGenerator ??
         (remote ? (_repository).saveDraft : null);
-    final report = await Navigator.of(context).push<DocumentRecord>(
+    final report = await Sign2DigitalNavigation.push<DocumentRecord>(context,
       MaterialPageRoute<DocumentRecord>(
         builder: (_) => SiteReportWizardScreen(
           initial: initial,
@@ -172,7 +173,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
       // The connected repository owns real generated reports and statuses.
       await _load();
       if (mounted) {
-        await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+        await Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
           builder: (_) => ReportReviewScreen(report: report,
             repository: _repository is RemoteSiteReportRepository
               ? _repository : null),
@@ -214,7 +215,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
       return;
     }
     if (!mounted) return;
-    final result = await Navigator.of(context).push<DocumentRecord>(
+    final result = await Sign2DigitalNavigation.push<DocumentRecord>(context,
       MaterialPageRoute(builder: (_) => MeetingMinutesEditorScreen(
         initial: initial,
         initialJobId: widget.jobId,
@@ -228,7 +229,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     }
     await _load();
     if (mounted && !result.demoOnly) {
-      await Navigator.of(context).push<void>(MaterialPageRoute(
+      await Sign2DigitalNavigation.push<void>(context,MaterialPageRoute(
         builder: (_) => ReportReviewScreen(
           report: result, repository: repository),
       ));
@@ -251,7 +252,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
       }
     }
     if(!mounted)return;
-    final saved=await Navigator.of(context).push<DocumentRecord>(
+    final saved=await Sign2DigitalNavigation.push<DocumentRecord>(context,
       MaterialPageRoute(builder:(_)=>WorkAcceptanceEditorScreen(
         initial:draft,initialJobId:widget.jobId,repository:repository)),
     );
@@ -273,7 +274,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
       return;
     }
     if(!mounted)return;
-    await Navigator.of(context).push<void>(MaterialPageRoute(
+    await Sign2DigitalNavigation.push<void>(context,MaterialPageRoute(
       builder:(_)=>WorkAcceptanceScreen(
         report:latest,
         selectedNavigationIndex:widget.selectedNavigationIndex,
@@ -285,7 +286,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
         onEditDraft:(item) async {
           final draft=await repository.loadDraft(item.id);
           if(!mounted)return;
-          await Navigator.of(context).push<DocumentRecord>(
+          await Sign2DigitalNavigation.push<DocumentRecord>(context,
             MaterialPageRoute(builder:(_)=>WorkAcceptanceEditorScreen(
               initial:draft,repository:repository)));
         },
@@ -368,7 +369,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
         final latest = await (_repository)
             .details(report.id);
         if (!mounted) return;
-        await Navigator.of(context).push<void>(MaterialPageRoute(
+        await Sign2DigitalNavigation.push<void>(context,MaterialPageRoute(
           builder: (_) => ReportReviewScreen(report: latest,
               repository: _repository),
         ));
@@ -390,7 +391,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
       }
       return;
     }
-    await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+    await Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
       builder: (_) => report.reportKind == ReportKind.workAcceptance
           ? WorkAcceptanceScreen(
               report: report,
