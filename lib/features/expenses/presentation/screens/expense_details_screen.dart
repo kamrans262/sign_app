@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -203,7 +204,7 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
   Future<void> _openReceipt(int index) async {
     if (_busy) return;
     setState(() => _tab = 1);
-    await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+    await Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
       builder: (_) => ReceiptScreen(
         expense: _record,
         repository: _repository,
@@ -318,7 +319,7 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
 
   Future<void> _edit() async {
     if (_busy) return;
-    final updated = await Navigator.of(context).push<ExpenseRecord>(
+    final updated = await Sign2DigitalNavigation.push<ExpenseRecord>(context,
       MaterialPageRoute<ExpenseRecord>(
         builder: (_) => AddExpenseScreen(initialExpense: _record)),
     );
