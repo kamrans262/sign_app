@@ -307,7 +307,8 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
 
   Future<void> _companyVoice() async {
     if (_voiceOpen || _saving) return;
-    if (!MobileAuthRepository.shared.isSignedIn && widget.aiClient == null) {
+    if (!MobileAuthRepository.shared.isSignedIn &&
+        widget.aiClient == null && widget.voiceSuggestionsLoader == null) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text('Sign in to use AI company creation.'),
       ));
