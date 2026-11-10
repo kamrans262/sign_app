@@ -77,7 +77,7 @@ void main() {
     );
     await openVoice(tester);
     expect(find.byType(AiVoiceFlowDialog), findsOneWidget);
-    expect(find.text('Record Deposit Details'), findsOneWidget);
+    expect(find.text('Record Job Details'), findsOneWidget);
     expect(find.text('● Recording'), findsOneWidget);
     expect(recorder.starts, 1);
     await tester.tap(find.byKey(const Key('voice-pause-resume')));
