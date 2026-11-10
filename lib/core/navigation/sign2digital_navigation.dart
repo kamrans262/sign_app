@@ -68,6 +68,30 @@ abstract final class Sign2DigitalNavigation {
     }
   }
 
+  /// Replacement for direct Navigator.push across modules. The source route
+  /// plus destination screen type identifies a single navigation action.
+  /// While its child is active a rapid second tap cannot add another copy;
+  /// opening that type from a *different* screen remains allowed.
+  ///
+  /// MaterialPageRoute's builder only constructs the destination widget;
+  /// it is still mounted and built exclusively by the original route.
+  static Future<T?> push<T>(
+    BuildContext context,
+    Route<T> route, {
+    Object? destination,
+  }) {
+    final target = destination ??
+        (route is MaterialPageRoute<T>
+            ? route.builder(context).runtimeType
+            : (route.settings.name ?? route.runtimeType));
+    final origin = ModalRoute.of(context) ?? context;
+    return runOnce<T>(
+      context,
+      _RouteAction(origin, target),
+      () => Navigator.of(context).push<T>(route),
+    );
+  }
+
   /// Simple screen push. Its type identifies the menu destination; IDs can
   /// be passed explicitly when multiple records share a screen class.
   static Future<T?> open<T>(
@@ -88,4 +112,19 @@ class _DashboardOwner {
   const _DashboardOwner(this.route, this.selectTab);
   final Route<dynamic> route;
   final ValueChanged<int> selectTab;
+}
+
+class _RouteAction {
+  const _RouteAction(this.origin, this.destination);
+  final Object origin;
+  final Object destination;
+
+  @override
+  bool operator ==(Object other) =>
+      other is _RouteAction &&
+      identical(other.origin, origin) &&
+      other.destination == destination;
+
+  @override
+  int get hashCode => Object.hash(identityHashCode(origin), destination);
 }
