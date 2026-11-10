@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
@@ -230,7 +231,7 @@ class _TimeLabourScreenState extends State<TimeLabourScreen> {
       widget.onEntryTap!(record);
       return;
     }
-    final deleted = await Navigator.of(context).push<bool>(
+    final deleted = await Sign2DigitalNavigation.push<bool>(context,
       MaterialPageRoute<bool>(
         builder: (_) => LabourEntryDetailsScreen(
           entry: record,
@@ -254,7 +255,7 @@ class _TimeLabourScreenState extends State<TimeLabourScreen> {
       widget.onCreateEntry!(_kind);
       return;
     }
-    final entry = await Navigator.of(context).push<LabourEntry>(
+    final entry = await Sign2DigitalNavigation.push<LabourEntry>(context,
       MaterialPageRoute<LabourEntry>(
         builder: (_) => AddLabourEntryScreen(
           kind: _kind,
