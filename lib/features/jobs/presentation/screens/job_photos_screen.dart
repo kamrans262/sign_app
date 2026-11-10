@@ -68,7 +68,9 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
     if (!_remote) return;
     try {
       final records = await _remoteRepository.listPhotos(widget.job.id);
-      if (mounted) setState(() => _photos = records);
+      // Repository snapshots are immutable; keep mutable screen state for
+      // optimistic inserts while preserving the verified server records.
+      if (mounted) setState(() => _photos = List<JobPhotoModel>.of(records));
     } catch (error) {
       if (mounted) _message('Unable to load saved job photos: $error');
     }
@@ -173,10 +175,6 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
           if (mounted) _message('Photos saved to the company job.');
         }
       } catch (error) {
-        assert(() {
-          debugPrint('M11 photo upload error type: ${error.runtimeType}; detail: $error');
-          return true;
-        }());
         if (mounted) _message(error is SignApiException
             ? error.message : 'Could not upload photo. Please retry.');
       } finally {
