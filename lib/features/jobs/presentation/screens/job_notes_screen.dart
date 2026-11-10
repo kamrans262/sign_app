@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -167,7 +168,7 @@ class _JobNotesScreenState extends State<JobNotesScreen> {
               key: const Key('job-note-convert'),
             onPressed: () {
               Navigator.of(dialogContext).pop();
-              Navigator.of(context).push<void>(MaterialPageRoute<void>(
+              Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
                 builder: (_) => ConvertDocumentScreen(
                   note: note, onTabSelected: widget.onTabSelected,
                 ),
@@ -193,7 +194,7 @@ class _JobNotesScreenState extends State<JobNotesScreen> {
         _selectedTab == 0 ? JobNoteType.text : JobNoteType.voice,
       );
     } else {
-      final saved = await Navigator.of(context).push<bool>(
+      final saved = await Sign2DigitalNavigation.push<bool>(context,
         MaterialPageRoute(builder: (_) => AddJobNoteScreen(
           job: widget.job,
           store: _remote ? null : _store,
