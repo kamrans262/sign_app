@@ -15,7 +15,7 @@ void main() {
   test('uses bearer token and verified tenant for real job AI dictation', () async {
     final temp = await Directory.systemTemp.createTemp('s2d-voice-test');
     addTearDown(() => temp.delete(recursive: true));
-    final file = File(temp.path + '/recording.m4a');
+    final file = File('${temp.path}/recording.m4a');
     await file.writeAsBytes(List<int>.filled(24, 1));
 
     final api = SignApiClient(
