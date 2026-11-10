@@ -17,7 +17,10 @@ Future<T?> showSign2DigitalBottomSheet<T>({
   material.Clip? clipBehavior,
   material.Color? barrierColor,
   bool isScrollControlled = false,
-  double scrollControlDisabledMaxHeightRatio = 9 / 16,
+  // Match the approved selection sheet's 88%-of-screen height allowance.
+  // Material's default 9/16 cap clips five-item sort sheets when the
+  // standardized drag handle is visible.
+  double scrollControlDisabledMaxHeightRatio = 0.88,
   bool useRootNavigator = false,
   bool isDismissible = true,
   bool enableDrag = true,
