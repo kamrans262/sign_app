@@ -33,7 +33,8 @@ void main() {
     expect(list, findsOneWidget);
     for (final entry in expected.entries) {
       await tester.scrollUntilVisible(find.byKey(Key(entry.key)), 100,
-          scrollable: list);
+          scrollable: find.descendant(of: list,
+            matching: find.byType(Scrollable)).first);
       expect(find.text(entry.value), findsOneWidget);
     }
     expect(find.text('Quote UI Demo'), findsNothing);
