@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import 'package:printing/printing.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -121,7 +122,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
   }
 
   Future<void> _editLocalDraft(DocumentRecord? draft, ReportKind kind) async {
-    final result = await showModalBottomSheet<DocumentRecord>(
+    final result = await showSign2DigitalBottomSheet<DocumentRecord>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
@@ -303,7 +304,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
       widget.onCreateReport!();
       return;
     }
-    final kind = await showModalBottomSheet<ReportKind>(
+    final kind = await showSign2DigitalBottomSheet<ReportKind>(
       context: context,
       builder: (sheet) => SafeArea(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
