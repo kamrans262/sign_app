@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -194,7 +195,7 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
 
   Future<void> _edit() async {
     if (_busy) return;
-    final next = await Navigator.of(context).push<EquipmentRecord>(
+    final next = await Sign2DigitalNavigation.push<EquipmentRecord>(context,
       MaterialPageRoute<EquipmentRecord>(
         builder: (_) => AddEquipmentScreen(initialEquipment: _record)),
     );
@@ -368,7 +369,7 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
         label:_record.currentLoanId==null?'Loan History':'Current Equipment Loan',
         enabled:!_busy,onPressed:() async {
           if(_record.currentLoanId==null){
-            await Navigator.of(context).push<void>(
+            await Sign2DigitalNavigation.push<void>(context,
               MaterialPageRoute(builder:(_)=>const EquipmentLoansScreen()));
             return;
           }
@@ -376,7 +377,7 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
             final repository=RemoteEquipmentLoanRepository.shared;
             final loan=await repository.detail(_record.currentLoanId!);
             if(!mounted)return;
-            await Navigator.of(context).push<void>(
+            await Sign2DigitalNavigation.push<void>(context,
               MaterialPageRoute(builder:(_)=>EquipmentLoanDetailsScreen(
                 loan:loan,repository:repository)));
           }catch(_){
