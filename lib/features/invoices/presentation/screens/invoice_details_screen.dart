@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import 'package:flutter/services.dart';
@@ -450,7 +451,7 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
       }
     }
     if(!mounted)return;
-    final updated = await Navigator.of(context).push<InvoiceRecord>(
+    final updated = await Sign2DigitalNavigation.push<InvoiceRecord>(context,
       MaterialPageRoute<InvoiceRecord>(
         builder: (_) => AddInvoiceScreen(
           initialInvoice: _record,
@@ -470,7 +471,7 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
 
   Future<void> _preview() async {
     if (_busy) { return; }
-    await Navigator.of(context).push<void>(
+    await Sign2DigitalNavigation.push<void>(context,
       MaterialPageRoute<void>(
         builder: (_) => InvoicePreviewScreen(
           invoice: _record,
