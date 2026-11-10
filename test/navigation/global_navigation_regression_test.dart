@@ -6,6 +6,7 @@ import 'package:sign2digital/core/navigation/sign2digital_navigation.dart';
 import 'package:sign2digital/features/clients/presentation/screens/clients_screen.dart';
 import 'package:sign2digital/features/clients/presentation/screens/more_screen.dart';
 import 'package:sign2digital/features/invoices/presentation/screens/add_invoice_screen.dart';
+import 'package:sign2digital/features/invoices/data/demo_invoice_repository.dart';
 import 'package:sign2digital/features/invoices/presentation/screens/invoices_screen.dart';
 
 Future<void> _frame(WidgetTester tester) async {
@@ -114,8 +115,11 @@ void main() {
   testWidgets('More to Invoices to Add Invoice Back then More always works',
       (tester) async {
     _phone(tester);
-    await tester.pumpWidget(const MaterialApp(
-      home: ClientsScreen(initialTab: 4),
+    await tester.pumpWidget(MaterialApp(
+      home: ClientsScreen(
+        initialTab: 4,
+        invoiceRepository: DemoInvoiceRepository(),
+      ),
     ));
     await _frame(tester);
     expect(find.byType(MoreScreen), findsOneWidget);
@@ -125,12 +129,6 @@ void main() {
     expect(find.byType(InvoicesScreen), findsOneWidget);
     await tester.tap(find.byKey(const Key('invoices-create')));
     await _frame(tester);
-    if (find.byType(AddInvoiceScreen).evaluate().isEmpty) {
-      final text = tester.widgetList<Text>(find.byType(Text))
-          .map((widget) => widget.data)
-          .whereType<String>().join(' | ');
-      debugPrint('Invoice navigation diagnostic: $text');
-    }
     expect(find.byType(AddInvoiceScreen), findsOneWidget);
 
     // Android system/back-button semantics return to the existing invoice list.
