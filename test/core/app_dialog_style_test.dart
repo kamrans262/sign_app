@@ -57,20 +57,25 @@ void main() {
           matching: find.byType(Dialog),
         ),
       );
-      expect(dialog.backgroundColor, AppColors.white);
-      expect(dialog.surfaceTintColor, Colors.transparent);
-      expect(dialog.elevation, 0);
+      // AlertDialog passes null overrides to Dialog, which resolves the
+      // approved values from the shared DialogThemeData at build time.
+      final theme = mode.value.dialogTheme;
+      expect(dialog.backgroundColor, isNull);
+      expect(theme.backgroundColor, AppColors.white);
+      expect(theme.surfaceTintColor, Colors.transparent);
+      expect(theme.elevation, 0);
       expect(
-        dialog.shape,
+        theme.shape,
         const RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(20)),
         ),
       );
+      expect(theme.constraints?.maxWidth, 350);
       expect(tester.getSize(find.byType(Dialog)).width, lessThanOrEqualTo(350));
-      expect(mode.value.alertDialogTheme.titleTextStyle?.fontFamily, 'Inter');
-      expect(mode.value.alertDialogTheme.titleTextStyle?.fontSize, 18);
-      expect(mode.value.alertDialogTheme.contentTextStyle?.fontSize, 14);
-      expect(mode.value.dialogTheme.barrierColor, const Color(0x80000000));
+      expect(theme.titleTextStyle?.fontFamily, 'Inter');
+      expect(theme.titleTextStyle?.fontSize, 18);
+      expect(theme.contentTextStyle?.fontSize, 14);
+      expect(theme.barrierColor, const Color(0x80000000));
       expect(alert.actions?.length, 2);
       expect(tester.takeException(), isNull);
       await tester.tap(find.text('Save Draft'));
