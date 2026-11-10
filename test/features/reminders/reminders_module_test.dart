@@ -61,7 +61,7 @@ class _FakeReminderVoice implements ReminderVoiceExtractionService {
   final Future<ReminderVoiceSuggestion> Function() onExtract;
 
   @override
-  Future<ReminderVoiceSuggestion> extract(String _, String __) => onExtract();
+  Future<ReminderVoiceSuggestion> extract(String _) => onExtract();
 }
 
 Future<void> _reach(WidgetTester tester, String key, {bool up = false}) async {
@@ -252,7 +252,6 @@ void main() {
       voiceRecorderFactory: () => recorder,
       voiceExtractionService: _FakeReminderVoice(() async =>
         const ReminderVoiceSuggestion(title: 'Call client')),
-      requestTemporaryApiKey: (_) async => 'test-key',
     )));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('create-with-ai-voice-button')));
@@ -260,6 +259,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.byType(AiVoiceFlowDialog), findsOneWidget);
     expect(find.text('Record Reminder Details'), findsOneWidget);
+    expect(find.byKey(const Key('reminder-voice-api-key')), findsNothing);
     await tester.tap(find.byKey(const Key('voice-cancel')));
     await tester.pumpAndSettle();
     expect(recorder.cancels, 1);
@@ -276,7 +276,6 @@ void main() {
         const ReminderVoiceSuggestion(
           title: 'Call client', type: ReminderType.client,
           time: TimeOfDay(hour: 17, minute: 0))),
-      requestTemporaryApiKey: (_) async => 'temporary-test-key',
     )));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextFormField).first, 'Manual title');
