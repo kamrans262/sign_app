@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -181,7 +182,7 @@ class _QuoteAiProcessingScreenState extends State<QuoteAiProcessingScreen> {
       return;
     }
     widget.onReviewStarted?.call();
-    Navigator.of(context).push<void>(MaterialPageRoute<void>(
+    Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
       builder: (_) => ReviewQuoteScreen(
         initialDraft: _reviewDraft!, onApproved: widget.onQuoteApproved),
     ));
