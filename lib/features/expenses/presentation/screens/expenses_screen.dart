@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 
@@ -134,7 +135,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       widget.onExpenseTap!(expense);
       return;
     }
-    await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+    await Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
       builder: (_) => ExpenseDetailsScreen(
         expense: expense, repository: _repository,
         loadExpense: _repository is RemoteExpenseRepository
@@ -152,7 +153,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       widget.onCreateExpense!();
       return;
     }
-    final draft = await Navigator.of(context).push<ExpenseRecord>(
+    final draft = await Sign2DigitalNavigation.push<ExpenseRecord>(context,
       MaterialPageRoute<ExpenseRecord>(
         builder: (_) => AddExpenseScreen(
           initialJob: widget.initialJob,
