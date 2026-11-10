@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import 'package:flutter/services.dart';
 import 'package:printing/printing.dart';
 
@@ -354,7 +355,7 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
       _notice('Add a customer email address before sending the invoice.');
       return false;
     }
-    return await showModalBottomSheet<bool>(
+    return await showSign2DigitalBottomSheet<bool>(
       context:context,showDragHandle:true,
       builder:(sheetContext)=>SafeArea(child:Padding(
         padding:const EdgeInsets.all(20),
