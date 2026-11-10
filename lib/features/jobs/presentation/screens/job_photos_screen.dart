@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -209,7 +210,7 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
 
   Future<void> _openAddPhotos() async {
     final staged = _pending.isEmpty ? null : _pending.first;
-    final saved = await Navigator.of(context).push<bool>(
+    final saved = await Sign2DigitalNavigation.push<bool>(context,
       MaterialPageRoute(
         builder: (_) => AddPhotosScreen(
           job: widget.job,
