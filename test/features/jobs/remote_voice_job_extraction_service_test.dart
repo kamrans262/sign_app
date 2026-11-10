@@ -27,7 +27,9 @@ void main() {
         expect(request.url.path, '/api/v1/ai/jobs/voice');
         expect(request.headers['Authorization'], 'Bearer test-token');
         expect(request.headers['X-Company-Id'], '5');
-        expect(request.headers['Content-Type'], contains('multipart/form-data'));
+        expect(request.headers.entries.any((header) =>
+          header.key.toLowerCase() == 'content-type' &&
+          header.value.contains('multipart/form-data')), isTrue);
         return http.Response(jsonEncode({
           'data': {
             'suggestions': {
