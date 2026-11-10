@@ -196,7 +196,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
   }
 
   void _openNotifications() {
-    Navigator.of(context).push<void>(
+    Sign2DigitalNavigation.push<void>(context,
       MaterialPageRoute<void>(builder: (_) => const NotificationInboxScreen()),
     );
   }
@@ -376,7 +376,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
             }
           }
           if (!mounted) return false;
-          final draft = await Navigator.of(context).push<CreateJobDraft>(
+          final draft = await Sign2DigitalNavigation.push<CreateJobDraft>(context,
             MaterialPageRoute<CreateJobDraft>(
               builder: (_) => CreateJobScreen(
                 clientRepository: _repository,
@@ -482,7 +482,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
           children: [
             Sign2DigitalDashboardHeader(
               onNotificationTap: _openNotifications,
-              onProfileTap: () => Navigator.of(context).push<void>(
+              onProfileTap: () => Sign2DigitalNavigation.push<void>(context,
                 MaterialPageRoute<void>(
                   builder: (_) => ProfileSettingsScreen(
                     onNotificationTap: _openNotifications,
