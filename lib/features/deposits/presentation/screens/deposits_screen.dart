@@ -32,6 +32,7 @@ class DepositsScreen extends StatefulWidget {
     super.key, this.repository, this.onDepositTap, this.onCreateDeposit,
     this.onNavigationSelected, this.onNotificationTap, this.onProfileTap,
     this.selectedNavigationIndex = 4,
+    this.jobId,
   });
 
   final DepositRepository? repository;
@@ -41,6 +42,8 @@ class DepositsScreen extends StatefulWidget {
   final VoidCallback? onNotificationTap;
   final VoidCallback? onProfileTap;
   final int selectedNavigationIndex;
+  /// A Job Details route filters this screen to its persisted job ID.
+  final String? jobId;
 
   @override
   State<DepositsScreen> createState() => _DepositsScreenState();
@@ -110,6 +113,7 @@ class _DepositsScreenState extends State<DepositsScreen> {
 
   List<DepositRecord> get _visible {
     final list = _all.where((item) =>
+        (widget.jobId == null || item.jobId == widget.jobId) &&
         (_tab == 0 || item.status == DepositStatus.values[_tab - 1]) &&
         item.matches(_search.text)).toList();
     list.sort((a, b) {
@@ -198,11 +202,16 @@ class _DepositsScreenState extends State<DepositsScreen> {
           return;
         }
       }
+      if (widget.jobId != null) {
+        jobs = jobs.where((job) => job.id == widget.jobId).toList();
+        if (jobs.isEmpty) { _notice('Job is no longer available.'); return; }
+      }
       if(!mounted)return;
       deposit=await Navigator.of(context).push<DepositRecord>(
         MaterialPageRoute<DepositRecord>(
           builder: (_) => AddDepositScreen(
             jobs: jobs,
+            initialJob: widget.jobId == null ? null : jobs.first,
             selectedNavigationIndex: widget.selectedNavigationIndex,
             onNavigationSelected: widget.onNavigationSelected,
           ),
