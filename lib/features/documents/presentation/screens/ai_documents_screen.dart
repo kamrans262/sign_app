@@ -5,7 +5,6 @@ import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
 import '../../../../core/widgets/sign2digital_dashboard_header.dart';
 import '../../../../core/widgets/sign2digital_outlined_container.dart';
 import '../../../quotes/presentation/widgets/sign2digital_quote_summary_card.dart';
-import '../../data/demo_document_repository.dart';
 import '../../data/remote_general_document_repository.dart';
 import '../../../auth/data/mobile_auth_repository.dart';
 import '../../domain/document_record.dart';
@@ -14,7 +13,7 @@ import 'generate_ai_document_screen.dart';
 import 'general_document_editor_screen.dart';
 
 /// AI document hub reusing the dashboard chrome and existing document cards.
-/// Default examples are clearly local Figma fixtures, not generated AI output.
+/// Loads real company-owned documents from Laravel; no preview fixtures.
 class AiDocumentsScreen extends StatefulWidget {
   const AiDocumentsScreen({
     super.key,
@@ -52,27 +51,11 @@ class _AiDocumentsScreenState extends State<AiDocumentsScreen> {
   @override
   void initState() {
     super.initState();
-    _repository = widget.repository ?? (
-      MobileAuthRepository.shared.isSignedIn
-        ? RemoteGeneralDocumentRepository.shared
-        : const DemoDocumentRepository());
+    _repository = widget.repository ?? RemoteGeneralDocumentRepository.shared;
     _load();
   }
 
   Future<void> _load() async {
-    // A signed-out Figma preview only displays the three local demo cards.
-    // Do not open the unrelated signed-quote PDF cache just to show them.
-    // Authenticated users still load actual tenant-scoped M18 documents.
-    if (widget.repository == null &&
-        !MobileAuthRepository.shared.isSignedIn) {
-      if (!mounted) return;
-      setState(() {
-        _documents = _figmaExamples();
-        _error = null;
-        _loading = false;
-      });
-      return;
-    }
     setState(() { _loading = true; _error = null; });
     try {
       final records = await _repository.listDocuments();
@@ -83,11 +66,7 @@ class _AiDocumentsScreenState extends State<AiDocumentsScreen> {
       generated.sort((a, b) => b.timestamp.compareTo(a.timestamp));
       if (!mounted) { return; }
       setState(() {
-        // Only the built-in demo repository supplies visual Figma examples.
-        // An injected empty repository correctly produces an empty state.
-        _documents = generated.isEmpty && widget.repository == null &&
-            !MobileAuthRepository.shared.isSignedIn
-            ? _figmaExamples() : generated;
+        _documents = generated;
         _loading = false;
       });
     } catch (_) {
@@ -98,22 +77,6 @@ class _AiDocumentsScreenState extends State<AiDocumentsScreen> {
       });
     }
   }
-
-  List<DocumentRecord> _figmaExamples() => [
-    for (var index = 0; index < 3; index++)
-      DocumentRecord(
-        id: 'ai-document-figma-${index + 1}',
-        category: DocumentCategory.reports,
-        reportKind: ReportKind.workAcceptance,
-        number: 'AI-DEMO-${index + 1}',
-        title: 'Work Acceptance Report',
-        project: 'Riverside villa',
-        customer: 'Jean Dupont',
-        timestamp: DateTime(2026, 8, 12),
-        status: 'Generated',
-        demoOnly: true,
-      ),
-  ];
 
   void _notify(String message) {
     if (!mounted) { return; }
@@ -134,7 +97,10 @@ class _AiDocumentsScreenState extends State<AiDocumentsScreen> {
       widget.onCreateDocument!();
       return;
     }
-    if(MobileAuthRepository.shared.isSignedIn){
+    if (!MobileAuthRepository.shared.isSignedIn) {
+      _notify('Sign in to generate company documents.');
+      return;
+    }
       final choice=await showModalBottomSheet<String>(
         context:context,showDragHandle:true,
         builder:(sheet)=>SafeArea(child:Column(
@@ -157,66 +123,7 @@ class _AiDocumentsScreenState extends State<AiDocumentsScreen> {
           : GenerateAiDocumentScreen(
               documentGenerator:widget.documentGenerator),
       ));
-    }else{
-      await Navigator.of(context).push<void>(
-        MaterialPageRoute<void>(
-          builder: (_) => GenerateAiDocumentScreen(
-            documentGenerator: widget.documentGenerator,
-          ),
-        ),
-      );
-    }
     if (mounted) { await _load(); }
-  }
-
-  Future<void> _selectDocumentFor(String operation) async {
-    if (_loading || _error != null) { return; }
-    List<DocumentRecord> available;
-    try {
-      available = await _repository.listDocuments();
-    } catch (_) {
-      _notify('Unable to load documents for $operation.');
-      return;
-    }
-    if (!mounted) { return; }
-    // Select from real repository documents when available. The Figma
-    // fixtures are only a fallback for the disconnected demo repository.
-    final choices = available.isEmpty ? _documents : available;
-    if (choices.isEmpty) {
-      _notify('No documents are available to $operation.');
-      return;
-    }
-    final picked = await showModalBottomSheet<DocumentRecord>(
-      context: context,
-      isScrollControlled: true,
-      builder: (sheet) => SafeArea(
-        child: SizedBox(
-          height: MediaQuery.sizeOf(sheet).height * .55,
-          child: Column(children: [
-            Padding(padding: const EdgeInsets.all(16),
-              child: Text('Select a document to $operation',
-                style: const TextStyle(fontFamily: 'Inter',
-                  fontSize: 16, fontWeight: FontWeight.w600))),
-            Expanded(child: ListView.builder(
-              itemCount: choices.length,
-              itemBuilder: (context, index) {
-                final record = choices[index];
-                return ListTile(
-                  key: Key('ai-documents-select-${record.id}'),
-                  title: Text(record.title),
-                  subtitle: Text(record.project),
-                  onTap: () => Navigator.of(sheet).pop(record),
-                );
-              },
-            )),
-          ]),
-        ),
-      ),
-    );
-    if (!mounted || picked == null) { return; }
-    // No document summarization or translation service is connected here.
-    _notify('AI $operation is not connected yet for ${picked.title}. '
-      'No changes were made.');
   }
 
   Future<void> _openDocument(DocumentRecord record) async {
@@ -376,13 +283,6 @@ class _AiDocumentsScreenState extends State<AiDocumentsScreen> {
                   title: 'Generate Document', id: 'generate',
                   onTap: _generate),
                 const SizedBox(height: 20),
-                _actionCard(
-                  title: 'Summarize Document', id: 'summarize',
-                  onTap: () => _selectDocumentFor('summarize')),
-                const SizedBox(height: 20),
-                _actionCard(
-                  title: 'Translate Document', id: 'translate',
-                  onTap: () => _selectDocumentFor('translate')),
                 const SizedBox(height: 25),
               ],
               _recentHeader(),
