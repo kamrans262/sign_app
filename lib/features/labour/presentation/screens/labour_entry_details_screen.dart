@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:printing/printing.dart';
@@ -242,7 +243,7 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
   Future<void> _openPhoto(int index) async {
     final selected = _record.photos[index];
     if(_isPdf(selected)) {
-      await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+      await Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
         builder: (_) => Scaffold(
           backgroundColor: AppColors.white,
           appBar: AppBar(title: Text(selected.name),
@@ -259,7 +260,7 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
       ));
       return;
     }
-    await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+    await Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
       builder: (_) => Scaffold(
         backgroundColor: Colors.black,
         appBar: AppBar(
@@ -442,7 +443,7 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
     try {
       final jobs = await _repository.jobs();
       if (!mounted) { return; }
-      final edited = await Navigator.of(context).push<LabourEntry>(
+      final edited = await Sign2DigitalNavigation.push<LabourEntry>(context,
         MaterialPageRoute<LabourEntry>(
           builder: (_) => AddLabourEntryScreen(
             kind: _record.kind,
