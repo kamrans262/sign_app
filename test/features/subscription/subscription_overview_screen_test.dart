@@ -37,6 +37,12 @@ void main() {
     await tester.pumpWidget(const MaterialApp(
       home: Scaffold(body: MoreScreen()),
     ));
+    final menu = find.byKey(const Key('more-menu-scroll'));
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('open-subscription')), 150,
+      scrollable: find.descendant(of: menu,
+        matching: find.byType(Scrollable)).first,
+    );
     await tester.tap(find.byKey(const Key('open-subscription')));
     await tester.pumpAndSettle();
 
@@ -48,7 +54,7 @@ void main() {
       ).selectedIndex,
       4,
     );
-    expect(find.byKey(const Key('subscription-demo-notice')), findsOneWidget);
+    expect(find.byKey(const Key('subscription-demo-notice')), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
