@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../auth/data/mobile_auth_repository.dart';
@@ -116,7 +117,7 @@ class _ChoosePlanScreenState extends State<ChoosePlanScreen> {
       _notice('Payment Details is not connected yet. Your selection is saved.');
       return;
     }
-    Navigator.of(context).push<void>(MaterialPageRoute<void>(
+    Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
       builder: (_) => SubscriptionPaymentDetailsScreen(
         plan: current,
         repository: widget.billingRepository,
