@@ -1,4 +1,6 @@
 // Sign2Digital — Create Your Company UI (frontend only).
+import 'dart:io';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
@@ -6,6 +8,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/sign2digital_country_selector.dart';
+import '../../../../core/widgets/sign2digital_ai_voice_button.dart';
 import '../../../../core/widgets/sign2digital_document_upload.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
 import '../../../../core/widgets/sign2digital_image_upload.dart';
@@ -18,6 +21,9 @@ import '../../../auth/data/mobile_auth_repository.dart';
 import '../../../clients/presentation/screens/clients_screen.dart';
 import '../../../../core/services/sign_api_client.dart';
 import '../../domain/company_profile.dart';
+import '../../../jobs/presentation/widgets/ai_voice_flow_dialog.dart';
+import '../../../jobs/services/voice_job_extraction_service.dart';
+import '../../../jobs/services/voice_recorder_service.dart';
 
 @immutable
 class CompanyDraft {
@@ -59,6 +65,8 @@ class CreateCompanyScreen extends StatefulWidget {
     this.companyRepository,
     this.initialCompany,
     this.onCompleted,
+    this.aiClient,
+    this.voiceRecorderFactory,
   });
 
   /// Existing optional hooks remain available to tests and demo previews.
@@ -70,6 +78,9 @@ class CreateCompanyScreen extends StatefulWidget {
   final CompanyRepository? companyRepository;
   final CompanyProfile? initialCompany;
   final VoidCallback? onCompleted;
+  /// Override only for isolated integration tests.
+  final SignApiClient? aiClient;
+  final VoiceRecorderService Function()? voiceRecorderFactory;
 
   @override
   State<CreateCompanyScreen> createState() => _CreateCompanyScreenState();
@@ -92,6 +103,8 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
   String? _savedCompanyId;
   bool _hasSavedLogo = false;
   bool _hasSavedTerms = false;
+  bool _voiceOpen = false;
+  bool _countryTouched = false;
 
   @override
   void initState() {
@@ -244,6 +257,108 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
     }
   }
 
+
+  /// AI never saves the company; it only fills blank fields for manual review.
+  void _applyAiCompany(Map<String, dynamic> suggestions) {
+    var changed = 0;
+    void fill(TextEditingController controller, String key) {
+      final value = suggestions[key];
+      if (controller.text.trim().isEmpty &&
+          value is String && value.trim().isNotEmpty) {
+        controller.text = value.trim();
+        changed++;
+      }
+    }
+
+    setState(() {
+      fill(_company, 'companyName');
+      fill(_address, 'address');
+      fill(_phone, 'phone');
+      fill(_email, 'email');
+      fill(_swissId, 'swissCompanyId');
+      fill(_vat, 'vatNumber');
+      fill(_iban, 'iban');
+      fill(_qrIban, 'qrIban');
+      fill(_numbering, 'documentNumbering');
+      final countryCode = suggestions['countryIsoCode'];
+      if (!_countryTouched && widget.initialCompany == null &&
+          countryCode is String) {
+        for (final country in Sign2DigitalCountries.all) {
+          if (country.isoCode == countryCode.toUpperCase()) {
+            if (_country.isoCode != country.isoCode) {
+              _country = country;
+              changed++;
+            }
+            break;
+          }
+        }
+      }
+    });
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(changed > 0
+          ? 'AI filled $changed company fields. Review before saving.'
+          : 'No empty company fields were changed. Review your details.'),
+    ));
+  }
+
+  Future<void> _companyVoice() async {
+    if (_voiceOpen || _saving) return;
+    if (!MobileAuthRepository.shared.isSignedIn && widget.aiClient == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Sign in to use AI company creation.'),
+      ));
+      return;
+    }
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState(() => _voiceOpen = true);
+    try {
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        barrierColor: const Color(0x80000000),
+        builder: (_) => AiVoiceFlowDialog(
+          recorder: widget.voiceRecorderFactory?.call() ??
+              LocalVoiceRecorderService(),
+          extraction: OpenAiVoiceJobExtractionService(),
+          rawAudioMode: true,
+          recordingTitle: 'Record Company Details',
+          onAudioProcessed: (path) async {
+            final recording = File(path);
+            if (!await recording.exists()) {
+              throw const SignApiException('The recording is no longer available.');
+            }
+            final response = await (widget.aiClient ??
+                    MobileAuthRepository.shared.api)
+                .postMultipart(
+              '/api/v1/ai/companies/voice',
+              filename: 'company-recording.m4a',
+              bytes: await recording.readAsBytes(),
+              maxBytes: 25 * 1024 * 1024,
+            );
+            final data = response['data'];
+            if (data is! Map<String, dynamic> ||
+                data['suggestions'] is! Map<String, dynamic>) {
+              throw const SignApiException('Invalid company AI suggestions.');
+            }
+            if (!mounted) return;
+            _applyAiCompany(data['suggestions'] as Map<String, dynamic>);
+            if (await recording.exists()) await recording.delete();
+          },
+        ),
+      );
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(error is SignApiException
+              ? error.message : 'Unable to process company voice recording.'),
+        ));
+      }
+    } finally {
+      if (mounted) setState(() => _voiceOpen = false);
+    }
+  }
+
   void _save() {
     FocusManager.instance.primaryFocus?.unfocus();
     if (!(_formKey.currentState?.validate() ?? false)) return;
@@ -355,6 +470,11 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
                                   textAlign: TextAlign.center,
                                 ),
                                 const SizedBox(height: 25),
+                                Sign2DigitalAiVoiceButton(
+                                  key: const Key('create-company-ai-voice'),
+                                  onPressed: _companyVoice,
+                                ),
+                                const SizedBox(height: 20),
                                 _field(
                                   label: 'Company Name',
                                   icon: 'company.svg',
@@ -396,8 +516,10 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
                                   keyboardType: TextInputType.phone,
                                   inputPrefix: Sign2DigitalCountrySelector(
                                     selected: _country,
-                                    onChanged: (value) =>
-                                        setState(() => _country = value),
+                                    onChanged: (value) => setState(() {
+                                      _country = value;
+                                      _countryTouched = true;
+                                    }),
                                   ),
                                 ),
                                 const SizedBox(height: 16),
