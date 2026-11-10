@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
 
 import 'create_job_screen.dart';
@@ -54,7 +55,7 @@ class _JobsScreenState extends State<JobsScreen> {
 
   Future<void> _openCreateJob() async {
     FocusManager.instance.primaryFocus?.unfocus();
-    final draft = await Navigator.of(context).push<CreateJobDraft>(
+    final draft = await Sign2DigitalNavigation.push<CreateJobDraft>(context,
       MaterialPageRoute<CreateJobDraft>(
         builder: (_) => const CreateJobScreen(),
       ),
