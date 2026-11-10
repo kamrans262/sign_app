@@ -30,19 +30,27 @@ class _PushedPage extends StatelessWidget {
   );
 }
 
+class _PushObserver extends NavigatorObserver {
+  int pushCount = 0;
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    pushCount++;
+    super.didPush(route, previousRoute);
+  }
+}
+
 void main() {
   testWidgets('rapid double-tap creates only one route, reopen works after Back',
       (tester) async {
     _phone(tester);
-    var constructed = 0;
-    await tester.pumpWidget(MaterialApp(home: Scaffold(
+    final observer = _PushObserver();
+    await tester.pumpWidget(MaterialApp(navigatorObservers: [observer], home: Scaffold(
       body: Builder(builder: (context) => ElevatedButton(
         key: const Key('open-destination'),
         onPressed: () {
           Sign2DigitalNavigation.push<void>(
             context,
             MaterialPageRoute<void>(builder: (_) {
-              constructed++;
               return const _PushedPage();
             }),
           );
@@ -54,14 +62,14 @@ void main() {
     await tester.tap(find.byKey(const Key('open-destination')));
     await _frame(tester);
     expect(find.byType(_PushedPage), findsOneWidget);
-    expect(constructed, 1);
+    expect(observer.pushCount, 2); // Initial route + one detail route.
     await tester.pageBack();
     await _frame(tester);
     expect(find.byType(_PushedPage), findsNothing);
     await tester.tap(find.byKey(const Key('open-destination')));
     await _frame(tester);
     expect(find.byType(_PushedPage), findsOneWidget);
-    expect(constructed, 2);
+    expect(observer.pushCount, 3); // Legitimate reopening after Back.
     expect(tester.takeException(), isNull);
   });
 
@@ -147,7 +155,7 @@ void main() {
 
     await tester.tap(find.byKey(const Key('dashboard-tab-1')).last);
     await _frame(tester);
-    expect(find.byKey(const Key('jobs-screen-scroll')), findsOneWidget);
+    expect(find.byKey(const Key('jobs-scroll')), findsOneWidget);
     await tester.tap(find.byKey(const Key('dashboard-tab-2')).last);
     await _frame(tester);
     expect(find.byKey(const Key('clients-scroll')), findsOneWidget);
