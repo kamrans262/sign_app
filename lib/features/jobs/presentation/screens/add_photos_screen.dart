@@ -8,14 +8,15 @@ import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import '../../data/job_photo_local_store.dart';
 import '../../data/remote_job_media_repository.dart';
+import '../../../../core/services/sign_api_client.dart';
 import '../../data/local_job_photo_source.dart';
 import '../../domain/job_model.dart';
 import '../../domain/job_photo_model.dart';
 import '../widgets/sign2digital_photo_preview.dart';
 import '../widgets/sign2digital_photo_source_card.dart';
 
-/// A single-photo editor. Demo preview is decorative, never saved as a photo.
-/// A saved photo is added to the same in-memory store used by JobPhotosScreen.
+/// Multi-photo editor. Saved jobs upload to Laravel private storage; any
+/// injected local store is intended only for isolated UI tests.
 class AddPhotosScreen extends StatefulWidget {
   const AddPhotosScreen({
     super.key,
@@ -25,6 +26,7 @@ class AddPhotosScreen extends StatefulWidget {
     this.initialSelection,
     this.initialCategory = JobPhotoCategory.during,
     this.onTabSelected,
+    this.remoteRepository,
   });
 
   final JobModel job;
@@ -33,6 +35,8 @@ class AddPhotosScreen extends StatefulWidget {
   final LocalJobPhotoSelection? initialSelection;
   final JobPhotoCategory initialCategory;
   final ValueChanged<int>? onTabSelected;
+  /// Inject only for tests; real jobs always use Laravel private storage.
+  final RemoteJobMediaRepository? remoteRepository;
 
   @override
   State<AddPhotosScreen> createState() => _AddPhotosScreenState();
@@ -43,20 +47,24 @@ class _AddPhotosScreenState extends State<AddPhotosScreen> {
   late final JobPhotoSource _source;
   late final JobPhotoLocalStore _store;
   late final TextEditingController _caption;
-  LocalJobPhotoSelection? _selection;
+  final List<LocalJobPhotoSelection> _selections = [];
+  int _previewIndex = 0;
   late JobPhotoCategory _category;
   bool _showDemo = true;
   bool _picking = false;
   bool _saving = false;
 
-  bool get _hasUnsavedChanges => _selection != null || _caption.text.isNotEmpty;
+  bool get _hasUnsavedChanges => _selections.isNotEmpty || _caption.text.isNotEmpty;
+  bool get _liveJob => (int.tryParse(widget.job.id) ?? 0) > 0;
 
   @override
   void initState() {
     super.initState();
     _source = widget.source ?? DeviceJobPhotoSource();
     _store = widget.store ?? JobPhotoLocalStore.shared;
-    _selection = widget.initialSelection;
+    if (widget.initialSelection != null) {
+      _selections.add(widget.initialSelection!);
+    }
     _category = widget.initialCategory;
     _caption = TextEditingController()..addListener(_captionChanged);
   }
@@ -81,31 +89,33 @@ class _AddPhotosScreenState extends State<AddPhotosScreen> {
     if (_picking || _saving) return;
     setState(() => _picking = true);
     try {
-      LocalJobPhotoSelection? next;
+      final picked = <LocalJobPhotoSelection>[];
       if (camera) {
-        next = await _source.camera();
+        final captured = await _source.camera();
+        if (captured != null) picked.add(captured);
       } else {
-        final selected = await _source.upload();
-        next = selected.isEmpty ? null : selected.first;
-        if (selected.length > 1 && mounted) {
-          _message('One photo at a time can be edited here.');
-        }
+        picked.addAll(await _source.upload());
       }
-      if (next == null || !mounted) return;
-      DeviceJobPhotoSource.validate(next.name, next.bytes);
+      if (picked.isEmpty || !mounted) return;
+      for (final file in picked) {
+        DeviceJobPhotoSource.validate(file.name, file.bytes);
+      }
       setState(() {
-        _selection = next;
+        if (!camera) _selections.clear();
+        for (final file in picked) {
+          if (!_selections.any((p) => p.sourceKey == file.sourceKey)) {
+            _selections.add(file);
+          }
+        }
+        _previewIndex = 0;
         _showDemo = false;
       });
     } catch (error) {
       if (!mounted) return;
-      _message(
-        error is FormatException
-            ? error.message
-            : camera
-            ? 'Unable to open the camera. Check camera permission.'
-            : 'Unable to choose a photo. Please try again.',
-      );
+      _message(error is FormatException ? error.message :
+        camera
+          ? 'Unable to open the camera. Check camera permission.'
+          : 'Unable to select images. Please try again.');
     } finally {
       if (mounted) setState(() => _picking = false);
     }
@@ -113,7 +123,10 @@ class _AddPhotosScreenState extends State<AddPhotosScreen> {
 
   void _removePreview() {
     setState(() {
-      _selection = null;
+      if (_selections.isNotEmpty) {
+        _selections.removeAt(_previewIndex.clamp(0, _selections.length - 1));
+      }
+      _previewIndex = 0;
       _showDemo = false;
     });
   }
@@ -152,45 +165,58 @@ class _AddPhotosScreenState extends State<AddPhotosScreen> {
   Future<void> _save() async {
     if (_picking || _saving) return;
     FocusManager.instance.primaryFocus?.unfocus();
-    final selection = _selection;
-    if (selection == null) {
+    if (_selections.isEmpty) {
       _message('Take a photo or choose a real image before saving.');
       return;
     }
+    if (widget.store == null && !_liveJob) {
+      _message('Save this job to your company before uploading photos.');
+      return;
+    }
     setState(() => _saving = true);
+    var savedCount = 0;
     try {
-      DeviceJobPhotoSource.validate(selection.name, selection.bytes);
-      if (widget.store == null &&
-          RemoteJobMediaRepository.isLiveJob(widget.job.id)) {
-        await RemoteJobMediaRepository.shared.uploadPhoto(
-          widget.job.id, selection, _category, _caption.text.trim());
-        if (mounted) Navigator.of(context).pop(true);
-        return;
-      }
-      final existing = _store.photosFor(widget.job.id);
-      if (existing.any((photo) => photo.sourceKey == selection.sourceKey)) {
-        _message('This photo has already been added.');
-        return;
-      }
+      final entries = List<LocalJobPhotoSelection>.of(_selections);
       final caption = _caption.text.trim();
-      final timestamp = DateTime.now();
-      final photo = JobPhotoModel(
-        id: 'local-${widget.job.id}-${timestamp.microsecondsSinceEpoch}',
-        jobId: widget.job.id,
-        title: caption.isEmpty ? 'Front View' : caption,
-        caption: caption,
-        category: _category,
-        createdAt: timestamp,
-        bytes: selection.bytes,
-        sourceKey: selection.sourceKey,
-      );
-      _store.addAll(widget.job.id, [photo]);
+      for (final selection in entries) {
+        DeviceJobPhotoSource.validate(selection.name, selection.bytes);
+        if (widget.store == null) {
+          // Persisted jobs NEVER fall back to local memory when an API call
+          // fails or the selected company is unavailable.
+          await (widget.remoteRepository ?? RemoteJobMediaRepository.shared)
+              .uploadPhoto(widget.job.id, selection, _category, caption);
+        } else {
+          final existing = _store.photosFor(widget.job.id);
+          if (!existing.any((p) => p.sourceKey == selection.sourceKey)) {
+            final time = DateTime.now();
+            _store.addAll(widget.job.id, [
+              JobPhotoModel(
+                id: 'local-${widget.job.id}-${time.microsecondsSinceEpoch}-$savedCount',
+                jobId: widget.job.id,
+                title: caption.isEmpty ? 'Front View' : caption,
+                caption: caption,
+                category: _category,
+                createdAt: time,
+                bytes: selection.bytes,
+                sourceKey: selection.sourceKey,
+              ),
+            ]);
+          }
+        }
+        savedCount++;
+        // Retry only the remaining images after a partial upload failure.
+        _selections.remove(selection);
+      }
       if (mounted) Navigator.of(context).pop(true);
     } catch (error) {
       if (mounted) {
-        _message(
-          error is FormatException ? error.message : 'Unable to save photo.',
-        );
+        setState(() => _previewIndex = 0);
+        final detail = error is SignApiException ? error.message
+            : error is FormatException ? error.message
+            : 'Unable to save photos. Please try again.';
+        _message(savedCount > 0
+            ? '$savedCount photo(s) saved. $detail Retry remaining photos.'
+            : detail);
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -288,11 +314,45 @@ class _AddPhotosScreenState extends State<AddPhotosScreen> {
                       ),
                     ),
                     const SizedBox(height: 6),
-                    Sign2DigitalPhotoPreview(
-                      bytes: _selection?.bytes,
-                      showDemo: _showDemo,
-                      onRemove: _removePreview,
-                    ),
+                    if (_selections.length <= 1)
+                      Sign2DigitalPhotoPreview(
+                        bytes: _selections.isEmpty ? null : _selections.first.bytes,
+                        showDemo: _showDemo,
+                        onRemove: _removePreview,
+                      )
+                    else ...[
+                      LayoutBuilder(builder: (context, constraints) =>
+                        SizedBox(
+                          height: (constraints.maxWidth * 180 / 390)
+                              .clamp(155.0, 260.0).toDouble(),
+                          child: PageView.builder(
+                            key: const Key('add-photo-preview-pages'),
+                            itemCount: _selections.length,
+                            onPageChanged: (index) =>
+                                setState(() => _previewIndex = index),
+                            itemBuilder: (context, index) =>
+                                Sign2DigitalPhotoPreview(
+                                  bytes: _selections[index].bytes,
+                                  showDemo: false,
+                                  onRemove: () {
+                                    setState(() => _previewIndex = index);
+                                    _removePreview();
+                                  },
+                                ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Photo ${_previewIndex + 1} of ${_selections.length}',
+                        key: const Key('add-photo-preview-counter'),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontFamily: 'Inter', fontSize: 12,
+                          color: AppColors.secondaryText,
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 20),
                     Sign2DigitalInputField(
                       key: const Key('add-photo-caption-field'),
@@ -319,7 +379,7 @@ class _AddPhotosScreenState extends State<AddPhotosScreen> {
                     const SizedBox(height: 40),
                     Sign2DigitalPrimaryButton(
                       key: const Key('add-photo-save'),
-                      label: 'Save Photo',
+                      label: _selections.length > 1 ? 'Save Photos' : 'Save Photo',
                       loading: _saving,
                       onPressed: _save,
                     ),
