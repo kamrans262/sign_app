@@ -38,6 +38,7 @@ import '../../data/remote_client_repository.dart';
 import '../../../auth/data/mobile_auth_repository.dart';
 import '../../../../core/services/active_company_session.dart';
 import '../../../../core/services/sign_api_client.dart';
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import '../../domain/client_profile.dart';
 import '../../domain/client_draft.dart';
 import 'add_client_screen.dart';
@@ -71,6 +72,8 @@ class _ClientsScreenState extends State<ClientsScreen> {
   int _clientsRevision = 0;
   int _documentsRevision = 0;
   String? _selectedCompanyId;
+  NavigatorState? _dashboardNavigator;
+  Route<dynamic>? _dashboardRoute;
 
   void _selectCompany(String? companyId) {
     if (!mounted || _selectedCompanyId == companyId) return;
@@ -162,6 +165,36 @@ class _ClientsScreenState extends State<ClientsScreen> {
     if (_usesRemoteJobs) _loadJobs();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final navigator = Navigator.of(context);
+    final route = ModalRoute.of(context);
+    if (route == null) return;
+    if (_dashboardNavigator != null && _dashboardRoute != null &&
+        (!identical(_dashboardNavigator, navigator) ||
+            !identical(_dashboardRoute, route))) {
+      Sign2DigitalNavigation.detachDashboard(
+        _dashboardNavigator!, _dashboardRoute!);
+    }
+    _dashboardNavigator = navigator;
+    _dashboardRoute = route;
+    Sign2DigitalNavigation.attachDashboard(
+      navigator: navigator,
+      route: route,
+      selectTab: _selectDashboardTab,
+    );
+  }
+
+  @override
+  void dispose() {
+    if (_dashboardNavigator != null && _dashboardRoute != null) {
+      Sign2DigitalNavigation.detachDashboard(
+        _dashboardNavigator!, _dashboardRoute!);
+    }
+    super.dispose();
+  }
+
   void _openNotifications() {
     Navigator.of(context).push<void>(
       MaterialPageRoute<void>(builder: (_) => const NotificationInboxScreen()),
@@ -181,7 +214,12 @@ class _ClientsScreenState extends State<ClientsScreen> {
   }
 
   void _selectDashboardTab(int index, {DocumentCategory? category}) {
-    if (!mounted) return;
+    if (!mounted || index < 0 || index > 4) return;
+    // An already selected tab has no new route or expensive refresh.
+    if (_selectedIndex == index &&
+        (index != 3 || category == null || category == _documentsCategory)) {
+      return;
+    }
     FocusManager.instance.primaryFocus?.unfocus();
     setState(() {
       _selectedIndex = index;
@@ -201,17 +239,13 @@ class _ClientsScreenState extends State<ClientsScreen> {
   }
 
   Future<void> _openHomeRoute(Widget screen) async {
-    await Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(builder: (_) => screen));
+    await Sign2DigitalNavigation.open<void>(context, screen);
     if (mounted) setState(() => _homeRevision++);
   }
 
   Future<void> _createJobFromHome() async {
-    final draft = await Navigator.of(context).push<CreateJobDraft>(
-      MaterialPageRoute<CreateJobDraft>(
-        builder: (_) => CreateJobScreen(clientRepository: _repository),
-      ),
-    );
+    final draft = await Sign2DigitalNavigation.open<CreateJobDraft>(
+      context, CreateJobScreen(clientRepository: _repository));
     if (!mounted || draft == null) return;
     try {
       final job = await _recordCreatedJob(draft);
@@ -223,11 +257,8 @@ class _ClientsScreenState extends State<ClientsScreen> {
   }
 
   Future<void> _createClientFromHome() async {
-    final draft = await Navigator.of(context).push<ClientDraft>(
-      MaterialPageRoute<ClientDraft>(
-        builder: (_) => const AddClientScreen(),
-      ),
-    );
+    final draft = await Sign2DigitalNavigation.open<ClientDraft>(
+      context, const AddClientScreen());
     if (draft == null || !mounted) return;
     try {
       await _repository.createClient(draft);
@@ -241,12 +272,8 @@ class _ClientsScreenState extends State<ClientsScreen> {
   }
 
   Future<void> _createExpenseFromHome() async {
-    final draft = await Navigator.of(context).push<ExpenseRecord>(
-      MaterialPageRoute<ExpenseRecord>(
-        builder: (_) => const AddExpenseScreen(
-          selectedNavigationIndex: 0),
-      ),
-    );
+    final draft = await Sign2DigitalNavigation.open<ExpenseRecord>(
+      context, const AddExpenseScreen(selectedNavigationIndex: 0));
     if (draft == null || !mounted) return;
     try {
       await const DemoExpenseRepository().saveDraft(draft);
@@ -258,13 +285,12 @@ class _ClientsScreenState extends State<ClientsScreen> {
   }
 
   Future<void> _createTimeFromHome() async {
-    final entry = await Navigator.of(context).push<LabourEntry>(
-      MaterialPageRoute<LabourEntry>(
-        builder: (_) => AddLabourEntryScreen(
-          kind: LabourEntryKind.timeSheet,
-          jobs: LabourDemoJobs.all,
-          selectedNavigationIndex: 0,
-        ),
+    final entry = await Sign2DigitalNavigation.open<LabourEntry>(
+      context,
+      AddLabourEntryScreen(
+        kind: LabourEntryKind.timeSheet,
+        jobs: LabourDemoJobs.all,
+        selectedNavigationIndex: 0,
       ),
     );
     if (entry == null || !mounted) return;
@@ -417,9 +443,9 @@ class _ClientsScreenState extends State<ClientsScreen> {
       }
       if (!mounted) return;
     }
-    await Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(
-        builder: (_) => JobDetailsScreen(
+    await Sign2DigitalNavigation.open<void>(
+      context,
+      JobDetailsScreen(
           job: realDetails?.job ?? job,
           details: realDetails,
           onManageJob: _usesRemoteJobs ? _manageJobAction : null,
@@ -439,7 +465,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
             _selectDashboardTab(index);
           },
         ),
-      ),
+      destination: 'job-details:${job.id}',
     );
     if (mounted && _usesRemoteJobs) await _loadJobs();
   }
@@ -583,9 +609,8 @@ class _ClientsContentState extends State<_ClientsContent> {
 
   Future<void> _openImportClients() async {
     FocusManager.instance.primaryFocus?.unfocus();
-    final tabIndex = await Navigator.of(
-      context,
-    ).push<int>(MaterialPageRoute<int>(builder: (_) => ImportClientsScreen()));
+    final tabIndex = await Sign2DigitalNavigation.open<int>(
+      context, ImportClientsScreen());
     if (!mounted) return;
     // Reload after returning from reviewed phone import so saved clients
     // appear immediately in the current company list.
@@ -595,9 +620,8 @@ class _ClientsContentState extends State<_ClientsContent> {
 
   Future<void> _openAddClient() async {
     FocusManager.instance.primaryFocus?.unfocus();
-    final draft = await Navigator.of(context).push<ClientDraft>(
-      MaterialPageRoute<ClientDraft>(builder: (_) => AddClientScreen()),
-    );
+    final draft = await Sign2DigitalNavigation.open<ClientDraft>(
+      context, AddClientScreen());
     if (draft == null || !mounted) return;
     try {
       await widget.repository.createClient(draft);
@@ -619,9 +643,9 @@ class _ClientsContentState extends State<_ClientsContent> {
 
   Future<void> _openClientDetails(ClientProfile client) async {
     FocusManager.instance.primaryFocus?.unfocus();
-    await Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(
-        builder: (_) => ClientDetailsScreen(
+    await Sign2DigitalNavigation.open<void>(
+      context,
+      ClientDetailsScreen(
           client: client,
           repository: widget.repository,
           companyId: widget.companyId,
@@ -633,7 +657,7 @@ class _ClientsContentState extends State<_ClientsContent> {
             widget.onTabSelected(1);
           },
         ),
-      ),
+      destination: 'client-details:${client.id}',
     );
     if (!mounted) {
       return;
