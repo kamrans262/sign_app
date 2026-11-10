@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import '../../../auth/data/remote_account_repository.dart';
 import '../../../deposits/data/remote_deposit_repository.dart';
 import '../../../documents/data/remote_general_document_repository.dart';
@@ -35,8 +36,7 @@ class MoreScreen extends StatelessWidget {
   final AiDocumentGenerator? documentGenerator;
 
   Future<void> _open(BuildContext context, Widget screen) =>
-      Navigator.of(context).push<void>(
-        MaterialPageRoute<void>(builder: (_) => screen));
+      Sign2DigitalNavigation.open<void>(context, screen);
 
   void _openProfile(BuildContext context) => _open(context,
     ProfileSettingsScreen(
