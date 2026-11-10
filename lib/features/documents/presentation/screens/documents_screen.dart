@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import 'package:file_picker/file_picker.dart';
@@ -261,7 +262,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     if (selected.addendumDraftId != null &&
         AddendumDraftSession.load(selected.addendumDraftId!)
                 ?.isCreatedLocally != true) {
-      await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+      await Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
         builder: (_) => CreateAddendumScreen(
           draftId: selected.addendumDraftId,
           repository: _repository,
@@ -269,7 +270,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
         ),
       ));
     } else {
-      await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+      await Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
         builder: (_) => DocumentDetailsScreen(
           documentId: selected.id,
           document: selected,
