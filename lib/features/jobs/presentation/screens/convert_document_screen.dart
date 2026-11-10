@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -279,7 +280,7 @@ class _ConvertDocumentScreenState extends State<ConvertDocumentScreen> {
         _reviewOpened = false;
         _approved = false;
       });
-      await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+      await Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
         builder: (_) => QuoteAiProcessingScreen(
           input: input,
           service: service,
