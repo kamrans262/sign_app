@@ -16,19 +16,19 @@ import '../../data/remote_reminder_reference_source.dart';
 import '../../../auth/data/mobile_auth_repository.dart';
 import '../../domain/reminder_record.dart';
 import '../../services/reminder_voice_extraction_service.dart';
+import '../../services/remote_reminder_voice_extraction_service.dart';
 
 class AddReminderScreen extends StatefulWidget {
   const AddReminderScreen({
     super.key, this.initialReminder, this.referenceSource,
     this.voiceRecorderFactory, this.voiceExtractionService,
-    this.requestTemporaryApiKey, this.datePicker, this.timePicker,
+    this.datePicker, this.timePicker,
   });
 
   final ReminderRecord? initialReminder;
   final ReminderReferenceSource? referenceSource;
   final VoiceRecorderService Function()? voiceRecorderFactory;
   final ReminderVoiceExtractionService? voiceExtractionService;
-  final Future<String?> Function(BuildContext)? requestTemporaryApiKey;
   final Future<DateTime?> Function(BuildContext, DateTime)? datePicker;
   final Future<TimeOfDay?> Function(BuildContext, TimeOfDay)? timePicker;
 
@@ -225,36 +225,6 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
       ..showSnackBar(SnackBar(content: Text(message)));
   }
 
-  Future<String?> _askApiKey(BuildContext context) async {
-    final input = TextEditingController();
-    try {
-      return await showDialog<String>(
-        context: context,
-        builder: (dialog) => AlertDialog(
-          title: const Text('Connect Reminder AI'),
-          content: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Text('Enter a temporary OpenAI API key to process your '
-                'voice recording. Audio is sent to OpenAI; charges may apply.'),
-            TextField(
-              key: const Key('reminder-voice-api-key'),
-              controller: input, obscureText: true,
-              decoration: const InputDecoration(labelText: 'OpenAI API key')),
-          ]),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(dialog),
-              child: const Text('Cancel')),
-            TextButton(
-              key: const Key('reminder-voice-process'),
-              onPressed: () => Navigator.pop(dialog, input.text.trim()),
-              child: const Text('Process recording')),
-          ],
-        ),
-      );
-    } finally {
-      input.dispose();
-    }
-  }
-
   Future<void> _applyVoice(ReminderVoiceSuggestion result) async {
     if (!mounted) return;
     // Link only a real existing record that matches the speech; don't create
@@ -321,13 +291,10 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
           extraction: OpenAiVoiceJobExtractionService(),
           recordingTitle: 'Record Reminder Details',
           onAudioProcessed: (path) async {
-            final key = await (widget.requestTemporaryApiKey?.call(context) ??
-                _askApiKey(context));
-            if (key == null || key.trim().isEmpty) {
-              throw StateError('Reminder AI extraction was cancelled.');
-            }
+            // Authenticated Laravel handles transcription and AI extraction.
+            // Never ask for, store or expose an OpenAI key on the device.
             final suggestion = await (widget.voiceExtractionService ??
-                const OpenAiReminderVoiceExtractionService()).extract(path, key);
+                RemoteReminderVoiceExtractionService()).extract(path);
             await _applyVoice(suggestion);
           },
         ),
