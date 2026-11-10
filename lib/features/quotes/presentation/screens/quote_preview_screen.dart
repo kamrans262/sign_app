@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import '../../../documents/data/document_activity_session.dart';
@@ -222,7 +223,7 @@ class _QuotePreviewScreenState extends State<QuotePreviewScreen> {
         widget.inPersonBusinessSignerId?.trim().isNotEmpty == true &&
         widget.onSubmitInPersonSignature != null;
     if (configured) {
-      Navigator.of(context).push<void>(MaterialPageRoute<void>(
+      Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
         builder: (_) => InPersonSignatureScreen(
           quote: _quote.copy(),
           projectName: _quote.items.isEmpty
@@ -240,7 +241,7 @@ class _QuotePreviewScreenState extends State<QuotePreviewScreen> {
       final session = await RemoteInPersonSigningRepository.shared.start(_quote);
       if (!mounted) return;
       final quote = _quote.copy();
-      await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+      await Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
         builder: (_) => InPersonSignatureScreen(
           quote: quote,
           projectName: quote.items.isEmpty
@@ -266,7 +267,7 @@ class _QuotePreviewScreenState extends State<QuotePreviewScreen> {
       _message('Complete and validate the quote in Review Quote before sharing.');
       return;
     }
-    Navigator.of(context).push<void>(MaterialPageRoute<void>(
+    Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
       builder: (_) => SendQuoteScreen(
         quote: _quote.copy(),
         tracking: _matchingTracking,
