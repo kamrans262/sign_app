@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:sign2digital/features/quotes/presentation/screens/create_quote_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -72,7 +73,7 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
     if (open != null) {
       await open(job);
     } else {
-      await Navigator.of(context).push<void>(
+      await Sign2DigitalNavigation.push<void>(context,
         MaterialPageRoute<void>(builder: (_) => JobDetailsScreen(
           job: job,
           client: _client,
@@ -90,7 +91,7 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
   }
 
   Future<void> _editClient() async {
-    final draft = await Navigator.of(context).push<ClientDraft>(
+    final draft = await Sign2DigitalNavigation.push<ClientDraft>(context,
       MaterialPageRoute<ClientDraft>(
         builder: (_) => AddClientScreen(initialClient: _client),
       ),
@@ -122,7 +123,7 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
 
   Future<void> _openCreateJob() async {
     FocusManager.instance.primaryFocus?.unfocus();
-    final draft = await Navigator.of(context).push<CreateJobDraft>(
+    final draft = await Sign2DigitalNavigation.push<CreateJobDraft>(context,
       MaterialPageRoute<CreateJobDraft>(
         builder: (_) => CreateJobScreen(
           initialClient: _client,
@@ -300,7 +301,7 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
             fallbackIcon: Icons.request_quote_outlined,
             onTap: () => widget.onNewQuote != null
                 ? widget.onNewQuote!(_client)
-                : Navigator.of(context).push<void>(
+                : Sign2DigitalNavigation.push<void>(context,
                     MaterialPageRoute<void>(
                       builder: (_) => CreateQuoteScreen(
                         clientId: _client.id,
