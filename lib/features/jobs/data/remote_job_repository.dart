@@ -201,27 +201,64 @@ class RemoteJobRepository {
       throw const SignApiException('Invalid job details response.');
     }
     final saved = _parse(raw, company);
-    // Quote/expense/labour/invoice modules are not yet persistent. Their
-    // figures must show unavailable, not fictional screenshot amounts.
-    final financials = data['financials'];
-    if (financials is! Map<String, dynamic> ||
-        financials.values.any((value) => value != null)) {
-      throw const SignApiException('Unexpected job financial data.');
+    final financialMinor = data['financials_minor'];
+    final financialChf = data['financials'];
+    int? amountChf(String field) {
+      if (financialMinor is Map) {
+        final value = financialMinor['${field}_minor'];
+        if (value == null) return null; // Unknown or restricted.
+        if (value is! int || value < 0) {
+          throw const SignApiException('Invalid verified job amount.');
+        }
+        return (value / 100).round();
+      }
+      // Backward-compatible with an older backend until it is updated.
+      if (financialChf is Map) {
+        final value = financialChf['${field}_chf'];
+        if (value == null) return null;
+        if (value is! num || !value.isFinite || value < 0) {
+          throw const SignApiException('Invalid job financial response.');
+        }
+        return value.round();
+      }
+      return null;
     }
-    // M6 links only verified quote records; other downstream modules remain
-    // intentionally unavailable until their own persistence is implemented.
+    final amounts = <String, int?>{
+      for (final key in const [
+        'quote_amount', 'expenses', 'labour_cost', 'deposits',
+        'invoiced', 'received', 'remaining_balance',
+      ])
+        key: amountChf(key),
+    };
+    final countData = data['section_counts'];
     final sections = data['sections'];
-    final visibleQuotes = sections is Map ? sections['quotes'] : null;
-    final visiblePhotos = sections is Map ? sections['photos'] : null;
-    final visibleNotes = sections is Map ? sections['notes'] : null;
-    final visibleReports = sections is Map ? sections['site_reports'] : null;
-    final visibleAcceptance = sections is Map ? sections['acceptance'] : null;
-    return JobDetailsModel.liveUnconnected(saved,
-      quoteCount: visibleQuotes is List ? visibleQuotes.length : null,
-      photoCount: visiblePhotos is List ? visiblePhotos.length : null,
-      noteCount: visibleNotes is List ? visibleNotes.length : null,
-      siteReportCount: visibleReports is List ? visibleReports.length : null,
-      acceptanceCount: visibleAcceptance is List ? visibleAcceptance.length : null);
+    final counts = <JobSection, int?>{};
+    for (final section in JobSection.values) {
+      final key = switch (section) {
+        JobSection.quotes => 'quotes',
+        JobSection.addenda => 'addenda',
+        JobSection.documents => 'documents',
+        JobSection.photos => 'photos',
+        JobSection.notes => 'notes',
+        JobSection.purchases => 'purchases',
+        JobSection.time => 'time',
+        JobSection.deposits => 'deposits',
+        JobSection.siteReports => 'site_reports',
+        JobSection.acceptance => 'acceptance',
+        JobSection.invoices => 'invoices',
+      };
+      final count = countData is Map ? countData[key] : null;
+      if (count is int && count >= 0) {
+        counts[section] = count;
+      } else if (count == null && sections is Map && sections[key] is List) {
+        // Older deployments provide only bounded lists for five modules.
+        counts[section] = (sections[key] as List).length;
+      } else {
+        counts[section] = null;
+      }
+    }
+    return JobDetailsModel.liveFromServer(saved,
+      counts: counts, amountsChf: amounts);
   }
 
   Future<JobModel> updateDraft(JobModel job, CreateJobDraft draft) async {
