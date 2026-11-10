@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -96,7 +97,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
     }
     if (!mounted) return;
     setState(() => _busy = false);
-    final updated = await Navigator.of(context).push<DocumentRecord>(
+    final updated = await Sign2DigitalNavigation.push<DocumentRecord>(context,
       MaterialPageRoute(builder: (_) =>
         current.reportKind == ReportKind.meetingMinutes
             ? MeetingMinutesEditorScreen(
@@ -220,7 +221,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
       final documents = widget.documents ?? RemoteDocumentRepository.shared;
       final doc = await documents.details('managed-$id');
       if (!mounted) return;
-      await Navigator.of(context).push<void>(MaterialPageRoute(
+      await Sign2DigitalNavigation.push<void>(context,MaterialPageRoute(
         builder: (_) => DocumentDetailsScreen(
           documentId: doc.id, document: doc,
           loadDocument: documents.details,
