@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import '../assets/dashboard_assets.dart';
 import '../theme/app_colors.dart';
+import '../navigation/sign2digital_navigation.dart';
 
 class Sign2DigitalBottomNavigationBar extends StatelessWidget {
   const Sign2DigitalBottomNavigationBar({
@@ -45,7 +46,14 @@ class Sign2DigitalBottomNavigationBar extends StatelessWidget {
                   child: InkWell(
                     key: Key('dashboard-tab-$index'),
                     borderRadius: BorderRadius.circular(10),
-                    onTap: () => onSelected(index),
+                    onTap: () {
+                      // A nested screen must return to the existing
+                      // dashboard instead of independently popping routes.
+                      if (!Sign2DigitalNavigation.selectDashboardTab(
+                          context, index)) {
+                        onSelected(index);
+                      }
+                    },
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 3),
                       child: Column(
