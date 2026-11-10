@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_ai_voice_button.dart';
@@ -184,7 +185,7 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
       _notice('Select the original document before reviewing.');
       return;
     }
-    showModalBottomSheet<void>(
+    showSign2DigitalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       builder: (sheet) => SafeArea(child: Padding(
@@ -255,7 +256,7 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
               doc.id.toLowerCase() == reference.trim().toLowerCase())
           .toList();
       // Even an exact AI match requires the user's explicit confirmation.
-      final selection = await showModalBottomSheet<DocumentRecord>(
+      final selection = await showSign2DigitalBottomSheet<DocumentRecord>(
         context: context,
         isScrollControlled: true,
         builder: (sheet) => SafeArea(
