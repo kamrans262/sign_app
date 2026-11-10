@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -106,7 +107,7 @@ class _SubscriptionManagementScreenState
   }
 
   Future<void> _changePlan() async {
-    await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+    await Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
       builder: (_) => ChoosePlanScreen(
         flowState: _flowState,
         billingRepository: _repository is RemoteSubscriptionRepository
