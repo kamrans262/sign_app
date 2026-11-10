@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 
@@ -174,7 +175,7 @@ class _DepositsScreenState extends State<DepositsScreen> {
       }
     }
     if(!mounted)return;
-    await Navigator.of(context).push<bool>(
+    await Sign2DigitalNavigation.push<bool>(context,
       MaterialPageRoute<bool>(
         builder: (_) => DepositDetailsScreen(
           deposit: selected, repository: _repository),
@@ -207,7 +208,7 @@ class _DepositsScreenState extends State<DepositsScreen> {
         if (jobs.isEmpty) { _notice('Job is no longer available.'); return; }
       }
       if(!mounted)return;
-      deposit=await Navigator.of(context).push<DepositRecord>(
+      deposit=await Sign2DigitalNavigation.push<DepositRecord>(context,
         MaterialPageRoute<DepositRecord>(
           builder: (_) => AddDepositScreen(
             jobs: jobs,
