@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -19,7 +20,7 @@ class ProfileBusinessInformationScreen extends StatelessWidget {
   String _roleFor(CompanyProfile company) => company.role;
 
   Future<void> _openInvitations(BuildContext context) async {
-    final accepted = await Navigator.of(context).push<bool>(
+    final accepted = await Sign2DigitalNavigation.push<bool>(context,
       MaterialPageRoute<bool>(
         builder: (_) => const CompanyInvitationsScreen(),
       ),
@@ -87,7 +88,7 @@ class ProfileBusinessInformationScreen extends StatelessWidget {
                 const SizedBox(height: 20),
                 FilledButton(
                   key: const Key('profile-company-setup'),
-                  onPressed: () => Navigator.of(context).push<void>(
+                  onPressed: () => Sign2DigitalNavigation.push<void>(context,
                     MaterialPageRoute<void>(builder: (_) =>
                       CreateCompanyScreen(
                         companyRepository: MobileAuthRepository.shared.isSignedIn
@@ -127,7 +128,7 @@ class ProfileBusinessInformationScreen extends StatelessWidget {
                 FilledButton(
                   key: const Key('edit-company-details'),
                   onPressed: () async {
-                    final changed = await Navigator.of(context).push<bool>(
+                    final changed = await Sign2DigitalNavigation.push<bool>(context,
                       MaterialPageRoute<bool>(builder: (_) =>
                           CreateCompanyScreen(initialCompany: company)),
                     );
@@ -143,7 +144,7 @@ class ProfileBusinessInformationScreen extends StatelessWidget {
                 const SizedBox(height: 10),
                 OutlinedButton(
                   key: const Key('manage-company-team'),
-                  onPressed: () => Navigator.of(context).push<void>(
+                  onPressed: () => Sign2DigitalNavigation.push<void>(context,
                     MaterialPageRoute<void>(builder: (_) => CompanyTeamScreen(
                       companyId: company.id,
                       companyName: company.companyName,
