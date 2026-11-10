@@ -204,7 +204,6 @@ void main() {
       tokenProvider: () async => 'test-auth',
       activeCompanyId: () => ActiveCompanySession.companyId,
       httpClient: MockClient((request) async {
-        debugPrint('Job media mocked request: method=${request.method}, path=${request.url.path}, headerKeys=${request.headers.keys.join(',')}, size=${request.bodyBytes.length}');
         expect(request.headers['Authorization'], 'Bearer test-auth');
         expect(request.headers['X-Company-Id'], '7');
         if (request.method == 'POST' &&
@@ -248,11 +247,6 @@ void main() {
     await tester.tap(find.byKey(const Key('job-photos-confirm-pending')));
     await tester.pumpAndSettle();
     expect(posts, 1);
-    if (reads < 2) {
-      final labels = tester.widgetList<Text>(find.byType(Text))
-          .map((widget) => widget.data).whereType<String>().join(' | ');
-      debugPrint('Job photo upload diagnostic: reads=$reads, labels=$labels');
-    }
     expect(reads, greaterThanOrEqualTo(2));
     expect(find.byKey(const Key('photo-grid-23')), findsOneWidget);
     expect(find.byKey(const Key('job-photo-pending-panel')), findsNothing);
