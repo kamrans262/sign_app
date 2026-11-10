@@ -1,5 +1,6 @@
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_ai_voice_button.dart';
@@ -186,7 +187,7 @@ class _AddDepositScreenState extends State<AddDepositScreen> {
 
   Future<void> _addPhotos() async {
     if (_photoBusy || _saving) { return; }
-    final camera = await showModalBottomSheet<bool>(
+    final camera = await showSign2DigitalBottomSheet<bool>(
       context: context,
       builder: (sheet) => SafeArea(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
