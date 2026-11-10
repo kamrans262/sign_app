@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/services/active_company_session.dart';
@@ -148,7 +149,7 @@ class _SubscriptionManagementScreenState
       if (!mounted) return;
       final records = result['invoices'];
       if (records is! List) throw const FormatException();
-      await showModalBottomSheet<void>(context: context, useSafeArea: true,
+      await showSign2DigitalBottomSheet<void>(context: context, useSafeArea: true,
         builder: (sheet) => Padding(
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
           child: Column(mainAxisSize: MainAxisSize.min,
@@ -187,7 +188,7 @@ class _SubscriptionManagementScreenState
     if (data == null) return;
     final usage = data.usage;
 
-    showModalBottomSheet<void>(
+    showSign2DigitalBottomSheet<void>(
       context: context,
       useSafeArea: true,
       builder: (sheet) => Padding(
