@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import 'package:printing/printing.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -112,7 +113,7 @@ class _InvoicePreviewScreenState extends State<InvoicePreviewScreen> {
   Future<void> _addPhoto() async {
     if (_busy) { return; }
     final source = widget.photoSource ?? DeviceJobPhotoSource();
-    final selection = await showModalBottomSheet<String>(
+    final selection = await showSign2DigitalBottomSheet<String>(
       context: context,
       builder: (sheet) => SafeArea(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
