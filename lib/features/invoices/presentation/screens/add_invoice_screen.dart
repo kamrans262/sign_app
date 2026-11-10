@@ -43,7 +43,6 @@ class AddInvoiceScreen extends StatefulWidget {
     this.initialInvoice,
     this.voiceRecorderFactory,
     this.voiceExtractionService,
-    this.requestTemporaryApiKey,
     this.datePicker,
   });
 
@@ -58,7 +57,6 @@ class AddInvoiceScreen extends StatefulWidget {
   final InvoiceRecord? initialInvoice;
   final VoiceRecorderService Function()? voiceRecorderFactory;
   final InvoiceVoiceExtractionService? voiceExtractionService;
-  final Future<String?> Function(BuildContext)? requestTemporaryApiKey;
   final Future<DateTime?> Function(BuildContext, DateTime)? datePicker;
 
   @override
@@ -589,38 +587,6 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
     }
   }
 
-  Future<String?> _askApiKey(BuildContext parent) {
-    String value = '';
-    return showDialog<String>(
-      context: parent,
-      builder: (dialog) => AlertDialog(
-        title: const Text('Connect Invoice AI'),
-        content: Column(mainAxisSize: MainAxisSize.min, children: [
-          const Text('Enter a temporary OpenAI API key for testing. '
-            'It is not saved. Production requires a secure backend.'),
-          TextField(
-            key: const Key('invoice-ai-key'),
-            obscureText: true,
-            onChanged: (text) => value = text,
-            decoration: const InputDecoration(labelText: 'OpenAI API key')),
-        ]),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialog).pop(),
-            child: const Text('Cancel')),
-          TextButton(
-            key: const Key('invoice-ai-extract'),
-            onPressed: () {
-              if (value.trim().isNotEmpty) {
-                Navigator.of(dialog).pop(value.trim());
-              }
-            },
-            child: const Text('Process recording')),
-        ],
-      ),
-    );
-  }
-
   Future<void> _applyVoice(InvoiceVoiceSuggestion result) async {
     if (!mounted) { return; }
     JobModel? matched;
@@ -733,14 +699,10 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
           extraction: OpenAiVoiceJobExtractionService(),
           recordingTitle: 'Record Invoice Details',
           onAudioProcessed: (path) async {
-            final key = await (widget.requestTemporaryApiKey?.call(context) ??
-                _askApiKey(context));
-            if (key == null) {
-              throw StateError('AI processing was cancelled.');
-            }
+            // Production requests OpenAI via authenticated Laravel.
+            // No temporary API key is requested or handled by the app.
             final result = await (widget.voiceExtractionService ??
-                const OpenAiInvoiceVoiceExtractionService()).extract(
-                  path, key);
+                RemoteInvoiceVoiceExtractionService()).extract(path);
             await _applyVoice(result);
           },
         ),
