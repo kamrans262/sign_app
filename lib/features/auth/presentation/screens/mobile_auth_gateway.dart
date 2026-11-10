@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/services/sign_api_client.dart';
@@ -46,13 +47,13 @@ class _MobileAuthGatewayState extends State<MobileAuthGateway> {
   }
 
   void _openRegistration() {
-    Navigator.of(context).push(MaterialPageRoute<void>(
+    Sign2DigitalNavigation.push(context,MaterialPageRoute<void>(
       builder: (_) => CreateAccountScreen(onCreateAccount: _register),
     ));
   }
 
   void _openForgotPassword() {
-    Navigator.of(context).push(MaterialPageRoute<void>(
+    Sign2DigitalNavigation.push(context,MaterialPageRoute<void>(
       builder: (_) => ForgotPasswordScreen(onResetRequested: _forgot),
     ));
   }
@@ -87,7 +88,7 @@ class _MobileAuthGatewayState extends State<MobileAuthGateway> {
     required bool rememberMe,
   }) {
     var challenge = initialChallenge;
-    Navigator.of(context).push(MaterialPageRoute<void>(
+    Sign2DigitalNavigation.push(context,MaterialPageRoute<void>(
       builder: (otpContext) => OtpVerificationScreen(
         onVerify: (code) {
           _execute(() async {
