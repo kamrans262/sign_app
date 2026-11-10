@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 
@@ -302,7 +303,7 @@ class _SecurityAccessScreenState extends State<SecurityAccessScreen> {
 
   void _viewAll() {
     final sessions = _snapshot?.sessions;
-    Navigator.of(context).push<void>(
+    Sign2DigitalNavigation.push<void>(context,
       MaterialPageRoute<void>(builder: (_) => _SecuritySessionsScreen(
         sessions: sessions,
         demoOnly: _snapshot?.demoOnly ?? false,
@@ -422,7 +423,7 @@ class _SecurityAccessScreenState extends State<SecurityAccessScreen> {
                   const SizedBox(height: 12),
                   TextButton.icon(
                     key: const Key('m22-change-password'),
-                    onPressed: _busy ? null : () => Navigator.of(context).push<void>(
+                    onPressed: _busy ? null : () => Sign2DigitalNavigation.push<void>(context,
                       MaterialPageRoute<void>(builder: (_) => ChangeAccountPasswordScreen(
                         repository: widget.repository as RemoteSecurityAccessRepository))),
                     icon: const Icon(Icons.lock_reset_outlined),
