@@ -45,7 +45,7 @@ class ReportsScreen extends StatefulWidget {
   final ReportKind? initialKind;
   final ValueChanged<DocumentRecord>? onReportTap;
   final VoidCallback? onCreateReport;
-  /// Optional real report generation. Absence keeps local draft behavior.
+  /// Optional real report generation; the default uses Laravel for drafts.
   final Future<DocumentRecord> Function(DocumentRecord draft)? reportGenerator;
   final ValueChanged<int>? onNavigationSelected;
   final VoidCallback? onNotificationTap;
@@ -68,10 +68,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
   void initState() {
     super.initState();
     _selectedKind = widget.initialKind;
-    _repository = widget.repository ??
-        (ActiveCompanySession.companyId == null
-          ? const DemoReportRepository()
-          : RemoteSiteReportRepository.shared);
+    _repository = widget.repository ?? RemoteSiteReportRepository.shared;
     _load();
   }
 
