@@ -12,12 +12,10 @@ import '../../../reminders/presentation/screens/reminders_screen.dart';
 import '../../../reminders/presentation/screens/notification_inbox_screen.dart';
 import '../../../invoices/presentation/screens/invoices_screen.dart';
 import '../../../labour/presentation/screens/time_labour_screen.dart';
-import '../../../quotes/presentation/screens/quote_ui_demo_screen.dart';
 import '../../../profile/presentation/screens/profile_settings_screen.dart';
 import '../../../subscription/presentation/screens/subscription_overview_screen.dart';
-import '../../../subscription/presentation/screens/subscription_management_screen.dart';
 
-/// Entry points for UI-only tools belong to More, not the Clients list.
+/// Real, company-scoped module entry points; preview-only tools never appear.
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key, this.onTabSelected, this.onNotReady,
     this.documentGenerator});
@@ -59,30 +57,6 @@ class MoreScreen extends StatelessWidget {
               onNotificationTap: () => onNotReady?.call('Notifications'),
               onProfileTap: () => _openProfile(context),
             ))),
-          const SizedBox(height: 15),
-          _tile(context,
-            key: const Key('open-subscription'),
-            title: 'Subscription',
-            icon: Icons.workspace_premium_outlined,
-            onTap: () => _open(context, SubscriptionOverviewScreen(
-              onNavigationSelected: onTabSelected,
-              onNotificationTap: () => onNotReady?.call('Notifications'),
-              onProfileTap: () => _openProfile(context),
-            ))),
-          const SizedBox(height: 15),
-          _tile(context,
-            key: const Key('open-subscription-management'),
-            title: 'Subscription Management',
-            icon: Icons.manage_accounts_outlined,
-            onTap: () => _open(context, SubscriptionManagementScreen(
-              onNavigationSelected: onTabSelected,
-            ))),
-          const SizedBox(height: 15),
-          _tile(context,
-            key: const Key('open-quote-ui-demo'),
-            title: 'Quote UI Demo',
-            icon: Icons.description_outlined,
-            onTap: () => _open(context, const QuoteUiDemoScreen())),
           const SizedBox(height: 15),
           _tile(context,
             key: const Key('open-ai-documents'),
@@ -164,6 +138,17 @@ class MoreScreen extends StatelessWidget {
               onNotificationTap: () => onNotReady?.call('Notifications'),
               onProfileTap: () => _openProfile(context),
             ))),
+          const SizedBox(height: 15),
+          _tile(context,
+            key: const Key('open-subscription'),
+            title: 'Subscription',
+            icon: Icons.workspace_premium_outlined,
+            onTap: () => _open(context, SubscriptionOverviewScreen(
+              onNavigationSelected: onTabSelected,
+              onNotificationTap: () => onNotReady?.call('Notifications'),
+              onProfileTap: () => _openProfile(context),
+            ))),
+          const SizedBox(height: 15),
         ],
       ),
     ),
