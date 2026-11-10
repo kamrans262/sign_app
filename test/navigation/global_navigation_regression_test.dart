@@ -131,8 +131,9 @@ void main() {
     await _frame(tester);
     expect(find.byType(AddInvoiceScreen), findsOneWidget);
 
-    // Android system/back-button semantics return to the existing invoice list.
-    await tester.pageBack();
+    // Android system Back works even when the approved header has no
+    // standard Material/Cupertino AppBar back icon.
+    await tester.binding.handlePopRoute();
     await _frame(tester);
     expect(find.byType(InvoicesScreen), findsOneWidget);
     expect(find.byType(AddInvoiceScreen), findsNothing);
