@@ -81,7 +81,8 @@ void main() {
       // verifies the UI without waiting for unrelated perpetual work.
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
-      expect(find.byKey(const Key('open-quote-ui-demo')), findsOneWidget);
+      // The demo-only quote entry was intentionally removed from More.
+      expect(find.byKey(const Key('open-quote-ui-demo')), findsNothing);
       // The unchanged More menu is a lazy ListView: verify offscreen items
       // by scrolling to them instead of assuming they are eagerly built.
       final moreScroll = find.descendant(
