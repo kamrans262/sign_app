@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 
@@ -128,7 +129,7 @@ class _AiDocumentsScreenState extends State<AiDocumentsScreen> {
       ),
     );
     if (!mounted || choice == null) return;
-    await Navigator.of(context).push<void>(
+    await Sign2DigitalNavigation.push<void>(context,
       MaterialPageRoute<void>(builder: (_) => choice == 'general'
         ? const GeneralDocumentEditorScreen()
         : GenerateAiDocumentScreen(documentGenerator: widget.documentGenerator)),
@@ -143,7 +144,7 @@ class _AiDocumentsScreenState extends State<AiDocumentsScreen> {
     }
     final id=record.id.startsWith('general-')
         ? int.tryParse(record.id.substring('general-'.length)) : null;
-    await Navigator.of(context).push<void>(
+    await Sign2DigitalNavigation.push<void>(context,
       MaterialPageRoute<void>(
         builder: (_) => id!=null
           ? GeneralDocumentEditorScreen(documentId:id)
@@ -154,7 +155,7 @@ class _AiDocumentsScreenState extends State<AiDocumentsScreen> {
   }
 
   void _seeAll() {
-    Navigator.of(context).push<void>(
+    Sign2DigitalNavigation.push<void>(context,
       MaterialPageRoute<void>(
         builder: (_) => AiDocumentsScreen(
           repository: widget.repository,
