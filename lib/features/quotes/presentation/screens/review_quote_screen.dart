@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
 import '../../../documents/data/document_activity_session.dart';
 
@@ -292,7 +293,7 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
     final approvedSnapshot = _draft.copy();
     widget.onApproved?.call(approvedSnapshot);
     if (!mounted) return;
-    Navigator.of(context).push<void>(MaterialPageRoute<void>(
+    Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
       builder: (_) => QuotePreviewScreen(quote: approvedSnapshot),
     ));
   }
