@@ -437,7 +437,7 @@ class _AiVoiceFlowDialogState extends State<AiVoiceFlowDialog>
         _label('Speak clearly and naturally', _support),
         const SizedBox(height: 5),
         _label(
-          widget.rawAudioMode
+          widget.rawAudioMode && widget.onAudioProcessed == null
             ? 'Save this recording as a local job-note attachment'
             : 'AI will extract the information and fill the form for you',
           _support,
