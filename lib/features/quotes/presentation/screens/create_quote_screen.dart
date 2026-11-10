@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -134,7 +135,7 @@ class _CreateQuoteScreenState extends State<CreateQuoteScreen> {
     if (_pickingImage || !mounted) {
       return;
     }
-    final source = await showModalBottomSheet<ImageSource>(
+    final source = await showSign2DigitalBottomSheet<ImageSource>(
       context: context,
       builder: (sheetContext) => SafeArea(
         child: Column(
