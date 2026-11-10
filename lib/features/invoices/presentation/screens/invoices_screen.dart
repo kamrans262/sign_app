@@ -33,6 +33,7 @@ class InvoicesScreen extends StatefulWidget {
     super.key, this.repository, this.onInvoiceTap, this.onCreateInvoice,
     this.onNavigationSelected, this.onNotificationTap, this.onProfileTap,
     this.selectedNavigationIndex = 4,
+    this.jobId,
   });
 
   final InvoiceRepository? repository;
@@ -42,6 +43,8 @@ class InvoicesScreen extends StatefulWidget {
   final VoidCallback? onNotificationTap;
   final VoidCallback? onProfileTap;
   final int selectedNavigationIndex;
+  /// A Job Details route filters this screen to its persisted job ID.
+  final String? jobId;
 
   @override
   State<InvoicesScreen> createState() => _InvoicesScreenState();
@@ -112,6 +115,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
 
   List<InvoiceRecord> get _visible {
     final list = _all.where((item) =>
+        (widget.jobId == null || item.jobId == widget.jobId) &&
         (_tab == 0 || item.status == InvoiceStatus.values[_tab - 1] ||
           // Pending includes partially settled invoices; keep six approved tabs.
           (_tab == 3 && item.status == InvoiceStatus.partiallyPaid)) &&
@@ -201,6 +205,10 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
         _notice('Unable to load current jobs.');
         return;
       }
+    }
+    if (widget.jobId != null && jobs != null) {
+      jobs = jobs.where((job) => job.id == widget.jobId).toList();
+      if (jobs.isEmpty) { _notice('Job is no longer available.'); return; }
     }
     if(!mounted||company!=ActiveCompanySession.companyId)return;
     final draft = await Navigator.of(context).push<InvoiceRecord>(
