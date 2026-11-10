@@ -64,7 +64,7 @@ void main() {
     expect(find.byType(_PushedPage), findsOneWidget);
     expect(observer.pushCount, 2); // Initial route + one detail route.
     await tester.pageBack();
-    await _frame(tester);
+    await tester.pumpAndSettle();
     expect(find.byType(_PushedPage), findsNothing);
     await tester.tap(find.byKey(const Key('open-destination')));
     await _frame(tester);
@@ -125,6 +125,12 @@ void main() {
     expect(find.byType(InvoicesScreen), findsOneWidget);
     await tester.tap(find.byKey(const Key('invoices-create')));
     await _frame(tester);
+    if (find.byType(AddInvoiceScreen).evaluate().isEmpty) {
+      final text = tester.widgetList<Text>(find.byType(Text))
+          .map((widget) => widget.data)
+          .whereType<String>().join(' | ');
+      debugPrint('Invoice navigation diagnostic: $text');
+    }
     expect(find.byType(AddInvoiceScreen), findsOneWidget);
 
     // Android system/back-button semantics return to the existing invoice list.
