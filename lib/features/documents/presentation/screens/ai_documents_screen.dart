@@ -101,28 +101,35 @@ class _AiDocumentsScreenState extends State<AiDocumentsScreen> {
       _notify('Sign in to generate company documents.');
       return;
     }
-      final choice=await showModalBottomSheet<String>(
-        context:context,showDragHandle:true,
-        builder:(sheet)=>SafeArea(child:Column(
-          mainAxisSize:MainAxisSize.min,children:[
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheet) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
             ListTile(
-              key:const Key('ai-documents-create-general'),
-              title:const Text('General Document'),
-              subtitle:const Text('Business letter, statement, acceptance or custom draft'),
-              onTap:()=>Navigator.pop(sheet,'general')),
+              key: const Key('ai-documents-create-general'),
+              title: const Text('General Document'),
+              subtitle: const Text('Business letter, statement, acceptance or custom draft'),
+              onTap: () => Navigator.pop(sheet, 'general'),
+            ),
             ListTile(
-              key:const Key('ai-documents-create-project'),
-              title:const Text('Project Document'),
-              subtitle:const Text('Use the existing job and sections workflow'),
-              onTap:()=>Navigator.pop(sheet,'project')),
-          ])));
-      if(!mounted||choice==null)return;
-      await Navigator.of(context).push<void>(MaterialPageRoute<void>(
-        builder:(_)=>choice=='general'
-          ? const GeneralDocumentEditorScreen()
-          : GenerateAiDocumentScreen(
-              documentGenerator:widget.documentGenerator),
-      ));
+              key: const Key('ai-documents-create-project'),
+              title: const Text('Project Document'),
+              subtitle: const Text('Use the existing job and sections workflow'),
+              onTap: () => Navigator.pop(sheet, 'project'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (!mounted || choice == null) return;
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(builder: (_) => choice == 'general'
+        ? const GeneralDocumentEditorScreen()
+        : GenerateAiDocumentScreen(documentGenerator: widget.documentGenerator)),
+    );
     if (mounted) { await _load(); }
   }
 
@@ -282,7 +289,6 @@ class _AiDocumentsScreenState extends State<AiDocumentsScreen> {
                 _actionCard(
                   title: 'Generate Document', id: 'generate',
                   onTap: _generate),
-                const SizedBox(height: 20),
                 const SizedBox(height: 25),
               ],
               _recentHeader(),
