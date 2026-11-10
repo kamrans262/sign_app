@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/services/active_company_session.dart';
@@ -102,7 +103,7 @@ class _EquipmentLoansScreenState extends State<EquipmentLoansScreen> {
   }
 
   Future<void> _create() async{
-    final result=await Navigator.of(context).push<EquipmentLoanRecord>(
+    final result=await Sign2DigitalNavigation.push<EquipmentLoanRecord>(context,
       MaterialPageRoute(builder:(_)=>CreateEquipmentLoanScreen(
         repository:_repository)));
     if(result==null||!mounted)return;
@@ -118,7 +119,7 @@ class _EquipmentLoansScreenState extends State<EquipmentLoansScreen> {
   Future<void> _open(EquipmentLoanRecord loan) async{
     final id=loan.id;
     if(id==null)return;
-    await Navigator.of(context).push<void>(
+    await Sign2DigitalNavigation.push<void>(context,
       MaterialPageRoute(builder:(_)=>EquipmentLoanDetailsScreen(
         loan:loan,repository:_repository)));
     if(mounted)await _load();
