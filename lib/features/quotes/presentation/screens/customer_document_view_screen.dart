@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
 
 import '../../domain/quote_document_tracking.dart';
@@ -76,7 +77,7 @@ class CustomerDocumentViewScreen extends StatelessWidget {
       return true;
     }
 
-    final submitted = await Navigator.of(context).push<QuoteSignatureDraft>(
+    final submitted = await Sign2DigitalNavigation.push<QuoteSignatureDraft>(context,
       MaterialPageRoute<QuoteSignatureDraft>(
         builder: (_) => AddSignatureScreen(
           quoteId: draft.id,
