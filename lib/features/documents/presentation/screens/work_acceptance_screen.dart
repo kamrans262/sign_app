@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
 
@@ -159,7 +160,7 @@ class _WorkAcceptanceScreenState extends State<WorkAcceptanceScreen> {
       return;
     }
     await _run(widget.onViewReport ?? (report) async {
-      await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+      await Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
         builder: (_) => DocumentDetailsScreen(
           documentId: report.id,
           document: report,
