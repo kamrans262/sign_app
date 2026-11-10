@@ -22,6 +22,7 @@ import '../../domain/create_job_draft.dart';
 import '../../domain/job_model.dart';
 import '../../models/extracted_job_details.dart';
 import '../../services/voice_job_extraction_service.dart';
+import '../../services/remote_voice_job_extraction_service.dart';
 import '../../services/voice_recorder_service.dart';
 import '../widgets/ai_voice_flow_dialog.dart';
 
@@ -48,7 +49,7 @@ class CreateJobScreen extends StatefulWidget {
   /// Injectable for platform-free widget tests and custom recording providers.
   final VoiceRecorderService Function()? voiceRecorderFactory;
 
-  /// Optional injection for tests. Default: in-memory-key direct OpenAI service.
+  /// Optional injection for tests. Production uses the Laravel AI proxy.
   final VoiceJobExtractionService? voiceExtractionService;
 
   @override
@@ -117,8 +118,10 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
       _members = const [];
       _loadCompanyMembers();
     }
-    _voiceExtraction =
-        widget.voiceExtractionService ?? OpenAiVoiceJobExtractionService();
+    _voiceExtraction = widget.voiceExtractionService ??
+        (MobileAuthRepository.shared.isSignedIn
+            ? RemoteVoiceJobExtractionService()
+            : OpenAiVoiceJobExtractionService());
     _client = widget.initialClient;
     final existing = widget.initialJob;
     if (existing != null) {
