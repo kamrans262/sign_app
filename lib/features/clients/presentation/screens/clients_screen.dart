@@ -74,6 +74,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
   int _homeRevision = 0;
   int _clientsRevision = 0;
   int _documentsRevision = 0;
+  int _tabEpoch = 0;
   String? _selectedCompanyId;
   NavigatorState? _dashboardNavigator;
   Route<dynamic>? _dashboardRoute;
@@ -225,6 +226,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
     }
     FocusManager.instance.primaryFocus?.unfocus();
     setState(() {
+      _tabEpoch++;
       _selectedIndex = index;
       if (index == 3) {
         _documentsCategory = category;
@@ -421,6 +423,15 @@ class _ClientsScreenState extends State<ClientsScreen> {
   }
 
   Future<void> _openJobDetails(JobModel job) async {
+    await Sign2DigitalNavigation.runOnce<void>(
+      context, 'job-details-load:${job.id}',
+      () => _loadAndOpenJobDetails(job),
+    );
+  }
+
+  Future<void> _loadAndOpenJobDetails(JobModel job) async {
+    final tabEpoch = _tabEpoch;
+    final originalCompany = ActiveCompanySession.companyId;
     FocusManager.instance.primaryFocus?.unfocus();
     ClientProfile? linkedClient;
     try {
@@ -434,7 +445,8 @@ class _ClientsScreenState extends State<ClientsScreen> {
     } catch (_) {
       // A missing contact must not prevent access to the job itself.
     }
-    if (!mounted) return;
+    if (!mounted || tabEpoch != _tabEpoch ||
+        originalCompany != ActiveCompanySession.companyId) return;
     JobDetailsModel? realDetails;
     if (_usesRemoteJobs) {
       try {
@@ -444,7 +456,8 @@ class _ClientsScreenState extends State<ClientsScreen> {
             ? error.message : 'Unable to open the job.');
         return;
       }
-      if (!mounted) return;
+      if (!mounted || tabEpoch != _tabEpoch ||
+          originalCompany != ActiveCompanySession.companyId) return;
     }
     await Sign2DigitalNavigation.open<void>(
       context,
