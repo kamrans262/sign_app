@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 
 import '../../../../core/services/active_company_session.dart';
 import '../../../auth/data/mobile_auth_repository.dart';
@@ -105,7 +106,7 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
   }
 
   Future<void> _sortMenu() async {
-    final chosen = await showModalBottomSheet<EquipmentSort>(
+    final chosen = await showSign2DigitalBottomSheet<EquipmentSort>(
       context: context,
       builder: (sheet) => SafeArea(child: Column(
         mainAxisSize: MainAxisSize.min, children: [
