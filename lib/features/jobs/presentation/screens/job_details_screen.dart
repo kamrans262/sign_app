@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -131,7 +132,7 @@ class JobDetailsScreen extends StatelessWidget {
               final index = options.indexOf(choice) - 1;
               if (index >= 0 && index < visible.length) {
                 final selected = visible[index];
-                Navigator.of(context).push<void>(MaterialPageRoute<void>(
+                Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
                   builder: (_) => selected.approvedLocally
                       ? QuotePreviewScreen(quote: selected)
                       : ReviewQuoteScreen(initialDraft: selected),
@@ -147,7 +148,7 @@ class JobDetailsScreen extends StatelessWidget {
           ));
         }
       }
-      Navigator.of(context).push<void>(MaterialPageRoute<void>(
+      Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
         builder: (_) => CreateQuoteScreen(
           jobId: job.id,
           clientId: job.clientId,
@@ -162,7 +163,7 @@ class JobDetailsScreen extends StatelessWidget {
       return;
     }
     if (section == JobSection.addenda) {
-      await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+      await Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
         builder: (_) => Scaffold(
           backgroundColor: Colors.white,
           body: SafeArea(child: Column(children: [
@@ -299,7 +300,7 @@ class JobDetailsScreen extends StatelessWidget {
       if (!context.mounted) return;
     }
     if (section == JobSection.time) {
-      await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+      await Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
         builder: (_) => TimeLabourScreen(
           jobId: int.tryParse(job.id) == null ? null : job.id,
           initialJob: job,
@@ -309,7 +310,7 @@ class JobDetailsScreen extends StatelessWidget {
       return;
     }
     if (section == JobSection.purchases) {
-      await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+      await Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
         builder: (_) => ExpensesScreen(
           jobId: int.tryParse(job.id) == null ? null : job.id,
           initialJob: job,
@@ -319,7 +320,7 @@ class JobDetailsScreen extends StatelessWidget {
       return;
     }
     if (section == JobSection.deposits) {
-      await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+      await Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
         builder: (_) => DepositsScreen(
           jobId: int.tryParse(job.id) != null ? job.id : null,
           onNavigationSelected: (index) => _selectTab(context, index),
@@ -328,7 +329,7 @@ class JobDetailsScreen extends StatelessWidget {
       return;
     }
     if (section == JobSection.invoices) {
-      await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+      await Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
         builder: (_) => InvoicesScreen(
           jobId: int.tryParse(job.id) != null ? job.id : null,
           onNavigationSelected: (index) => _selectTab(context, index),
@@ -337,7 +338,7 @@ class JobDetailsScreen extends StatelessWidget {
       return;
     }
     if (section == JobSection.acceptance) {
-      await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+      await Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
         builder: (_) => ReportsScreen(
           jobId: int.tryParse(job.id) != null ? job.id : null,
           initialKind: ReportKind.workAcceptance,
@@ -347,7 +348,7 @@ class JobDetailsScreen extends StatelessWidget {
       return;
     }
     if (section == JobSection.siteReports) {
-      await Navigator.of(context).push<void>(MaterialPageRoute<void>(
+      await Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
         builder: (_) => ReportsScreen(
           jobId: int.tryParse(job.id) != null ? job.id : null,
           onNavigationSelected: (index) => _selectTab(context, index),
@@ -356,7 +357,7 @@ class JobDetailsScreen extends StatelessWidget {
       return;
     }
     if (section == JobSection.photos) {
-      Navigator.of(context).push<void>(
+      Sign2DigitalNavigation.push<void>(context,
         MaterialPageRoute(
           builder: (_) => JobPhotosScreen(
             job: job,
@@ -367,7 +368,7 @@ class JobDetailsScreen extends StatelessWidget {
       return;
     }
     if (section == JobSection.notes) {
-      Navigator.of(context).push<void>(
+      Sign2DigitalNavigation.push<void>(context,
         MaterialPageRoute(
           builder: (_) => JobNotesScreen(
             job: job,
