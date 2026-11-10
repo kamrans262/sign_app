@@ -131,9 +131,18 @@ class M20PushCoordinator with WidgetsBindingObserver {
   Future<String?> _currentFid() async {
     if (!_initialized) { return null; }
     if (defaultTargetPlatform == TargetPlatform.iOS) {
-      // iOS requires APNs to be ready before Firebase Messaging registration.
-      final apns = await FirebaseMessaging.instance.getAPNSToken();
-      if (apns == null || apns.isEmpty) { return null; }
+      // APNs can become available a few seconds after the first permission
+      // grant. Retry briefly so the user does not have to reopen the app.
+      var apnsReady = false;
+      for (var attempt = 0; attempt < 5; attempt++) {
+        final apns = await FirebaseMessaging.instance.getAPNSToken();
+        if (apns != null && apns.isNotEmpty) {
+          apnsReady = true;
+          break;
+        }
+        if (attempt < 4) await Future<void>.delayed(const Duration(seconds: 1));
+      }
+      if (!apnsReady) return null;
     }
     // 17.x emits the FID asynchronously through onRegistered.
     final received = Completer<String?>();
