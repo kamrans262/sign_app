@@ -71,7 +71,17 @@ void main() {
         ),
       );
       expect(theme.constraints?.maxWidth, 350);
-      expect(tester.getSize(find.byType(Dialog)).width, lessThanOrEqualTo(350));
+      // Dialog is a full-screen semantics wrapper; the inner card material
+      // is the actual popup surface whose width is limited by the theme.
+      final cardFinder = find.descendant(
+        of: find.byType(Dialog),
+        matching: find.byWidgetPredicate(
+          (widget) => widget is Material && widget.type == MaterialType.card,
+        ),
+      );
+      expect(cardFinder, findsOneWidget);
+      expect(tester.widget<Material>(cardFinder).color, AppColors.white);
+      expect(tester.getSize(cardFinder).width, lessThanOrEqualTo(350));
       expect(theme.titleTextStyle?.fontFamily, 'Inter');
       expect(theme.titleTextStyle?.fontSize, 18);
       expect(theme.contentTextStyle?.fontSize, 14);
