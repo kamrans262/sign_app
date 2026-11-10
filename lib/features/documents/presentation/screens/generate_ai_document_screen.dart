@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'dart:io';
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
@@ -321,7 +322,7 @@ class _GenerateAiDocumentScreenState extends State<GenerateAiDocumentScreen> {
   Future<void> _openExistingWorkflow() async {
     final job = _job;
     if (job == null) { return; }
-    await Navigator.of(context).push<void>(
+    await Sign2DigitalNavigation.push<void>(context,
       MaterialPageRoute<void>(
         builder: (_) => JobNotesScreen(job: job),
       ),
@@ -409,7 +410,7 @@ class _GenerateAiDocumentScreenState extends State<GenerateAiDocumentScreen> {
         throw StateError('The AI service did not return a saved document.');
       }
       if (!mounted) { return; }
-      await Navigator.of(context).push<void>(
+      await Sign2DigitalNavigation.push<void>(context,
         MaterialPageRoute<void>(
           builder: (_) => liveGeneral
               ? GeneralDocumentEditorScreen(
