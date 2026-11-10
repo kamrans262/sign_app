@@ -173,6 +173,10 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
           if (mounted) _message('Photos saved to the company job.');
         }
       } catch (error) {
+        assert(() {
+          debugPrint('M11 photo upload error type: ${error.runtimeType}; detail: $error');
+          return true;
+        }());
         if (mounted) _message(error is SignApiException
             ? error.message : 'Could not upload photo. Please retry.');
       } finally {
