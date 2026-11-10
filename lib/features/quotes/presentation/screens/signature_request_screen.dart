@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -256,7 +257,7 @@ class _SignatureRequestScreenState extends State<SignatureRequestScreen> {
   }
 
   void _viewDocument() {
-    Navigator.of(context).push<void>(MaterialPageRoute<void>(
+    Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
       builder: (_) => CustomerDocumentViewScreen(
         quote: _quote.copy(),
         documentTitle: 'Quote',
