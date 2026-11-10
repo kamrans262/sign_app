@@ -10,6 +10,7 @@ import '../../../equipment/data/remote_equipment_repository.dart';
 import '../../../expenses/data/remote_expense_repository.dart';
 import '../../../global_search/data/remote_global_search_provider.dart';
 import '../../../invoices/data/remote_invoice_repository.dart';
+import '../../../invoices/domain/invoice_record.dart';
 import '../../../labour/data/remote_labour_repository.dart';
 import '../../../reminders/data/remote_reminder_repository.dart';
 import '../../../subscription/data/remote_subscription_repository.dart';
@@ -30,10 +31,12 @@ import '../../../subscription/presentation/screens/subscription_overview_screen.
 /// Real, company-scoped module entry points; preview-only tools never appear.
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key, this.onTabSelected, this.onNotReady,
-    this.documentGenerator});
+    this.documentGenerator, this.invoiceRepository});
   final ValueChanged<int>? onTabSelected;
   final ValueChanged<String>? onNotReady;
   final AiDocumentGenerator? documentGenerator;
+  /// Explicit repository injection only; production continues using Laravel.
+  final InvoiceRepository? invoiceRepository;
 
   Future<void> _open(BuildContext context, Widget screen) =>
       Sign2DigitalNavigation.open<void>(context, screen);
@@ -110,7 +113,7 @@ class MoreScreen extends StatelessWidget {
             title: 'Invoices',
             icon: Icons.description_outlined,
             onTap: () => _open(context, InvoicesScreen(
-              repository: RemoteInvoiceRepository.shared,
+              repository: invoiceRepository ?? RemoteInvoiceRepository.shared,
               onNavigationSelected: onTabSelected,
               onNotificationTap: () => onNotReady?.call('Notifications'),
               onProfileTap: () => _openProfile(context),
