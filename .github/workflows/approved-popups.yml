@@ -1,0 +1,40 @@
+name: Sign2Digital Approved Popup Styling
+
+on:
+  push:
+    branches: [fix/m20-android-live-reminder-integration-2026-11-06]
+    paths:
+      - '.github/workflows/approved-popups.yml'
+      - 'lib/core/theme/app_theme.dart'
+      - 'test/core/app_dialog_style_test.dart'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: s2d-approved-popups
+  cancel-in-progress: true
+
+jobs:
+  dialog-style:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Count default Material AlertDialog sites
+        shell: bash
+        run: |
+          set -euo pipefail
+          count=$(grep -RohE 'AlertDialog[[:space:]]*\(' lib/features --include='*.dart' | wc -l)
+          echo "Material AlertDialog sites themed centrally: $count"
+          test "$count" -eq 50
+      - name: Analyze approved popup style
+        run: timeout 100s flutter analyze --no-pub lib/core/theme/app_theme.dart test/core/app_dialog_style_test.dart
+      - name: Test approved popup appearance and actions
+        run: timeout 180s flutter test --no-pub --concurrency=2 --timeout=50s --reporter=expanded test/core/app_dialog_style_test.dart test/features/documents/generate_ai_document_screen_test.dart test/features/invoices/add_invoice_screen_test.dart
