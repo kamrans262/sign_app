@@ -1,5 +1,6 @@
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_ai_voice_button.dart';
@@ -497,7 +498,7 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
           : (previous!.unitPriceMinor! / 100).toStringAsFixed(2));
     String? error;
     try {
-      await showModalBottomSheet<void>(
+      await showSign2DigitalBottomSheet<void>(
         context: context, isScrollControlled: true,
         builder: (sheet) => StatefulBuilder(
           builder: (sheet, update) => SafeArea(
