@@ -48,6 +48,7 @@ class AiVoiceFlowDialog extends StatefulWidget {
     BuildContext context, {
     required VoiceRecorderService recorder,
     required VoiceJobExtractionService extraction,
+    String recordingTitle = 'Record Job Details',
   }) {
     return showDialog<ExtractedJobDetails>(
       context: context,
@@ -55,7 +56,11 @@ class AiVoiceFlowDialog extends StatefulWidget {
       barrierColor: const Color(0x80000000),
       useSafeArea: true,
       builder: (_) =>
-          AiVoiceFlowDialog(recorder: recorder, extraction: extraction),
+          AiVoiceFlowDialog(
+            recorder: recorder,
+            extraction: extraction,
+            recordingTitle: recordingTitle,
+          ),
     );
   }
 
