@@ -44,7 +44,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     // Reports are opened through the document/navigation flow, not an
     // obsolete ClientsScreen open-reports key. Verify the actual Reports UI.
-    await tester.pumpWidget(const MaterialApp(home: ReportsScreen()));
+    await tester.pumpWidget(const MaterialApp(home: ReportsScreen(repository: DemoReportRepository())));
     await tester.pumpAndSettle();
     expect(find.byType(ReportsScreen), findsOneWidget);
     expect(find.byType(Sign2DigitalDashboardHeader), findsOneWidget);
@@ -62,7 +62,7 @@ void main() {
 
   testWidgets('category selection and searching operate together',
       (tester) async {
-    await tester.pumpWidget(const MaterialApp(home: ReportsScreen()));
+    await tester.pumpWidget(const MaterialApp(home: ReportsScreen(repository: DemoReportRepository())));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('details-tab-2')));
     await tester.pumpAndSettle();
@@ -94,7 +94,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    await tester.pumpWidget(const MaterialApp(home: ReportsScreen()));
+    await tester.pumpWidget(const MaterialApp(home: ReportsScreen(repository: DemoReportRepository())));
     await tester.pumpAndSettle();
     final first = find.byKey(const Key('report-card-report-figma-site-1'));
     final second = find.byKey(const Key('report-card-report-figma-site-2'));
@@ -120,7 +120,7 @@ void main() {
 
   testWidgets('tapping Completed fixture opens matching report details',
       (tester) async {
-    await tester.pumpWidget(const MaterialApp(home: ReportsScreen()));
+    await tester.pumpWidget(const MaterialApp(home: ReportsScreen(repository: DemoReportRepository())));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('report-card-report-figma-site-1')));
     await tester.pumpAndSettle();
@@ -136,7 +136,7 @@ void main() {
 
   testWidgets('floating plus launches wizard, persists and reopens real draft',
       (tester) async {
-    await tester.pumpWidget(const MaterialApp(home: ReportsScreen()));
+    await tester.pumpWidget(const MaterialApp(home: ReportsScreen(repository: DemoReportRepository())));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('reports-create-button')));
     await tester.pumpAndSettle();
@@ -261,7 +261,7 @@ void main() {
       tester.view.physicalSize = size;
       tester.view.devicePixelRatio = 1;
       await tester.pumpWidget(const SizedBox.shrink());
-      await tester.pumpWidget(const MaterialApp(home: ReportsScreen()));
+      await tester.pumpWidget(const MaterialApp(home: ReportsScreen(repository: DemoReportRepository())));
       await tester.pumpAndSettle();
       final scroll = find.byKey(const Key('reports-scroll'));
       final nav = find.byType(Sign2DigitalBottomNavigationBar);
