@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
@@ -563,7 +564,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
               title: const Text('Send Quote'),
               onTap: () {
                 Navigator.pop(sheet);
-                Navigator.of(context).push<void>(MaterialPageRoute<void>(
+                Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
                   builder: (_) => SendQuoteScreen(
                     quote: record.quote!.copy()),
                 ));
@@ -579,7 +580,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
               title: const Text('Edit Addendum Draft'),
               onTap: () async {
                 Navigator.pop(sheet);
-                await Navigator.of(context).push<void>(
+                await Sign2DigitalNavigation.push<void>(context,
                   MaterialPageRoute<void>(
                     builder: (_) => CreateAddendumScreen(
                       draftId: record.id,
@@ -665,7 +666,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
               title: const Text('Create Addendum'),
               onTap: () {
                 Navigator.of(sheet).pop();
-                Navigator.of(context).push<void>(MaterialPageRoute<void>(
+                Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
                   builder: (_) => CreateAddendumScreen(
                     linkedDocument: record),
                 ));
@@ -907,7 +908,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
           status: linked[i].status,
           documentDate: linked[i].timestamp,
           listStyle: true,
-          onTap: () => Navigator.push<void>(context, MaterialPageRoute<void>(
+          onTap: () => Sign2DigitalNavigation.push<void>(context, MaterialPageRoute<void>(
             builder: (_) => DocumentDetailsScreen(
               documentId: linked[i].id,
               document: widget.loadDocument != null &&
