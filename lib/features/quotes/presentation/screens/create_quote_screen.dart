@@ -1,3 +1,4 @@
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -256,7 +257,7 @@ class _CreateQuoteScreenState extends State<CreateQuoteScreen> {
     if (!mounted) {
       return;
     }
-    await Navigator.of(context).push<void>(
+    await Sign2DigitalNavigation.push<void>(context,
       MaterialPageRoute<void>(
         builder: (_) => QuoteAiProcessingScreen(
           input: prepared,
