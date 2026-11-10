@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/services/active_company_session.dart';
 import '../../../../core/services/sign_api_client.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
 import '../../../../core/widgets/sign2digital_dashboard_header.dart';
