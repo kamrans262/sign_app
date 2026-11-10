@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import 'package:file_picker/file_picker.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -112,7 +113,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
 
   void _openDocumentFilters() {
     FocusManager.instance.primaryFocus?.unfocus();
-    showModalBottomSheet<void>(
+    showSign2DigitalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       builder: (sheetContext) => SafeArea(
@@ -187,7 +188,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
       if (file.bytes == null || file.bytes!.isEmpty) {
         throw const FormatException('The selected PDF could not be read.');
       }
-      final category = await showModalBottomSheet<DocumentCategory>(
+      final category = await showSign2DigitalBottomSheet<DocumentCategory>(
         context: context,
         builder: (sheet) => SafeArea(
           child: ListView(
