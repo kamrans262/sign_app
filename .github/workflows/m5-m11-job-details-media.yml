@@ -1,0 +1,35 @@
+name: Sign2Digital M5-M11 Job Details and Media Flutter Verification
+
+on:
+  push:
+    branches: [fix/m20-android-live-reminder-integration-2026-11-06]
+    paths:
+      - '.github/workflows/m5-m11-job-details-media.yml'
+      - 'lib/features/jobs/**'
+      - 'lib/features/deposits/presentation/screens/deposits_screen.dart'
+      - 'lib/features/invoices/presentation/screens/invoices_screen.dart'
+      - 'test/features/jobs/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: s2d-m5-m11-flutter
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Analyze affected Flutter features
+        run: timeout 185s flutter analyze --no-pub --no-fatal-infos --no-fatal-warnings lib/features/jobs lib/features/deposits/presentation/screens/deposits_screen.dart lib/features/invoices/presentation/screens/invoices_screen.dart test/features/jobs/m5_m11_live_job_detail_media_test.dart test/features/jobs/m5_remote_job_repository_test.dart
+      - name: Verify job detail, photo DB upload and multi-photo swipe
+        run: timeout 235s flutter test --no-pub --concurrency=2 --timeout=55s --reporter=expanded test/features/jobs/m5_m11_live_job_detail_media_test.dart test/features/jobs/job_photos_screen_test.dart test/features/jobs/add_photos_screen_test.dart test/features/jobs/job_details_screen_test.dart test/features/jobs/m5_remote_job_repository_test.dart test/features/jobs/m11_remote_job_media_repository_test.dart test/features/deposits/deposits_screen_test.dart test/features/invoices/invoices_screen_test.dart
