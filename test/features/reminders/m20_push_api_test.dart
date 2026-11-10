@@ -94,21 +94,31 @@ void main() {
     client.close();
   });
 
-  test('M20 system notification permission is first-launch only', () {
-    expect(M20PushCoordinator.shouldRequestPermission(
-        AuthorizationStatus.notDetermined), isTrue);
-    expect(M20PushCoordinator.shouldRequestPermission(
-        AuthorizationStatus.denied), isFalse);
-    expect(M20PushCoordinator.shouldRequestPermission(
-        AuthorizationStatus.authorized), isFalse);
-    expect(M20PushCoordinator.shouldRequestPermission(
-        AuthorizationStatus.provisional), isFalse);
+  test('M20 first-launch consent handles Android 13 and never re-prompts', () {
+    bool request(AuthorizationStatus status, {
+      bool android = false, bool requested = false,
+    }) => M20PushCoordinator.shouldRequestPermission(status,
+        isAndroid: android, previouslyRequested: requested);
+
+    expect(request(AuthorizationStatus.notDetermined), isTrue);
+    expect(request(AuthorizationStatus.notDetermined, requested: true), isFalse);
+    // Android 13+ can return denied before its FIRST permission dialog.
+    expect(request(AuthorizationStatus.denied, android: true), isTrue);
+    expect(request(AuthorizationStatus.denied, android: true,
+        requested: true), isFalse);
+    expect(request(AuthorizationStatus.denied), isFalse);
+    expect(request(AuthorizationStatus.deniedPermanently,
+        android: true), isFalse);
+    expect(request(AuthorizationStatus.authorized), isFalse);
+    expect(request(AuthorizationStatus.provisional), isFalse);
     expect(M20PushCoordinator.hasPushPermission(
         AuthorizationStatus.authorized), isTrue);
     expect(M20PushCoordinator.hasPushPermission(
         AuthorizationStatus.provisional), isTrue);
     expect(M20PushCoordinator.hasPushPermission(
         AuthorizationStatus.denied), isFalse);
+    expect(M20PushCoordinator.hasPushPermission(
+        AuthorizationStatus.deniedPermanently), isFalse);
     expect(M20PushCoordinator.hasPushPermission(
         AuthorizationStatus.notDetermined), isFalse);
   });
