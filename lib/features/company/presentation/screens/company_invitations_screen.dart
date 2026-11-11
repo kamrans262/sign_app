@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../../core/services/sign_api_client.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
+import '../../../../core/widgets/sign2digital_input_field.dart';
+import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../../quotes/presentation/widgets/sign2digital_quote_shadow_panel.dart';
 import '../../data/remote_company_repository.dart';
 
@@ -77,17 +79,23 @@ class _CompanyInvitationsScreenState extends State<CompanyInvitationsScreen> {
                   style: TextStyle(fontFamily: 'Inter', fontSize: 13,
                     color: AppColors.secondaryText)),
                 const SizedBox(height: 15),
-                TextField(
+                Sign2DigitalInputField(
                   key: const Key('company-invitation-code'),
                   controller: _code,
-                  autocorrect: false,
-                  decoration: const InputDecoration(labelText: 'Invitation code'),
+                  label: 'Invitation Code',
+                  hintText: 'Paste the 64-character code',
+                  iconAsset: '',
+                  leadingIcon: Icons.mail_lock_outlined,
+                  leadingIconSize: 24,
+                  maxLength: 64,
+                  textInputAction: TextInputAction.done,
                 ),
                 const SizedBox(height: 20),
-                FilledButton(
+                Sign2DigitalPrimaryButton(
                   key: const Key('accept-company-invitation'),
-                  onPressed: _saving ? null : _accept,
-                  child: Text(_saving ? 'Accepting...' : 'Accept Invitation'),
+                  label: 'Accept Invitation',
+                  loading: _saving,
+                  onPressed: _accept,
                 ),
               ]),
             ),

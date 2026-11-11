@@ -4,6 +4,10 @@ import '../../../../core/services/sign_api_client.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
+import '../../../../core/widgets/sign2digital_selection_field.dart';
+import '../../../../core/widgets/sign2digital_input_field.dart';
+import '../../../../core/widgets/sign2digital_primary_button.dart';
+import '../../../../core/widgets/sign2digital_outlined_button.dart';
 import '../../../quotes/presentation/widgets/sign2digital_quote_shadow_panel.dart';
 import '../../data/remote_company_repository.dart';
 
@@ -96,6 +100,9 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
     final selected = await Sign2DigitalSelectionSheet.show(
       context, title: 'Company role',
       options: choices, selected: _role, icon: Icons.people_outline,
+      iconForOption: (role) => role == 'admin'
+          ? Icons.admin_panel_settings_outlined
+          : Icons.person_outline_rounded,
     );
     if (selected != null && mounted) setState(() => _role = selected);
   }
@@ -129,10 +136,12 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
                 ),
             ],
           )),
-          Padding(padding: const EdgeInsets.all(16), child: FilledButton(
-            onPressed: () => Navigator.of(sheetContext).pop(selected.toList()),
-            child: const Text('Apply permissions'),
-          )),
+          Padding(padding: const EdgeInsets.all(16),
+            child: Sign2DigitalPrimaryButton(
+              label: 'Apply Permissions',
+              onPressed: () => Navigator.of(sheetContext).pop(selected.toList()),
+            )),
+
         ]),
       ),
     );
@@ -228,14 +237,15 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
       builder: (sheet) => Padding(
         padding: const EdgeInsets.all(20),
         child: Row(children: [
-          Expanded(child: OutlinedButton(
+          Expanded(child: Sign2DigitalOutlinedButton(
+            label: 'Cancel',
+            primaryOutline: true,
             onPressed: () => Navigator.pop(sheet, false),
-            child: const Text('Cancel'),
           )),
           const SizedBox(width: 10),
-          Expanded(child: FilledButton(
+          Expanded(child: Sign2DigitalPrimaryButton(
+            label: 'Confirm',
             onPressed: () => Navigator.pop(sheet, true),
-            child: const Text('Confirm'),
           )),
         ]),
       ),
@@ -290,26 +300,49 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
                     fontFamily: 'Inter', fontWeight: FontWeight.w600,
                     fontSize: 16, color: AppColors.dark)),
                   const SizedBox(height: 15),
-                  TextField(
+                  Sign2DigitalInputField(
                     key: const Key('company-invite-email'),
                     controller: _email,
+                    label: 'Email Address',
+                    hintText: 'team@example.com',
+                    iconAsset: '',
+                    leadingIcon: Icons.mail_outline_rounded,
+                    leadingIconSize: 24,
                     keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                      labelText: 'Email address', hintText: 'team@example.com'),
+                    textInputAction: TextInputAction.done,
                   ),
                   const SizedBox(height: 12),
-                  OutlinedButton.icon(
-                    onPressed: _chooseRole, icon: const Icon(Icons.people_outline),
-                    label: Text('Role: $_role')),
-                  OutlinedButton.icon(
-                    onPressed: _choosePermissions,
-                    icon: const Icon(Icons.shield_outlined),
-                    label: Text('Permissions (${_permissions.length})')),
+                  Sign2DigitalSelectionField(
+                    key: const Key('company-role-picker'),
+                    label: 'Role',
+                    value: 'Role: $_role',
+                    hintText: 'Select team role',
+                    iconAsset: '',
+                    leadingIcon: Icons.people_outline,
+                    leadingIconSize: 24,
+                    trailing: const Icon(Icons.keyboard_arrow_down_rounded,
+                      size: 24, color: AppColors.secondaryText),
+                    onTap: _chooseRole,
+                  ),
+                  const SizedBox(height: 12),
+                  Sign2DigitalSelectionField(
+                    key: const Key('company-permissions-picker'),
+                    label: 'Permissions',
+                    value: 'Permissions (${_permissions.length})',
+                    hintText: 'Choose team permissions',
+                    iconAsset: '',
+                    leadingIcon: Icons.shield_outlined,
+                    leadingIconSize: 24,
+                    trailing: const Icon(Icons.keyboard_arrow_down_rounded,
+                      size: 24, color: AppColors.secondaryText),
+                    onTap: _choosePermissions,
+                  ),
                   const SizedBox(height: 15),
-                  FilledButton(
+                  Sign2DigitalPrimaryButton(
                     key: const Key('company-send-invite'),
-                    onPressed: _saving ? null : _invite,
-                    child: Text(_saving ? 'Sending...' : 'Send Invitation'),
+                    label: 'Send Invitation',
+                    loading: _saving,
+                    onPressed: _invite,
                   ),
                 ]),
               ),
