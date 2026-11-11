@@ -211,14 +211,35 @@ class _NewTicketState extends State<NewSupportTicketScreen> {
             key:const Key('m22-support-category'),
             initialValue:category,
             decoration:const InputDecoration(
-              labelText:'Issue category',border:OutlineInputBorder()),
+              labelText:'Issue category',
+              prefixIcon:Icon(Icons.support_agent_outlined,
+                color:AppColors.dark),
+              border:OutlineInputBorder()),
             items:const [
-              DropdownMenuItem(value:'technical',child:Text('Technical help')),
-              DropdownMenuItem(value:'bug',child:Text('Report a problem')),
-              DropdownMenuItem(value:'account',child:Text('Account')),
-              DropdownMenuItem(value:'billing',child:Text('Billing question')),
-              DropdownMenuItem(value:'general',child:Text('General')),
-              DropdownMenuItem(value:'feedback',child:Text('Feedback')),
+              DropdownMenuItem(value:'technical',child:Row(
+                mainAxisSize:MainAxisSize.min,children:[
+                  Icon(Icons.build_outlined,size:20),
+                  SizedBox(width:10),Text('Technical help')])),
+              DropdownMenuItem(value:'bug',child:Row(
+                mainAxisSize:MainAxisSize.min,children:[
+                  Icon(Icons.bug_report_outlined,size:20),
+                  SizedBox(width:10),Text('Report a problem')])),
+              DropdownMenuItem(value:'account',child:Row(
+                mainAxisSize:MainAxisSize.min,children:[
+                  Icon(Icons.manage_accounts_outlined,size:20),
+                  SizedBox(width:10),Text('Account')])),
+              DropdownMenuItem(value:'billing',child:Row(
+                mainAxisSize:MainAxisSize.min,children:[
+                  Icon(Icons.receipt_long_outlined,size:20),
+                  SizedBox(width:10),Text('Billing question')])),
+              DropdownMenuItem(value:'general',child:Row(
+                mainAxisSize:MainAxisSize.min,children:[
+                  Icon(Icons.help_outline_rounded,size:20),
+                  SizedBox(width:10),Text('General')])),
+              DropdownMenuItem(value:'feedback',child:Row(
+                mainAxisSize:MainAxisSize.min,children:[
+                  Icon(Icons.rate_review_outlined,size:20),
+                  SizedBox(width:10),Text('Feedback')])),
             ],
             onChanged:(value){if(value!=null)setState(()=>category=value);},
           ),
