@@ -21,7 +21,7 @@ class _Storage implements AuthTokenStorage {
 
 void main() {
   test('email OTP with 2FA returns no bearer until authenticator proof', () async {
-    final ticket = 'a' * 64;
+    final ticket = List.filled(64, 'a').join();
     final storage = _Storage();
     final seen = <String>[];
     final api = SignApiClient(
