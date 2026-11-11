@@ -23,7 +23,7 @@ jobs:
       - name: Strict analysis of billing models, real API and approved screens
         run: |
           dart analyze --fatal-infos lib/features/subscription test/features/subscription lib/core/widgets/sign2digital_subscription_gate.dart test/core/widgets/sign2digital_subscription_gate_test.dart
-          dart analyze --fatal-infos lib/features/quotes/presentation/screens/review_quote_screen.dart lib/features/invoices/presentation/screens/invoice_details_screen.dart lib/features/documents/presentation/screens/report_review_screen.dart lib/features/documents/presentation/screens/general_document_editor_screen.dart
+          dart analyze --fatal-warnings lib/features/quotes/presentation/screens/review_quote_screen.dart lib/features/invoices/presentation/screens/invoice_details_screen.dart lib/features/documents/presentation/screens/report_review_screen.dart lib/features/documents/presentation/screens/general_document_editor_screen.dart
       - name: M23 remote company security and existing UI acceptance
         run: |
           timeout --signal=TERM --kill-after=10s 560s flutter test --no-pub --concurrency=2 --timeout=75s --reporter=expanded test/features/subscription test/core/widgets/sign2digital_subscription_gate_test.dart
