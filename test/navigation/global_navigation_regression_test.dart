@@ -144,10 +144,10 @@ void main() {
     expect(find.byType(AddInvoiceScreen), findsNothing);
 
     // The highlighted More tab must not be inert on a child route.
-    await tester.tap(
-      find.byKey(const Key('dashboard-tab-4')).hitTestable().last);
-    // The live dashboard schedules ongoing frames; bounded pumps validate
-    // route completion without waiting for unrelated perpetual animations.
+    await tester.tap(find.descendant(
+      of: find.byType(InvoicesScreen),
+      matching: find.byKey(const Key('dashboard-tab-4')),
+    ).hitTestable().first);
     await _frame(tester);
     expect(find.byType(MoreScreen), findsOneWidget);
     expect(find.byType(InvoicesScreen), findsNothing);
@@ -164,10 +164,16 @@ void main() {
     // Allow the second Add Invoice entrance animation to complete; tapping
     // during a route transition is intentionally ignored by Flutter.
     await tester.pump(const Duration(milliseconds: 800));
-    await tester.tap(
-      find.byKey(const Key('dashboard-tab-4')).hitTestable().last);
-    // Pop two nested routes; use bounded pumps because the dashboard also
-    // contains background async widgets and cannot pumpAndSettle globally.
+    final addInvoiceRoute = ModalRoute.of(
+      tester.element(find.byType(AddInvoiceScreen)));
+    expect(addInvoiceRoute?.isCurrent, isTrue,
+      reason: 'Add Invoice must own the active route before bottom navigation');
+    await tester.tap(find.descendant(
+      of: find.byType(AddInvoiceScreen),
+      matching: find.byKey(const Key('dashboard-tab-4')),
+    ).hitTestable().first);
+    // Two stacked routes exit; bounded pumps avoid background dashboard
+    // animations preventing pumpAndSettle.
     await tester.pump(const Duration(milliseconds: 850));
     await tester.pump();
     expect(find.byType(MoreScreen), findsOneWidget);
