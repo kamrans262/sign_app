@@ -67,7 +67,11 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
   PlatformFile? _logo;
   bool _voiceOpen = false;
   bool _creating = false;
+  bool _loadingExisting = false;
   AddendumDraft? _serverDraft;
+
+  bool get _editMode => _live &&
+      RegExp(r'^addendum-[1-9][0-9]*$').hasMatch(widget.draftId ?? '');
 
   bool get _live => MobileAuthRepository.shared.isSignedIn &&
       (widget.repository == null ||
@@ -82,8 +86,8 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
     _id = widget.draftId ?? 'local-addendum-${DateTime.now().microsecondsSinceEpoch}';
     final existing = AddendumDraftSession.load(_id);
     _serverDraft = existing?.serverId != null ? existing : null;
-    if (existing == null && _live &&
-        RegExp(r'^addendum-[1-9][0-9]*$').hasMatch(_id)) {
+    if (existing == null && _editMode) {
+      _loadingExisting = true;
       _restoreServerDraft(int.parse(_id.substring('addendum-'.length)));
     }
     _number.text = existing?.number ?? '';
@@ -123,6 +127,8 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
       }
     } catch (_) {
       _notice('Saved addendum could not be loaded.');
+    } finally {
+      if (mounted) setState(() => _loadingExisting = false);
     }
   }
 
@@ -391,7 +397,11 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
   }
 
   Future<void> _saveDraft() async {
-    if (_creating) return;
+    if (_creating || _loadingExisting) return;
+    if (_editMode && _serverDraft?.serverId == null) {
+      _notice('Existing addendum must load before saving.');
+      return;
+    }
     if (!_live) {
       AddendumDraftSession.save(_draft());
       _notice('Addendum draft saved locally on this device for this session.');
@@ -416,7 +426,11 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
   }
 
   Future<void> _create() async {
-    if (_creating) return;
+    if (_creating || _loadingExisting) return;
+    if (_editMode && _serverDraft?.serverId == null) {
+      _notice('Existing addendum must load before editing.');
+      return;
+    }
     final draft = _draft();
     if (draft.validationIssues.isNotEmpty) {
       _notice(draft.validationIssues.first);
@@ -458,7 +472,9 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
             .details(saved.id);
         if (!mounted) return;
         _serverDraft = saved;
-        _notice('Addendum draft saved to the company; review before approving.');
+        _notice(_editMode
+            ? 'Addendum saved to your company. Review before approving.'
+            : 'Addendum draft saved to the company; review before approving.');
         unawaited(Navigator.of(context).pushReplacement<void, void>(
           MaterialPageRoute(builder: (_) => DocumentDetailsScreen(
             documentId: details.id,
@@ -523,11 +539,13 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
       final draft = Sign2DigitalOutlinedButton(
         key: const Key('addendum-save-draft'),
         label: 'Save as Draft', onPressed: _saveDraft,
-        enabled: !_creating, primaryOutline: true,
+        enabled: !_creating && !_loadingExisting, primaryOutline: true,
       );
       final create = Sign2DigitalPrimaryButton(
         key: const Key('addendum-create'),
-        label: 'Create Addendum', loading: _creating, onPressed: _create,
+        label: _editMode ? 'Save Addendum' : 'Create Addendum',
+        loading: _creating, enabled: !_loadingExisting,
+        onPressed: _create,
       );
       if (narrow) {
         return Column(
@@ -619,13 +637,6 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
                 },
               ),
               const SizedBox(height: 20),
-              Sign2DigitalOutlinedButton(
-                key: const Key('addendum-review'),
-                label: 'Review Addendum',
-                onPressed: _reviewAddendum,
-                primaryOutline: true,
-              ),
-              const SizedBox(height: 20),
               Sign2DigitalSelectionField(
                 key: const Key('addendum-effective-date'),
                 label: 'Effective Dates',
@@ -640,7 +651,15 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
                 initialFile: _logo,
                 onChanged: (file) => setState(() => _logo = file),
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 20),
+              Sign2DigitalOutlinedButton(
+                key: const Key('addendum-review'),
+                label: 'Review Addendum',
+                onPressed: _reviewAddendum,
+                enabled: !_loadingExisting && !_creating,
+                primaryOutline: true,
+              ),
+              const SizedBox(height: 20),
               _footer(),
             ],
           ),
