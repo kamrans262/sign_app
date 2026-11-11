@@ -321,7 +321,7 @@ class RemoteExpenseRepository implements ExpenseRepository {
   }
 
   static String _historyTitle(String event) {
-    final words = event.replaceAll('_', ' ').trim().split(RegExp(r'\\s+'));
+    final words = event.replaceAll('_', ' ').trim().split(RegExp(r'\s+'));
     return words.where((word) => word.isNotEmpty).map((word) =>
       '${word[0].toUpperCase()}${word.substring(1)}').join(' ');
   }
