@@ -38,10 +38,6 @@ abstract final class Sign2DigitalNavigation {
     final navigator = Navigator.maybeOf(context);
     if (navigator == null) return false;
     final owner = _dashboards[navigator];
-    assert(() {
-      debugPrint('S2D TAB TRACE: tab=$index, ownerExists=${owner != null}, ownerActive=${owner?.route.isActive}, contextRouteCurrent=${ModalRoute.of(context)?.isCurrent}, ownerEqualsContext=${identical(ModalRoute.of(context), owner?.route)}, canPop=${navigator.canPop()}');
-      return true;
-    }());
     if (owner == null || !owner.route.isActive) return false;
 
     if (!identical(ModalRoute.of(context), owner.route)) {
