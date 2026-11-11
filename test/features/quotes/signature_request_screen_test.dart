@@ -63,13 +63,33 @@ void main() {
     },
   );
 
+  test('created secure link is Ready to Share, not falsely marked as sent', () {
+    final tracked = QuoteDocumentTracking(
+      quoteId: 'server-quote-7',
+      requestId: 'request-7',
+      secureUrl: Uri.parse('https://example.test/sign/token'),
+      expiresAt: DateTime(2099, 1, 1),
+      events: [
+        QuoteDocumentEvent(
+          id: 'requested',
+          type: QuoteDocumentEventType.signatureRequested,
+          occurredAt: DateTime(2026, 11, 12),
+        ),
+      ],
+    );
+    expect(tracked.statusAt(DateTime(2026, 11, 12)),
+        QuoteSignatureStatus.readyToShare);
+    expect(tracked.requestIsActive, isTrue);
+    expect(tracked.sent, isFalse);
+  });
+
   testWidgets(
     'shows corrected Customer spelling and does not fake completion',
     (tester) async {
       await tester.pumpWidget(
         MaterialApp(home: SignatureRequestScreen(quote: sampleQuote())),
       );
-      expect(find.text('Create Quote'), findsOneWidget);
+      expect(find.text('Signature Request'), findsOneWidget);
       expect(find.text('Viewed by Customer'), findsOneWidget);
       expect(find.text('Customer'), findsOneWidget);
       expect(find.text('Costumer'), findsNothing);
@@ -178,7 +198,7 @@ void main() {
     await tester.ensureVisible(find.byKey(const Key('send-view-tracking')));
     await tester.tap(find.byKey(const Key('send-view-tracking')));
     await tester.pumpAndSettle();
-    expect(find.text('Create Quote'), findsOneWidget);
+    expect(find.text('Signature Request'), findsOneWidget);
     expect(
       find.text('Document delivery has not been confirmed yet.'),
       findsOneWidget,
