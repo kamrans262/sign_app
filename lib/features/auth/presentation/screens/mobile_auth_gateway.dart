@@ -9,6 +9,7 @@ import 'create_account_screen.dart';
 import 'forgot_password_screen.dart';
 import 'login_screen.dart';
 import 'otp_verification_screen.dart';
+import 'two_factor_login_screen.dart';
 import 'reset_password_screen.dart';
 
 /// Coordinates the existing Sign2Digital authentication screens.
@@ -108,6 +109,27 @@ class _MobileAuthGatewayState extends State<MobileAuthGateway> {
                     resetToken: proof,
                     newPassword: newPassword,
                   ),
+                ),
+              ));
+              return;
+            }
+            if (outcome.requiresTwoFactor) {
+              final ticket = outcome.twoFactorTicket!;
+              Navigator.of(otpContext).push(MaterialPageRoute<void>(
+                builder: (_) => TwoFactorLoginScreen(
+                  onVerify: (code) async {
+                    await _auth.verifyTwoFactor(ticket, code,
+                      rememberMe: rememberMe);
+                    if (!mounted) return;
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute<void>(
+                        builder: (_) => CompanyEntryGate(
+                          repository: RemoteCompanyRepository(api: _auth.api),
+                        ),
+                      ),
+                      (_) => false,
+                    );
+                  },
                 ),
               ));
               return;

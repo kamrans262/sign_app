@@ -50,11 +50,15 @@ class EmailOtpVerification {
     required this.purpose,
     this.accessToken,
     this.resetToken,
+    this.twoFactorTicket,
   });
 
   final String purpose;
   final String? accessToken;
   final String? resetToken;
+  /// One-use short-lived verifier; never a bearer session.
+  final String? twoFactorTicket;
+  bool get requiresTwoFactor => twoFactorTicket != null;
 }
 
 /// One central mobile auth repository. UI components stay unchanged.
@@ -185,6 +189,16 @@ class MobileAuthRepository {
       return EmailOtpVerification(purpose: purpose, resetToken: token);
     }
 
+    if (data['requires_two_factor'] == true) {
+      final ticket = data['two_factor_ticket'];
+      if (purpose != 'login' || ticket is! String || ticket.length != 64) {
+        throw const SignApiException('Invalid authenticator challenge.');
+      }
+      return EmailOtpVerification(
+        purpose: purpose, twoFactorTicket: ticket,
+      );
+    }
+
     final token = data['access_token'];
     if (token is! String || token.isEmpty) {
       throw const SignApiException('Missing authentication token.');
@@ -199,6 +213,31 @@ class MobileAuthRepository {
       }
     }
     return EmailOtpVerification(purpose: purpose, accessToken: token);
+  }
+
+  /// Completes 2FA only after an email-OTP challenge. The server never
+  /// returns a bearer for an unverified authenticator response.
+  Future<void> verifyTwoFactor(
+    String ticket, String code, {required bool rememberMe}
+  ) async {
+    if (isSignedIn) {
+      throw const SignApiException('Sign out before starting another sign-in.');
+    }
+    final response = await _api.post('/api/v1/auth/2fa/verify',
+      authenticated: false, data: {'ticket': ticket, 'code': code});
+    final data = _data(response);
+    final token = data['access_token'];
+    if (data['purpose'] != 'login' || token is! String || token.isEmpty) {
+      throw const SignApiException('Authenticator verification did not complete.');
+    }
+    _sessionToken = token;
+    if (rememberMe) {
+      try {
+        await _tokenStorage.write(token);
+      } catch (_) {
+        // Preserve a verified memory-only session, never plaintext storage.
+      }
+    }
   }
 
   Future<Map<String, dynamic>> currentProfile() => _api.currentAccount();
