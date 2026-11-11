@@ -15,10 +15,8 @@ import 'document_signed_success_screen.dart';
 import '../../../clients/presentation/widgets/sign2digital_status_badge.dart';
 import '../../services/quote_pdf_service.dart';
 import '../../data/remote_quote_repository.dart';
-import '../../data/remote_in_person_signing_repository.dart';
 import '../../../../core/services/sign_api_client.dart';
 import 'send_quote_screen.dart';
-import 'signature_request_screen.dart';
 
 /// Mobile representation of the same structured quote sent to the PDF builder.
 /// A locally validated quote is not represented as server-approved or delivered.
@@ -210,58 +208,6 @@ class _QuotePreviewScreenState extends State<QuotePreviewScreen> {
     }
   }
 
-  bool get _inPersonReady =>
-      (widget.inPersonDocumentId?.trim().isNotEmpty == true &&
-       widget.inPersonCustomerSignerId?.trim().isNotEmpty == true &&
-       widget.inPersonBusinessSignerId?.trim().isNotEmpty == true &&
-       widget.onSubmitInPersonSignature != null) ||
-      (_quote.serverId != null && _quote.approvedLocally && !_quote.isDemo);
-
-  Future<void> _openVerifiedInPerson() async {
-    if (!_inPersonReady || _busy) return;
-    final configured = widget.inPersonDocumentId?.trim().isNotEmpty == true &&
-        widget.inPersonCustomerSignerId?.trim().isNotEmpty == true &&
-        widget.inPersonBusinessSignerId?.trim().isNotEmpty == true &&
-        widget.onSubmitInPersonSignature != null;
-    if (configured) {
-      Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
-        builder: (_) => InPersonSignatureScreen(
-          quote: _quote.copy(),
-          projectName: _quote.items.isEmpty
-              ? _quote.quoteNumber : _quote.items.first.title,
-          documentId: widget.inPersonDocumentId!,
-          customerSignerId: widget.inPersonCustomerSignerId!,
-          businessSignerId: widget.inPersonBusinessSignerId!,
-          onSubmit: widget.onSubmitInPersonSignature,
-        ),
-      ));
-      return;
-    }
-    setState(() => _busy = true);
-    try {
-      final session = await RemoteInPersonSigningRepository.shared.start(_quote);
-      if (!mounted) return;
-      final quote = _quote.copy();
-      await Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
-        builder: (_) => InPersonSignatureScreen(
-          quote: quote,
-          projectName: quote.items.isEmpty
-              ? quote.quoteNumber : quote.items.first.title,
-          documentId: session.documentId,
-          customerSignerId: session.customerSignerId,
-          businessSignerId: session.businessSignerId,
-          onSubmit: (signature) =>
-              RemoteInPersonSigningRepository.shared.complete(
-                quote, session, signature),
-        ),
-      ));
-    } catch (error) {
-      _message('Unable to start in-person signing: $error');
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-
   void _sendToCustomer() {
     if (_busy) return;
     if (!_quote.approvedLocally || _quote.approvalIssues.isNotEmpty) {
@@ -275,20 +221,6 @@ class _QuotePreviewScreenState extends State<QuotePreviewScreen> {
         signingContext: widget.signingContext,
         onSubmitSignature: widget.onSubmitSignature,
         onSubmitVerifiedSignature: widget.onSubmitVerifiedSignature,
-      ),
-    ));
-  }
-
-  void _requestSignature() {
-    if (_busy) return;
-    if (_quote.isDemo || _quote.serverId == null || !_quote.approvedLocally) {
-      _message('Approve a saved quote before requesting a signature.');
-      return;
-    }
-    Sign2DigitalNavigation.push<void>(context, MaterialPageRoute<void>(
-      builder: (_) => SignatureRequestScreen(
-        quote: _quote.copy(),
-        tracking: _matchingTracking,
       ),
     ));
   }
@@ -364,36 +296,6 @@ class _QuotePreviewScreenState extends State<QuotePreviewScreen> {
               _terms(),
               const SizedBox(height: 60),
               if (widget.customerView) _customerAction() else _actions(),
-              if (!widget.customerView && !_quote.isDemo &&
-                  _quote.serverId != null && _quote.approvedLocally) ...[
-                const SizedBox(height: 12),
-                SizedBox(
-                  height: 48,
-                  child: FilledButton(
-                    key: const Key('quote-preview-request-signature'),
-                    onPressed: _busy ? null : _requestSignature,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10))),
-                    child: Text('Request Signature', textAlign: TextAlign.center,
-                      style: _text(16, color: Colors.white)),
-                  ),
-                ),
-              ],
-              if (!widget.customerView &&
-                   (widget.onInPersonSign != null || _inPersonReady)) ...[
-                const SizedBox(height: 12),
-                SizedBox(
-                  height: 48,
-                  child: OutlinedButton.icon(
-                    key: const Key('quote-preview-in-person-sign'),
-                    onPressed: widget.onInPersonSign ?? _openVerifiedInPerson,
-                    icon: const Icon(Icons.draw_outlined),
-                    label: const Text('In-Person Signature'),
-                  ),
-                ),
-              ],
             ]),
         )),
       )),
