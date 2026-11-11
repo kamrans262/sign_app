@@ -1,6 +1,6 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
-import '../../auth/data/mobile_auth_repository.dart';
+import '../../../auth/data/mobile_auth_repository.dart';
 
 import 'create_job_screen.dart';
 import '../../domain/create_job_draft.dart';
