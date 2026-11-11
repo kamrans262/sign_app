@@ -35,7 +35,7 @@ DocumentRecord _record({
     customer: name,
     timestamp: DateTime(2026, 8, 12, 10, 15),
     status: done.contains(WorkAcceptanceStage.completed)
-        ? 'Completed' : 'Pending',
+        ? 'accepted' : 'Pending',
     demoOnly: demo,
     workAcceptance: WorkAcceptanceEvidence(
       events: [
@@ -137,6 +137,26 @@ void main() {
     final image = tester.widget<Image>(
         find.byKey(const Key('work-acceptance-saved-signature')));
     expect(image.fit, BoxFit.contain);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('unsigned and awaiting acceptances never show a customer signature',
+      (tester) async {
+    for (final status in ['draft', 'approved', 'sent', 'viewed']) {
+      final pending = _record(signature:true, reportPdf:true);
+      await tester.pumpWidget(MaterialApp(home: WorkAcceptanceScreen(
+        report: DocumentRecord(
+          id:pending.id, category:pending.category,
+          reportKind:pending.reportKind, number:pending.number,
+          title:pending.title, project:pending.project,
+          customer:pending.customer, timestamp:pending.timestamp,
+          status:status, demoOnly:false,
+          workAcceptance:pending.workAcceptance,
+        ),
+      )));
+      expect(find.text('Client Signature'), findsNothing);
+      expect(find.byType(Sign2DigitalSignatureDisplay), findsNothing);
+    }
     expect(tester.takeException(), isNull);
   });
 
