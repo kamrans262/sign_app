@@ -1,0 +1,33 @@
+name: Sign2Digital QA Batch 2 Flutter
+on:
+  push:
+    branches: [fix/m20-android-live-reminder-integration-2026-11-06]
+    paths:
+      - '.github/workflows/qa-batch2.yml'
+      - 'lib/features/expenses/**'
+      - 'lib/features/labour/**'
+      - 'lib/features/jobs/**'
+      - 'test/features/expenses/**'
+      - 'test/features/labour/**'
+      - 'test/features/jobs/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: sign2digital-qa-batch2-flutter
+  cancel-in-progress: true
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 17
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Check all Dart code without unrelated SDK deprecation-info failures
+        run: flutter analyze --no-pub --no-fatal-infos --no-fatal-warnings lib
+      - name: Verify expenses approvals, labour approvals, financial cards and grouped job photos
+        run: flutter test --no-pub --concurrency=2 --timeout=55s --reporter=expanded test/features/expenses/m14_remote_expense_repository_test.dart test/features/expenses/expense_details_screen_test.dart test/features/expenses/expenses_screen_test.dart test/features/labour/m15_remote_labour_repository_test.dart test/features/labour/labour_entry_details_screen_test.dart test/features/labour/time_labour_screen_test.dart test/features/jobs/job_details_screen_test.dart test/features/jobs/job_photos_screen_test.dart test/features/jobs/m11_remote_job_media_repository_test.dart
