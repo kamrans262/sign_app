@@ -468,10 +468,12 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
         // separate explicit steps; neither is fabricated by this action.
         final saved = await RemoteAddendumRepository.shared.save(snapshot);
         if (!mounted) return;
+        // Remember the backend ID before loading document details: if that
+        // read fails, retrying must PATCH this record, never POST a duplicate.
+        setState(() => _serverDraft = saved);
         final details = await RemoteDocumentRepository.shared
             .details(saved.id);
         if (!mounted) return;
-        _serverDraft = saved;
         _notice(_editMode
             ? 'Addendum saved to your company. Review before approving.'
             : 'Addendum draft saved to the company; review before approving.');
