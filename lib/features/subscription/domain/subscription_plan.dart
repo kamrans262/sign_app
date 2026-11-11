@@ -22,6 +22,8 @@ class SubscriptionPlanOption {
     this.demoOnly = false,
     this.serverPlanId,
     this.canCheckout = false,
+    this.amountMinor,
+    this.currency,
   });
 
   final String id;
@@ -34,6 +36,9 @@ class SubscriptionPlanOption {
   /// Numeric published plan ID verified by Laravel; never a hardcoded price.
   final int? serverPlanId;
   final bool canCheckout;
+  /// Published, admin-owned price in currency minor units; never trusted to charge.
+  final int? amountMinor;
+  final String? currency;
 }
 
 /// Plans can later be loaded from the billing catalog without changing UI.

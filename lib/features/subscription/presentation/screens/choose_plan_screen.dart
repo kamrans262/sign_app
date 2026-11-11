@@ -45,9 +45,13 @@ class _ChoosePlanScreenState extends State<ChoosePlanScreen> {
   void initState() {
     super.initState();
     _draft = widget.flowState ?? SubscriptionPlanFlowState();
-    _catalog = widget.catalog ?? (MobileAuthRepository.shared.isSignedIn
-        ? RemoteSubscriptionPlanCatalog()
-        : const DemoSubscriptionPlanCatalog());
+    _catalog = widget.catalog ??
+        (widget.billingRepository != null
+            ? RemoteSubscriptionPlanCatalog.fromRepository(
+                widget.billingRepository!)
+            : MobileAuthRepository.shared.isSignedIn
+                ? RemoteSubscriptionPlanCatalog()
+                : const DemoSubscriptionPlanCatalog());
     if (_catalog is RemoteSubscriptionPlanCatalog) _loadPlans();
   }
 
@@ -75,6 +79,25 @@ class _ChoosePlanScreenState extends State<ChoosePlanScreen> {
   }
 
   SubscriptionPlanOption? get _current => _optionFor(_draft.period);
+
+  String? _yearlySavings(SubscriptionPlanOption plan) {
+    if (plan.period != SubscriptionBillingPeriod.yearly ||
+        plan.amountMinor == null || plan.currency == null) return null;
+    for (final monthly in _catalog.options) {
+      if (monthly.id != plan.id ||
+          monthly.period != SubscriptionBillingPeriod.monthly ||
+          monthly.currency != plan.currency || monthly.amountMinor == null) {
+        continue;
+      }
+      final saved = monthly.amountMinor! * 12 - plan.amountMinor!;
+      if (saved <= 0) return null;
+      final francs = saved / 100;
+      final formatted = francs == francs.roundToDouble()
+          ? francs.toStringAsFixed(0) : francs.toStringAsFixed(2);
+      return 'Save ${plan.currency} $formatted per year';
+    }
+    return null;
+  }
 
   bool _isSelected(SubscriptionPlanOption plan) {
     final chosen = _draft.selectedPlan;
@@ -271,6 +294,17 @@ class _ChoosePlanScreenState extends State<ChoosePlanScreen> {
                           height: 1.0,
                           color: AppColors.dark,
                         )),
+                      if (_yearlySavings(plan) != null) ...[
+                        const SizedBox(height: 6),
+                        Text(_yearlySavings(plan)!,
+                          key: const Key('m23-yearly-savings'),
+                          style: const TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.primary,
+                          )),
+                      ],
                       const SizedBox(height: 5),
                       Text(plan.description, style: const TextStyle(
                         fontFamily: 'Inter',

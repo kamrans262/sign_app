@@ -28,6 +28,8 @@ class SubscriptionCurrentPlanCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final management = variant == SubscriptionPlanCardVariant.management;
+    final isFree = !data.demoOnly &&
+        const {'free', 'granted'}.contains(data.status?.toLowerCase());
     final description = data.billingDescription ?? 'Billing details unavailable';
     final billingLines = management
         ? description.split(' · ')
@@ -62,7 +64,7 @@ class SubscriptionCurrentPlanCard extends StatelessWidget {
                     color: AppColors.dark,
                   )),
                 SizedBox(height: management ? 2 : 7),
-                Text(data.priceLabel ?? 'Price unavailable',
+                Text(data.priceLabel ?? (isFree ? 'Free' : 'Price unavailable'),
                   key: const Key('subscription-plan-price'),
                   style: TextStyle(
                     fontFamily: 'Inter',
@@ -93,14 +95,14 @@ class SubscriptionCurrentPlanCard extends StatelessWidget {
             Row(children: [
               Expanded(child: Sign2DigitalOutlinedButton(
                 key: const Key('subscription-view-billing'),
-                label: 'View Billing',
+                label: isFree ? 'Plan Details' : 'View Billing',
                 primaryOutline: true,
                 onPressed: onViewBilling ?? () {},
               )),
               const SizedBox(width: 10),
               Expanded(child: Sign2DigitalPrimaryButton(
                 key: const Key('subscription-manage-plan'),
-                label: 'Manage Plan',
+                label: isFree ? 'Upgrade Plan' : 'Manage Plan',
                 height: 52,
                 onPressed: onManagePlan ?? () {},
               )),

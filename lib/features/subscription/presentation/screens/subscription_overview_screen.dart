@@ -68,6 +68,7 @@ class _SubscriptionOverviewScreenState
         onNavigationSelected: widget.onNavigationSelected,
       ),
     ));
+    if (mounted) await _load();
   }
 
   @override
@@ -194,8 +195,13 @@ class _SubscriptionOverviewScreenState
                   const Text('Plan Features', style: _sectionStyle),
                   const SizedBox(height: 20),
                   if (_overview!.features == null)
-                    const Text('Plan features are unavailable.',
-                      style: AppTextStyles.subtitle)
+                    Text(
+                      _overview!.status == 'free'
+                          ? 'Upgrade to Business to access all plan features. '
+                            'Your free document allowance remains available.'
+                          : 'Plan features are unavailable.',
+                      style: AppTextStyles.subtitle,
+                    )
                   else
                     SubscriptionFeatureList(items: [
                       for (final feature in SubscriptionFeature.values)

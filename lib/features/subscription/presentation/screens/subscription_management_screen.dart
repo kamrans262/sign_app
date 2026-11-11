@@ -115,6 +115,7 @@ class _SubscriptionManagementScreenState
         changeExistingPlan: _data?.canManageBilling == true,
       ),
     ));
+    if (mounted) await _load();
   }
 
   Future<void> _paymentMethod() async {
@@ -234,6 +235,16 @@ class _SubscriptionManagementScreenState
         fontWeight: FontWeight.w500, color: AppColors.placeholder)),
     ],
   );
+
+  bool get _isFreePlan => !(_data?.demoOnly ?? false) &&
+      const {'free', 'granted'}.contains(_data?.status?.toLowerCase());
+
+  bool get _hasBillingHistory {
+    if (_data == null || _isFreePlan) return false;
+    return _data!.demoOnly ||
+        const {'active', 'trialing', 'past_due', 'unpaid', 'canceled'}
+            .contains(_data?.status?.toLowerCase());
+  }
 
   // A free allowance, administrative grant or unverified provider state
   // is not a paid subscription that the user can cancel.
@@ -361,27 +372,33 @@ class _SubscriptionManagementScreenState
                 const SizedBox(height: 20),
                 SubscriptionManagementActionCard(
                   key: const Key('subscription-action-change-plan'),
-                  title: 'Change Plan',
-                  subtitle: 'Upgrade or downgrade your plan',
+                  title: _isFreePlan ? 'Upgrade Plan' : 'Change Plan',
+                  subtitle: _isFreePlan
+                      ? 'Explore Business monthly and yearly'
+                      : 'Upgrade or downgrade your plan',
                   icon: Icons.swap_horiz_rounded,
                   onTap: _changePlan,
                 ),
-                const SizedBox(height: 20),
-                SubscriptionManagementActionCard(
-                  key: const Key('subscription-action-payment-method'),
-                  title: 'Payment Method',
-                  subtitle: 'Update your card or bank details',
-                  icon: Icons.credit_card_outlined,
-                  onTap: _paymentMethod,
-                ),
-                const SizedBox(height: 20),
-                SubscriptionManagementActionCard(
-                  key: const Key('subscription-action-billing-history'),
-                  title: 'Billing History',
-                  subtitle: 'View and document your invoices',
-                  icon: Icons.receipt_long_outlined,
-                  onTap: _billingHistory,
-                ),
+                if (_data!.canManageBilling || _data!.demoOnly) ...[
+                  const SizedBox(height: 20),
+                  SubscriptionManagementActionCard(
+                    key: const Key('subscription-action-payment-method'),
+                    title: 'Payment Method',
+                    subtitle: 'Update your card or bank details',
+                    icon: Icons.credit_card_outlined,
+                    onTap: _paymentMethod,
+                  ),
+                ],
+                if (_hasBillingHistory) ...[
+                  const SizedBox(height: 20),
+                  SubscriptionManagementActionCard(
+                    key: const Key('subscription-action-billing-history'),
+                    title: 'Billing History',
+                    subtitle: 'View and download verified invoices',
+                    icon: Icons.receipt_long_outlined,
+                    onTap: _billingHistory,
+                  ),
+                ],
                 const SizedBox(height: 20),
                 SubscriptionManagementActionCard(
                   key: const Key('subscription-action-usage'),

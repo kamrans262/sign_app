@@ -1,13 +1,17 @@
 /// A subscription is only verified when supplied by the connected service.
 /// The app currently has no billing backend; the demo fixture is clearly marked.
 enum SubscriptionFeature {
-  unlimitedProjects('Unlimited projects'),
+  unlimitedProjects('Unlimited projects & job management'),
+  clientManagement('Client management'),
+  quotes('Quotes & approvals'),
   aiDocuments('AI document generation'),
-  eSignature('eSignature & work acceptance'),
+  siteReports('Site reports & meeting minutes'),
+  eSignature('eSignatures & work acceptance'),
   invoices('Invoices & deposits'),
-  labour('Labour & time tracking'),
+  expenses('Purchases & expense tracking'),
+  labour('Time & labour tracking'),
   equipment('Equipment management'),
-  reminders('Reminder & advanced search'),
+  reminders('Reminders & global search'),
   emailSupport('Email support');
 
   const SubscriptionFeature(this.label);

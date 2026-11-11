@@ -204,6 +204,9 @@ class RemoteSubscriptionPlanCatalog implements SubscriptionPlanCatalog {
   RemoteSubscriptionPlanCatalog({SignApiClient? api})
       : _repo = RemoteSubscriptionRepository(api: api);
 
+  /// Reuse the same company-scoped repository as Subscription Overview.
+  RemoteSubscriptionPlanCatalog.fromRepository(this._repo);
+
   final RemoteSubscriptionRepository _repo;
   List<SubscriptionPlanOption> _options = const [];
 
@@ -238,6 +241,9 @@ class RemoteSubscriptionPlanCatalog implements SubscriptionPlanCatalog {
         serverPlanId: RemoteSubscriptionRepository._integer(row['id']),
         canCheckout: row['can_checkout'] == true,
         id: code, name: name, period: period, priceLabel: price,
+        amountMinor: row['amount_minor'] is num
+            ? (row['amount_minor'] as num).toInt() : null,
+        currency: RemoteSubscriptionRepository._string(row['currency']),
         description: RemoteSubscriptionRepository._string(row['description']) ?? '',
         featureLabels: List<String>.unmodifiable(featureLabels.cast<String>()),
       ));
