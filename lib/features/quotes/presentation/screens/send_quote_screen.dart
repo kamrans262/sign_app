@@ -374,6 +374,12 @@ class _SendQuoteScreenState extends State<SendQuoteScreen> {
       final service = RemoteSignatureRequestRepository.shared;
       final existing = await service.latest(_quote);
       if (!mounted) return;
+      if (existing != null && (existing.tracking.signed ||
+          existing.tracking.completed || existing.status == 'signed')) {
+        _rememberSignatureRequest(existing);
+        _notify('This quote is already signed. Open Documents to view the final PDF.');
+        return;
+      }
       if (existing != null && existing.tracking.requestIsActive) {
         _rememberSignatureRequest(existing);
         _notify('An active signing request already exists. Open View document status.');
