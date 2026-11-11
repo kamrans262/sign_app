@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/sign2digital_subscription_gate.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
 import '../../../../core/widgets/sign2digital_ai_voice_button.dart';
 import '../../../../core/widgets/sign2digital_outlined_container.dart';
@@ -277,9 +278,12 @@ class _GeneralDocumentEditorScreenState extends State<GeneralDocumentEditorScree
       });
       _notice(action=='approve'?'Document approved and locked.':
         'Document marked reviewed.');
-    }catch(_){
-      if(mounted)setState(()=>_error=
-        'Approval failed. Check permissions and current revision.');
+    }catch(error){
+      if(mounted && !await Sign2DigitalSubscriptionGate.handle(
+          context, error)){
+        setState(()=>_error=
+          'Approval failed. Check permissions and current revision.');
+      }
     }finally{
       if(mounted)setState(()=>_busy=false);
     }
