@@ -174,15 +174,17 @@ class _WorkAcceptanceEditorScreenState extends State<WorkAcceptanceEditorScreen>
         DeviceJobPhotoSource.validate(file.name,file.bytes);
       }
       final seen=_newPhotos.map((p)=>p.sourceKey).toSet();
+      final additional=<LocalJobPhotoSelection>[];
       for(final photo in files) {
-        if(seen.add(photo.sourceKey))_newPhotos.add(photo);
+        if(seen.add(photo.sourceKey))additional.add(photo);
       }
-      if(_photoIds.length+_newPhotos.length>8) {
-        _newPhotos.removeWhere((photo)=>
-            !files.any((file)=>file.sourceKey==photo.sourceKey));
+      if(_photoIds.length+_newPhotos.length+additional.length>8) {
         throw const FormatException('Select no more than eight photos.');
       }
-      setState(()=>_error=null);
+      setState(() {
+        _newPhotos.addAll(additional);
+        _error=null;
+      });
     }catch(error) {
       if(mounted)setState(()=>_error='Unable to select photos: $error');
     }finally{
@@ -262,10 +264,12 @@ class _WorkAcceptanceEditorScreenState extends State<WorkAcceptanceEditorScreen>
     try {
       // Upload only new device captures and retain each verified ID before
       // persisting the Work Acceptance relationship. A retry reuses these IDs.
-      for(final photo in _newPhotos) {
+      for(final photo in List<LocalJobPhotoSelection>.of(_newPhotos)) {
         final known=_uploadedPhotoIds[photo.sourceKey];
         if(known!=null) {
           _photoIds.add(known);
+          _savedPhotoPreviews[known]=photo.bytes;
+          _newPhotos.remove(photo);
           continue;
         }
         final uploaded=await _media.uploadPhoto(
@@ -276,6 +280,8 @@ class _WorkAcceptanceEditorScreenState extends State<WorkAcceptanceEditorScreen>
         }
         _uploadedPhotoIds[photo.sourceKey]=id;
         _photoIds.add(id);
+        _savedPhotoPreviews[id]=photo.bytes;
+        _newPhotos.remove(photo);
       }
       final existing=widget.initial;
       final result=await _repo.saveDraft(WorkAcceptanceDraft(
