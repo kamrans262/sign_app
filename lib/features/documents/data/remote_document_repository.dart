@@ -219,11 +219,12 @@ class RemoteDocumentRepository implements DocumentRepository {
         }
       }
     }
-    // M9 catalog lists quotes but has no embedded quote item model. For a
-    // draft or legacy approved quote without frozen bytes, load the actual
-    // M6 saved quote read-only. Never synthesize an approved/signed PDF.
+    // The M9 catalog has no embedded quote item model. Fetch the live,
+    // company-scoped quote for ALL quote documents, including approved quotes
+    // with immutable PDFs, so quote actions remain reachable after reopening.
+    // The PDF is still obtained and verified separately from server storage.
     QuoteReviewDraft? quoteSnapshot;
-    if (id.startsWith('quote-') && raw['has_pdf'] != true) {
+    if (id.startsWith('quote-')) {
       final quoteId = int.tryParse(id.substring('quote-'.length));
       if (quoteId == null || quoteId <= 0) {
         throw const SignApiException('Invalid quote document identity.');
