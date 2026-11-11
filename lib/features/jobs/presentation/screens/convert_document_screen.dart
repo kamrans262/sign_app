@@ -1,4 +1,5 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
+import '../../../../core/widgets/sign2digital_subscription_gate.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -186,7 +187,10 @@ class _ConvertDocumentScreenState extends State<ConvertDocumentScreen> {
                       ? 'Approved PDF saved to Documents. Nothing was sent.'
                       : 'Approved locally. Nothing was sent or signed.');
                 } catch (error) {
-                  _notify('Unable to approve document: $error');
+                  if (mounted && !await Sign2DigitalSubscriptionGate.handle(
+                      context, error)) {
+                    _notify('Unable to approve document: $error');
+                  }
                 }
               },
               child: Text(current.serverId != null
