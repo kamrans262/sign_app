@@ -114,6 +114,14 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(SiteReportReviewContent), findsOneWidget);
       expect(find.text('Custom safety inspection'), findsOneWidget);
+      // The original review uses a lazily laid-out scrolling list. Build its
+      // lower action rows by scrolling rather than assuming they are mounted.
+      await tester.scrollUntilVisible(
+        find.text(status == 'draft' ? 'Approve Report'
+            : status == 'archived' ? 'View Approved PDF' : 'Already Approved'),
+        350, scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
       if (status == 'draft') {
         expect(find.text('Edit Draft'), findsOneWidget);
         expect(find.text('Prepare with AI'), findsOneWidget);
