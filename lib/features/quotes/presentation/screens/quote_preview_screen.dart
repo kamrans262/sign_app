@@ -18,6 +18,7 @@ import '../../data/remote_quote_repository.dart';
 import '../../data/remote_in_person_signing_repository.dart';
 import '../../../../core/services/sign_api_client.dart';
 import 'send_quote_screen.dart';
+import 'signature_request_screen.dart';
 
 /// Mobile representation of the same structured quote sent to the PDF builder.
 /// A locally validated quote is not represented as server-approved or delivered.
@@ -278,6 +279,20 @@ class _QuotePreviewScreenState extends State<QuotePreviewScreen> {
     ));
   }
 
+  void _requestSignature() {
+    if (_busy) return;
+    if (_quote.isDemo || _quote.serverId == null || !_quote.approvedLocally) {
+      _message('Approve a saved quote before requesting a signature.');
+      return;
+    }
+    Sign2DigitalNavigation.push<void>(context, MaterialPageRoute<void>(
+      builder: (_) => SignatureRequestScreen(
+        quote: _quote.copy(),
+        tracking: _matchingTracking,
+      ),
+    ));
+  }
+
   TextStyle _text(double size, {Color color = AppColors.dark,
       FontWeight weight = FontWeight.w500}) => TextStyle(
     fontFamily: 'Inter', fontSize: size, fontWeight: weight, color: color,
@@ -349,6 +364,23 @@ class _QuotePreviewScreenState extends State<QuotePreviewScreen> {
               _terms(),
               const SizedBox(height: 60),
               if (widget.customerView) _customerAction() else _actions(),
+              if (!widget.customerView && !_quote.isDemo &&
+                  _quote.serverId != null && _quote.approvedLocally) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 48,
+                  child: FilledButton(
+                    key: const Key('quote-preview-request-signature'),
+                    onPressed: _busy ? null : _requestSignature,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10))),
+                    child: Text('Request Signature', textAlign: TextAlign.center,
+                      style: _text(16, color: Colors.white)),
+                  ),
+                ),
+              ],
               if (!widget.customerView &&
                    (widget.onInPersonSign != null || _inPersonReady)) ...[
                 const SizedBox(height: 12),
