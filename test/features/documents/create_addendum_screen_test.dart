@@ -170,6 +170,33 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('existing addendum shows Save and updates one record without duplicate',
+      (tester) async {
+    final repository = _InMemoryDocumentRepository(_fixtureQuotes());
+    final quote = repository.records.first;
+    AddendumDraftSession.create(AddendumDraft(
+      id: 'addendum-8', number: 'A-0008', title: 'Original work',
+      description: 'Existing signed-source change',
+      linkedDocumentId: quote.id, effectiveDate: DateTime(2026, 11, 12),
+    ));
+    await tester.pumpWidget(MaterialApp(home: CreateAddendumScreen(
+      repository: repository, linkedDocument: quote, draftId: 'addendum-8',
+    )));
+    expect(find.text('Save Addendum'), findsOneWidget);
+    expect(find.text('Create Addendum'), findsNothing);
+    expect(find.text('Original work'), findsOneWidget);
+    await tester.enterText(find.byType(TextFormField).at(1), 'Updated work');
+    await tester.ensureVisible(find.byKey(const Key('addendum-create')));
+    await tester.tap(find.byKey(const Key('addendum-create')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
+    expect(AddendumDraftSession.created, hasLength(1));
+    expect(AddendumDraftSession.load('addendum-8')!.title, 'Updated work');
+    expect(AddendumDraftSession.load('addendum-8')!.number, 'A-0008');
+    expect(find.byType(DocumentDetailsScreen), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('remove and reselect document without deleting underlying quote',
       (tester) async {
     final repository = _InMemoryDocumentRepository(_fixtureQuotes());
