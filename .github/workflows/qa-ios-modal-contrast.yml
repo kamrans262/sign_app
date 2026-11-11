@@ -1,0 +1,32 @@
+name: iOS modal and bottom-sheet contrast regression
+
+on:
+  push:
+    branches: [fix/m20-android-live-reminder-integration-2026-11-06]
+    paths:
+      - '.github/workflows/qa-ios-modal-contrast.yml'
+      - 'lib/core/widgets/sign2digital_modal_surface.dart'
+      - 'lib/core/widgets/sign2digital_styled_bottom_sheet.dart'
+      - 'lib/core/widgets/sign2digital_selection_sheet.dart'
+      - 'lib/features/quotes/presentation/widgets/sign2digital_signature_consent.dart'
+      - 'test/core/iphone_modal_contrast_test.dart'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  iOS-modal-contrast:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Analyze changed popup and sheet code
+        run: flutter analyze --no-pub --no-fatal-infos lib/core/widgets/sign2digital_modal_surface.dart lib/core/widgets/sign2digital_styled_bottom_sheet.dart lib/core/widgets/sign2digital_selection_sheet.dart lib/features/quotes/presentation/widgets/sign2digital_signature_consent.dart test/core/iphone_modal_contrast_test.dart
+      - name: Verify light and dark text visibility and unchanged modal behavior
+        run: flutter test --no-pub --concurrency=2 --timeout=2m --reporter=expanded test/core/iphone_modal_contrast_test.dart test/core/app_dialog_style_test.dart test/core/sign2digital_styled_bottom_sheet_test.dart test/core/widgets/sign2digital_selection_sheet_test.dart test/core/widgets/sign2digital_selection_sheet_uniformity_test.dart
