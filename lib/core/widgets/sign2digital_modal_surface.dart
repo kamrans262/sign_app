@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
+import '../theme/app_theme.dart';
 
 /// Shared white modal surface. Show through showDialog with a 50%-black barrier.
 class Sign2DigitalModalSurface extends StatelessWidget {
@@ -10,7 +11,9 @@ class Sign2DigitalModalSurface extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
+    return Theme(
+      data: AppTheme.light,
+      child: Dialog(
       backgroundColor: AppColors.white,
       elevation: 0,
       shadowColor: Colors.transparent,
@@ -24,6 +27,7 @@ class Sign2DigitalModalSurface extends StatelessWidget {
           padding: const EdgeInsets.all(25),
           child: child,
         ),
+      ),
       ),
     );
   }
