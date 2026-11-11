@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/dashboard_colors.dart';
+import 'sign2digital_modal_guard.dart';
 
 /// Shared Switch Company sheet appearance for every field-based option picker.
 /// This only owns the sheet chrome; callers still own their data and callbacks.
@@ -16,7 +17,9 @@ class Sign2DigitalSelectionSheet {
     String? subtitle,
     bool isScrollControlled = true,
     bool useSafeArea = true,
-  }) => showModalBottomSheet<T>(
+  }) => Sign2DigitalModalGuard.run<T>(
+    context,
+    () => showModalBottomSheet<T>(
     context: context,
     isScrollControlled: isScrollControlled,
     useSafeArea: useSafeArea,
@@ -107,6 +110,7 @@ class Sign2DigitalSelectionSheet {
           ],
         ),
       ),
+    ),
     ),
   );
 
