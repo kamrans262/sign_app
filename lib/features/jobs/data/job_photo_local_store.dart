@@ -22,6 +22,10 @@ class JobPhotoLocalStore {
     _photos.putIfAbsent(_key(jobId), () => _seed(jobId)),
   );
 
+  void remove(String jobId, String photoId) {
+    _photos[_key(jobId)]?.removeWhere((photo) => photo.id == photoId);
+  }
+
   void addAll(String jobId, Iterable<JobPhotoModel> photos) {
     final list = _photos.putIfAbsent(_key(jobId), () => _seed(jobId));
     for (final photo in photos) {
