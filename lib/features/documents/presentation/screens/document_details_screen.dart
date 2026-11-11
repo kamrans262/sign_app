@@ -17,6 +17,7 @@ import '../../../quotes/domain/quote_review_models.dart' show quoteMoney;
 import '../../../quotes/services/quote_pdf_service.dart';
 import '../../../quotes/presentation/widgets/sign2digital_financial_document_sections.dart';
 import '../../../quotes/presentation/screens/send_quote_screen.dart';
+import '../../../quotes/presentation/screens/signature_request_screen.dart';
 import '../../data/document_activity_session.dart';
 import '../../domain/document_record.dart';
 import '../../domain/addendum_draft.dart';
@@ -550,6 +551,17 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
     );
   }
 
+  void _requestQuoteSignature(DocumentRecord record) {
+    final quote = record.quote;
+    if (quote == null || !quote.approvedLocally || quote.isDemo) {
+      _message('A saved approved quote is required to request a signature.');
+      return;
+    }
+    Sign2DigitalNavigation.push<void>(context, MaterialPageRoute<void>(
+      builder: (_) => SignatureRequestScreen(quote: quote.copy()),
+    ));
+  }
+
   void _more() {
     final record = _record;
     if (record == null) return;
@@ -955,6 +967,17 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
           const SizedBox(height: 20),
           if (_tab != 3) ...[
             _actions(),
+            if (record.category == DocumentCategory.quotes &&
+                record.quote?.approvedLocally == true &&
+                record.status.toLowerCase() != 'signed' &&
+                !record.demoOnly) ...[
+              const SizedBox(height: 12),
+              Sign2DigitalPrimaryButton(
+                key: const Key('document-request-signature'),
+                label: 'Request Signature',
+                onPressed: () => _requestQuoteSignature(record),
+              ),
+            ],
             const SizedBox(height: 20),
           ],
           Stack(children: [
