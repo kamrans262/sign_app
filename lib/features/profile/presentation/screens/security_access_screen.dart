@@ -11,6 +11,8 @@ import '../../../../core/widgets/sign2digital_outlined_button.dart';
 import '../../data/security_access_repository.dart';
 import '../../data/remote_security_access_repository.dart';
 import 'change_account_password_screen.dart';
+import 'two_factor_setup_screen.dart';
+import 'two_factor_proof_screen.dart';
 import '../widgets/profile_notification_row.dart';
 import '../widgets/security_session_card.dart';
 
@@ -138,6 +140,30 @@ class _SecurityAccessScreenState extends State<SecurityAccessScreen> {
     if (!_hasPassword()) {
       return;
     }
+    final repo = widget.repository;
+    if (repo is RemoteSecurityAccessRepository) {
+      setState(() => _busy = true);
+      try {
+        final screen = enabled
+            ? TwoFactorSetupScreen(repository: repo, password: _password.text)
+            : TwoFactorProofScreen(repository: repo,
+                password: _password.text, regenerate: false);
+        final updated = await Sign2DigitalNavigation.open<bool>(context, screen);
+        if (!mounted) return;
+        await _load();
+        if (updated == true) {
+          _message(enabled
+              ? 'Authenticator enabled. Keep your recovery codes safe.'
+              : 'Two-factor authentication disabled.');
+        }
+      } catch (error) {
+        _message('Unable to complete authenticator security setup.');
+      } finally {
+        _password.clear();
+        if (mounted) setState(() => _busy = false);
+      }
+      return;
+    }
     final confirmed = await _confirm(
       title: enabled ? 'Enable Two-Factor Authentication?' :
           'Disable Two-Factor Authentication?',
@@ -173,6 +199,28 @@ class _SecurityAccessScreenState extends State<SecurityAccessScreen> {
       if (mounted) {
         setState(() => _busy = false);
       }
+    }
+  }
+
+  Future<void> _regenerateRecoveryCodes() async {
+    final repo = widget.repository;
+    if (_busy || repo is! RemoteSecurityAccessRepository ||
+        _snapshot?.twoFactorEnabled != true || !_hasPassword()) return;
+    setState(() => _busy = true);
+    try {
+      final updated = await Sign2DigitalNavigation.open<bool>(context,
+        TwoFactorProofScreen(repository: repo,
+          password: _password.text, regenerate: true));
+      if (!mounted) return;
+      if (updated == true) {
+        _message('Previous recovery codes revoked. Save the new codes securely.');
+      }
+      await _load();
+    } catch (_) {
+      _message('Unable to rotate recovery codes.');
+    } finally {
+      _password.clear();
+      if (mounted) setState(() => _busy = false);
     }
   }
 
@@ -404,9 +452,22 @@ class _SecurityAccessScreenState extends State<SecurityAccessScreen> {
                   message: snapshot.twoFactorEnabled == null
                       ? 'Sign-in already requires password and email OTP. A separate authenticator is not yet enrolled.'
                       : isTwoFactorOn
-                          ? 'Your account is protected with two factor authentication'
-                          : 'Enable verified two factor authentication for extra security',
+                          ? 'Authenticator verification is required on new sign-ins.'
+                          : 'Set up an authenticator app for extra security.',
                 ),
+                if (isTwoFactorOn &&
+                    widget.repository is RemoteSecurityAccessRepository) ...[
+                  const SizedBox(height: 12),
+                  Sign2DigitalOutlinedButton(
+                    key: const Key('m24-regenerate-recovery'),
+                    label: 'Replace Recovery Codes',
+                    enabled: !_busy,
+                    primaryOutline: true,
+                    leading: const Icon(Icons.key_outlined,
+                      size: 20, color: AppColors.primary),
+                    onPressed: _regenerateRecoveryCodes,
+                  ),
+                ],
                 if (snapshot.demoOnly) ...[
                   const SizedBox(height: 8),
                   const Text(
