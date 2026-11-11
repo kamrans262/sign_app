@@ -9,6 +9,8 @@ import '../../../../core/widgets/sign2digital_header.dart';
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import '../../domain/quote_document_tracking.dart';
 import '../../data/remote_signature_request_repository.dart';
+import '../../../documents/data/remote_document_repository.dart';
+import '../../../documents/presentation/screens/document_details_screen.dart';
 import '../../domain/quote_review_models.dart';
 import '../../domain/quote_tracking_home_session.dart';
 import '../../domain/quote_signature_draft.dart';
@@ -46,7 +48,7 @@ class SignatureRequestScreen extends StatefulWidget {
   State<SignatureRequestScreen> createState() => _SignatureRequestScreenState();
 }
 
-class _SignatureRequestScreenState extends State<SignatureRequestScreen> {
+class _SignatureRequestScreenState extends State<SignatureRequestScreen> with WidgetsBindingObserver {
   late final QuoteReviewDraft _quote = widget.quote.copy();
   late QuoteDocumentTracking _tracking;
   late bool _remindersEnabled;
@@ -60,10 +62,26 @@ class _SignatureRequestScreenState extends State<SignatureRequestScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _tracking = widget.tracking ?? QuoteDocumentTracking(quoteId: _quote.id);
     _remindersEnabled = QuoteReminderPreferences.getEnabled(_quote.id);
     if (_quote.serverId != null && _quote.approvedLocally && !_quote.isDemo) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _loadRemoteRequest());
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed &&
+        _quote.serverId != null && _quote.approvedLocally &&
+        !_quote.isDemo) {
+      _loadRemoteRequest();
     }
   }
 
@@ -231,21 +249,17 @@ class _SignatureRequestScreenState extends State<SignatureRequestScreen> {
       _notify('Resending requires an active signature request.');
       return;
     }
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Resend signature request?'),
-        content: Text('Email another signing request to ${_quote.clientName}? '
-            'The previous link will stop working.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text('Resend')),
-        ],
-      ),
+    // Existing approved selection sheet instead of a new/default dialog.
+    final choice = await Sign2DigitalSelectionSheet.show(
+      context,
+      title: 'Resend signature request?',
+      subtitle: 'Email another signing request to ${_quote.clientName}? '
+          'The previous link will stop working.',
+      icon: Icons.mail_outline,
+      options: const ['Resend Request'],
+      iconForOption: (_) => Icons.send_outlined,
     );
-    if (confirmed != true || !mounted) return;
+    if (choice != 'Resend Request' || !mounted) return;
     setState(() => _resending = true);
     try {
       if (_serverRequestId != null) {
@@ -285,18 +299,54 @@ class _SignatureRequestScreenState extends State<SignatureRequestScreen> {
     QuoteTrackingHomeSession.rememberVerifiedTracking(_tracking);
   }
 
-  void _viewDocument() {
-    Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
-      builder: (_) => CustomerDocumentViewScreen(
-        quote: _quote.copy(),
-        documentTitle: 'Quote',
-        tracking: _tracking,
-        signingContext: widget.signingContext,
-        onSubmitSignature: widget.onSubmitSignature,
-        onSubmitVerifiedSignature: widget.onSubmitVerifiedSignature,
-        onVerifiedSignature: _verifiedSigned,
-      ),
-    ));
+  Future<void> _viewDocument() async {
+    if (_tracking.signed || _tracking.completed) {
+      final quoteId = _quote.serverId;
+      if (quoteId == null || _quote.isDemo) {
+        _notify('Open Documents to view the verified signed quote.');
+        return;
+      }
+      try {
+        final original = await RemoteDocumentRepository.shared.details('quote-$quoteId');
+        if (!mounted) return;
+        final linked = original.related.where((record) =>
+            RegExp(r'^signed-[1-9][0-9]*$').hasMatch(record.id) &&
+            record.status.toLowerCase() == 'signed' &&
+            record.verifiedSignedPdfAvailable &&
+            record.number == original.number &&
+            record.jobId == original.jobId).toList();
+        if (linked.length != 1) {
+          _notify('No verified signed document is available yet.');
+          return;
+        }
+        final signed = linked.single;
+        await Sign2DigitalNavigation.push<void>(context, MaterialPageRoute<void>(
+          builder: (_) => DocumentDetailsScreen(
+            documentId: signed.id,
+            document: signed,
+            loadDocument: RemoteDocumentRepository.shared.details,
+            loadSignedPdf: RemoteDocumentRepository.shared.downloadPdf,
+          ),
+        ));
+      } catch (_) {
+        if (mounted) _notify('Could not open the verified signed document.');
+      }
+    } else {
+      await Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
+        builder: (_) => CustomerDocumentViewScreen(
+          quote: _quote.copy(),
+          documentTitle: 'Quote',
+          tracking: _tracking,
+          signingContext: widget.signingContext,
+          onSubmitSignature: widget.onSubmitSignature,
+          onSubmitVerifiedSignature: widget.onSubmitVerifiedSignature,
+          onVerifiedSignature: _verifiedSigned,
+        ),
+      ));
+    }
+    if (mounted && _quote.serverId != null && !_quote.isDemo) {
+      await _loadRemoteRequest();
+    }
   }
 
   void _selectTab(int index) {
