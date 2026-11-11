@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -9,6 +11,9 @@ import '../../../../core/widgets/sign2digital_outlined_button.dart';
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import '../../../jobs/data/remote_job_repository.dart';
 import '../../../jobs/data/remote_job_media_repository.dart';
+import '../../../jobs/data/local_job_photo_source.dart';
+import '../../../jobs/domain/job_photo_model.dart';
+import '../../../jobs/presentation/widgets/sign2digital_photo_preview.dart';
 import '../../../jobs/domain/job_model.dart';
 import '../../data/remote_work_acceptance_repository.dart';
 
@@ -16,10 +21,13 @@ import '../../data/remote_work_acceptance_repository.dart';
 class WorkAcceptanceEditorScreen extends StatefulWidget {
   const WorkAcceptanceEditorScreen({
     super.key, this.initial, this.initialJobId, this.repository,
+    this.photoSource, this.mediaRepository,
   });
   final WorkAcceptanceDraft? initial;
   final String? initialJobId;
   final RemoteWorkAcceptanceRepository? repository;
+  final JobPhotoSource? photoSource;
+  final RemoteJobMediaRepository? mediaRepository;
 
   @override
   State<WorkAcceptanceEditorScreen> createState() => _WorkAcceptanceEditorScreenState();
@@ -32,14 +40,20 @@ class _WorkAcceptanceEditorScreenState extends State<WorkAcceptanceEditorScreen>
   DateTime _completed=DateTime.now();
   String _cleaning='cleaned';
   final Set<int> _photoIds={};
+  final List<LocalJobPhotoSelection> _newPhotos=[];
+  final Map<int,Uint8List> _savedPhotoPreviews={};
+  final Map<String,int> _uploadedPhotoIds={};
+  bool _picking=false;
   bool _busy=false;
   String? _error;
   late final RemoteWorkAcceptanceRepository _repo;
+  late final RemoteJobMediaRepository _media;
 
   @override
   void initState() {
     super.initState();
     _repo=widget.repository??RemoteWorkAcceptanceRepository.shared;
+    _media=widget.mediaRepository??RemoteJobMediaRepository.shared;
     final v=widget.initial;
     if(v!=null) {
       _work.text=v.completedWork;_issues.text=v.outstandingIssues;
@@ -54,6 +68,9 @@ class _WorkAcceptanceEditorScreenState extends State<WorkAcceptanceEditorScreen>
           if(mounted) {
             final matching=jobs.where((x)=>x.id==selected);
             setState(() { _job=matching.isEmpty?null:matching.first; });
+            if (_job != null && _photoIds.isNotEmpty) {
+              await _restoreSelectedPreviews();
+            }
           }
         }catch(error) {
           if(mounted)setState(()=>_error='Unable to load linked job: $error');
@@ -85,51 +102,131 @@ class _WorkAcceptanceEditorScreenState extends State<WorkAcceptanceEditorScreen>
         ]),
       );
       if(result!=null&&mounted) {
-        setState(() { _job=result;_photoIds.clear();_error=null; });
+        setState(() { _job=result;_photoIds.clear();
+          _savedPhotoPreviews.clear();_newPhotos.clear();
+          _uploadedPhotoIds.clear();_error=null; });
       }
     }catch(error){
       if(mounted)setState(()=>_error='Unable to select company job: $error');
     }
   }
 
-  Future<void> _choosePhotos() async {
-    if(_job==null) { setState(()=>_error='Select a job before photos.');return; }
+  /// Only already-linked acceptance images are reloaded for draft editing.
+  /// The user is never shown the Job Photos library as a picker.
+  Future<void> _restoreSelectedPreviews() async {
+    final job=_job;
+    if(job==null||_photoIds.isEmpty)return;
     try {
-      final photos=await RemoteJobMediaRepository.shared.listPhotos(_job!.id);
+      final saved=await _media.listPhotos(job.id);
       if(!mounted)return;
-      final chosen=<int>{..._photoIds};
-      final selected=await Sign2DigitalSelectionSheet.showCustom<bool>(
-        context:context,title:'Select Job Photos',
-        icon:Icons.photo_library_outlined,subtitle:'Up to 8 saved job photos',
-        builder:(sheet)=>StatefulBuilder(builder:(context,update)=>Column(
-          mainAxisSize:MainAxisSize.min,children:[
-            Flexible(child:ListView(shrinkWrap:true,children:[
-              for(final photo in photos)CheckboxListTile(
-                title:Text(photo.title),
-                subtitle:Text(photo.caption??photo.category.name),
-                secondary:photo.bytes==null?null:Image.memory(photo.bytes!,
-                  width:50,height:50,fit:BoxFit.cover),
-                value:chosen.contains(int.tryParse(photo.id)),
-                onChanged:(value) {
-                  final id=int.tryParse(photo.id);
-                  if(id==null)return;
-                  if(value==true&&chosen.length>=8&&!chosen.contains(id))return;
-                  update(() { if(value==true) {chosen.add(id);} else {chosen.remove(id);} });
-                },
-              ),
-            ])),
-            Padding(padding:const EdgeInsets.all(20),
-              child:Sign2DigitalPrimaryButton(label:'Use Selected Photos',
-                onPressed:()=>Navigator.of(sheet).pop(true))),
-          ],
-        )),
-      );
-      if(selected==true&&mounted) {
-        setState(() { _photoIds..clear()..addAll(chosen); });
-      }
+      setState(() {
+        for(final photo in saved) {
+          final id=int.tryParse(photo.id);
+          if(id!=null && _photoIds.contains(id) && photo.bytes!=null) {
+            _savedPhotoPreviews[id]=photo.bytes!;
+          }
+        }
+      });
     }catch(error) {
-      if(mounted)setState(()=>_error='Unable to load job photos: $error');
+      if(mounted)setState(()=>_error=
+          'Some saved acceptance photos could not be previewed: $error');
     }
+  }
+
+  Future<void> _choosePhotos() async {
+    if(_busy||_picking)return;
+    if(_job==null) {
+      setState(()=>_error='Select a job before adding photos.');
+      return;
+    }
+    final camera=await Sign2DigitalSelectionSheet.showCustom<bool>(
+      context:context,title:'Select Photos',
+      icon:Icons.photo_library_outlined,
+      subtitle:'Take a photo or choose from your device',
+      builder:(sheet)=>Column(mainAxisSize:MainAxisSize.min,children:[
+        ListTile(
+          key:const Key('acceptance-choose-camera'),
+          leading:const Icon(Icons.photo_camera_outlined),
+          title:const Text('Camera'),
+          onTap:()=>Navigator.of(sheet).pop(true),
+        ),
+        ListTile(
+          key:const Key('acceptance-choose-gallery'),
+          leading:const Icon(Icons.photo_library_outlined),
+          title:const Text('Gallery'),
+          onTap:()=>Navigator.of(sheet).pop(false),
+        ),
+      ]),
+    );
+    if(camera==null||!mounted)return;
+    setState(()=>_picking=true);
+    try {
+      final source=widget.photoSource??DeviceJobPhotoSource();
+      final files=<LocalJobPhotoSelection>[];
+      if(camera) {
+        final item=await source.camera();
+        if(item!=null)files.add(item);
+      }else{
+        files.addAll(await source.upload());
+      }
+      if(!mounted||files.isEmpty)return;
+      for(final file in files) {
+        DeviceJobPhotoSource.validate(file.name,file.bytes);
+      }
+      final seen=_newPhotos.map((p)=>p.sourceKey).toSet();
+      for(final photo in files) {
+        if(seen.add(photo.sourceKey))_newPhotos.add(photo);
+      }
+      if(_photoIds.length+_newPhotos.length>8) {
+        _newPhotos.removeWhere((photo)=>
+            !files.any((file)=>file.sourceKey==photo.sourceKey));
+        throw const FormatException('Select no more than eight photos.');
+      }
+      setState(()=>_error=null);
+    }catch(error) {
+      if(mounted)setState(()=>_error='Unable to select photos: $error');
+    }finally{
+      if(mounted)setState(()=>_picking=false);
+    }
+  }
+
+  Widget _photoGrid() {
+    final existing=_photoIds.toList()..sort();
+    final count=existing.length+_newPhotos.length;
+    if(count==0)return const SizedBox.shrink();
+    return Padding(
+      padding:const EdgeInsets.only(bottom:15),
+      child:GridView.builder(
+        key:const Key('acceptance-photo-grid'),
+        shrinkWrap:true,
+        physics:const NeverScrollableScrollPhysics(),
+        gridDelegate:const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount:2,
+          mainAxisSpacing:10,
+          crossAxisSpacing:15,
+          childAspectRatio:188/118,
+        ),
+        itemCount:count,
+        itemBuilder:(context,index) {
+          final saved=index<existing.length;
+          final id=saved?existing[index]:null;
+          final photo=saved?null:_newPhotos[index-existing.length];
+          return Sign2DigitalPhotoPreview(
+            key:Key('acceptance-photo-$index'),
+            bytes:saved?_savedPhotoPreviews[id]:photo!.bytes,
+            showDemo:false,compactTile:true,
+            onRemove:()=>setState(() {
+              if(saved) {
+                _photoIds.remove(id);
+                _savedPhotoPreviews.remove(id);
+              } else {
+                _newPhotos.removeAt(index-existing.length);
+              }
+            }),
+          );
+        },
+      ),
+    );
   }
 
   Future<void> _chooseCleaning() async {
@@ -163,6 +260,23 @@ class _WorkAcceptanceEditorScreenState extends State<WorkAcceptanceEditorScreen>
     }
     setState(() { _busy=true;_error=null; });
     try {
+      // Upload only new device captures and retain each verified ID before
+      // persisting the Work Acceptance relationship. A retry reuses these IDs.
+      for(final photo in _newPhotos) {
+        final known=_uploadedPhotoIds[photo.sourceKey];
+        if(known!=null) {
+          _photoIds.add(known);
+          continue;
+        }
+        final uploaded=await _media.uploadPhoto(
+          _job!.id,photo,JobPhotoCategory.after,'Work acceptance photo');
+        final id=int.tryParse(uploaded.id);
+        if(id==null||id<=0) {
+          throw StateError('Acceptance photo upload was not verified.');
+        }
+        _uploadedPhotoIds[photo.sourceKey]=id;
+        _photoIds.add(id);
+      }
       final existing=widget.initial;
       final result=await _repo.saveDraft(WorkAcceptanceDraft(
         id:existing?.id,revision:existing?.revision??1,
@@ -211,9 +325,12 @@ class _WorkAcceptanceEditorScreenState extends State<WorkAcceptanceEditorScreen>
           _input('Outstanding Issues',_issues),
           _input('Required Remedial Work',_remedial),
           Sign2DigitalOutlinedButton(
-            label:'Select Job Photos (${_photoIds.length}/8)',
+            key:const Key('acceptance-select-photos'),
+            label:'Select Photos (${_photoIds.length+_newPhotos.length}/8)',
+            enabled:!_busy&&!_picking,
             onPressed:_choosePhotos),
           const SizedBox(height:15),
+          _photoGrid(),
           if(_error!=null)Padding(padding:const EdgeInsets.only(bottom:15),
             child:Text(_error!,style:const TextStyle(
               fontFamily:'Inter',color:Color(0xFFB42318)))),
