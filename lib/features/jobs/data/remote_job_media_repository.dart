@@ -51,6 +51,7 @@ class RemoteJobMediaRepository {
         'before' => JobPhotoCategory.before,
         'during' => JobPhotoCategory.during,
         'after' => JobPhotoCategory.after,
+        null || '' => JobPhotoCategory.during,
         _ => throw const SignApiException('Invalid photo category.'),
       };
 
@@ -113,6 +114,18 @@ class RemoteJobMediaRepository {
       title: caption.trim().isEmpty ? 'Front View' : caption.trim(),
       caption: caption.trim(), category: category,
       createdAt: DateTime.now(), bytes: file.bytes, sourceKey: file.sourceKey);
+  }
+
+  Future<void> deletePhoto(JobPhotoModel photo) async {
+    final company = _company();
+    final id = int.tryParse(photo.id);
+    final jobId = int.tryParse(photo.jobId);
+    if (id == null || id <= 0 || jobId == null || jobId <= 0) {
+      throw const SignApiException('Only saved company photos can be deleted.');
+    }
+    await _api.delete('/api/v1/jobs/$jobId/photos/$id',
+      companyScoped: true);
+    _check(company);
   }
 
   JobNoteModel _note(Object? raw, int company, String jobId) {
