@@ -14,6 +14,30 @@ import '../../data/remote_company_repository.dart';
 /// M3 team management built with the approved Sign2Digital header, cards,
 /// shared Switch Company bottom sheet and existing primary color.
 class CompanyTeamScreen extends StatefulWidget {
+  /// Presentation-only permission labels; server keys stay unchanged.
+  static String permissionLabel(String key) {
+    final parts = key.split('.');
+    if (parts.length != 2) return key;
+    final area = switch (parts[0]) {
+      'clients' => 'Clients',
+      'jobs' => 'Jobs',
+      'documents' => 'Documents',
+      'quotes' => 'Quotes',
+      'invoices' => 'Invoices',
+      'reports' => 'Reports',
+      'expenses' => 'Expenses',
+      'labour' => 'Time & Labour',
+      'equipment' => 'Equipment',
+      _ => parts[0],
+    };
+    final action = switch (parts[1]) {
+      'read' => 'View',
+      'write' => 'Manage',
+      _ => parts[1],
+    };
+    return '$action $area';
+  }
+
   const CompanyTeamScreen({
     super.key,
     required this.companyId,
@@ -121,7 +145,7 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
               for (final permission in permissionOptions)
                 CheckboxListTile(
                   key: Key('team-permission-$permission'),
-                  title: Text(permission.replaceAll('.', ' · '),
+                  title: Text(CompanyTeamScreen.permissionLabel(permission),
                     style: const TextStyle(fontFamily: 'Inter', fontSize: 14,
                       color: AppColors.dark)),
                   activeColor: AppColors.primary,
