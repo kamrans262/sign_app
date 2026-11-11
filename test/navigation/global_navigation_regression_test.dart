@@ -59,8 +59,13 @@ void main() {
         child: const Text('Open'),
       )),
     )));
-    await tester.tap(find.byKey(const Key('open-destination')));
-    await tester.tap(find.byKey(const Key('open-destination')));
+    final open = tester.widget<ElevatedButton>(
+      find.byKey(const Key('open-destination')));
+    // Invoke the same action twice in the same frame. The second widget
+    // becomes obscured after the push, so a second screen tap is not
+    // a reliable way to reproduce rapid repeated callbacks.
+    open.onPressed!();
+    open.onPressed!();
     await _frame(tester);
     expect(find.byType(_PushedPage), findsOneWidget);
     expect(observer.pushCount, 2); // Initial route + one detail route.
@@ -133,24 +138,15 @@ void main() {
 
     // Android system Back works even when the approved header has no
     // standard Material/Cupertino AppBar back icon.
-    final addRouteBefore = ModalRoute.of(
-      tester.element(find.byType(AddInvoiceScreen)),
-    );
-    debugPrint('system back: before route=${addRouteBefore.runtimeType}, isCurrent=${addRouteBefore?.isCurrent}, canPop=${Navigator.of(tester.element(find.byType(AddInvoiceScreen))).canPop()}');
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
-    if (find.byType(AddInvoiceScreen).evaluate().isNotEmpty) {
-      final addRouteAfter = ModalRoute.of(
-        tester.element(find.byType(AddInvoiceScreen)),
-      );
-      debugPrint('system back: after route=${addRouteAfter.runtimeType}, isCurrent=${addRouteAfter?.isCurrent}, canPop=${Navigator.of(tester.element(find.byType(AddInvoiceScreen))).canPop()}');
-    }
     expect(find.byType(InvoicesScreen), findsOneWidget);
     expect(find.byType(AddInvoiceScreen), findsNothing);
 
     // The highlighted More tab must not be inert on a child route.
-    await tester.tap(find.byKey(const Key('dashboard-tab-4')).last);
-    await _frame(tester);
+    await tester.tap(
+      find.byKey(const Key('dashboard-tab-4')).hitTestable().last);
+    await tester.pumpAndSettle();
     expect(find.byType(MoreScreen), findsOneWidget);
     expect(find.byType(InvoicesScreen), findsNothing);
     expect(find.byType(AddInvoiceScreen), findsNothing);
@@ -163,8 +159,9 @@ void main() {
     await tester.tap(find.byKey(const Key('invoices-create')));
     await _frame(tester);
     expect(find.byType(AddInvoiceScreen), findsOneWidget);
-    await tester.tap(find.byKey(const Key('dashboard-tab-4')).last);
-    await _frame(tester);
+    await tester.tap(
+      find.byKey(const Key('dashboard-tab-4')).hitTestable().last);
+    await tester.pumpAndSettle();
     expect(find.byType(MoreScreen), findsOneWidget);
     expect(find.byType(InvoicesScreen), findsNothing);
 
