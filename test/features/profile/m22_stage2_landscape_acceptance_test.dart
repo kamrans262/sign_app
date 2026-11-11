@@ -6,6 +6,10 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
 import 'package:sign2digital/core/services/sign_api_client.dart';
+import 'package:sign2digital/core/widgets/sign2digital_input_field.dart';
+import 'package:sign2digital/core/widgets/sign2digital_selection_field.dart';
+import 'package:sign2digital/core/widgets/sign2digital_primary_button.dart';
+import 'package:sign2digital/core/widgets/sign2digital_outlined_button.dart';
 import 'package:sign2digital/features/auth/data/demo_account_repository.dart';
 import 'package:sign2digital/features/auth/data/remote_account_repository.dart';
 import 'package:sign2digital/features/profile/data/app_settings_repository.dart';
@@ -134,6 +138,81 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.getSize(find.byKey(const Key('m22-email-password'))).width,
       greaterThan(1000));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('security and verification fields use approved icon input and primary action',
+      (tester) async {
+    await tester.pumpWidget(const MaterialApp(
+      home: ChangeAccountPasswordScreen()));
+    await tester.pumpAndSettle();
+    for (final entry in [
+      (const Key('m22-pass-current'), Icons.lock_outline_rounded),
+      (const Key('m22-pass-new'), Icons.key_outlined),
+      (const Key('m22-pass-confirm'), Icons.verified_user_outlined),
+    ]) {
+      expect(tester.widget<Sign2DigitalInputField>(
+          find.byKey(entry.$1)).leadingIcon, entry.$2);
+    }
+    expect(find.byKey(const Key('m22-pass-save')), findsOneWidget);
+    expect(tester.widget<Sign2DigitalPrimaryButton>(
+        find.byKey(const Key('m22-pass-save'))).label, 'Change Password');
+
+    await tester.pumpWidget(MaterialApp(
+      home: VerifiedEmailChangeScreen(
+        newEmail: 'verified@example.test',
+        repository: RemoteAccountRepository())));
+    await tester.pumpAndSettle();
+    expect(tester.widget<Sign2DigitalInputField>(
+        find.byKey(const Key('m22-email-password'))).leadingIcon,
+        Icons.lock_outline_rounded);
+    expect(tester.widget<Sign2DigitalPrimaryButton>(
+        find.byKey(const Key('m22-email-next'))).label,
+        'Send verification code');
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('support form uses icon fields and approved action buttons',
+      (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      home: NewSupportTicketScreen(repository: _support())));
+    await tester.pumpAndSettle();
+    expect(tester.widget<Sign2DigitalSelectionField>(
+        find.byKey(const Key('m22-support-category'))).leadingIcon,
+        Icons.support_agent_outlined);
+    expect(tester.widget<Sign2DigitalInputField>(
+        find.byKey(const Key('m22-support-subject'))).leadingIcon,
+        Icons.subject_outlined);
+    expect(tester.widget<Sign2DigitalInputField>(
+        find.byKey(const Key('m22-support-description'))).leadingIcon,
+        Icons.description_outlined);
+    expect(find.byKey(const Key('m22-support-screenshot')), findsOneWidget);
+    expect(tester.widget<Sign2DigitalOutlinedButton>(
+        find.byKey(const Key('m22-support-screenshot'))).primaryOutline,
+        isTrue);
+    expect(tester.widget<Sign2DigitalPrimaryButton>(
+        find.byKey(const Key('m22-support-submit'))).label,
+        'Submit Support Ticket');
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('privacy actions keep branded primary and destructive buttons',
+      (tester) async {
+    await tester.pumpWidget(const MaterialApp(
+      home: PrivacyDataScreen()));
+    await tester.pumpAndSettle();
+    expect(tester.widget<Sign2DigitalPrimaryButton>(
+        find.byKey(const Key('m22-privacy-export'))).label,
+        'Copy My Account Data');
+    expect(tester.widget<Sign2DigitalOutlinedButton>(
+        find.byKey(const Key('m22-privacy-deactivate'))).primaryOutline,
+        isTrue);
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('m22-privacy-delete')), 160,
+      scrollable: find.byType(Scrollable).first);
+    expect(tester.widget<Sign2DigitalOutlinedButton>(
+        find.byKey(const Key('m22-privacy-delete'))).destructive,
+        isTrue);
     expect(tester.takeException(), isNull);
   });
 
