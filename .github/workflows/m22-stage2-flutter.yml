@@ -25,7 +25,7 @@ jobs:
           dart analyze --fatal-infos lib/features/profile lib/features/auth/data/mobile_auth_repository.dart lib/features/auth/data/remote_account_repository.dart lib/core/services/sign_api_client.dart test/features/profile/m22_stage2_landscape_acceptance_test.dart
       - name: Stage 1 and Stage 2 screen and security integration tests
         run: |
-          timeout --signal=TERM --kill-after=10s 480s flutter test --no-pub --concurrency=2 --timeout=75s --reporter=expanded test/features/profile test/features/auth/mobile_auth_repository_test.dart
+          timeout --signal=TERM --kill-after=10s 480s flutter test --no-pub --concurrency=2 --timeout=75s --reporter=expanded test/features/profile test/core/widgets/sign2digital_field_icon_visibility_test.dart test/features/auth/mobile_auth_repository_test.dart
       - name: M21 global search UI regression
         run: |
           timeout --signal=TERM --kill-after=10s 300s flutter test --no-pub --concurrency=2 --timeout=60s test/features/global_search
