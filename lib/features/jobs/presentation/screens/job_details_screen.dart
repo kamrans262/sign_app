@@ -31,6 +31,7 @@ import '../../../../core/services/active_company_session.dart';
 import '../../../documents/domain/document_record.dart';
 import '../../../quotes/data/signed_quote_file_store.dart';
 import '../../../clients/domain/client_profile.dart';
+import '../../../auth/data/mobile_auth_repository.dart';
 import '../widgets/sign2digital_job_financial_card.dart';
 import '../widgets/sign2digital_job_progress_indicator.dart';
 import '../widgets/sign2digital_job_section_card.dart';
@@ -98,6 +99,9 @@ class JobDetailsScreen extends StatelessWidget {
   }
 
 
+  bool get _persistedLiveJob => MobileAuthRepository.shared.isSignedIn &&
+      int.tryParse(job.id) != null;
+
   Future<void> _openSection(BuildContext context, JobSection section) async {
     if (onSectionTap != null) {
       onSectionTap!(section);
@@ -106,7 +110,7 @@ class JobDetailsScreen extends StatelessWidget {
     if (section == JobSection.quotes) {
       // Offer existing real quotes without replacing the original Create Quote
       // route or introducing a separate, inconsistent UI design.
-      if (onManageJob != null) {
+      if (onManageJob != null || _persistedLiveJob) {
         try {
           final saved = await RemoteQuoteRepository.shared.listQuotes(jobId:job.id);
           if (!context.mounted) return;
@@ -182,7 +186,7 @@ class JobDetailsScreen extends StatelessWidget {
     if (section == JobSection.documents) {
       // The real job dossier includes every company-scoped document, not
       // only signed quote PDFs. Reuse the approved Documents screen and API.
-      if (onManageJob != null) {
+      if (onManageJob != null || _persistedLiveJob) {
         await Sign2DigitalNavigation.push<void>(context, MaterialPageRoute<void>(
           builder: (_) => Scaffold(
             backgroundColor: AppColors.white,
