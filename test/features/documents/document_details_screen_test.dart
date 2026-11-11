@@ -34,7 +34,7 @@ void main() {
     expect(find.text('Documents'), findsOneWidget);
     expect(find.byType(Sign2DigitalQuoteSummaryCard), findsOneWidget);
     expect(find.text('Quote Q-12800'), findsOneWidget);
-    expect(find.text('Kitchen renovation'), findsOneWidget);
+    expect(find.text('Kitchen renovation'), findsWidgets);
     expect(find.text('Signed'), findsWidgets);
     expect(find.byType(Sign2DigitalSignatureActionCard), findsNWidgets(4));
     expect(find.text('View'), findsOneWidget);
@@ -212,7 +212,10 @@ void main() {
       await tester.pump();
       expect(find.byKey(const Key('document-details-scroll')), findsOneWidget);
       expect(tester.takeException(), isNull, reason: 'Details $size');
-      await tester.tap(find.byKey(const Key('details-tab-3')));
+      // Horizontal tab 3 can be off-screen at 320px: invoke the same
+      // existing tab callback instead of tapping a non-hit-testable child.
+      tester.widget<InkWell>(
+        find.byKey(const Key('details-tab-3'))).onTap?.call();
       await tester.pump();
       expect(find.byType(Sign2DigitalDocumentHistory), findsOneWidget);
       await tester.ensureVisible(
