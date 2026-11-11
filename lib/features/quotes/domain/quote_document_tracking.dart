@@ -2,6 +2,7 @@
 /// Status is derived from authenticated events and request expiration, not UI taps.
 enum QuoteSignatureStatus {
   draft('Draft'),
+  readyToShare('Ready to Share'),
   sent('Sent'),
   viewed('Viewed'),
   awaitingSignature('Awaiting Signature'),
@@ -75,18 +76,24 @@ class QuoteDocumentTracking {
     if (requestId != null && expiresAt != null && !now.isBefore(expiresAt!)) {
       return QuoteSignatureStatus.expired;
     }
+    if (viewed) return QuoteSignatureStatus.viewed;
     if (requestId != null &&
         timeOf(QuoteDocumentEventType.signatureRequested) != null && sent) {
       return QuoteSignatureStatus.awaitingSignature;
     }
-    if (viewed) return QuoteSignatureStatus.viewed;
     if (sent) return QuoteSignatureStatus.sent;
+    if (requestId != null &&
+        timeOf(QuoteDocumentEventType.signatureRequested) != null) {
+      return QuoteSignatureStatus.readyToShare;
+    }
     return QuoteSignatureStatus.draft;
   }
 
-  // A verified customer view is sufficient after an owner shares a secure
-  // link manually; a native share-sheet is not evidence of delivery.
-  bool get requestIsActive => requestId != null && (sent || viewed) && !signed && !completed &&
+  // A server-issued link is active even before an email or manual delivery
+  // is confirmed. Do not claim sent; the status remains Ready to Share.
+  bool get requestIsActive => requestId != null &&
+      timeOf(QuoteDocumentEventType.signatureRequested) != null &&
+      !signed && !completed &&
       (expiresAt == null || DateTime.now().isBefore(expiresAt!));
 
   Uri? usableUrl(DateTime now) {
