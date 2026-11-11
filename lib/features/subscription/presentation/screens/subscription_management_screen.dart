@@ -235,8 +235,17 @@ class _SubscriptionManagementScreenState
     ],
   );
 
+  // A free allowance, administrative grant or unverified provider state
+  // is not a paid subscription that the user can cancel.
+  bool get _canCancelSubscription {
+    final current = _data;
+    if (current == null || !current.canManageBilling) return false;
+    return const {'active', 'trialing', 'past_due', 'unpaid'}
+        .contains(current.status?.toLowerCase().trim());
+  }
+
   Future<void> _cancelSubscription() async {
-    if (_cancelling || _data == null) return;
+    if (_cancelling || !_canCancelSubscription) return;
     final approved = await showDialog<bool>(
       context: context,
       builder: (dialog) => AlertDialog(
@@ -284,8 +293,9 @@ class _SubscriptionManagementScreenState
   }
 
   Future<void> _resumeSubscription() async {
-    if (_cancelling || _repository is! RemoteSubscriptionRepository ||
-        _data?.canManageBilling != true) {
+    if (_cancelling || !_canCancelSubscription ||
+        _repository is! RemoteSubscriptionRepository ||
+        _data?.cancelAtPeriodEnd != true) {
       return;
     }
     setState(()=>_cancelling=true);
@@ -380,18 +390,20 @@ class _SubscriptionManagementScreenState
                   icon: Icons.format_list_bulleted_rounded,
                   onTap: _usage,
                 ),
-                const SizedBox(height: 20),
-                SubscriptionManagementActionCard(
-                  key: const Key('subscription-action-cancel'),
-                  title: _data!.cancelAtPeriodEnd
-                      ? 'Cancellation Scheduled' : 'Cancel Subscription',
-                  subtitle: _data!.cancelAtPeriodEnd
-                      ? 'Access continues until your verified period ends'
-                      : 'Cancel at the end of the billing period',
-                  icon: Icons.cancel_outlined,
-                  onTap: _cancelling ? () {} : (_data!.cancelAtPeriodEnd
-                      ? _resumeSubscription : _cancelSubscription),
-                ),
+                if (_canCancelSubscription) ...[
+                  const SizedBox(height: 20),
+                  SubscriptionManagementActionCard(
+                    key: const Key('subscription-action-cancel'),
+                    title: _data!.cancelAtPeriodEnd
+                        ? 'Cancellation Scheduled' : 'Cancel Subscription',
+                    subtitle: _data!.cancelAtPeriodEnd
+                        ? 'Access continues until your verified period ends'
+                        : 'Cancel at the end of the billing period',
+                    icon: Icons.cancel_outlined,
+                    onTap: _cancelling ? () {} : (_data!.cancelAtPeriodEnd
+                        ? _resumeSubscription : _cancelSubscription),
+                  ),
+                ],
               ],
             ],
           ),
