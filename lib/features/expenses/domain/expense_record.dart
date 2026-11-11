@@ -42,6 +42,7 @@ class ExpenseRecord {
     required this.date,
     required this.status,
     this.description = '',
+    this.customCategory = '',
     this.supplier = '',
     this.lockVersion = 1,
     this.demoOnly = true,
@@ -66,7 +67,12 @@ class ExpenseRecord {
   final DateTime date;
   final ExpenseStatus status;
   final String description;
+  /// Optional name when Other is selected; legacy records may be empty.
+  final String customCategory;
   final String supplier;
+  String get displayCategory => category == ExpenseCategory.other &&
+          customCategory.trim().isNotEmpty
+      ? customCategory.trim() : category.label;
   final int lockVersion;
   final bool demoOnly;
   final String? jobId;
@@ -82,13 +88,15 @@ class ExpenseRecord {
   bool matches(String input) {
     final query = input.trim().toLowerCase();
     if (query.isEmpty) return true;
-    return [id, title, category.label, job, report, status.label, supplier, description, ...tags]
+    return [id, title, category.label, displayCategory, job, report,
+        status.label, supplier, description, ...tags]
         .any((value) => value.toLowerCase().contains(query));
   }
 
   ExpenseRecord copyWith({
     ExpenseCategory? category, String? title, String? job, String? jobId,
     String? report, double? amount, DateTime? date, String? description,
+    String? customCategory,
     List<LocalJobPhotoSelection>? photos, List<String>? tags,
     String? supplier, DateTime? updatedAt, List<ExpenseHistoryEvent>? history,
     bool? reimbursementRequested,
@@ -99,6 +107,7 @@ class ExpenseRecord {
     amount: amount ?? this.amount, date: date ?? this.date,
     status: status, demoOnly: demoOnly,
     description: description ?? this.description,
+    customCategory: customCategory ?? this.customCategory,
     supplier: supplier ?? this.supplier, lockVersion: lockVersion,
     photos: photos ?? this.photos, tags: tags ?? this.tags,
     clientName: clientName, approvedBy: approvedBy, approvedAt: approvedAt,
