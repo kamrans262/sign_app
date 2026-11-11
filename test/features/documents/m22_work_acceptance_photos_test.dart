@@ -143,6 +143,12 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(Sign2DigitalPhotoPreview), findsNWidgets(2));
 
+    // The editor uses lazy scrolling. Return to Completed Work before
+    // entering text; otherwise the first mounted TextFormField may belong
+    // to the lower Remedial Work field.
+    await tester.scrollUntilVisible(find.text('Completed Work'), -160,
+      scrollable: find.byType(Scrollable).first);
+    await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextFormField).first,'Roof finished');
     await tester.scrollUntilVisible(
       find.byKey(const Key('acceptance-save-draft')), 160,
