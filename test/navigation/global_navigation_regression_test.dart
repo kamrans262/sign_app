@@ -146,7 +146,9 @@ void main() {
     // The highlighted More tab must not be inert on a child route.
     await tester.tap(
       find.byKey(const Key('dashboard-tab-4')).hitTestable().last);
-    await tester.pumpAndSettle();
+    // The live dashboard schedules ongoing frames; bounded pumps validate
+    // route completion without waiting for unrelated perpetual animations.
+    await _frame(tester);
     expect(find.byType(MoreScreen), findsOneWidget);
     expect(find.byType(InvoicesScreen), findsNothing);
     expect(find.byType(AddInvoiceScreen), findsNothing);
@@ -161,7 +163,9 @@ void main() {
     expect(find.byType(AddInvoiceScreen), findsOneWidget);
     await tester.tap(
       find.byKey(const Key('dashboard-tab-4')).hitTestable().last);
-    await tester.pumpAndSettle();
+    // The live dashboard schedules ongoing frames; bounded pumps validate
+    // route completion without waiting for unrelated perpetual animations.
+    await _frame(tester);
     expect(find.byType(MoreScreen), findsOneWidget);
     expect(find.byType(InvoicesScreen), findsNothing);
 
