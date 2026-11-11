@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/services/sign2digital_request_key.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/sign2digital_country_selector.dart';
@@ -27,6 +28,8 @@ class AddClientScreen extends StatefulWidget {
 
 class _AddClientScreenState extends State<AddClientScreen> {
   final _formKey = GlobalKey<FormState>();
+  final String _requestKey = Sign2DigitalRequestKey.create();
+  bool _submitted = false;
   final _fullName = TextEditingController();
   final _company = TextEditingController();
   final _address = TextEditingController();
@@ -77,12 +80,14 @@ class _AddClientScreenState extends State<AddClientScreen> {
   }
 
   void _save() {
+    if (_submitted) return;
     FocusManager.instance.primaryFocus?.unfocus();
     if (!(_formKey.currentState?.validate() ?? false)) {
       return;
     }
 
     final draft = ClientDraft(
+      requestKey: widget.initialClient == null ? _requestKey : null,
       fullName: _fullName.text.trim(),
       companyName: _company.text.trim(),
       address: _address.text.trim(),
@@ -92,6 +97,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
       email: _email.text.trim(),
       notes: _notes.text.trim(),
     );
+    _submitted = true;
     if (widget.onSaveClient != null) {
       widget.onSaveClient!(draft);
     } else {
