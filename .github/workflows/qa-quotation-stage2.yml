@@ -10,6 +10,8 @@ on:
       - 'lib/features/quotes/presentation/screens/signature_request_screen.dart'
       - 'lib/features/quotes/domain/quote_document_tracking.dart'
       - 'test/features/documents/stage2_quote_status_integration_test.dart'
+      - 'test/features/documents/document_details_screen_test.dart'
+      - 'test/features/quotes/m8_remote_signature_request_test.dart'
       - 'test/features/quotes/signature_request_screen_test.dart'
   workflow_dispatch:
 
