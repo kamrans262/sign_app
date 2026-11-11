@@ -6,6 +6,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
+import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import '../../domain/quote_document_tracking.dart';
 import '../../data/remote_signature_request_repository.dart';
 import '../../domain/quote_review_models.dart';
@@ -86,40 +87,45 @@ class _SignatureRequestScreenState extends State<SignatureRequestScreen> {
 
   Future<void> _createRequest() async {
     if (_resending || _loadingRequest) return;
-    final email = _quote.clientEmail.trim();
-    if (email.isEmpty) {
-      _notify('A customer email address is required for a signing request.');
+    if (_quote.serverId == null || !_quote.approvedLocally || _quote.isDemo) {
+      _notify('Approve a saved quote before requesting a signature.');
       return;
     }
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Request customer signature?'),
-        content: Text('Create a secure signing link for ${_quote.clientName}? '
-            'You can copy it and share it with the customer.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Create link')),
-        ],
-      ),
+    final email = _quote.clientEmail.trim();
+    if (email.isEmpty) {
+      _notify('Add the customer email to the approved quote first.');
+      return;
+    }
+    // Reuse the approved Switch Company selection sheet; do not introduce
+    // a new signing dialog, color or visual component.
+    final choice = await Sign2DigitalSelectionSheet.show(
+      context,
+      title: 'Request Signature',
+      subtitle: '$email — ${_quote.clientName}',
+      icon: Icons.draw_outlined,
+      options: const ['Send by Email', 'Copy Signing Link'],
+      iconForOption: (option) => option == 'Send by Email'
+          ? Icons.mail_outline : Icons.link_outlined,
     );
-    if (confirmed != true || !mounted) return;
+    if (choice == null || !mounted) return;
     setState(() => _resending = true);
     try {
       final result = await RemoteSignatureRequestRepository.shared.create(
         _quote,
         signerName: _quote.clientName,
         signerEmail: email,
-        delivery: 'link',
+        delivery: choice == 'Send by Email' ? 'email' : 'link',
       );
       if (!mounted) return;
       setState(() {
         _serverRequestId = result.id;
         _tracking = result.tracking;
       });
-      _notify('Secure signing link created. Copy it to share with the customer.');
+      if (choice == 'Send by Email') {
+        _notify('Signature request email sent to $email.');
+      } else {
+        await _copyLink();
+      }
     } catch (error) {
       if (mounted) _notify('Unable to create signature request: $error');
     } finally {
@@ -190,6 +196,15 @@ class _SignatureRequestScreenState extends State<SignatureRequestScreen> {
 
   Future<void> _resend() async {
     if (_resending || _loadingRequest) return;
+    if (_tracking.signed || _tracking.completed) {
+      _notify('Already signed. Open Documents to view the signed PDF.');
+      return;
+    }
+    if (_serverRequestId != null &&
+        _tracking.statusAt(DateTime.now()) == QuoteSignatureStatus.expired) {
+      await _createRequest();
+      return;
+    }
     if (_serverRequestId == null && widget.onResend == null) {
       if (_quote.serverId != null && _quote.approvedLocally && !_quote.isDemo) {
         await _createRequest();
@@ -296,6 +311,8 @@ class _SignatureRequestScreenState extends State<SignatureRequestScreen> {
         'This signing request has expired. A new authorized request is required.',
       QuoteSignatureStatus.awaitingSignature =>
         'The document is awaiting the customer signature.',
+      QuoteSignatureStatus.readyToShare =>
+        'Copy the signing link and share it with the customer.',
       QuoteSignatureStatus.viewed =>
         "The customer has viewed the document. We'll notify you when it's signed.",
       QuoteSignatureStatus.sent =>
@@ -374,9 +391,10 @@ class _SignatureRequestScreenState extends State<SignatureRequestScreen> {
       Expanded(child: Sign2DigitalSignatureActionCard(
         key: const Key('signature-resend'),
         label: _resending ? 'Working…' :
-            (_tracking.requestId == null && _quote.serverId != null &&
-                    _quote.approvedLocally && !_quote.isDemo
-                ? 'Request Signature' : 'Resend Request'),
+            (_tracking.signed || _tracking.completed ? 'Signed' :
+            (_serverRequestId == null ||
+                _tracking.statusAt(DateTime.now()) == QuoteSignatureStatus.expired
+                ? 'Request Signature' : 'Resend Request')),
         icon: Icons.chat_bubble_outline, onTap: _resend)),
       SizedBox(width: gap),
       Expanded(child: Sign2DigitalSignatureActionCard(
@@ -491,7 +509,7 @@ class _SignatureRequestScreenState extends State<SignatureRequestScreen> {
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: Colors.white,
     body: SafeArea(bottom: false, child: Column(children: [
-      Sign2DigitalHeader(title: 'Create Quote',
+      Sign2DigitalHeader(title: 'Signature Request',
         onBack: () {
           if (widget.onNavigationSelected != null) {
             widget.onNavigationSelected!(2);
