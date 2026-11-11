@@ -80,7 +80,7 @@ void main() {
     expect(find.byType(Sign2DigitalStatusBadge), findsOneWidget);
     expect(find.byKey(const Key('subscription-demo-notice')), findsNothing);
     expect(find.text('AI document generation'), findsOneWidget);
-    expect(find.text('Unlimited projects'), findsOneWidget);
+    expect(find.text('Unlimited projects & job management'), findsOneWidget);
     final usage = find.byKey(const Key('subscription-usage-documents'));
     await _scrollTo(tester, const Key('subscription-usage-documents'));
     expect(find.descendant(of: usage, matching: find.text('7')), findsOneWidget);

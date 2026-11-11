@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sign2digital/core/widgets/sign2digital_header.dart';
 import 'package:sign2digital/core/widgets/sign2digital_primary_button.dart';
 import 'package:sign2digital/features/subscription/domain/subscription_plan.dart';
+import 'package:sign2digital/features/subscription/data/subscription_overview_repository.dart';
 import 'package:sign2digital/features/subscription/presentation/screens/choose_plan_screen.dart';
 import 'package:sign2digital/features/subscription/presentation/screens/subscription_overview_screen.dart';
 import 'package:sign2digital/features/subscription/presentation/widgets/subscription_feature_list.dart';
@@ -52,7 +53,7 @@ void main() {
     expect(find.text('Advanced reports & analytics'), findsOneWidget);
     expect(find.text('Additional document storage'), findsOneWidget);
     expect(find.text('Extended AI usage benefits'), findsOneWidget);
-    expect(find.text('Unlimited projects'), findsOneWidget);
+    expect(find.text('Unlimited projects & job management'), findsOneWidget);
     await tester.tap(find.byKey(const Key('details-tab-0')));
     await tester.pumpAndSettle();
     expect(find.text('CHF 20 / month'), findsOneWidget);
@@ -79,7 +80,7 @@ void main() {
     expect(continued?.id, 'business');
     expect(continued?.period, SubscriptionBillingPeriod.monthly);
     expect(continued?.priceLabel, 'CHF 20 / month');
-    expect(continued?.featureLabels.length, 8);
+    expect(continued?.featureLabels.length, SubscriptionFeature.values.length);
     expect(draft.selectedPlan?.id, 'business');
     expect(tester.takeException(), isNull);
   });
@@ -98,7 +99,7 @@ void main() {
     expect(draft.selectedPlan?.period, SubscriptionBillingPeriod.yearly);
     await tester.tap(find.byKey(const Key('choose-plan-continue')));
     expect(continued?.priceLabel, 'CHF 200 / year');
-    expect(continued?.featureLabels.length, 12);
+    expect(continued?.featureLabels.length, SubscriptionFeature.values.length + 4);
     expect(continued?.featureLabels.last, 'Extended AI usage benefits');
     expect(tester.takeException(), isNull);
   });

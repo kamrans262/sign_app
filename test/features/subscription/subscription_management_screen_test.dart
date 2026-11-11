@@ -62,7 +62,13 @@ void main() {
     await tester.pumpWidget(const MaterialApp(
       home: Scaffold(body: MoreScreen()),
     ));
-    await tester.ensureVisible(find.byKey(const Key('open-subscription')));
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('open-subscription')), 150,
+      scrollable: find.descendant(
+        of: find.byKey(const Key('more-menu-scroll')),
+        matching: find.byType(Scrollable),
+      ).first,
+    );
     await tester.tap(find.byKey(const Key('open-subscription')));
     await tester.pumpAndSettle();
     expect(find.byType(SubscriptionOverviewScreen), findsOneWidget);
