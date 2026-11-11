@@ -62,6 +62,13 @@ void main() {
     await tester.tap(find.byKey(const Key('m24-setup-enable')));
     await tester.pumpAndSettle();
     expect(find.text('Save Your Recovery Codes'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('m24-recovery-copy')),
+      150,
+      maxScrolls: 25,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
     expect(find.byKey(const Key('m24-recovery-copy')), findsOneWidget);
     expect(seen, ['/api/v1/me/2fa/setup', '/api/v1/me/2fa/confirm']);
     expect(tester.takeException(), isNull);
