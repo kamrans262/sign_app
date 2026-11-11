@@ -49,13 +49,17 @@ class _TwoFactorProofScreenState extends State<TwoFactorProofScreen> {
       } else {
         final disabled = await widget.repository.disableTwoFactor(
           widget.password, _code.text.trim());
-        if (!disabled) throw const SignApiException(
-          'Two-factor authentication was not disabled.');
+        if (!disabled) {
+          throw const SignApiException(
+            'Two-factor authentication was not disabled.');
+        }
       }
-      if (mounted) { Navigator.of(context).pop(true);
+      if (mounted) { Navigator.of(context).pop(true); }
     } catch (error) {
-      if (mounted) setState(() => _error = error is SignApiException
+      if (mounted) {
+        setState(() => _error = error is SignApiException
           ? error.message : 'Unable to verify this security change.');
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }

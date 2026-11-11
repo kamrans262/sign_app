@@ -205,7 +205,9 @@ class _SecurityAccessScreenState extends State<SecurityAccessScreen> {
   Future<void> _regenerateRecoveryCodes() async {
     final repo = widget.repository;
     if (_busy || repo is! RemoteSecurityAccessRepository ||
-        _snapshot?.twoFactorEnabled != true || !_hasPassword()) return;
+        _snapshot?.twoFactorEnabled != true || !_hasPassword()) {
+      return;
+    }
     setState(() => _busy = true);
     try {
       final updated = await Sign2DigitalNavigation.open<bool>(context,

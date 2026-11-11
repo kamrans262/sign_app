@@ -50,11 +50,13 @@ class _TwoFactorSetupScreenState extends State<TwoFactorSetupScreen> {
       final value = await widget.repository.beginTwoFactorSetup(widget.password);
       if (mounted) { setState(() { _enrollment = value; _loading = false; }); }
     } catch (error) {
-      if (mounted) setState(() {
-        _loading = false;
-        _error = error is SignApiException
-            ? error.message : 'Unable to start authenticator setup.';
-      });
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _error = error is SignApiException
+              ? error.message : 'Unable to start authenticator setup.';
+        });
+      }
     }
   }
 
@@ -74,8 +76,10 @@ class _TwoFactorSetupScreenState extends State<TwoFactorSetupScreen> {
       ));
       if (mounted) { Navigator.of(context).pop(true); }
     } catch (error) {
-      if (mounted) setState(() => _error = error is SignApiException
+      if (mounted) {
+        setState(() => _error = error is SignApiException
           ? error.message : 'Unable to verify authenticator setup.');
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
