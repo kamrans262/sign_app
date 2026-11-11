@@ -325,6 +325,19 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     super.dispose();
   }
 
+  /// Display a signed quote only when its separate, server-verified artifact
+  /// is present in the same company-scoped catalogue (also used by Jobs).
+  bool _hasVerifiedSignedQuote(DocumentRecord quote) =>
+      !quote.demoOnly &&
+      RegExp(r'^quote-[1-9][0-9]*$').hasMatch(quote.id) &&
+      _documents.any((item) =>
+          RegExp(r'^signed-[1-9][0-9]*$').hasMatch(item.id) &&
+          item.category == DocumentCategory.quotes &&
+          item.status.toLowerCase() == 'signed' &&
+          item.verifiedSignedPdfAvailable &&
+          item.number == quote.number &&
+          item.jobId == quote.jobId);
+
   @override
   Widget build(BuildContext context) {
     final visible = browseDocuments(
@@ -461,7 +474,8 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                         projectName: record.project,
                         customerName: record.customer,
                         documentDate: record.timestamp,
-                        status: record.status,
+                        status: _hasVerifiedSignedQuote(record)
+                            ? 'Signed' : record.status,
                         subtitleGap: 5,
                         listStyle: true,
                         onTap: () => _openDocument(record),
