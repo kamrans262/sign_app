@@ -45,11 +45,11 @@ void main() {
     expect(childOpens, 1);
     expect(find.text('Child picker'), findsOneWidget);
 
-    await tester.pageBack();
+    await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
     expect(find.text('Child picker'), findsNothing);
     expect(find.text('Open child'), findsOneWidget);
-    await tester.pageBack();
+    await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
     expect(find.text('Open parent'), findsOneWidget);
   });
