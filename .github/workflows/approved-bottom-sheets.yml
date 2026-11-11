@@ -7,6 +7,9 @@ on:
       - '.github/workflows/approved-bottom-sheets.yml'
       - 'lib/core/theme/app_theme.dart'
       - 'lib/core/widgets/sign2digital_styled_bottom_sheet.dart'
+      - 'lib/core/widgets/sign2digital_selection_sheet.dart'
+      - 'test/core/widgets/sign2digital_selection_sheet_test.dart'
+      - 'test/features/expenses/add_expense_screen_test.dart'
       - 'lib/features/**/presentation/screens/*.dart'
       - 'test/core/sign2digital_styled_bottom_sheet_test.dart'
   workflow_dispatch:
@@ -49,4 +52,4 @@ jobs:
           mapfile -t files < <(git diff --name-only ee6fdf880785faf56c22a9cbff1e0b914b8c361c HEAD | grep -E '^(lib|test)/.*\.dart$')
           timeout 190s flutter analyze --no-pub --no-fatal-infos --no-fatal-warnings "${files[@]}" lib/core/widgets/sign2digital_styled_bottom_sheet.dart
       - name: Bottom sheet and module UI tests
-        run: timeout 225s flutter test --no-pub --concurrency=2 --timeout=55s --reporter=expanded test/core/sign2digital_styled_bottom_sheet_test.dart test/features/documents/ai_documents_screen_test.dart test/features/documents/documents_screen_test.dart test/features/deposits/deposits_screen_test.dart test/features/expenses/expenses_screen_test.dart test/features/invoices/invoices_screen_test.dart
+        run: timeout 225s flutter test --no-pub --concurrency=2 --timeout=55s --reporter=expanded test/core/sign2digital_styled_bottom_sheet_test.dart test/features/documents/ai_documents_screen_test.dart test/features/documents/documents_screen_test.dart test/features/deposits/deposits_screen_test.dart test/features/expenses/expenses_screen_test.dart test/features/expenses/add_expense_screen_test.dart test/core/widgets/sign2digital_selection_sheet_test.dart test/features/invoices/invoices_screen_test.dart
