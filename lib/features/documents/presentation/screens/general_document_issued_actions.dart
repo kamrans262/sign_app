@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:printing/printing.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/sign2digital_subscription_gate.dart';
 import '../../../../core/widgets/sign2digital_outlined_button.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../data/remote_general_document_repository.dart';
@@ -88,9 +89,12 @@ class _GeneralDocumentIssuedActionsState
       await widget.repository.issue(widget.documentId);
       await _refresh();
       _notice('Official PDF issued and verified.');
-    }catch(_){
-      if(mounted)setState(()=>_error=
-        'Document issuance failed. Verify approval and storage.');
+    }catch(error){
+      if(mounted && !await Sign2DigitalSubscriptionGate.handle(
+          context,error)){
+        setState(()=>_error=
+          'Document issuance failed. Verify approval and storage.');
+      }
     }finally{
       if(mounted)setState(()=>_busy=false);
     }
