@@ -57,15 +57,16 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('More opens Subscription Management in the existing navigation',
+  testWidgets('More opens the real Subscription Overview entry point',
       (tester) async {
     await tester.pumpWidget(const MaterialApp(
       home: Scaffold(body: MoreScreen()),
     ));
-    await tester.tap(find.byKey(const Key('open-subscription-management')));
+    await tester.ensureVisible(find.byKey(const Key('open-subscription')));
+    await tester.tap(find.byKey(const Key('open-subscription')));
     await tester.pumpAndSettle();
-    expect(find.byType(SubscriptionManagementScreen), findsOneWidget);
-    expect(find.text('Current Plan'), findsOneWidget);
+    expect(find.byType(SubscriptionOverviewScreen), findsOneWidget);
+    expect(find.byType(SubscriptionManagementScreen), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -187,7 +188,7 @@ void main() {
   testWidgets('Cancellation requires confirmation and no callback changes no data',
       (tester) async {
     final repo = _StubRepository(const SubscriptionOverview(
-      planName: 'Professional', status: 'Active',
+      planName: 'Professional', status: 'Active', canManageBilling: true,
     ));
     await tester.pumpWidget(MaterialApp(
       home: SubscriptionManagementScreen(repository: repo),
@@ -217,6 +218,10 @@ void main() {
     var requests = 0;
     await tester.pumpWidget(MaterialApp(
       home: SubscriptionManagementScreen(
+        repository: _StubRepository(const SubscriptionOverview(
+          planName: 'Professional', status: 'active',
+          canManageBilling: true,
+        )),
         onConfirmCancellation: (current) async {
           expect(current.planName, 'Professional');
           requests++;
@@ -265,12 +270,30 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('Free account shows upgrade and usage but no payment or cancellation',
+      (tester) async {
+    await tester.pumpWidget(MaterialApp(home: SubscriptionManagementScreen(
+      repository: _StubRepository(const SubscriptionOverview(
+        planName: 'Free Plan', status: 'free',
+        freeDocumentLimit: 3, freeDocumentsRemaining: 3,
+        billingDescription: 'No paid subscription is connected.',
+      )),
+    )));
+    await tester.pumpAndSettle();
+    expect(find.text('Upgrade Plan'), findsOneWidget);
+    expect(find.byKey(const Key('subscription-action-payment-method')), findsNothing);
+    expect(find.byKey(const Key('subscription-action-billing-history')), findsNothing);
+    expect(find.byKey(const Key('subscription-action-cancel')), findsNothing);
+    expect(find.byKey(const Key('subscription-action-usage')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   for (final size in [
     const Size(320, 568),
     const Size(390, 844),
     const Size(800, 1024),
   ]) {
-    testWidgets('Five actions remain reachable without overflow at $size',
+    testWidgets('Subscription actions remain reachable without overflow at $size',
         (tester) async {
       tester.view.physicalSize = size;
       tester.view.devicePixelRatio = 1;
@@ -281,9 +304,10 @@ void main() {
       ));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
-      await _scrollTo(tester, const Key('subscription-action-cancel'));
-      expect(find.byKey(const Key('subscription-action-cancel')),
+      await _scrollTo(tester, const Key('subscription-action-usage'));
+      expect(find.byKey(const Key('subscription-action-usage')),
         findsOneWidget);
+      expect(find.byKey(const Key('subscription-action-cancel')), findsNothing);
       expect(tester.takeException(), isNull);
     });
   }

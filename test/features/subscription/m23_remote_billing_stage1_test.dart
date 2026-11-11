@@ -38,14 +38,16 @@ Map<String, dynamic> _plans(int companyId) => {
   'plans': [
     {
       'code':'business', 'name':'Business',
-      'period':'monthly', 'price_label':'CHF 20.00 / month',
-      'description':'Basic business plan',
+      'id':101, 'period':'monthly', 'price_label':'CHF 29.00 / month',
+      'amount_minor':2900, 'currency':'CHF', 'can_checkout':false,
+      'description':'Business monthly billing',
       'feature_labels':['Invoices & deposits','Email support'],
     },
     {
       'code':'business', 'name':'Business',
-      'period':'yearly', 'price_label':'CHF 200.00 / year',
-      'description':'Annual business plan',
+      'id':102, 'period':'yearly', 'price_label':'CHF 290.00 / year',
+      'amount_minor':29000, 'currency':'CHF', 'can_checkout':false,
+      'description':'Business annual billing',
       'feature_labels':['Invoices & deposits','Email support'],
     },
   ],
@@ -110,7 +112,9 @@ void main() {
     expect(catalog.options, isEmpty);
     await catalog.load();
     expect(catalog.options.length, 2);
-    expect(catalog.options.first.priceLabel, 'CHF 20.00 / month');
+    expect(catalog.options.first.priceLabel, 'CHF 29.00 / month');
+    expect(catalog.options.first.amountMinor, 2900);
+    expect(catalog.options.last.amountMinor, 29000);
     expect(catalog.options.last.period, SubscriptionBillingPeriod.yearly);
     expect(catalog.options.first.demoOnly, isFalse);
     expect(catalog.options.first.featureLabels, contains('Email support'));
@@ -140,7 +144,8 @@ void main() {
       repository: RemoteSubscriptionRepository(api:_api()))));
     await tester.pumpAndSettle();
     expect(find.text('Free allowance'), findsOneWidget);
-    expect(find.text('Price unavailable'), findsOneWidget);
+    expect(find.text('Free'), findsOneWidget);
+    expect(find.text('Upgrade Plan'), findsOneWidget);
     expect(find.text('Active'), findsNothing);
     expect(find.byKey(const Key('m23-free-document-allowance')), findsOneWidget);
     expect(find.text('Free documents remaining: 2 of 3'), findsOneWidget);
@@ -154,17 +159,18 @@ void main() {
     await tester.pumpWidget(MaterialApp(home: ChoosePlanScreen(
       catalog:catalog)));
     await tester.pumpAndSettle();
-    expect(find.text('CHF 20.00 / month'),findsOneWidget);
+    expect(find.text('CHF 29.00 / month'),findsOneWidget);
     expect(find.byKey(const Key('choose-plan-demo-notice')),findsNothing);
     await tester.tap(find.byKey(const Key('details-tab-1')));
     await tester.pumpAndSettle();
-    expect(find.text('CHF 200.00 / year'),findsOneWidget);
+    expect(find.text('CHF 290.00 / year'),findsOneWidget);
+    expect(find.text('Save CHF 58 per year'),findsOneWidget);
     await tester.tap(find.byKey(const Key('choose-plan-select')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('choose-plan-continue')));
     await tester.pumpAndSettle();
     expect(find.byType(SubscriptionPaymentDetailsScreen),findsOneWidget);
-    expect(find.text('CHF 200.00 / year'),findsOneWidget);
+    expect(find.text('CHF 290.00 / year'),findsOneWidget);
     expect(find.byKey(const Key('m23-stripe-disabled')),findsOneWidget);
     final checkout = tester.widget<FilledButton>(
       find.descendant(
@@ -174,22 +180,16 @@ void main() {
     expect(tester.takeException(),isNull);
   });
 
-  testWidgets('Verified billing history is empty rather than fabricated',
+  testWidgets('Real Free account has usage and upgrade but no paid billing actions',
       (tester) async {
     await tester.pumpWidget(MaterialApp(home:SubscriptionManagementScreen(
       repository:RemoteSubscriptionRepository(api:_api()))));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(
-      find.byKey(const Key('subscription-action-billing-history')));
-    await tester.pumpAndSettle();
-    // Keep the tap above the fixed bottom navigation, which can occlude
-    // a card's center when ensureVisible only scrolls it to the viewport edge.
-    await tester.drag(find.byKey(const Key('subscription-management-scroll')),
-      const Offset(0, -180));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('subscription-action-billing-history')));
-    await tester.pumpAndSettle();
-    expect(find.byKey(const Key('m23-no-billing-history')),findsOneWidget);
+    expect(find.text('Upgrade Plan'),findsOneWidget);
+    expect(find.byKey(const Key('subscription-action-usage')),findsOneWidget);
+    expect(find.byKey(const Key('subscription-action-payment-method')),findsNothing);
+    expect(find.byKey(const Key('subscription-action-billing-history')),findsNothing);
+    expect(find.byKey(const Key('subscription-action-cancel')),findsNothing);
     expect(find.text('CHF 49 / month'), findsNothing);
     expect(tester.takeException(),isNull);
   });
