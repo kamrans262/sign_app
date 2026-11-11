@@ -1,4 +1,5 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
+import '../../../../core/widgets/sign2digital_subscription_gate.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
@@ -352,8 +353,11 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
         _pdfFuture = null;
       });
       _message('Addendum approved and original PDF frozen securely.');
-    } catch (_) {
-      _message('Could not approve addendum. Reload and review again.');
+    } catch (error) {
+      if (mounted && !await Sign2DigitalSubscriptionGate.handle(
+          context, error)) {
+        _message('Could not approve addendum. Reload and review again.');
+      }
     } finally {
       if (mounted) setState(() => _requestingAddendum = false);
     }
