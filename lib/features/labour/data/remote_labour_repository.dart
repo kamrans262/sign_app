@@ -113,6 +113,7 @@ class RemoteLabourRepository implements LabourRepository {
   LabourEntry _entry(Object? data,int company,{
     List<LocalJobPhotoSelection> photos=const [],
     List<LabourHistoryEvent> events=const [],
+    bool canApprove=false,
   }) {
     final row=_map(data);
     final id=_int(row['id']);
@@ -150,7 +151,7 @@ class RemoteLabourRepository implements LabourRepository {
       endMinutes:_int(row['end_minutes']),
       hourlyRate:rate==null?null:rate/100.0,
       task:'${row['task'] ?? ''}',
-      photos:photos,history:events,
+      photos:photos,history:events,canApprove:canApprove,
       status:status,source:'${row['source']}',
       lockVersion:ver,isDemo:false,
       approvedAt:row['approved_at']==null?null:_date(row['approved_at']),
@@ -250,7 +251,8 @@ class RemoteLabourRepository implements LabourRepository {
     }
     final history=res['history'];
     if(history is! List)throw const SignApiException('Missing labour audit.');
-    return _entry(res['entry'],company,photos:files,events:[
+    return _entry(res['entry'],company,photos:files,
+      canApprove:res['can_approve']==true,events:[
       for(final obj in history)
         LabourHistoryEvent(
           id:'${_map(obj)['id']}',
@@ -359,6 +361,22 @@ class RemoteLabourRepository implements LabourRepository {
         companyScoped:true);
       _ensureCompany(company);
     }
+  }
+
+  Future<LabourEntry> approveEntry(LabourEntry entry) async {
+    if (entry.status != LabourEntryStatus.pending || !entry.canApprove) {
+      throw const SignApiException('Only a company reviewer may approve pending time.');
+    }
+    final company=_company();
+    final id=_id(entry.id);
+    final result=_data(await _api.post('/api/v1/labour/entries/$id/approve',
+      companyScoped:true,data:{'confirm':true}));
+    _ensureCompany(company);
+    final approved=_entry(result['entry'],company);
+    if(approved.id!=entry.id || approved.status!=LabourEntryStatus.approved) {
+      throw const SignApiException('Labour approval response identity mismatch.');
+    }
+    return detail(entry.id);
   }
 
   @override
