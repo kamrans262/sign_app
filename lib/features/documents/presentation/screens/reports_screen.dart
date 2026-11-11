@@ -360,9 +360,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
     }
     if (_repository is RemoteSiteReportRepository) {
       if (report.status.toLowerCase() == 'draft' &&
-          report.reportKind == ReportKind.siteReport) {
-        await _openSiteWizard(report);
-      } else if (report.status.toLowerCase() == 'draft' &&
           report.reportKind == ReportKind.meetingMinutes) {
         await _openMinutes(report);
       } else {
