@@ -11,10 +11,12 @@ class JobPhotoGalleryDialog extends StatefulWidget {
     super.key,
     required this.photos,
     required this.initialPhotoId,
+    this.onDelete,
   });
 
   final List<JobPhotoModel> photos;
   final String initialPhotoId;
+  final Future<bool> Function(JobPhotoModel)? onDelete;
 
   @override
   State<JobPhotoGalleryDialog> createState() => _JobPhotoGalleryDialogState();
@@ -69,6 +71,18 @@ class _JobPhotoGalleryDialogState extends State<JobPhotoGalleryDialog> {
                     fontWeight: FontWeight.w600, color: AppColors.dark,
                   ),
                 )),
+                if (widget.onDelete != null)
+                  IconButton(
+                    key: const Key('job-photo-delete'),
+                    tooltip: 'Delete photo',
+                    onPressed: () async {
+                      if (await widget.onDelete!(current) && context.mounted) {
+                        Navigator.of(context).pop();
+                      }
+                    },
+                    icon: const Icon(Icons.delete_outline,
+                      color: AppColors.primary),
+                  ),
                 IconButton(
                   key: const Key('job-photo-close-preview'),
                   tooltip: 'Close photo preview',
