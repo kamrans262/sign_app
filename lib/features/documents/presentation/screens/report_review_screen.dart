@@ -37,6 +37,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
   late final RemoteSiteReportRepository _repository;
   Map<String, dynamic>? _suggestion;
   bool _busy = false;
+  bool _latestServerReportLoaded = false;
   String? _error;
 
   @override
@@ -50,11 +51,17 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
   bool get _isDraft => _report.status.toLowerCase() == 'draft';
 
   Future<void> _reload() async {
+    if (mounted) setState(() => _latestServerReportLoaded = false);
     try {
       final result = await _repository.details(_report.id);
-      if (mounted) setState(() => _report = result);
+      if (mounted) setState(() {
+        _report = result;
+        _latestServerReportLoaded = true;
+        _error = null;
+      });
     } catch (error) {
-      if (mounted) setState(() => _error = 'Unable to refresh report: $error');
+      if (mounted) setState(() =>
+          _error = 'Unable to refresh report: $error');
     }
   }
 
@@ -85,7 +92,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
   }
 
   Future<void> _editDraft() async {
-    if (_busy || !_isDraft) return;
+    if (_busy || !_isDraft || !_latestServerReportLoaded) return;
     setState(() { _busy = true; _error = null; });
     DocumentRecord current;
     try {
@@ -115,7 +122,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
   }
 
   Future<void> _prepare() async {
-    if (_busy || !_isDraft) return;
+    if (_busy || !_isDraft || !_latestServerReportLoaded) return;
     if (!await _confirm('Prepare AI Draft',
         'Use the saved report details to suggest an editable draft? No report will be approved or sent.')) {
       return;
@@ -135,7 +142,8 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
   }
 
   Future<void> _apply() async {
-    if (_busy || !_isDraft || _suggestion == null) return;
+    if (_busy || !_isDraft || !_latestServerReportLoaded ||
+        _suggestion == null) return;
     if (!await _confirm('Apply Suggested Changes',
         'Save the reviewed AI text to this editable report? This does not approve or send the report.')) {
       return;
@@ -155,7 +163,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
   }
 
   Future<void> _approve() async {
-    if (_busy || !_isDraft) return;
+    if (_busy || !_isDraft || !_latestServerReportLoaded) return;
     if (!await _confirm('Approve Report',
         'Freeze this exact revision as a verified PDF in Documents? Approved reports cannot be edited.')) {
       return;
@@ -178,7 +186,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
   }
 
   Future<void> _send() async {
-    if (_busy || _isDraft) return;
+    if (_busy || _isDraft || !_latestServerReportLoaded) return;
     if (!await _confirm('Send Report',
         'Send the approved PDF to the email address saved for the linked client?')) {
       return;
@@ -198,7 +206,8 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
   }
 
   Future<void> _archive() async {
-    if (_busy || _report.status == 'archived') return;
+    if (_busy || !_latestServerReportLoaded ||
+        _report.status == 'archived') return;
     if (!await _confirm('Archive Report',
         'Archive this report? The approved PDF and audit history will remain unchanged.')) {
       return;
@@ -221,7 +230,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
 
   Future<void> _openPdf() async {
     final id = _report.reportManagedDocumentId;
-    if (_busy || id == null) return;
+    if (_busy || !_latestServerReportLoaded || id == null) return;
     setState(() { _busy = true; _error = null; });
     try {
       final documents = widget.documents ?? RemoteDocumentRepository.shared;
@@ -323,19 +332,20 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
                   LayoutBuilder(builder: (context, constraints) {
                     final edit = Sign2DigitalOutlinedButton(
                       label: 'Edit Draft', onPressed: _editDraft,
-                      enabled: !_busy,
+                      enabled: !_busy && _latestServerReportLoaded,
                     );
                     final ai = Sign2DigitalOutlinedButton(
                       label: 'Prepare with AI', onPressed: _prepare,
-                      enabled: !_busy,
+                      enabled: !_busy && _latestServerReportLoaded,
                     );
                     final approve = Sign2DigitalPrimaryButton(
                       label: 'Approve Report', loading: _busy,
+                      enabled: _latestServerReportLoaded,
                       onPressed: _approve,
                     );
                     final archive = Sign2DigitalOutlinedButton(
                       label: 'Archive Report', onPressed: _archive,
-                      enabled: !_busy,
+                      enabled: !_busy && _latestServerReportLoaded,
                     );
                     // Preserve equal-width original buttons; only phones with
                     // insufficient two-column space use the vertical fallback.
@@ -369,10 +379,12 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
                     const SizedBox(height: 12),
                     Sign2DigitalOutlinedButton(
                       label: 'View Approved PDF', onPressed: _openPdf,
+                      enabled: _latestServerReportLoaded,
                     ),
                     const SizedBox(height: 12),
                     Sign2DigitalPrimaryButton(
                       label: 'Send to Client', loading: _busy,
+                      enabled: _latestServerReportLoaded,
                       onPressed: _send,
                     ),
                   ],
@@ -385,6 +397,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
                   const SizedBox(height: 12),
                   Sign2DigitalOutlinedButton(
                     label: 'Archive Report', onPressed: _archive,
+                    enabled: _latestServerReportLoaded,
                   ),
                 ],
               ],
