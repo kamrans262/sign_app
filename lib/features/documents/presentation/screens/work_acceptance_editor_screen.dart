@@ -21,13 +21,14 @@ import '../../data/remote_work_acceptance_repository.dart';
 class WorkAcceptanceEditorScreen extends StatefulWidget {
   const WorkAcceptanceEditorScreen({
     super.key, this.initial, this.initialJobId, this.repository,
-    this.photoSource, this.mediaRepository,
+    this.photoSource, this.mediaRepository, this.jobLoader,
   });
   final WorkAcceptanceDraft? initial;
   final String? initialJobId;
   final RemoteWorkAcceptanceRepository? repository;
   final JobPhotoSource? photoSource;
   final RemoteJobMediaRepository? mediaRepository;
+  final Future<List<JobModel>> Function()? jobLoader;
 
   @override
   State<WorkAcceptanceEditorScreen> createState() => _WorkAcceptanceEditorScreenState();
@@ -64,7 +65,8 @@ class _WorkAcceptanceEditorScreenState extends State<WorkAcceptanceEditorScreen>
     if(selected!=null) {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         try {
-          final jobs=await RemoteJobRepository.shared.listJobs();
+          final jobs=await (widget.jobLoader?.call() ??
+              RemoteJobRepository.shared.listJobs());
           if(mounted) {
             final matching=jobs.where((x)=>x.id==selected);
             setState(() { _job=matching.isEmpty?null:matching.first; });
@@ -87,7 +89,8 @@ class _WorkAcceptanceEditorScreenState extends State<WorkAcceptanceEditorScreen>
 
   Future<void> _chooseJob() async {
     try {
-      final jobs=await RemoteJobRepository.shared.listJobs();
+      final jobs=await (widget.jobLoader?.call() ??
+              RemoteJobRepository.shared.listJobs());
       if(!mounted)return;
       final result=await Sign2DigitalSelectionSheet.showCustom<JobModel>(
         context:context,title:'Choose Job / Project',
