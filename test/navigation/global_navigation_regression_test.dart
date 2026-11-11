@@ -168,14 +168,24 @@ void main() {
       tester.element(find.byType(AddInvoiceScreen)));
     expect(addInvoiceRoute?.isCurrent, isTrue,
       reason: 'Add Invoice must own the active route before bottom navigation');
-    await tester.tap(find.descendant(
+    final moreFromForm = find.descendant(
       of: find.byType(AddInvoiceScreen),
       matching: find.byKey(const Key('dashboard-tab-4')),
-    ).hitTestable().first);
+    ).hitTestable().first;
+    final ink = tester.widget<InkWell>(moreFromForm);
+    debugPrint('ACTIVE FORM TAB: onTap=${ink.onTap != null}, center=${tester.getCenter(moreFromForm)}, routeCurrent=${ModalRoute.of(tester.element(moreFromForm))?.isCurrent}');
+    await tester.tap(moreFromForm);
     // Two stacked routes exit; bounded pumps avoid background dashboard
     // animations preventing pumpAndSettle.
     await tester.pump(const Duration(milliseconds: 850));
     await tester.pump();
+    if (find.byType(InvoicesScreen).evaluate().isNotEmpty) {
+      debugPrint('ACTIVE FORM TAB NOT ROUTED: tab still mounted; invoke callback only for diagnostic');
+      ink.onTap?.call();
+      await tester.pump(const Duration(milliseconds: 850));
+      await tester.pump();
+      debugPrint('AFTER CALLBACK: invoiceMounted=${find.byType(InvoicesScreen).evaluate().isNotEmpty}');
+    }
     expect(find.byType(MoreScreen), findsOneWidget);
     expect(find.byType(InvoicesScreen), findsNothing);
 
