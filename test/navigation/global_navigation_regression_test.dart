@@ -161,11 +161,15 @@ void main() {
     await tester.tap(find.byKey(const Key('invoices-create')));
     await _frame(tester);
     expect(find.byType(AddInvoiceScreen), findsOneWidget);
+    // Allow the second Add Invoice entrance animation to complete; tapping
+    // during a route transition is intentionally ignored by Flutter.
+    await tester.pump(const Duration(milliseconds: 800));
     await tester.tap(
       find.byKey(const Key('dashboard-tab-4')).hitTestable().last);
-    // The live dashboard schedules ongoing frames; bounded pumps validate
-    // route completion without waiting for unrelated perpetual animations.
-    await _frame(tester);
+    // Pop two nested routes; use bounded pumps because the dashboard also
+    // contains background async widgets and cannot pumpAndSettle globally.
+    await tester.pump(const Duration(milliseconds: 850));
+    await tester.pump();
     expect(find.byType(MoreScreen), findsOneWidget);
     expect(find.byType(InvoicesScreen), findsNothing);
 
