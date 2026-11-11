@@ -304,7 +304,10 @@ class _WorkAcceptanceEditorScreenState extends State<WorkAcceptanceEditorScreen>
 
   Widget _input(String label,TextEditingController controller) =>
     Padding(padding:const EdgeInsets.only(bottom:15),
-      child:Sign2DigitalInputField(label:label,
+      child:Sign2DigitalInputField(
+        key: label == 'Completed Work'
+            ? const Key('acceptance-completed-work') : null,
+        label:label,
         hintText:label,iconAsset:'assets/icons/description.svg',
         controller:controller,minLines:3,maxLines:6));
 
