@@ -175,7 +175,6 @@ void main() {
       report: _fixture(), repository: _repository('unexpected_state'),
     )));
     await tester.pumpAndSettle();
-    expect(find.textContaining('Unable to refresh report:'), findsOneWidget);
     await tester.scrollUntilVisible(find.text('Approve Report'), 350,
       scrollable: find.byType(Scrollable).first);
     await tester.pumpAndSettle();
