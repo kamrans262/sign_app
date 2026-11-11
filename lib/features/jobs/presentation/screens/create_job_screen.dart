@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/services/sign2digital_request_key.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
 import '../../../../core/widgets/sign2digital_ai_voice_button.dart';
@@ -64,6 +65,8 @@ class _DemoMember {
 
 class _CreateJobScreenState extends State<CreateJobScreen> {
   final _formKey = GlobalKey<FormState>();
+  final String _requestKey = Sign2DigitalRequestKey.create();
+  bool _submitted = false;
   bool _voiceOpen = false;
   late final VoiceJobExtractionService _voiceExtraction;
   final _title = TextEditingController();
@@ -322,6 +325,7 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
   }
 
   void _create() {
+    if (_submitted) return;
     FocusManager.instance.primaryFocus?.unfocus();
     final formValid = _formKey.currentState?.validate() ?? false;
     setState(() {
@@ -341,6 +345,7 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
     final value = _budget.text.trim();
     final draft = CreateJobDraft(
       title: _title.text.trim().isEmpty ? null : _title.text.trim(),
+      requestKey: widget.initialJob == null ? _requestKey : null,
       clientId: _client!.id,
       clientName: _client!.companyName,
       address: _address.text.trim(),
@@ -350,6 +355,7 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
       budgetChf: value.isEmpty ? null : double.parse(value),
       teamMemberIds: List<String>.unmodifiable(_memberIds),
     );
+    _submitted = true;
     if (widget.onCreateJob != null) {
       widget.onCreateJob!(draft);
     } else {
