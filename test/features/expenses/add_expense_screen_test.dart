@@ -1,6 +1,8 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/theme/app_colors.dart';
+import 'package:sign2digital/features/jobs/data/mock_jobs.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sign2digital/features/expenses/domain/expense_record.dart';
 import 'package:sign2digital/features/expenses/presentation/screens/add_expense_screen.dart';
@@ -58,6 +60,50 @@ void main() {
     expect(find.byKey(const Key('expense-save-draft')), findsOneWidget);
     expect(tester.widget<Sign2DigitalBottomNavigationBar>(
       find.byType(Sign2DigitalBottomNavigationBar)).selectedIndex, 4);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Expense job search owns controller until sheet reverse animation ends',
+      (tester) async {
+    tester.view.physicalSize = const Size(320, 568);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(const MaterialApp(home: AddExpenseScreen()));
+    await tester.tap(find.byKey(const Key('expense-add-job')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('expense-job-search')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    final field = tester.widget<TextField>(
+      find.byKey(const Key('expense-job-search')));
+    expect(field.style?.color, AppColors.dark);
+    expect(field.decoration?.hintStyle?.color, AppColors.dark);
+
+    await tester.enterText(find.byKey(const Key('expense-job-search')),
+      'no-job-has-this-name');
+    await tester.pump();
+    expect(find.text('No matching jobs'), findsOneWidget);
+    await tester.enterText(find.byKey(const Key('expense-job-search')), '');
+    await tester.pump();
+    await tester.tap(find.byKey(Key('expense-job-${MockJobsData.jobs.first.id}')));
+    // The route result completes before the reverse transition disposes
+    // its still-mounted TextField. It must never see a disposed controller.
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+    await tester.pump(const Duration(milliseconds: 80));
+    expect(tester.takeException(), isNull);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('expense-job-search')), findsNothing);
+    expect(tester.takeException(), isNull);
+
+    // Closing without choosing a job follows the same safe lifecycle.
+    await tester.tap(find.byKey(const Key('expense-add-job')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('selection-sheet-close')));
+    await tester.pump();
+    await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
   });
 
