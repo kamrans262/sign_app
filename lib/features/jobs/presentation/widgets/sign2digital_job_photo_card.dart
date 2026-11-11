@@ -8,10 +8,15 @@ class Sign2DigitalJobPhotoCard extends StatelessWidget {
     super.key,
     required this.photo,
     required this.onTap,
+    this.groupPhotos,
+    this.groupLabel,
   });
 
   final JobPhotoModel photo;
   final VoidCallback onTap;
+  /// An optional category collection rendered inside the existing photo card.
+  final List<JobPhotoModel>? groupPhotos;
+  final String? groupLabel;
 
   static Widget picture(JobPhotoModel photo, {BoxFit fit = BoxFit.cover}) {
     if (photo.bytes != null) {
@@ -41,6 +46,8 @@ class Sign2DigitalJobPhotoCard extends StatelessWidget {
       builder: (context, limits) {
         final width = limits.maxWidth;
         final imageHeight = (width * 110 / 188).clamp(80.0, 160.0).toDouble();
+        final photos = groupPhotos ?? [photo];
+        final grouped = groupPhotos != null;
         return Material(
           color: Colors.white,
           borderRadius: BorderRadius.circular(10),
@@ -66,12 +73,33 @@ class Sign2DigitalJobPhotoCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  ClipRRect(
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(10),
+                  if (photos.length == 1)
+                    ClipRRect(
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(10),
+                      ),
+                      child: SizedBox(height: imageHeight,
+                        child: picture(photo)),
+                    )
+                  else
+                    Padding(
+                      padding: const EdgeInsets.all(10),
+                      child: Wrap(
+                        spacing: 6, runSpacing: 6,
+                        children: [
+                          for (final item in photos)
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: SizedBox(
+                                width: (width - 28) / 2,
+                                height: ((width - 28) / 2 * 0.70)
+                                    .clamp(56.0, 126.0).toDouble(),
+                                child: picture(item),
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
-                    child: SizedBox(height: imageHeight, child: picture(photo)),
-                  ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
                     child: Column(
@@ -79,7 +107,7 @@ class Sign2DigitalJobPhotoCard extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          photo.title,
+                          grouped ? (groupLabel ?? photo.title) : photo.title,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -91,7 +119,10 @@ class Sign2DigitalJobPhotoCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 5),
                         Text(
-                          JobPhotoModel.formattedDate(photo.createdAt),
+                          grouped
+                              ? '${photos.length} photo${photos.length == 1 ? '' : 's'} · '
+                                '${JobPhotoModel.formattedDate(photo.createdAt)}'
+                              : JobPhotoModel.formattedDate(photo.createdAt),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
