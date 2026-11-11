@@ -201,6 +201,12 @@ class _SubscriptionManagementScreenState
             style: _sectionStyle),
           const SizedBox(height: 20),
           _usageLine('Documents', usage.documents),
+          if (!data.demoOnly) const Text(
+            'Document creations are counted for your account. '
+            'Client and equipment totals belong to the company.',
+            style: TextStyle(fontFamily:'Inter',fontSize:12,
+              color:AppColors.dark),
+          ),
           const SizedBox(height: 12),
           _usageLine('Clients', usage.clients),
           const SizedBox(height: 12),

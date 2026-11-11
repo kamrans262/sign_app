@@ -180,7 +180,7 @@ class _SubscriptionOverviewScreenState
                   if (_overview!.freeDocumentLimit != null) ...[
                     const SizedBox(height: 12),
                     Text(
-                      'Free documents remaining: '
+                      'Free documents remaining for your account: '
                       '${_overview!.freeDocumentsRemaining ?? 0} of '
                       '${_overview!.freeDocumentLimit}',
                       key: const Key('m23-free-document-allowance'),
