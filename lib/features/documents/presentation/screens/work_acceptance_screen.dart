@@ -237,7 +237,8 @@ class _WorkAcceptanceScreenState extends State<WorkAcceptanceScreen> {
                 ],
                 _tracking(),
                 const SizedBox(height: 40),
-                if (_report.status == 'signed' &&
+                if (const ['accepted', 'accepted_with_reservations']
+                    .contains(_report.status.toLowerCase()) &&
                     _hasVerifiedSignature) ...[
                   const Text('Client Signature', style: TextStyle(
                     fontFamily: 'Inter', fontSize: 18,
