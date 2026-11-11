@@ -83,6 +83,30 @@ void main() {
     expect(tracked.sent, isFalse);
   });
 
+  test('verified issuer signature is shown without pretending the quote is fully signed',
+      () {
+    final tracked = QuoteDocumentTracking(
+      quoteId: 'quote-42', requestId: 'request-42',
+      expiresAt: DateTime(2099, 1, 1),
+      events: [
+        QuoteDocumentEvent(
+          id: 'issuer-signed', type: QuoteDocumentEventType.businessSigned,
+          occurredAt: DateTime.utc(2026, 11, 12),
+        ),
+        QuoteDocumentEvent(
+          id: 'requested', type: QuoteDocumentEventType.signatureRequested,
+          occurredAt: DateTime.utc(2026, 11, 12),
+        ),
+      ],
+    );
+    expect(tracked.latestFirst.any(
+      (event) => event.title == 'Business Signed'), isTrue);
+    expect(tracked.signed, isFalse);
+    expect(tracked.completed, isFalse);
+    expect(tracked.statusAt(DateTime.utc(2026, 11, 12)),
+        QuoteSignatureStatus.readyToShare);
+  });
+
   testWidgets(
     'shows corrected Customer spelling and does not fake completion',
     (tester) async {
