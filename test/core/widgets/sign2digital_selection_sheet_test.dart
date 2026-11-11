@@ -18,6 +18,8 @@ void main() {
               options: const ['English', 'French', 'German'],
               selected: 'English',
               icon: Icons.language_rounded,
+              iconForOption: (option) => option == 'French'
+                  ? Icons.translate_rounded : Icons.public_outlined,
               keyForOption: (option) => Key('language-$option'),
             );
           },
@@ -30,6 +32,8 @@ void main() {
     expect(find.text('Language'), findsOneWidget);
     expect(find.text('Select an option'), findsOneWidget);
     expect(find.byKey(const Key('selection-sheet-options')), findsOneWidget);
+    expect(find.byIcon(Icons.translate_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.public_outlined), findsNWidgets(2));
     expect(find.byIcon(Icons.check_circle_rounded), findsOneWidget);
     expect(find.byKey(const Key('selection-sheet-close')), findsOneWidget);
     expect(find.byType(Divider), findsWidgets);

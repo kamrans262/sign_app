@@ -95,6 +95,13 @@ void main() {
 
     expect(find.byType(Sign2DigitalHeader), findsOneWidget);
     expect(find.text('Settings'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('app-settings-theme')));
+    await tester.pumpAndSettle();
+    expect(find.byIcon(Icons.light_mode_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.dark_mode_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.brightness_auto_outlined), findsOneWidget);
+    await tester.tap(find.byKey(const Key('selection-sheet-close')));
+    await tester.pumpAndSettle();
     expect(find.text('Theme'), findsOneWidget);
     expect(find.text('Light'), findsOneWidget);
     expect(find.text('Default Settings'), findsOneWidget);

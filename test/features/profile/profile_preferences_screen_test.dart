@@ -80,6 +80,15 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(Sign2DigitalHeader), findsOneWidget);
     expect(find.text('Preferences'), findsOneWidget);
+    expect(find.descendant(
+      of: find.byKey(const Key('preferences-language')),
+      matching: find.byIcon(Icons.keyboard_arrow_down_rounded),
+    ), findsOneWidget);
+    await tester.tap(find.byKey(const Key('preferences-language')));
+    await tester.pumpAndSettle();
+    expect(find.byIcon(Icons.translate_rounded), findsNWidgets(4));
+    await tester.tap(find.byKey(const Key('selection-sheet-close')));
+    await tester.pumpAndSettle();
     expect(find.text('Language'), findsOneWidget);
     expect(find.text('English'), findsOneWidget);
     expect(find.text('DD / MM / YYYY'), findsOneWidget);

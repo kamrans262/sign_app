@@ -124,6 +124,25 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
       options: values,
       selected: current,
       icon: icon,
+      iconForOption: (value) => switch (label) {
+        'Theme' => switch (value) {
+          'Light' => Icons.light_mode_outlined,
+          'Dark' => Icons.dark_mode_outlined,
+          _ => Icons.brightness_auto_outlined,
+        },
+        'Default Job View' => Icons.view_list_rounded,
+        'Default Document Type' => switch (value) {
+          'Quote' => Icons.request_quote_outlined,
+          'Invoice' => Icons.receipt_long_outlined,
+          'Report' => Icons.description_outlined,
+          'Addendum' => Icons.note_add_outlined,
+          _ => Icons.insert_drive_file_outlined,
+        },
+        'Default Currency' => Icons.account_balance_wallet_outlined,
+        'Units' => value.startsWith('Metric')
+            ? Icons.straighten_outlined : Icons.square_foot_outlined,
+        _ => icon,
+      },
       keyForOption: (value) => Key(
         'app-settings-option-${value.toLowerCase().replaceAll(' ', '-').replaceAll('/', '-')}',
       ),
@@ -252,7 +271,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
               _field(
                 key: const Key('app-settings-job-view'),
                 title: 'Default Job View', value: _settings.jobView,
-                icon: Icons.description_outlined, options: _jobViews,
+                icon: Icons.view_list_rounded, options: _jobViews,
                 update: (v) => _settings.copyWith(jobView: v),
               ),
               const SizedBox(height: 20),
@@ -276,7 +295,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
               _field(
                 key: const Key('app-settings-units'),
                 title: 'Units', value: _settings.units,
-                icon: Icons.grid_view_rounded, options: _units,
+                icon: Icons.straighten_outlined, options: _units,
                 update: (v) => _settings.copyWith(units: v),
               ),
               const SizedBox(height: 20),

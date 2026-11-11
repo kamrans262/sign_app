@@ -118,6 +118,7 @@ class Sign2DigitalSelectionSheet {
     IconData icon = Icons.tune_rounded,
     String? subtitle,
     String Function(String)? labelForOption,
+    IconData? Function(String)? iconForOption,
     Key Function(String)? keyForOption,
   }) => showCustom<String>(
     context: context,
@@ -136,6 +137,7 @@ class Sign2DigitalSelectionSheet {
       itemBuilder: (context, index) {
         final option = options[index];
         final isSelected = option == selected;
+        final optionIcon = iconForOption?.call(option);
         return Semantics(
           selected: isSelected,
           button: true,
@@ -151,6 +153,12 @@ class Sign2DigitalSelectionSheet {
                 padding: const EdgeInsets.symmetric(
                   horizontal: 14, vertical: 14),
                 child: Row(children: [
+                  if (optionIcon != null) ...[
+                    Icon(optionIcon, size: 20,
+                      color: isSelected ? AppColors.primary : AppColors.dark,
+                      semanticLabel: '${labelForOption?.call(option) ?? option} icon'),
+                    const SizedBox(width: 12),
+                  ],
                   Expanded(child: Text(
                     labelForOption?.call(option) ?? option,
                     style: TextStyle(

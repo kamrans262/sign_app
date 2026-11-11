@@ -83,6 +83,15 @@ class _ProfilePreferencesScreenState extends State<ProfilePreferencesScreen> {
       options: options,
       selected: current,
       icon: icon,
+      iconForOption: (option) => switch (title) {
+        'Language' => Icons.translate_rounded,
+        'Date Format' => Icons.calendar_month_outlined,
+        'Time Format' => option == '24 hours'
+            ? Icons.schedule_outlined : Icons.watch_later_outlined,
+        'Time Zone' => option == 'UTC'
+            ? Icons.public_outlined : Icons.location_on_outlined,
+        _ => icon,
+      },
       keyForOption: (option) => Key(
         'preferences-option-${option.replaceAll('/', '-').replaceAll(' ', '-')}',
       ),
@@ -149,7 +158,7 @@ class _ProfilePreferencesScreenState extends State<ProfilePreferencesScreen> {
     required IconData icon,
     required List<String> options,
     required ValueChanged<String> onSelected,
-    bool chevron = false,
+    bool chevron = true,
   }) => Sign2DigitalSelectionField(
     key: key,
     label: label,
@@ -239,7 +248,7 @@ class _ProfilePreferencesScreenState extends State<ProfilePreferencesScreen> {
                 key: const Key('preferences-time-zone'),
                 label: 'Time Zone',
                 value: _draft.timeZone,
-                icon: Icons.update_rounded,
+                icon: Icons.public_outlined,
                 options: _timeZones,
                 onSelected: (value) =>
                     _draft = _draft.copyWith(timeZone: value),

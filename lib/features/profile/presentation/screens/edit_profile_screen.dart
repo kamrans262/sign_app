@@ -139,7 +139,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       subtitle: 'Choose your job title or enter another',
       options: [...options, '__other__'],
       selected: _title,
-      icon: Icons.description_outlined,
+      icon: Icons.badge_outlined,
+      iconForOption: (value) => value == '__other__'
+          ? Icons.edit_outlined : Icons.badge_outlined,
       labelForOption: (value) =>
           value == '__other__' ? 'Other title...' : value,
       keyForOption: (value) => value == '__other__'
@@ -387,7 +389,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   label: 'Title',
                   hintText: 'e.g. Project Manager',
                   iconAsset: '',
-                  leadingIcon: Icons.description_outlined,
+                  leadingIcon: Icons.badge_outlined,
                   leadingIconSize: 24,
                   value: _title,
                   trailing: const Icon(Icons.keyboard_arrow_down_rounded,
