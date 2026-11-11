@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart' as material;
 
 import '../theme/app_colors.dart';
+import 'sign2digital_modal_guard.dart';
 
 /// Standardized Sign2Digital sheet shell.
 ///
@@ -34,7 +35,9 @@ Future<T?> showSign2DigitalBottomSheet<T>({
   bool? requestFocus,
 }) {
   final appTheme = material.Theme.of(context);
-  return material.showModalBottomSheet<T>(
+  return Sign2DigitalModalGuard.run<T>(
+    context,
+    () => material.showModalBottomSheet<T>(
     context: context,
     builder: (sheetContext) => material.Theme(
       data: appTheme.copyWith(
@@ -75,5 +78,6 @@ Future<T?> showSign2DigitalBottomSheet<T>({
     ),
     clipBehavior: material.Clip.antiAlias,
     showDragHandle: true,
+    ),
   );
 }
