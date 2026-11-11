@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -8,6 +9,7 @@ import 'package:sign2digital/core/services/sign_api_client.dart';
 import 'package:sign2digital/features/quotes/data/remote_signature_request_repository.dart';
 import 'package:sign2digital/features/quotes/domain/quote_document_tracking.dart';
 import 'package:sign2digital/features/quotes/domain/quote_review_models.dart';
+import 'package:sign2digital/features/quotes/domain/quote_signature_draft.dart';
 
 QuoteReviewDraft approvedSource() {
   final quote = QuoteReviewDraft(
@@ -86,6 +88,72 @@ void main() {
     expect(result.tracking.sent,isFalse);
     expect(result.tracking.viewed,isFalse);
     expect(calls,[
+      'POST /api/v1/quotes/22/signature-requests',
+      'GET /api/v1/signature-requests/101',
+    ]);
+  });
+
+  test('issuer signing uses server-provided authorization and preserves email contents',
+      () async {
+    final calls = <String>[];
+    const ref = '12345678-aaaa-4444-bbbb-aaaaaaaaaaaa';
+    final api = client(MockClient((request) async {
+      calls.add(request.method + ' ' + request.url.path);
+      if (request.method == 'GET' &&
+          request.url.path.endsWith('/business-signature-context')) {
+        return http.Response(jsonEncode({'data':{'context':{
+          'quote_id':'22', 'document_id':ref, 'request_id':ref,
+          'signer_id':ref, 'document_version':'2:verified-sha',
+          'consent_reference':'consent', 'authorization':'opaque-server-ticket',
+        }}}),200);
+      }
+      if (request.method == 'POST' &&
+          request.url.path.endsWith('/signature-requests')) {
+        final body = jsonDecode(request.body) as Map<String,dynamic>;
+        expect(body['business_authorization'],'opaque-server-ticket');
+        expect(body['business_signature_png_base64'],base64Encode([1,2,3]));
+        expect(body['business_signature_method'],'draw');
+        expect(body['business_consent_accepted'],isTrue);
+        expect(body['message'],'Please sign this quote');
+        expect(body['attach_pdf'],isTrue);
+        return http.Response(jsonEncode({'data':{
+          'request':requestRecord(status:'sent'),
+          'secure_link':null,'delivered':true,
+        }}),201);
+      }
+      if (request.method == 'GET' && request.url.path.endsWith('/101')) {
+        return http.Response(jsonEncode({'data':{
+          'request':requestRecord(status:'sent'),
+          'events':[{
+            'id':'1','type':'documentSent',
+            'occurredAt':'2026-11-04T00:00:00Z',
+          }],
+        }}),200);
+      }
+      throw StateError('Unexpected request: ${request.url}');
+    }));
+    final service = RemoteSignatureRequestRepository(api:api);
+    final ctx = await service.prepareBusiness(approvedSource());
+    final signature = QuoteSignatureDraft(
+      quoteId:ctx.quoteId, documentId:ctx.documentId,
+      requestId:ctx.requestId, signerId:ctx.signerId,
+      documentVersion:ctx.documentVersion,
+      consentReference:ctx.consentReference,
+      method:QuoteSignatureMethod.draw,
+      pngBytes:Uint8List.fromList([1,2,3]),
+      capturedAt:DateTime.utc(2026,11,12),
+      consentAccepted:true,
+    );
+    final result = await service.create(
+      approvedSource(),
+      signerName:'Signer Customer', signerEmail:'signer@example.test',
+      delivery:'email', message:'Please sign this quote', attachPdf:true,
+      businessContext:ctx, businessSignature:signature,
+    );
+    expect(result.status,'sent');
+    expect(result.tracking.sent,isTrue);
+    expect(calls,[
+      'GET /api/v1/quotes/22/business-signature-context',
       'POST /api/v1/quotes/22/signature-requests',
       'GET /api/v1/signature-requests/101',
     ]);
