@@ -148,7 +148,7 @@ void main() {
     expect(find.text('Upgrade Plan'), findsOneWidget);
     expect(find.text('Active'), findsNothing);
     expect(find.byKey(const Key('m23-free-document-allowance')), findsOneWidget);
-    expect(find.text('Free documents remaining: 2 of 3'), findsOneWidget);
+    expect(find.text('Free documents remaining for your account: 2 of 3'), findsOneWidget);
     expect(find.byKey(const Key('subscription-demo-notice')), findsNothing);
     expect(tester.takeException(),isNull);
   });
