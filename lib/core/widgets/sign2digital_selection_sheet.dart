@@ -69,7 +69,7 @@ class Sign2DigitalSelectionSheet {
                     Text(subtitle ?? 'Select an option', style: const TextStyle(
                       fontFamily: 'Inter', fontSize: 12,
                       fontWeight: FontWeight.w400, letterSpacing: -0.3,
-                      color: AppColors.placeholder,
+                      color: AppColors.dark,
                     )),
                   ],
                 )),
@@ -93,7 +93,9 @@ class Sign2DigitalSelectionSheet {
               color: AppColors.divider),
             Flexible(
               child: ListTileTheme(
-                selectedColor: AppColors.primary,
+                selectedColor: AppColors.dark,
+                textColor: AppColors.dark,
+                iconColor: AppColors.dark,
                 selectedTileColor: DashboardColors.paleBlue,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10)),
@@ -156,8 +158,7 @@ class Sign2DigitalSelectionSheet {
                       fontWeight: isSelected
                           ? FontWeight.w600 : FontWeight.w500,
                       letterSpacing: -0.3,
-                      color: isSelected
-                          ? AppColors.primary : AppColors.dark,
+                      color: AppColors.dark,
                     ),
                   )),
                   if (isSelected)
