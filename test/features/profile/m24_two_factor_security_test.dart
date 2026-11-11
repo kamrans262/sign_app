@@ -47,7 +47,17 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(QrImageView), findsOneWidget);
     expect(find.byKey(const Key('m24-setup-secret')), findsOneWidget);
-    await tester.enterText(find.byType(TextFormField), '345678');
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('m24-setup-verification')),
+      150,
+      maxScrolls: 25,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    await tester.enterText(find.descendant(
+      of: find.byKey(const Key('m24-setup-verification')),
+      matching: find.byType(TextFormField),
+    ), '345678');
     await tester.ensureVisible(find.byKey(const Key('m24-setup-enable')));
     await tester.tap(find.byKey(const Key('m24-setup-enable')));
     await tester.pumpAndSettle();
