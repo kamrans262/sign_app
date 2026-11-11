@@ -8,6 +8,7 @@ import '../../../../core/widgets/sign2digital_header.dart';
 import '../../../../core/widgets/sign2digital_information_table.dart';
 import '../../../../core/widgets/sign2digital_outlined_button.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
+import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import '../../../../core/widgets/sign2digital_outlined_container.dart';
 import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import '../../../clients/presentation/widgets/sign2digital_status_badge.dart';
@@ -44,6 +45,7 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
   int _tab = 0;
   bool _busy = false;
   bool _confirmingDeletion = false;
+  bool _confirmingApproval = false;
   bool _verifiedRemote = false;
   bool _loadingRemote = false;
 
@@ -474,7 +476,52 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
     }
   }
 
-  Widget _actions() => Row(
+  Future<void> _approve() async {
+    if (_busy || _confirmingApproval || !_canModifyRemote ||
+        !_record.canApprove || _record.status != LabourEntryStatus.pending ||
+        _repository is! RemoteLabourRepository) return;
+    _confirmingApproval = true;
+    try {
+      final choice = await Sign2DigitalSelectionSheet.show(
+        context, title: 'Approve Time Entry',
+        subtitle: 'Confirm approval for ${_record.workerName}. This locks the entry.',
+        icon: Icons.check_circle_outline,
+        options: const ['Cancel', 'Approve'],
+      );
+      if (!mounted || choice != 'Approve') return;
+      setState(() => _busy = true);
+      final approved = await (_repository as RemoteLabourRepository)
+          .approveEntry(_record);
+      if (!mounted) return;
+      if (approved.id != _record.id || approved.status != LabourEntryStatus.approved) {
+        throw StateError('Invalid approval response.');
+      }
+      setState(() => _record = approved);
+      _notice('Time entry approved.');
+    } catch (_) {
+      _notice('Unable to approve time entry. Refresh and retry.');
+    } finally {
+      _confirmingApproval = false;
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Widget _actions() => Column(
+    key: const Key('labour-detail-actions'),
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      if (_record.status == LabourEntryStatus.pending &&
+          _record.canApprove && _repository is RemoteLabourRepository) ...[
+        Sign2DigitalPrimaryButton(
+          key: const Key('labour-detail-approve'),
+          label: 'Approve',
+          enabled: !_busy && !_confirmingApproval && _canModifyRemote,
+          loading: _busy,
+          onPressed: _approve,
+        ),
+        const SizedBox(height: 10),
+      ],
+      Row(
     key: const Key('labour-detail-actions'),
     children: [
       Expanded(child: Sign2DigitalOutlinedButton(
@@ -494,6 +541,8 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
             (_repository is! RemoteLabourRepository || _record.source == 'manual'),
         onPressed: _edit,
       )),
+    ],
+      ),
     ],
   );
 
