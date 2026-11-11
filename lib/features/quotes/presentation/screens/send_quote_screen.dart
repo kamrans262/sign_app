@@ -1,5 +1,6 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import '../../../documents/data/document_activity_session.dart';
 import 'package:flutter/services.dart';
@@ -13,6 +14,7 @@ import '../../domain/quote_document_tracking.dart';
 import '../../domain/quote_tracking_home_session.dart';
 import '../../domain/quote_review_models.dart';
 import '../../data/remote_quote_repository.dart';
+import '../../data/remote_signature_request_repository.dart';
 import '../../../../core/services/active_company_session.dart';
 import '../../../../core/services/sign_api_client.dart';
 import '../../../auth/data/mobile_auth_repository.dart';
@@ -23,6 +25,7 @@ import '../../services/quote_pdf_service.dart';
 import '../widgets/sign2digital_quote_shadow_panel.dart';
 import '../widgets/sign2digital_sending_method_card.dart';
 import 'signature_request_screen.dart';
+import 'add_signature_screen.dart';
 
 /// Opening an email/share chooser does not prove that a quote was delivered.
 /// Secure links require a trusted provider, not a locally manufactured URL.
@@ -345,6 +348,118 @@ class _SendQuoteScreenState extends State<SendQuoteScreen> {
     _saveSession();
   }
 
+  void _rememberSignatureRequest(RemoteSigningRequest result) {
+    if (!mounted) return;
+    setState(() {
+      _serverSecureLink = result.tracking.secureUrl?.toString();
+      _serverLinkExpiresAt = result.tracking.expiresAt;
+    });
+    QuoteTrackingHomeSession.rememberVerifiedTracking(result.tracking);
+  }
+
+  Future<void> _sendForSignature({required bool businessRequired}) async {
+    if (_sendDraft.method == QuoteSendingMethod.other) return;
+    final recipient = _sendDraft.email.trim();
+    if (recipient.isEmpty ||
+        recipient.toLowerCase() != _quote.clientEmail.trim().toLowerCase()) {
+      _notify('Signature requests must use the email on the approved customer record.');
+      return;
+    }
+    if (_sendDraft.method == QuoteSendingMethod.email &&
+        _messageController.text.trim().isEmpty) {
+      _notify('Write a message before sending.'); return;
+    }
+    setState(() => _busy = true);
+    try {
+      final service = RemoteSignatureRequestRepository.shared;
+      final existing = await service.latest(_quote);
+      if (!mounted) return;
+      if (existing != null && existing.tracking.requestIsActive) {
+        _rememberSignatureRequest(existing);
+        _notify('An active signing request already exists. Open View document status.');
+        return;
+      }
+      final delivery = _sendDraft.method == QuoteSendingMethod.email
+          ? 'email' : 'link';
+
+      Future<RemoteSigningRequest> create({
+        BusinessSignatureContext? context,
+        QuoteSignatureDraft? signature,
+      }) => service.create(
+        _quote,
+        signerName: _quote.clientName,
+        signerEmail: _quote.clientEmail.trim(),
+        delivery: delivery,
+        message: _messageController.text.trim(),
+        attachPdf: _sendDraft.method == QuoteSendingMethod.email &&
+            _sendDraft.pdfAttached,
+        businessContext: context,
+        businessSignature: signature,
+      );
+
+      if (businessRequired) {
+        final context = await service.prepareBusiness(_quote);
+        if (!mounted) return;
+        RemoteSigningRequest? created;
+        final result = await Sign2DigitalNavigation.push<QuoteSignatureDraft>(
+          this.context,
+          MaterialPageRoute<QuoteSignatureDraft>(
+            builder: (_) => AddSignatureScreen(
+              quoteId: context.quoteId,
+              documentId: context.documentId,
+              requestId: context.requestId,
+              signerId: context.signerId,
+              documentVersion: context.documentVersion,
+              consentReference: context.consentReference,
+              termsText: _quote.terms,
+              onSubmit: (signature) async {
+                try {
+                  created = await create(context: context, signature: signature);
+                  if (mounted) _rememberSignatureRequest(created!);
+                  return true;
+                } catch (error) {
+                  if (mounted) _notify('Unable to submit issuer signature: $error');
+                  return false;
+                }
+              },
+            ),
+          ),
+        );
+        if (!mounted || result == null || created == null) return;
+        if (delivery == 'email') {
+          _notify(created!.status == 'sent'
+              ? 'Business signature recorded and signing email sent to the customer.'
+              : 'Business signature recorded. Email delivery is not confirmed.');
+        } else {
+          final url = created!.tracking.secureUrl;
+          if (url != null) {
+            await Clipboard.setData(ClipboardData(text: url.toString()));
+            _notify('Business signature recorded. Customer signing link copied.');
+          }
+        }
+      } else {
+        final created = await create();
+        if (!mounted) return;
+        _rememberSignatureRequest(created);
+        if (delivery == 'email') {
+          _notify(created.status == 'sent'
+              ? 'Customer signing request sent by email.'
+              : 'Signature request created; email delivery is not confirmed.');
+        } else {
+          final url = created.tracking.secureUrl;
+          if (url != null) {
+            await Clipboard.setData(ClipboardData(text: url.toString()));
+            _notify('Customer signing link copied. Delivery is not yet confirmed.');
+          }
+        }
+      }
+    } catch (error) {
+      if (mounted) _notify('Could not send signing request: $error');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   Future<void> _send() async {
     if (_busy || _preparing) { return; }
     if (!_quote.approvedLocally || _quote.approvalIssues.isNotEmpty) {
@@ -354,6 +469,28 @@ class _SendQuoteScreenState extends State<SendQuoteScreen> {
     if (MobileAuthRepository.shared.isSignedIn &&
         !_quote.isDemo && _quote.serverId != null &&
         _sendDraft.method != QuoteSendingMethod.other) {
+      // Use our existing Sign2Digital selection sheet; no new screen or design.
+      // The review-only sharing path remains available and unchanged.
+      final purpose = await Sign2DigitalSelectionSheet.show(
+        context,
+        title: 'Send Quote',
+        subtitle: 'Select how the customer will receive this quotation.',
+        icon: Icons.draw_outlined,
+        options: const [
+          'Customer Signature',
+          'Business + Customer Signatures',
+          'Send for Review',
+        ],
+        iconForOption: (option) => option == 'Send for Review'
+            ? Icons.visibility_outlined : Icons.draw_outlined,
+      );
+      if (purpose == null || !mounted) return;
+      if (purpose != 'Send for Review') {
+        await _sendForSignature(
+          businessRequired: purpose == 'Business + Customer Signatures',
+        );
+        return;
+      }
       if (_sendDraft.method == QuoteSendingMethod.email) {
         if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
             .hasMatch(_sendDraft.email.trim())) {
