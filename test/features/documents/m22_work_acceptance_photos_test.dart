@@ -104,7 +104,10 @@ void main() {
     )));
     await tester.pumpAndSettle();
 
-    await tester.ensureVisible(find.byKey(const Key('acceptance-select-photos')));
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('acceptance-select-photos')), 160,
+      scrollable: find.byType(Scrollable).first);
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('acceptance-select-photos')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('acceptance-choose-camera')), findsOneWidget);
@@ -112,11 +115,18 @@ void main() {
     await tester.tap(find.byKey(const Key('acceptance-choose-camera')));
     await tester.pumpAndSettle();
     expect(photos.cameraCalls,1);
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('acceptance-photo-grid')), 160,
+      scrollable: find.byType(Scrollable).first);
+    await tester.pumpAndSettle();
     expect(find.byKey(const Key('acceptance-photo-grid')), findsOneWidget);
     expect(find.byKey(const Key('acceptance-photo-0')), findsOneWidget);
     expect(find.byType(Sign2DigitalPhotoPreview), findsOneWidget);
 
-    await tester.ensureVisible(find.byKey(const Key('acceptance-select-photos')));
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('acceptance-select-photos')), 160,
+      scrollable: find.byType(Scrollable).first);
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('acceptance-select-photos')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('acceptance-choose-gallery')));
@@ -124,7 +134,9 @@ void main() {
     expect(photos.galleryCalls,1);
     expect(find.byType(Sign2DigitalPhotoPreview), findsNWidgets(3));
 
-    await tester.ensureVisible(find.byKey(const Key('acceptance-photo-1')));
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('acceptance-photo-1')), 100,
+      scrollable: find.byType(Scrollable).first);
     await tester.tap(find.descendant(
       of:find.byKey(const Key('acceptance-photo-1')),
       matching:find.byType(IconButton)));
@@ -132,7 +144,9 @@ void main() {
     expect(find.byType(Sign2DigitalPhotoPreview), findsNWidgets(2));
 
     await tester.enterText(find.byType(TextFormField).first,'Roof finished');
-    await tester.ensureVisible(find.byKey(const Key('acceptance-save-draft')));
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('acceptance-save-draft')), 160,
+      scrollable: find.byType(Scrollable).first);
     await tester.tap(find.byKey(const Key('acceptance-save-draft')));
     await tester.pumpAndSettle();
     expect(repo.saves,1);
@@ -159,6 +173,10 @@ void main() {
       initial:draft,photoSource:_PickedPhotos(),mediaRepository:media,
       repository:repo,jobLoader:() async=>[_job()],
     )));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('acceptance-photo-grid')), 160,
+      scrollable: find.byType(Scrollable).first);
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('acceptance-photo-grid')), findsOneWidget);
     expect(find.byType(Sign2DigitalPhotoPreview), findsOneWidget);
