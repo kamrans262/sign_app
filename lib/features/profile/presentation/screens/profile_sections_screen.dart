@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
+import '../../../../core/widgets/sign2digital_primary_button.dart';
+import '../../../../core/widgets/sign2digital_outlined_button.dart';
 import '../../../company/data/demo_company_repository.dart';
 import '../../../company/data/remote_company_repository.dart';
 import '../../../company/presentation/screens/company_team_screen.dart';
@@ -69,13 +71,13 @@ class ProfileBusinessInformationScreen extends StatelessWidget {
                   style: TextStyle(fontFamily: 'Inter',
                     fontSize: 14, color: AppColors.placeholder)),
                 const SizedBox(height: 20),
-                FilledButton(
+                Sign2DigitalPrimaryButton(
                   key: const Key('retry-company-load'),
+                  label: 'Retry',
                   onPressed: () => Navigator.of(context).pushReplacement<void, void>(
                     MaterialPageRoute<void>(builder: (_) =>
                       const ProfileBusinessInformationScreen()),
                   ),
-                  child: const Text('Retry'),
                 ),
               ]);
             }
@@ -86,21 +88,22 @@ class ProfileBusinessInformationScreen extends StatelessWidget {
                   style: TextStyle(fontFamily: 'Inter',
                     fontSize: 14, color: AppColors.placeholder)),
                 const SizedBox(height: 20),
-                FilledButton(
+                Sign2DigitalPrimaryButton(
                   key: const Key('profile-company-setup'),
+                  label: 'Set Up Business Information',
                   onPressed: () => Sign2DigitalNavigation.push<void>(context,
                     MaterialPageRoute<void>(builder: (_) =>
                       CreateCompanyScreen(
                         companyRepository: MobileAuthRepository.shared.isSignedIn
                             ? null : DemoCompanyRepository.shared))),
-                  child: const Text('Set Up Business Information'),
                 ),
                 if (MobileAuthRepository.shared.isSignedIn) ...[
                   const SizedBox(height: 12),
-                  OutlinedButton(
+                  Sign2DigitalOutlinedButton(
                     key: const Key('company-invitations-no-company'),
+                    label: 'Accept Company Invitation',
+                    primaryOutline: true,
                     onPressed: () => _openInvitations(context),
-                    child: const Text('Accept Company Invitation'),
                   ),
                 ],
               ]);
@@ -125,8 +128,9 @@ class ProfileBusinessInformationScreen extends StatelessWidget {
               const SizedBox(height: 15),
               if (MobileAuthRepository.shared.isSignedIn) ...[
                 if (company.role == 'owner' || company.role == 'admin')
-                FilledButton(
+                Sign2DigitalPrimaryButton(
                   key: const Key('edit-company-details'),
+                  label: 'Edit Business Information',
                   onPressed: () async {
                     final changed = await Sign2DigitalNavigation.push<bool>(context,
                       MaterialPageRoute<bool>(builder: (_) =>
@@ -139,11 +143,12 @@ class ProfileBusinessInformationScreen extends StatelessWidget {
                       ),
                     );
                   },
-                  child: const Text('Edit Business Information'),
                 ),
                 const SizedBox(height: 10),
-                OutlinedButton(
+                Sign2DigitalOutlinedButton(
                   key: const Key('manage-company-team'),
+                  label: 'Team Members & Permissions',
+                  primaryOutline: true,
                   onPressed: () => Sign2DigitalNavigation.push<void>(context,
                     MaterialPageRoute<void>(builder: (_) => CompanyTeamScreen(
                       companyId: company.id,
@@ -151,13 +156,13 @@ class ProfileBusinessInformationScreen extends StatelessWidget {
                       role: _roleFor(company),
                     )),
                   ),
-                  child: const Text('Team Members & Permissions'),
                 ),
                 const SizedBox(height: 10),
-                OutlinedButton(
+                Sign2DigitalOutlinedButton(
                   key: const Key('accept-company-invitation'),
+                  label: 'Company Invitations',
+                  primaryOutline: true,
                   onPressed: () => _openInvitations(context),
-                  child: const Text('Company Invitations'),
                 ),
               ] else
                 const Text(
