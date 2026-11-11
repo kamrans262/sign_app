@@ -167,9 +167,9 @@ class RemoteSignatureRequestRepository {
     if ((businessContext == null) != (businessSignature == null)) {
       throw const SignApiException('Issuer authorization and signature must be provided together.');
     }
-    if (businessContext != null && (
+    if (businessContext != null && businessSignature != null && (
         businessContext.quoteId != '$serverId' ||
-        businessContext.documentId != businessSignature!.documentId ||
+        businessContext.documentId != businessSignature.documentId ||
         businessContext.requestId != businessSignature.requestId ||
         businessContext.signerId != businessSignature.signerId ||
         businessContext.documentVersion != businessSignature.documentVersion ||
