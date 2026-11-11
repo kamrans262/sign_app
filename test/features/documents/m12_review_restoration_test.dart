@@ -169,6 +169,23 @@ void main() {
     });
   }
 
+  testWidgets('unverified server status never allows stale draft approval',
+      (tester) async {
+    await tester.pumpWidget(MaterialApp(home: ReportReviewScreen(
+      report: _fixture(), repository: _repository('unexpected_state'),
+    )));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Unable to refresh report:'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Approve Report'), 350,
+      scrollable: find.byType(Scrollable).first);
+    await tester.pumpAndSettle();
+    final approve = tester.widget<Sign2DigitalPrimaryButton>(find.ancestor(
+      of: find.text('Approve Report'),
+      matching: find.byType(Sign2DigitalPrimaryButton)));
+    expect(approve.enabled, false);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('existing Other condition and risk are restored as editable inputs',
       (tester) async {
     await tester.pumpWidget(MaterialApp(home:
