@@ -103,7 +103,40 @@ void main() {
         .getExpense('expense-21');
     expect(loaded.photos.single.bytes,bytes);
     expect(loaded.photos.single.sourceKey,'remote-receipt-41');
-    expect(loaded.history.single.title,'created');
+    expect(loaded.history.single.title,'Created');
+    client.dispose();
+  });
+
+  test('expense review checks capability, posts confirmation and reloads history',
+      () async {
+    var approvals=0;
+    final client=api((req) async {
+      if(req.url.path.endsWith('/approve')){
+        approvals++;
+        expect(req.method,'POST');
+        expect(jsonDecode(req.body)['confirm'], true);
+        return http.Response(jsonEncode({'data':{
+          'expense':expense(status:'approved', version:2),
+        }}),200);
+      }
+      return http.Response(jsonEncode({'data':{
+        'expense':expense(status:approvals==0?'to_review':'approved',
+          version:approvals==0?1:2),
+        'can_approve':true,
+        'history':[{
+          'id':1,'type':'reimbursement_requested',
+          'created_at':'2026-11-05T11:00:00Z','actor_id':3,
+        }],
+        'receipts':[],
+      }}),200);
+    });
+    final repository=RemoteExpenseRepository(api:client);
+    final pending=await repository.getExpense('expense-21');
+    expect(pending.canApprove,true);
+    expect(pending.history.single.title,'Reimbursement Requested');
+    final approved=await repository.approveExpense(pending);
+    expect(approved.status, ExpenseStatus.approved);
+    expect(approvals,1);
     client.dispose();
   });
 
