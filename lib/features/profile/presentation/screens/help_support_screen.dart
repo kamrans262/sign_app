@@ -5,6 +5,11 @@ import 'package:printing/printing.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
+import '../../../../core/widgets/sign2digital_input_field.dart';
+import '../../../../core/widgets/sign2digital_selection_field.dart';
+import '../../../../core/widgets/sign2digital_selection_sheet.dart';
+import '../../../../core/widgets/sign2digital_primary_button.dart';
+import '../../../../core/widgets/sign2digital_outlined_button.dart';
 import '../../data/remote_support_repository.dart';
 import '../../data/profile_preferences_repository.dart';
 
@@ -85,11 +90,12 @@ class _HelpSupportState extends State<HelpSupportScreen> {
           child:ListView(key:const Key('m22-help-scroll'),
             padding:const EdgeInsets.fromLTRB(20,12,20,24),
             children:[
-              FilledButton.icon(
+              Sign2DigitalPrimaryButton(
                 key:const Key('m22-contact-support'),
+                label:'Contact Support / Report a Problem',
                 onPressed:newTicket,
-                icon:const Icon(Icons.support_agent_outlined),
-                label:const Text('Contact Support / Report a Problem'),
+                leading:const Icon(Icons.support_agent_outlined,
+                  color:AppColors.white,size:20),
               ),
               const SizedBox(height:20),
               const Text('Help Center',style:TextStyle(fontFamily:'Inter',
@@ -151,6 +157,19 @@ class NewSupportTicketScreen extends StatefulWidget {
 class _NewTicketState extends State<NewSupportTicketScreen> {
   final subject=TextEditingController(), description=TextEditingController();
   String category='technical';
+  static const categoryLabels=<String,String>{
+    'technical':'Technical help','bug':'Report a problem',
+    'account':'Account','billing':'Billing question',
+    'general':'General','feedback':'Feedback',
+  };
+  static IconData categoryIcon(String value) => switch(value){
+    'technical'=>Icons.build_outlined,
+    'bug'=>Icons.bug_report_outlined,
+    'account'=>Icons.manage_accounts_outlined,
+    'billing'=>Icons.receipt_long_outlined,
+    'feedback'=>Icons.rate_review_outlined,
+    _=>Icons.help_outline_rounded,
+  };
   bool saving=false;
   String? error;
   XFile? screenshot;
@@ -197,6 +216,19 @@ class _NewTicketState extends State<NewSupportTicketScreen> {
     }
   }
 
+  Future<void> pickCategory() async {
+    final value=await Sign2DigitalSelectionSheet.show(
+      context,title:'Issue Category',
+      icon:Icons.support_agent_outlined,
+      options:categoryLabels.keys.toList(growable:false),
+      selected:category,
+      labelForOption:(value)=>categoryLabels[value]??value,
+      iconForOption:categoryIcon,
+      keyForOption:(value)=>Key('m22-support-category-$value'),
+    );
+    if(mounted&&value!=null)setState(()=>category=value);
+  }
+
   @override
   Widget build(BuildContext context)=>Scaffold(
     backgroundColor:AppColors.white,
@@ -207,65 +239,60 @@ class _NewTicketState extends State<NewSupportTicketScreen> {
           MediaQuery.orientationOf(context)==Orientation.landscape
               ? double.infinity : 720),
         child:ListView(padding:const EdgeInsets.all(20),children:[
-          DropdownButtonFormField<String>(
+          Sign2DigitalSelectionField(
             key:const Key('m22-support-category'),
-            initialValue:category,
-            decoration:const InputDecoration(
-              labelText:'Issue category',
-              prefixIcon:Icon(Icons.support_agent_outlined,
-                color:AppColors.dark),
-              border:OutlineInputBorder()),
-            items:const [
-              DropdownMenuItem(value:'technical',child:Row(
-                mainAxisSize:MainAxisSize.min,children:[
-                  Icon(Icons.build_outlined,size:20),
-                  SizedBox(width:10),Text('Technical help')])),
-              DropdownMenuItem(value:'bug',child:Row(
-                mainAxisSize:MainAxisSize.min,children:[
-                  Icon(Icons.bug_report_outlined,size:20),
-                  SizedBox(width:10),Text('Report a problem')])),
-              DropdownMenuItem(value:'account',child:Row(
-                mainAxisSize:MainAxisSize.min,children:[
-                  Icon(Icons.manage_accounts_outlined,size:20),
-                  SizedBox(width:10),Text('Account')])),
-              DropdownMenuItem(value:'billing',child:Row(
-                mainAxisSize:MainAxisSize.min,children:[
-                  Icon(Icons.receipt_long_outlined,size:20),
-                  SizedBox(width:10),Text('Billing question')])),
-              DropdownMenuItem(value:'general',child:Row(
-                mainAxisSize:MainAxisSize.min,children:[
-                  Icon(Icons.help_outline_rounded,size:20),
-                  SizedBox(width:10),Text('General')])),
-              DropdownMenuItem(value:'feedback',child:Row(
-                mainAxisSize:MainAxisSize.min,children:[
-                  Icon(Icons.rate_review_outlined,size:20),
-                  SizedBox(width:10),Text('Feedback')])),
-            ],
-            onChanged:(value){if(value!=null)setState(()=>category=value);},
+            label:'Issue Category',
+            value:categoryLabels[category],
+            hintText:'Select issue category',
+            iconAsset:'',
+            leadingIcon:Icons.support_agent_outlined,
+            leadingIconSize:24,
+            trailing:const Icon(Icons.keyboard_arrow_down_rounded,
+              color:AppColors.secondaryText,size:24),
+            onTap:pickCategory,
           ),
           const SizedBox(height:16),
-          TextField(key:const Key('m22-support-subject'),
+          Sign2DigitalInputField(
+            key:const Key('m22-support-subject'),
+            label:'Subject',
+            hintText:'Briefly describe your issue',
+            iconAsset:'',
+            leadingIcon:Icons.subject_outlined,
+            leadingIconSize:24,
             controller:subject,maxLength:180,
-            decoration:const InputDecoration(labelText:'Subject',
-              border:OutlineInputBorder())),
+            textInputAction:TextInputAction.next,
+          ),
           const SizedBox(height:12),
-          TextField(key:const Key('m22-support-description'),
-            controller:description,maxLength:10000,maxLines:6,
-            decoration:const InputDecoration(labelText:'What happened?',
-              border:OutlineInputBorder())),
+          Sign2DigitalInputField(
+            key:const Key('m22-support-description'),
+            label:'What Happened?',
+            hintText:'Describe the issue in detail',
+            iconAsset:'',
+            leadingIcon:Icons.description_outlined,
+            leadingIconSize:24,
+            controller:description,
+            keyboardType:TextInputType.multiline,
+            textInputAction:TextInputAction.newline,
+            minLines:4,maxLines:6,maxLength:10000,
+          ),
           const SizedBox(height:8),
-          TextButton.icon(
+          Sign2DigitalOutlinedButton(
             key:const Key('m22-support-screenshot'),
+            label:screenshot==null?'Attach Screenshot (Optional)'
+              :'Screenshot Selected',
             onPressed:pickScreenshot,
-            icon:const Icon(Icons.attach_file),
-            label:Text(screenshot==null?'Attach screenshot (optional)'
-              :'Screenshot selected')),
+            primaryOutline:true,
+            leading:const Icon(Icons.attach_file,
+              color:AppColors.primary,size:20),
+          ),
           if(error!=null)
             Text(error!,style:const TextStyle(color:Colors.red)),
           const SizedBox(height:18),
-          FilledButton(key:const Key('m22-support-submit'),
-            onPressed:saving?null:submit,
-            child:Text(saving?'Submitting…':'Submit Support Ticket')),
+          Sign2DigitalPrimaryButton(
+            key:const Key('m22-support-submit'),
+            label:'Submit Support Ticket',
+            loading:saving,onPressed:submit,
+          ),
         ]),
       ))),
     ])),
@@ -389,15 +416,26 @@ class _TicketDetailState extends State<SupportTicketDetailsScreen> {
               ],
               if(data!.ticket.status!='closed')...[
                 const SizedBox(height:14),
-                TextField(key:const Key('m22-ticket-reply'),
-                  controller:reply,maxLines:4,maxLength:10000,
-                  decoration:const InputDecoration(
-                    labelText:'Your reply',border:OutlineInputBorder())),
+                Sign2DigitalInputField(
+                  key:const Key('m22-ticket-reply'),
+                  controller:reply,
+                  label:'Your Reply',
+                  hintText:'Write a reply to this ticket',
+                  iconAsset:'',
+                  leadingIcon:Icons.reply_outlined,
+                  leadingIconSize:24,
+                  keyboardType:TextInputType.multiline,
+                  textInputAction:TextInputAction.newline,
+                  minLines:3,maxLines:4,maxLength:10000,
+                ),
                 if(error!=null)
                   Text(error!,style:const TextStyle(color:Colors.red)),
-                FilledButton(key:const Key('m22-ticket-send'),
-                  onPressed:saving?null:send,
-                  child:Text(saving?'Sending…':'Send Reply')),
+                const SizedBox(height:16),
+                Sign2DigitalPrimaryButton(
+                  key:const Key('m22-ticket-send'),
+                  label:'Send Reply',
+                  loading:saving,onPressed:send,
+                ),
               ],
             ],
           ]),
