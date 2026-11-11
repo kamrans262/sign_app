@@ -8,6 +8,12 @@ import '../../../jobs/domain/job_model.dart';
 import '../../../jobs/data/demo_created_job_repository.dart';
 import '../../../jobs/data/remote_job_repository.dart';
 import '../../../jobs/presentation/screens/job_details_screen.dart';
+import '../../../documents/data/remote_document_repository.dart';
+import '../../../documents/presentation/screens/document_details_screen.dart';
+import '../../../invoices/data/remote_invoice_repository.dart';
+import '../../../invoices/presentation/screens/invoice_details_screen.dart';
+import '../../../../core/services/active_company_session.dart';
+import '../../../../core/services/sign_api_client.dart';
 
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -29,7 +35,7 @@ import '../widgets/sign2digital_statistics_card.dart';
 import '../widgets/sign2digital_status_badge.dart';
 import 'add_client_screen.dart';
 
-/// Client-specific, UI-only details. None of the presented records come from a server.
+/// Company-bound client dossier, using real related records when signed in.
 class ClientDetailsScreen extends StatefulWidget {
   const ClientDetailsScreen({
     super.key,
@@ -61,10 +67,15 @@ class ClientDetailsScreen extends StatefulWidget {
 class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
   late ClientProfile _client;
   int _tabIndex = 0;
+  ClientDetailsModel? _liveDetails;
+  bool _detailsLoading = false;
+  String? _detailsError;
   // Used only when Client Details is opened outside the dashboard shell.
   final DemoCreatedJobRepository _standaloneJobs = DemoCreatedJobRepository();
 
   List<JobModel> get _createdClientJobs =>
+      widget.repository is RemoteClientRepository
+          ? const <JobModel>[] :
       widget.createdJobsForClient?.call(_client.id) ??
       _standaloneJobs.forClient(_client.id);
 
@@ -88,6 +99,83 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
   void initState() {
     super.initState();
     _client = widget.client;
+    if (widget.repository is RemoteClientRepository) _loadDetails();
+  }
+
+  Future<void> _loadDetails() async {
+    final repository = widget.repository;
+    if (repository is! RemoteClientRepository || !mounted) return;
+    final company = ActiveCompanySession.companyId;
+    setState(() { _detailsLoading = true; _detailsError = null; });
+    try {
+      final details = await repository.details(_client.id);
+      if (!mounted || company != ActiveCompanySession.companyId) return;
+      setState(() {
+        _liveDetails = details;
+        _client = details.client;
+        _detailsLoading = false;
+      });
+    } catch (error) {
+      if (!mounted || company != ActiveCompanySession.companyId) return;
+      setState(() {
+        _detailsLoading = false;
+        _detailsError = error is SignApiException ? error.message
+            : 'Unable to load client details.';
+      });
+    }
+  }
+
+  Future<void> _openRelatedRecord(ClientRelatedRecord record) async {
+    if (widget.repository is! RemoteClientRepository) {
+      if (_tabIndex == 0) {
+        for (final job in _createdClientJobs) {
+          if (job.id == record.id) { await _openExistingJob(job); return; }
+        }
+      }
+      _notReady('Open related record');
+      return;
+    }
+    try {
+      switch (_tabIndex) {
+        case 0:
+          final id = int.tryParse(record.id);
+          if (id == null || id < 1) throw StateError('Invalid job.');
+          await _openExistingJob(await RemoteJobRepository.shared.getJob(id));
+          break;
+        case 1:
+        case 2:
+          final document = await RemoteDocumentRepository.shared.details(record.id);
+          if (!mounted) return;
+          await Sign2DigitalNavigation.open<void>(context,
+              DocumentDetailsScreen(
+                documentId: record.id, document: document,
+                loadDocument: RemoteDocumentRepository.shared.details,
+              ));
+          break;
+        case 3:
+          final invoice = await RemoteInvoiceRepository.shared.invoiceDetail(record.id);
+          if (!mounted) return;
+          await Sign2DigitalNavigation.open<void>(context,
+              InvoiceDetailsScreen(invoice: invoice,
+                  repository: RemoteInvoiceRepository.shared));
+          break;
+        case 4:
+          if (!mounted) return;
+          await showDialog<void>(context: context, builder: (dialog) =>
+              AlertDialog(title: Text(record.title),
+                content: SingleChildScrollView(child: Text(record.description)),
+                actions: [TextButton(
+                  onPressed: () => Navigator.of(dialog).pop(),
+                  child: const Text('Close'))]));
+      }
+      if (mounted) await _loadDetails();
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(error is SignApiException ? error.message
+            : 'Unable to open the related record.'),
+      ));
+    }
   }
 
   Future<void> _editClient() async {
@@ -105,6 +193,8 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
         return;
       }
       setState(() => _client = updated);
+      if (widget.repository is RemoteClientRepository) await _loadDetails();
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(widget.repository is RemoteClientRepository
             ? 'Client updated.' : 'Client updated in the local demo list')),
@@ -142,6 +232,8 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
               : _standaloneJobs.create(draft);
       if (!mounted) return;
       setState(() => _tabIndex = 0);
+      if (widget.repository is RemoteClientRepository) await _loadDetails();
+      if (!mounted) return;
       await _openExistingJob(job);
     } catch (_) {
       if (!mounted) return;
@@ -159,7 +251,7 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final details = DemoClientDetails.forClient(_client);
+    final details = _liveDetails ?? DemoClientDetails.forClient(_client);
     return Scaffold(
       backgroundColor: AppColors.white,
       body: SafeArea(
@@ -170,7 +262,17 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
               onBack: () => Navigator.of(context).maybePop(),
             ),
             Expanded(
-              child: Center(
+              child: _detailsLoading && _liveDetails == null
+                  ? const Center(child: CircularProgressIndicator())
+                  : _detailsError != null && _liveDetails == null
+                  ? Center(child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [Text(_detailsError!,
+                        style: AppTextStyles.subtitle),
+                        TextButton(onPressed: _loadDetails,
+                          child: const Text('Retry'))],
+                    ))
+                  : Center(
                 child: ConstrainedBox(
                   constraints: BoxConstraints(maxWidth:
                     MediaQuery.orientationOf(context) == Orientation.landscape
@@ -342,7 +444,7 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
               width: width,
               child: Sign2DigitalStatisticsCard(
                 count: widget.repository is RemoteClientRepository
-                    ? _createdClientJobs.length
+                    ? details.jobs.length
                     : _client.jobCount + _createdClientJobs.length,
                 label: 'Total jobs',
                 iconAsset: 'assets/icons/jobs.svg',
@@ -416,26 +518,15 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
           Sign2DigitalClientRelatedItemCard(
             key: ValueKey(record.id),
             item: record,
-            onTap: () {
-              // Only actual created jobs have matching typed JobModel records.
-              // Do not open an unrelated job for screenshot-only sample IDs.
-              if (_tabIndex == 0) {
-                for (final job in _createdClientJobs) {
-                  if (job.id == record.id) {
-                    _openExistingJob(job);
-                    return;
-                  }
-                }
-              }
-              _notReady('Open ${names[_tabIndex]} item');
-            },
+            onTap: () => _openRelatedRecord(record),
           ),
           const SizedBox(height: 20),
         ],
         if (_tabIndex == 0)
           Sign2DigitalPrimaryButton(
             key: const Key('view-all-jobs-button'),
-            label: 'View All Jobs (${_client.jobCount + _createdClientJobs.length})',
+            label: 'View All Jobs (${widget.repository is RemoteClientRepository
+                ? details.jobs.length : _client.jobCount + _createdClientJobs.length})',
             onPressed: () => widget.onViewAllJobs != null
                 ? widget.onViewAllJobs!(_client)
                 : _notReady('View All Jobs'),
