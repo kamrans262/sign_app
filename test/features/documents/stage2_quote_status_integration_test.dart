@@ -111,7 +111,9 @@ void main() {
   testWidgets('Documents catalogue shows Signed only for verified related artifact',
       (tester) async {
     await tester.pumpWidget(MaterialApp(
-      home: DocumentsScreen(repository: _Catalog([_original(), _signed()])),
+      home: Scaffold(
+        body: DocumentsScreen(repository: _Catalog([_original(), _signed()])),
+      ),
     ));
     await tester.pumpAndSettle();
     final quoteCard = find.byKey(const Key('document-card-quote-42'));
