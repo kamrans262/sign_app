@@ -48,7 +48,7 @@ class _TwoFactorSetupScreenState extends State<TwoFactorSetupScreen> {
     setState(() { _loading = true; _error = null; });
     try {
       final value = await widget.repository.beginTwoFactorSetup(widget.password);
-      if (mounted) setState(() { _enrollment = value; _loading = false; });
+      if (mounted) { setState(() { _enrollment = value; _loading = false; }); }
     } catch (error) {
       if (mounted) setState(() {
         _loading = false;
@@ -68,11 +68,11 @@ class _TwoFactorSetupScreenState extends State<TwoFactorSetupScreen> {
     setState(() { _busy = true; _error = null; });
     try {
       final codes = await widget.repository.confirmTwoFactor(code);
-      if (!mounted) return;
+      if (!mounted) { return; }
       await Navigator.of(context).push<void>(MaterialPageRoute<void>(
         builder: (_) => TwoFactorRecoveryCodesScreen(codes: codes),
       ));
-      if (mounted) Navigator.of(context).pop(true);
+      if (mounted) { Navigator.of(context).pop(true); }
     } catch (error) {
       if (mounted) setState(() => _error = error is SignApiException
           ? error.message : 'Unable to verify authenticator setup.');
