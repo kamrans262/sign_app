@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 @immutable
 class CreateJobDraft {
   const CreateJobDraft({
+    this.title,
     required this.clientId,
     required this.clientName,
     required this.address,
@@ -14,6 +15,9 @@ class CreateJobDraft {
     required this.teamMemberIds,
   });
 
+  /// Explicit job name, independent of the work description.
+  /// Null preserves compatibility with previously saved forms.
+  final String? title;
   final String clientId;
   final String clientName;
   final String address;

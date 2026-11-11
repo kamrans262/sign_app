@@ -171,6 +171,8 @@ class RemoteJobRepository {
       companyScoped: true,
       data: {
         'client_id': client,
+        if (draft.title != null && draft.title!.trim().isNotEmpty)
+          'title': draft.title!.trim(),
         'description': draft.description,
         'address': draft.address,
         'start_date': _date(draft.startDate),
@@ -283,7 +285,9 @@ class RemoteJobRepository {
     final firstLine = description.split(RegExp(r'\r?\n')).first.trim();
     return updateJob(id, {
       'client_id': client,
-      'title': firstLine.length > 255 ? firstLine.substring(0, 255) : firstLine,
+      'title': (draft.title?.trim().isNotEmpty ?? false)
+          ? draft.title!.trim() :
+          (firstLine.length > 255 ? firstLine.substring(0, 255) : firstLine),
       'description': description,
       'address': draft.address.trim(),
       'start_date': _date(draft.startDate),
