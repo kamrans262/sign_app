@@ -57,6 +57,33 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('approved server quote shows existing Request Signature action',
+      (tester) async {
+    final quote = QuoteReviewDraft(
+      id: 'server-quote-7',
+      serverId: 7,
+      clientName: 'QA Customer',
+      clientEmail: 'qa@example.test',
+      quoteNumber: 'Q-QA-7',
+      date: DateTime(2026, 11, 12),
+      terms: 'Approved terms',
+      approvedLocally: true,
+      items: [
+        QuoteReviewWorkItem(
+          id: 'line-1', title: 'Bathroom repair',
+          quantity: '1', unitPrice: '1493.00',
+        ),
+      ],
+    );
+    await tester.pumpWidget(MaterialApp(home: QuotePreviewScreen(quote: quote)));
+    await tester.ensureVisible(
+      find.byKey(const Key('quote-preview-request-signature')));
+    expect(find.text('Request Signature'), findsOneWidget);
+    expect(find.byKey(const Key('quote-preview-share')), findsOneWidget);
+    expect(find.byKey(const Key('quote-preview-download')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('M7 mobile quote preview includes deposit, balance and all reviewed fields',
       (tester) async {
     tester.view.physicalSize = const Size(416, 940);
