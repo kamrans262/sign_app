@@ -184,7 +184,7 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
   Widget _details() {
     final r = _record;
     final rows = <Sign2DigitalInformationRow>[
-      Sign2DigitalInformationRow('Expense Type', r.category.label),
+      Sign2DigitalInformationRow('Expense Type', r.displayCategory),
       Sign2DigitalInformationRow('Amount', r.formattedAmount),
       Sign2DigitalInformationRow('Job', r.job),
       if (r.clientName?.trim().isNotEmpty == true)
