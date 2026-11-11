@@ -12,10 +12,13 @@ import '../../../../core/services/active_company_session.dart';
 import '../../../../core/services/sign_api_client.dart';
 import '../../../company/domain/company_profile.dart';
 import '../../../documents/data/demo_document_repository.dart';
+import '../../../documents/data/remote_document_repository.dart';
 import '../../../documents/domain/document_record.dart';
 import '../../../expenses/data/demo_expense_repository.dart';
+import '../../../expenses/data/remote_expense_repository.dart';
 import '../../../expenses/domain/expense_record.dart';
 import '../../../invoices/data/demo_invoice_repository.dart';
+import '../../../invoices/data/remote_invoice_repository.dart';
 import '../../../invoices/domain/invoice_record.dart';
 import '../../../jobs/data/mock_jobs.dart';
 import '../../../jobs/domain/job_model.dart';
@@ -85,10 +88,10 @@ class HomeDashboardScreen extends StatefulWidget {
     required this.onAction,
     this.selectedQuote,
     this.companyRepository,
-    this.documentRepository = const DemoDocumentRepository(),
-    this.invoiceRepository = const DemoInvoiceRepository(),
+    this.documentRepository,
+    this.invoiceRepository,
     this.reminderRepository,
-    this.expenseRepository = const DemoExpenseRepository(),
+    this.expenseRepository,
     this.refreshRevision = 0,
     this.additionalActiveJobs = 0,
     this.includeDemoJobs = true,
@@ -98,10 +101,10 @@ class HomeDashboardScreen extends StatefulWidget {
   final ValueChanged<HomeAction> onAction;
   final QuoteReviewDraft? selectedQuote;
   final CompanyRepository? companyRepository;
-  final DocumentRepository documentRepository;
-  final InvoiceRepository invoiceRepository;
+  final DocumentRepository? documentRepository;
+  final InvoiceRepository? invoiceRepository;
   final ReminderRepository? reminderRepository;
-  final ExpenseRepository expenseRepository;
+  final ExpenseRepository? expenseRepository;
   final int refreshRevision;
   final int additionalActiveJobs;
   final bool includeDemoJobs;
@@ -122,6 +125,16 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     letterSpacing: -0.3,
     color: AppColors.dark,
   );
+
+  DocumentRepository get _documentRepo => widget.documentRepository ??
+      (MobileAuthRepository.shared.isSignedIn
+          ? RemoteDocumentRepository.shared : const DemoDocumentRepository());
+  InvoiceRepository get _invoiceRepo => widget.invoiceRepository ??
+      (MobileAuthRepository.shared.isSignedIn
+          ? RemoteInvoiceRepository.shared : const DemoInvoiceRepository());
+  ExpenseRepository get _expenseRepo => widget.expenseRepository ??
+      (MobileAuthRepository.shared.isSignedIn
+          ? RemoteExpenseRepository.shared : const DemoExpenseRepository());
 
   ReminderRepository get _reminderRepo => widget.reminderRepository ??
       (MobileAuthRepository.shared.isSignedIn
@@ -184,13 +197,13 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
       }
     }
     try {
-      final records = await widget.documentRepository.listDocuments();
+      final records = await _documentRepo.listDocuments();
       quotes = HomeOverview.countPendingQuotes(records);
       documents = HomeOverview.countRecent(records, DateTime.now());
     } catch (_) {}
     try {
       invoices = HomeOverview.countOutstanding(
-        await widget.invoiceRepository.listInvoices());
+        await _invoiceRepo.listInvoices());
     } catch (_) {}
     try {
       reminders = HomeOverview.countUpcoming(
@@ -198,7 +211,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     } catch (_) {}
     try {
       expenses = HomeOverview.totalExpenses(
-        await widget.expenseRepository.listExpenses());
+        await _expenseRepo.listExpenses());
     } catch (_) {}
     if (MobileAuthRepository.shared.isSignedIn &&
         widget.companyRepository == null && loadedCompanies &&
