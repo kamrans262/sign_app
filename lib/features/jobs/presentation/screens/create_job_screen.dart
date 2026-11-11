@@ -66,6 +66,7 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _voiceOpen = false;
   late final VoiceJobExtractionService _voiceExtraction;
+  final _title = TextEditingController();
   final _address = TextEditingController();
   final _description = TextEditingController();
   final _budget = TextEditingController();
@@ -125,6 +126,7 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
     _client = widget.initialClient;
     final existing = widget.initialJob;
     if (existing != null) {
+      _title.text = existing.title;
       _address.text = existing.address;
       _description.text = existing.description;
       _start = existing.startDate;
@@ -144,6 +146,7 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
     if (_voiceExtraction is OpenAiVoiceJobExtractionService) {
       _voiceExtraction.clearTemporaryApiKey();
     }
+    _title.dispose();
     _address.dispose();
     _description.dispose();
     _budget.dispose();
@@ -337,6 +340,7 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
     }
     final value = _budget.text.trim();
     final draft = CreateJobDraft(
+      title: _title.text.trim().isEmpty ? null : _title.text.trim(),
       clientId: _client!.id,
       clientName: _client!.companyName,
       address: _address.text.trim(),
@@ -585,6 +589,16 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           _aiVoiceButton(),
+                          const SizedBox(height: 20),
+                          Sign2DigitalInputField(
+                            key: const Key('job-title-input'),
+                            label: 'Job Title',
+                            hintText: 'e.g. Terrace Renovation',
+                            iconAsset: 'assets/icons/jobs.svg',
+                            controller: _title,
+                            textCapitalization: TextCapitalization.sentences,
+                            textInputAction: TextInputAction.next,
+                          ),
                           const SizedBox(height: 20),
                           Sign2DigitalSelectionField(
                             key: const Key('job-client-select'),
