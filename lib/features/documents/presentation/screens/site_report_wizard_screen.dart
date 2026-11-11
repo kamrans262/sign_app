@@ -50,7 +50,7 @@ class SiteReportWizardScreen extends StatefulWidget {
 
 class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
   static const _reportTitles = [
-    'Site Report', 'Weekly Site Report', 'Site Inspection', 'Custom title',
+    'Site Report', 'Weekly Site Report', 'Site Inspection', 'Custom Title',
   ];
   static const _weatherOptions = [
     'Sunny', 'Cloudy', 'Rainy', 'Snowy', 'Windy', 'Other',
@@ -122,7 +122,7 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
       if (_reportTitles.contains(initial.title)) {
         _title = initial.title;
       } else {
-        _title = 'Custom title';
+        _title = 'Custom Title';
         _customTitle.text = initial.title;
       }
       final details = initial.siteReportDetails;
@@ -217,7 +217,7 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
     super.dispose();
   }
 
-  String get _actualTitle => _title == 'Custom title'
+  String get _actualTitle => _title == 'Custom Title'
       ? _customTitle.text.trim() : (_title ?? '');
 
   List<String> _lines(String value) => value.split('\n').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
@@ -622,7 +622,7 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
         label: 'Report Title',
         iconAsset: 'assets/icons/description.svg',
         hintText: 'e.g, Site report',
-        value: _title == 'Custom title' ? null : _title,
+        value: _title == 'Custom Title' ? null : _title,
         trailing: const Icon(Icons.keyboard_arrow_down_rounded,
           color: AppColors.secondaryText),
         onTap: () => _pickOption(
@@ -632,7 +632,7 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
           onSelected: (value) => _title = value,
         ),
       ),
-      if (_title == 'Custom title') ...[
+      if (_title == 'Custom Title') ...[
         const SizedBox(height: 15),
         Sign2DigitalInputField(
           key: const Key('site-report-custom-title'),
