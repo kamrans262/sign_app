@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart' as material;
 
 import '../theme/app_colors.dart';
+import '../theme/app_theme.dart';
 import 'sign2digital_modal_guard.dart';
 
 /// Standardized Sign2Digital sheet shell.
@@ -34,7 +35,9 @@ Future<T?> showSign2DigitalBottomSheet<T>({
   material.AnimationStyle? sheetAnimationStyle,
   bool? requestFocus,
 }) {
-  final appTheme = material.Theme.of(context);
+  // All approved sheets are white, including when the device uses dark mode.
+  // Inherit light text/control colors only inside the modal surface.
+  final appTheme = AppTheme.light;
   return Sign2DigitalModalGuard.run<T>(
     context,
     () => material.showModalBottomSheet<T>(
