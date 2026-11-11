@@ -13,6 +13,8 @@ class Sign2DigitalInputField extends StatelessWidget {
     required this.hintText,
     required this.iconAsset,
     this.controller,
+    this.initialValue,
+    this.autofocus = false,
     this.keyboardType,
     this.textCapitalization = TextCapitalization.none,
     this.obscureText = false,
@@ -36,6 +38,8 @@ class Sign2DigitalInputField extends StatelessWidget {
   final String hintText;
   final String iconAsset;
   final TextEditingController? controller;
+  final String? initialValue;
+  final bool autofocus;
   final TextInputType? keyboardType;
   final TextCapitalization textCapitalization;
   final bool obscureText;
@@ -90,6 +94,8 @@ class Sign2DigitalInputField extends StatelessWidget {
                     Expanded(
                       child: TextFormField(
                         controller: controller,
+                        initialValue: initialValue,
+                        autofocus: autofocus,
                         minLines: obscureText ? 1 : minLines,
                         maxLines: obscureText ? 1 : maxLines,
                         maxLength: maxLength,
