@@ -82,7 +82,9 @@ class _ChoosePlanScreenState extends State<ChoosePlanScreen> {
 
   String? _yearlySavings(SubscriptionPlanOption plan) {
     if (plan.period != SubscriptionBillingPeriod.yearly ||
-        plan.amountMinor == null || plan.currency == null) return null;
+        plan.amountMinor == null || plan.currency == null) {
+      return null;
+    }
     for (final monthly in _catalog.options) {
       if (monthly.id != plan.id ||
           monthly.period != SubscriptionBillingPeriod.monthly ||
@@ -90,7 +92,9 @@ class _ChoosePlanScreenState extends State<ChoosePlanScreen> {
         continue;
       }
       final saved = monthly.amountMinor! * 12 - plan.amountMinor!;
-      if (saved <= 0) return null;
+      if (saved <= 0) {
+        return null;
+      }
       final francs = saved / 100;
       final formatted = francs == francs.roundToDouble()
           ? francs.toStringAsFixed(0) : francs.toStringAsFixed(2);
