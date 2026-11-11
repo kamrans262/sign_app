@@ -65,6 +65,7 @@ class RemoteExpenseRepository implements ExpenseRepository {
   ExpenseRecord _record(Object? data, int company, {
     List<LocalJobPhotoSelection> files = const [],
     List<ExpenseHistoryEvent> history = const [],
+    bool canApprove = false,
   }) {
     final row = _map(data);
     final id = _integer(row['id']);
@@ -116,6 +117,7 @@ class RemoteExpenseRepository implements ExpenseRepository {
       updatedAt: _date(row['updated_at']),
       history: history,
       reimbursementRequested: row['reimbursement_requested_at'] != null,
+      canApprove: canApprove,
     );
   }
 
@@ -187,7 +189,7 @@ class RemoteExpenseRepository implements ExpenseRepository {
       for (final row in events)
         ExpenseHistoryEvent(
           id: '${_map(row)['id']}',
-          title: '${_map(row)['type']}'.replaceAll('_', ' '),
+          title: _historyTitle('${_map(row)['type']}'),
           occurredAt: _date(_map(row)['created_at']),
           description: _map(row)['metadata'] is Map &&
                   '${(_map(row)['metadata'] as Map)['custom_category'] ?? ''}'
@@ -199,7 +201,8 @@ class RemoteExpenseRepository implements ExpenseRepository {
         ),
     ];
     return _record(response['expense'], company,
-        files: files, history: history);
+        files: files, history: history,
+        canApprove: response['can_approve'] == true);
   }
 
   static Map<String, dynamic> _fields(ExpenseRecord expense) {
@@ -315,6 +318,28 @@ class RemoteExpenseRepository implements ExpenseRepository {
         companyScoped: true);
       _assertCompany(company);
     }
+  }
+
+  static String _historyTitle(String event) {
+    final words = event.replaceAll('_', ' ').trim().split(RegExp(r'\\s+'));
+    return words.where((word) => word.isNotEmpty).map((word) =>
+      '${word[0].toUpperCase()}${word.substring(1)}').join(' ');
+  }
+
+  Future<ExpenseRecord> approveExpense(ExpenseRecord expense) async {
+    if (expense.status != ExpenseStatus.toReview || !expense.canApprove) {
+      throw const SignApiException('This expense cannot be approved by this account.');
+    }
+    final company = _company();
+    final result = _data(await _api.post(
+      '/api/v1/expenses/${idOf(expense)}/approve',
+      data: {'confirm': true}, companyScoped: true));
+    _assertCompany(company);
+    final approved = _record(result['expense'], company);
+    if (approved.id != expense.id || approved.status != ExpenseStatus.approved) {
+      throw const SignApiException('Expense approval response did not match.');
+    }
+    return getExpense(expense.id);
   }
 
   Future<ExpenseRecord> requestReimbursement(ExpenseRecord expense) async {
