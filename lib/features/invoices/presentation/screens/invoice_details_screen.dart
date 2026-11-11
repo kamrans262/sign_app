@@ -1,4 +1,5 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
+import '../../../../core/widgets/sign2digital_subscription_gate.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import 'package:flutter/services.dart';
@@ -334,8 +335,11 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
       }
       setState(()=>_record=approved);
       _notice('Invoice approved. Delivery is a separate action.');
-    }catch(_){
-      _notice('Unable to approve. Refresh invoice and try again.');
+    }catch(error){
+      if(mounted && !await Sign2DigitalSubscriptionGate.handle(
+          context, error)) {
+        _notice('Unable to approve. Refresh invoice and try again.');
+      }
     }finally{
       if(mounted)setState(()=>_busy=false);
     }
