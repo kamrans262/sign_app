@@ -150,7 +150,11 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
     super.initState();
     _tab = widget.initialTab.clamp(0, 3).toInt();
     _record = widget.document?.id == widget.documentId ? widget.document : null;
-    if (_record == null && widget.loadDocument != null) {
+    // Hydrate quote list snapshots for action/status correctness. Keep all
+    // other document screens' existing initialization behavior unchanged.
+    if (widget.loadDocument != null &&
+        (_record == null ||
+         (_record!.id.startsWith('quote-') && _record!.quote == null))) {
       _load();
     }
   }
