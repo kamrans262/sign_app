@@ -1,5 +1,6 @@
 // Sign2Digital Login UI Package — reusable icon/label/editable auth field.
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../theme/app_spacing.dart';
@@ -11,7 +12,7 @@ class Sign2DigitalInputField extends StatelessWidget {
     required this.label,
     required this.hintText,
     required this.iconAsset,
-    required this.controller,
+    this.controller,
     this.keyboardType,
     this.textCapitalization = TextCapitalization.none,
     this.obscureText = false,
@@ -21,6 +22,8 @@ class Sign2DigitalInputField extends StatelessWidget {
     this.inputPrefix,
     this.autofillHints,
     this.onFieldSubmitted,
+    this.onChanged,
+    this.inputFormatters,
     this.minLines = 1,
     this.maxLines = 1,
     this.maxLength,
@@ -32,7 +35,7 @@ class Sign2DigitalInputField extends StatelessWidget {
   final String label;
   final String hintText;
   final String iconAsset;
-  final TextEditingController controller;
+  final TextEditingController? controller;
   final TextInputType? keyboardType;
   final TextCapitalization textCapitalization;
   final bool obscureText;
@@ -42,6 +45,8 @@ class Sign2DigitalInputField extends StatelessWidget {
   final Widget? inputPrefix;
   final Iterable<String>? autofillHints;
   final ValueChanged<String>? onFieldSubmitted;
+  final ValueChanged<String>? onChanged;
+  final List<TextInputFormatter>? inputFormatters;
   final int minLines;
   final int? maxLines;
   final int? maxLength;
@@ -104,6 +109,8 @@ class Sign2DigitalInputField extends StatelessWidget {
                         validator: validator,
                         textInputAction: textInputAction,
                         onFieldSubmitted: onFieldSubmitted,
+                        onChanged: onChanged,
+                        inputFormatters: inputFormatters,
                         autofillHints: autofillHints,
                         autocorrect: false,
                         enableSuggestions: !obscureText,
