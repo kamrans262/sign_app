@@ -32,5 +32,7 @@ jobs:
       - run: flutter pub get
       - name: Analyze complete app for navigation integration errors
         run: timeout 210s flutter analyze --no-pub --no-fatal-infos --no-fatal-warnings lib test/navigation/global_navigation_regression_test.dart
+      - name: Isolated nested navigation regression (fail fast)
+        run: timeout 85s flutter test --no-pub --concurrency=1 --timeout=40s --reporter=expanded test/navigation/global_navigation_regression_test.dart
       - name: Verify duplicate taps, nested navigation and back handling
         run: timeout 210s flutter test --no-pub --concurrency=2 --timeout=50s --reporter=expanded test/navigation/global_navigation_regression_test.dart test/features/clients/clients_screen_test.dart test/features/invoices/invoices_screen_test.dart test/features/invoices/add_invoice_screen_test.dart test/features/quotes/home_signature_navigation_test.dart test/features/jobs/job_details_screen_test.dart test/features/documents/documents_screen_test.dart
