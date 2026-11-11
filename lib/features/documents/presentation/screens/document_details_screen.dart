@@ -18,6 +18,9 @@ import '../../../quotes/services/quote_pdf_service.dart';
 import '../../../quotes/presentation/widgets/sign2digital_financial_document_sections.dart';
 import '../../../quotes/presentation/screens/send_quote_screen.dart';
 import '../../../quotes/presentation/screens/signature_request_screen.dart';
+import '../../data/remote_addendum_repository.dart';
+import '../../../auth/data/mobile_auth_repository.dart';
+import '../../../../core/services/sign_api_client.dart';
 import '../../data/document_activity_session.dart';
 import '../../domain/document_record.dart';
 import '../../domain/addendum_draft.dart';
@@ -352,25 +355,82 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
     } catch (_) { _message('Could not open the document share sheet.'); }
   }
 
+  bool _canApproveAddendum(DocumentRecord record) =>
+      record.category == DocumentCategory.addends &&
+      record.status.toLowerCase() == 'draft' &&
+      RegExp(r'^addendum-[1-9][0-9]*$').hasMatch(record.id) &&
+      (widget.onApproveAddendum != null ||
+          (widget.loadDocument != null &&
+              MobileAuthRepository.shared.isSignedIn));
+
+  String _addendumApprovalError(Object error) {
+    if (error is SignApiException) {
+      switch (error.statusCode) {
+        case 403:
+          return 'You do not have permission to approve this addendum.';
+        case 404:
+          return 'The saved addendum was not found for this company.';
+        case 409:
+          return 'The addendum or signed original changed. Reload and review again.';
+        case 422:
+          return 'Check the addendum details: ${error.message}';
+        case 503:
+          return 'The original PDF could not be verified or the approved PDF '
+              'could not be stored. Approval was not recorded.';
+      }
+      return 'Could not approve addendum: ${error.message}';
+    }
+    return 'Could not approve addendum. Check your connection and try again.';
+  }
+
   Future<void> _approveAddendum() async {
     final record = _record;
-    final action = widget.onApproveAddendum;
-    final draft = AddendumDraftSession.load(record?.addendumDraftId ?? '');
-    if (record == null || action == null || draft == null ||
-        draft.serverId == null || draft.serverStatus != 'draft' ||
+    if (record == null || !_canApproveAddendum(record) ||
         _requestingAddendum) {
       _message('A saved server addendum draft is required for approval.');
       return;
     }
+    // Both Job → Addenda and Documents → Addenda must verify the SAME
+    // authoritative draft before the user confirms approval. Never approve
+    // a cached version or a different revision after the confirmation sheet.
+    final live = widget.loadDocument != null &&
+        MobileAuthRepository.shared.isSignedIn;
+    AddendumDraft? draft;
+    try {
+      draft = live
+          ? await RemoteAddendumRepository.shared.get(
+              int.parse(record.id.substring('addendum-'.length)))
+          : AddendumDraftSession.load(record.addendumDraftId ?? '');
+      if (!mounted) return;
+      if (draft == null || draft.serverId == null ||
+          draft.serverStatus != 'draft' || draft.validationIssues.isNotEmpty) {
+        _message('A saved, valid addendum draft is required for approval.');
+        return;
+      }
+      if (live && draft.serverRevision != record.version) {
+        await _load();
+        if (mounted) _message(
+          'The addendum was updated. Review the latest version before approving.');
+        return;
+      }
+    } catch (error) {
+      if (!mounted) return;
+      if (!await Sign2DigitalSubscriptionGate.handle(context, error) &&
+          mounted) {
+        _message(_addendumApprovalError(error));
+      }
+      return;
+    }
+
+    final reviewedDraft = draft;
     final approved = await showSign2DigitalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       builder: (sheet) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20),
-          // Viewing the sheet is not approval; the user must check consent.
           child: _AddendumApprovalConfirmation(
-            draft: draft,
+            draft: reviewedDraft,
             onConfirmed: () => Navigator.pop(sheet, true),
           ),
         ),
@@ -379,17 +439,32 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
     if (approved != true || !mounted) return;
     setState(() => _requestingAddendum = true);
     try {
-      final latest = await action(record);
+      DocumentRecord latest;
+      if (live) {
+        // The approved revision is the revision the user actually reviewed.
+        // Server rejects concurrent edits with 409; never silently approve
+        // a newer revision or create a replacement addendum.
+        await RemoteAddendumRepository.shared.approve(reviewedDraft);
+        final loaded = await widget.loadDocument!(record.id);
+        if (loaded == null || loaded.id != record.id ||
+            loaded.status.toLowerCase() != 'approved') {
+          throw const SignApiException(
+            'Approval succeeded but refreshed document status was unavailable.');
+        }
+        latest = loaded;
+      } else {
+        latest = await widget.onApproveAddendum!(record);
+      }
       if (!mounted) return;
       setState(() {
         _record = latest;
         _pdfFuture = null;
       });
-      _message('Addendum approved and original PDF frozen securely.');
+      _message('Addendum approved and PDF frozen securely.');
     } catch (error) {
       if (mounted && !await Sign2DigitalSubscriptionGate.handle(
-          context, error)) {
-        _message('Could not approve addendum. Reload and review again.');
+          context, error) && mounted) {
+        _message(_addendumApprovalError(error));
       }
     } finally {
       if (mounted) setState(() => _requestingAddendum = false);
@@ -671,7 +746,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
           if (record.category == DocumentCategory.addends &&
               record.status.toLowerCase() == 'draft' &&
               RegExp(r'^addendum-[1-9][0-9]*$').hasMatch(record.id) &&
-              widget.onApproveAddendum != null)
+              _canApproveAddendum(record))
             ListTile(
               key: const Key('addendum-edit-server-draft'),
               leading: const Icon(Icons.edit_outlined),
@@ -696,7 +771,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
           if (record.category == DocumentCategory.addends &&
               record.status.toLowerCase() == 'draft' &&
               RegExp(r'^addendum-[1-9][0-9]*$').hasMatch(record.id) &&
-              widget.onApproveAddendum != null)
+              _canApproveAddendum(record))
             ListTile(
               key: const Key('addendum-approve'),
               leading: const Icon(Icons.verified_outlined),
