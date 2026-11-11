@@ -1,10 +1,13 @@
 import 'dart:collection';
 import 'package:flutter/material.dart';
 
-/// Navigator-scoped synchronous gate for approved modal picker surfaces.
-/// One sheet at a time, held until the route closes. No timers, UI or animation changes.
+/// One modal at a time per *origin route*, not per entire navigator.
+/// Nested selection sheets are valid (filter -> client picker); repeated taps
+/// on the same originating screen/sheet cannot stack duplicate modal routes.
+/// Locks live until the pushed route closes. No debounce or animation changes.
 abstract final class Sign2DigitalModalGuard {
-  static final Set<NavigatorState> _active = HashSet<NavigatorState>.identity();
+  static final Map<NavigatorState, Set<Object>> _active =
+      HashMap<NavigatorState, Set<Object>>.identity();
 
   static Future<T?> run<T>(
     BuildContext context,
@@ -12,11 +15,17 @@ abstract final class Sign2DigitalModalGuard {
   ) async {
     if (!context.mounted) return null;
     final navigator = Navigator.maybeOf(context);
-    if (navigator == null || !_active.add(navigator)) return null;
+    if (navigator == null) return null;
+    final origin = ModalRoute.of(context) ?? context;
+    final locked = _active.putIfAbsent(
+      navigator, () => HashSet<Object>.identity(),
+    );
+    if (!locked.add(origin)) return null;
     try {
       return await showModal();
     } finally {
-      _active.remove(navigator);
+      locked.remove(origin);
+      if (locked.isEmpty) _active.remove(navigator);
     }
   }
 }
