@@ -17,14 +17,10 @@ import '../../../../core/widgets/sign2digital_wizard_stepper.dart';
 import '../../../jobs/data/local_job_photo_source.dart';
 import '../../../jobs/data/mock_jobs.dart';
 import '../../../jobs/data/remote_job_repository.dart';
-import '../../../jobs/services/voice_recorder_service.dart';
-import '../../../jobs/services/voice_job_extraction_service.dart';
-import '../../../jobs/presentation/widgets/ai_voice_flow_dialog.dart';
 import '../../../../core/services/active_company_session.dart';
 import '../../../jobs/domain/job_model.dart';
 import '../../../jobs/presentation/widgets/sign2digital_photo_preview.dart';
 import '../../domain/document_record.dart';
-import '../../data/remote_site_report_repository.dart';
 import '../widgets/site_report_review_content.dart';
 
 /// UI-only three-step site report wizard, never claims remote submission.
@@ -104,7 +100,6 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
   String? _error;
   bool _picking = false;
   bool _saving = false;
-  bool _dictating = false;
 
   @override
   void initState() {
@@ -458,39 +453,6 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
       if (mounted) { Navigator.of(context).pop(draft); }
     } finally {
       if (mounted) { setState(() => _saving = false); }
-    }
-  }
-
-  Future<void> _dictateNotes() async {
-    if (_dictating || widget.reportGenerator == null ||
-        ActiveCompanySession.companyId == null || _selectedJob == null) {
-      setState(() => _error = 'Choose a real job before dictating notes.');
-      return;
-    }
-    _dictating = true;
-    try {
-      await showDialog<void>(
-        context: context, barrierDismissible: false,
-        builder: (_) => AiVoiceFlowDialog(
-          recorder: LocalVoiceRecorderService(),
-          extraction: OpenAiVoiceJobExtractionService(),
-          recordingTitle: 'Dictate Site Report Notes',
-          onAudioProcessed: (path) async {
-            final transcript = await RemoteSiteReportRepository.shared
-                .transcribeAudio(_selectedJob!.id, path);
-            if (!mounted) return;
-            final field = _contents[SiteReportSection.notes]!;
-            final earlier = field.text.trim();
-            setState(() {
-              _selectedSections.add(SiteReportSection.notes);
-              field.text = earlier.isEmpty ? transcript : '$earlier\n$transcript';
-              _error = null;
-            });
-          },
-        ),
-      );
-    } finally {
-      _dictating = false;
     }
   }
 
