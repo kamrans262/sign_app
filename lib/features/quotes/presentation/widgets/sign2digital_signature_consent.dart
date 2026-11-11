@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_theme.dart';
 
 /// Shared explicit signing consent. No approval is inferred by navigation.
 Future<bool> showSign2DigitalSignatureConsent(
@@ -8,7 +9,11 @@ Future<bool> showSign2DigitalSignatureConsent(
   bool accepted = false;
   final result = await showDialog<bool>(
     context: context,
-    builder: (dialogContext) => StatefulBuilder(
+    // Force readable brand text, checkbox labels and actions on the white
+    // agreement popup even when iOS appearance or app theme is dark.
+    builder: (dialogContext) => Theme(
+      data: AppTheme.light,
+      child: StatefulBuilder(
       builder: (dialogContext, setDialogState) => AlertDialog(
         scrollable: true,
         title: const Text('Confirm agreement'),
@@ -46,6 +51,7 @@ Future<bool> showSign2DigitalSignatureConsent(
             child: const Text('Continue'),
           ),
         ],
+      ),
       ),
     ),
   );
