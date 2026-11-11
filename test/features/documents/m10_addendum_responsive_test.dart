@@ -55,6 +55,11 @@ void main() {
       expect(find.text('Select effective date'), findsWidgets);
       await tester.ensureVisible(find.byKey(const Key('addendum-create')));
       await tester.pump();
+      final review = find.byKey(const Key('addendum-review'));
+      final saveDraft = find.byKey(const Key('addendum-save-draft'));
+      expect(tester.getBottomLeft(review).dy,
+          lessThan(tester.getTopLeft(saveDraft).dy));
+      expect(find.text('Create Addendum'), findsOneWidget);
       expect(find.byKey(const Key('addendum-create')), findsOneWidget);
       expect(tester.takeException(), isNull);
     }
