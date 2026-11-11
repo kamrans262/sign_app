@@ -17,6 +17,7 @@ void main() {
     final seen = <String>[];
     final repo = RemoteSecurityAccessRepository(api: SignApiClient(
       baseUrl: Uri.parse('https://example.test'),
+      tokenProvider: () async => 'test-authenticated-session',
       httpClient: MockClient((request) async {
         seen.add(request.url.path);
         final body = jsonDecode(request.body) as Map<String, dynamic>;
@@ -60,6 +61,7 @@ void main() {
       (tester) async {
     final repo = RemoteSecurityAccessRepository(api: SignApiClient(
       baseUrl: Uri.parse('https://example.test'),
+      tokenProvider: () async => 'test-authenticated-session',
       httpClient: MockClient((request) async {
         expect(request.url.path, '/api/v1/me/2fa/disable');
         final body = jsonDecode(request.body) as Map<String,dynamic>;
