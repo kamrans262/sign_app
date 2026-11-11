@@ -1,5 +1,6 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
+import '../../auth/data/mobile_auth_repository.dart';
 
 import 'create_job_screen.dart';
 import '../../domain/create_job_draft.dart';
@@ -85,7 +86,7 @@ class _JobsScreenState extends State<JobsScreen> {
     final jobs = <JobModel>[
       ...widget.createdJobs.where(
         (job) => job.category == _category && job.matches(_search.text)),
-      if (widget.includeDemoJobs)
+      if (widget.includeDemoJobs && !MobileAuthRepository.shared.isSignedIn)
         ...MockJobsData.search(category: _category, query: _search.text),
     ];
     final categories = JobCategory.values;
@@ -95,7 +96,7 @@ class _JobsScreenState extends State<JobsScreen> {
           JobCategory.active => 'Active',
           JobCategory.completed => 'Completed',
           JobCategory.archived => 'Archived',
-        }} (${(widget.includeDemoJobs ? MockJobsData.count(category) : 0) + widget.createdJobs.where(
+        }} (${(widget.includeDemoJobs && !MobileAuthRepository.shared.isSignedIn ? MockJobsData.count(category) : 0) + widget.createdJobs.where(
           (job) => job.category == category,
         ).length})',
     ];

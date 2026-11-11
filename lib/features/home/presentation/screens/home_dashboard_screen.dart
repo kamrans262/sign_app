@@ -243,7 +243,8 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
         _companyId ??= companies.isEmpty ? null : companies.first.id;
       }
       _overview = HomeOverview(
-        activeJobs: widget.includeDemoJobs
+        activeJobs: widget.includeDemoJobs &&
+            !MobileAuthRepository.shared.isSignedIn
           ? MockJobsData.count(JobCategory.active) : 0,
         pendingQuotes: quotes,
         outstandingInvoices: invoices,

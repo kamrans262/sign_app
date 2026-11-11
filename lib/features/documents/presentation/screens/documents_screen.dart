@@ -60,7 +60,9 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
   @override
   void initState() {
     super.initState();
-    _repository = widget.repository ?? const DemoDocumentRepository();
+    _repository = widget.repository ??
+        (MobileAuthRepository.shared.isSignedIn
+            ? RemoteDocumentRepository.shared : const DemoDocumentRepository());
     _category = widget.initialCategory;
     _load();
   }
@@ -243,8 +245,9 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
       handler(record);
       return;
     }
-    final live = widget.repository == null &&
-        MobileAuthRepository.shared.isSignedIn;
+    final live = MobileAuthRepository.shared.isSignedIn &&
+        (widget.repository == null ||
+            widget.repository is RemoteDocumentRepository);
     var selected = record;
     if (live && RegExp(r'^(quote|signed|managed|addendum)-[1-9][0-9]*$')
         .hasMatch(record.id)) {

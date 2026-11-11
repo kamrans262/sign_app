@@ -251,7 +251,16 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final details = _liveDetails ?? DemoClientDetails.forClient(_client);
+    final details = _liveDetails ??
+        (widget.repository is RemoteClientRepository
+            ? ClientDetailsModel(
+                client: _client, status: 'Active',
+                displayAddress: _client.address,
+                totalQuotes: 0, totalDocuments: 0, totalInvoices: 0,
+                jobs: const [], quotes: const [], documents: const [],
+                invoices: const [], notes: const [],
+              )
+            : DemoClientDetails.forClient(_client));
     return Scaffold(
       backgroundColor: AppColors.white,
       body: SafeArea(
@@ -262,7 +271,10 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
               onBack: () => Navigator.of(context).maybePop(),
             ),
             Expanded(
-              child: _detailsLoading && _liveDetails == null
+              child: (_detailsLoading ||
+                      (_detailsError == null &&
+                       widget.repository is RemoteClientRepository)) &&
+                  _liveDetails == null
                   ? const Center(child: CircularProgressIndicator())
                   : _detailsError != null && _liveDetails == null
                   ? Center(child: Column(

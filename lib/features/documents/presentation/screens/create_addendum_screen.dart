@@ -69,8 +69,9 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
   bool _creating = false;
   AddendumDraft? _serverDraft;
 
-  bool get _live => widget.repository == null &&
-      MobileAuthRepository.shared.isSignedIn;
+  bool get _live => MobileAuthRepository.shared.isSignedIn &&
+      (widget.repository == null ||
+          widget.repository is RemoteDocumentRepository);
 
   @override
   void initState() {
