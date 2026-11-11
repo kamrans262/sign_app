@@ -1,5 +1,6 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import '../../../../core/widgets/sign2digital_subscription_gate.dart';
+import '../../../auth/data/mobile_auth_repository.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -173,6 +174,11 @@ class _ConvertDocumentScreenState extends State<ConvertDocumentScreen> {
                   approvedLocally: true,
                 );
                 try {
+                  if (MobileAuthRepository.shared.isSignedIn &&
+                      next.serverId == null) {
+                    _notify('Save and review a server document draft before approval.');
+                    return;
+                  }
                   if (next.serverId == null) NoteDocumentDraftSession.save(next);
                   final approved = next.serverId != null
                       ? await RemoteJobMediaRepository.shared.saveDocument(
