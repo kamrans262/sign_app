@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
+import '../theme/app_theme.dart';
 import '../theme/dashboard_colors.dart';
 import 'sign2digital_modal_guard.dart';
 
@@ -95,7 +96,9 @@ class Sign2DigitalSelectionSheet {
             const Divider(height: 1, thickness: 1,
               color: AppColors.divider),
             Flexible(
-              child: ListTileTheme(
+              child: Theme(
+                data: AppTheme.light,
+                child: ListTileTheme(
                 selectedColor: AppColors.dark,
                 textColor: AppColors.dark,
                 iconColor: AppColors.dark,
@@ -105,6 +108,7 @@ class Sign2DigitalSelectionSheet {
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16, vertical: 4),
                 child: builder(sheet),
+                ),
               ),
             ),
           ],
