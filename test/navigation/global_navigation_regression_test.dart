@@ -23,7 +23,7 @@ void _phone(WidgetTester tester) {
 }
 
 class _PushedPage extends StatelessWidget {
-  const _PushedPage({super.key});
+  const _PushedPage();
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('One route')),
