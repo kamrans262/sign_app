@@ -83,7 +83,7 @@ void main() {
     await tester.tap(find.byKey(const Key('document-view-signed-quote')));
     await tester.pumpAndSettle();
     expect(find.text('Signed Quote Q-42'), findsWidgets);
-    expect(find.text('Documents'), findsNWidgets(2));
+    expect(find.text('Documents'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
