@@ -143,48 +143,22 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   }
 
   Future<void> _chooseJob() async {
-    final search = TextEditingController();
-    try {
-      final jobs = ActiveCompanySession.companyId == null &&
-          !MobileAuthRepository.shared.isSignedIn
-          ? MockJobsData.jobs : await RemoteJobRepository.shared.listJobs();
-      if (!mounted) return;
-      final chosen = await Sign2DigitalSelectionSheet.showCustom<JobModel>(
-        title: 'Select Job / Project',
-        icon: Icons.work_outline_rounded,
-        subtitle: 'Search jobs for this expense',
-        context: context, isScrollControlled: true,
-        builder: (sheet) => StatefulBuilder(
-          builder: (sheet, update) => SafeArea(child: SizedBox(
-            height: MediaQuery.sizeOf(sheet).height * 0.65,
-            child: Column(children: [
-              Padding(padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: TextField(key: const Key('expense-job-search'),
-                  controller: search,
-                  decoration: const InputDecoration(
-                    hintText: 'Search jobs or reference number'),
-                  onChanged: (_) => update(() {}),
-                )),
-              Expanded(child: ListView(children: [
-                for (final job in jobs.where((item) =>
-                    item.matches(search.text)))
-                  ListTile(
-                    key: Key('expense-job-${job.id}'),
-                    selected: _job?.id == job.id,
-                    trailing: _job?.id == job.id
-                        ? const Icon(Icons.check_circle_rounded,
-                            color: AppColors.primary) : null,
-                    title: Text(job.title),
-                    subtitle: Text('${job.referenceNumber} • ${job.clientName}'),
-                    onTap: () => Navigator.of(sheet).pop(job),
-                  ),
-              ])),
-            ]),
-          )),
-        ),
-      );
-      if (chosen != null && mounted) setState(() { _job = chosen; _error = null; });
-    } finally { search.dispose(); }
+    final jobs = ActiveCompanySession.companyId == null &&
+        !MobileAuthRepository.shared.isSignedIn
+        ? MockJobsData.jobs : await RemoteJobRepository.shared.listJobs();
+    if (!mounted) return;
+    final chosen = await Sign2DigitalSelectionSheet.showCustom<JobModel>(
+      title: 'Select Job / Project',
+      icon: Icons.work_outline_rounded,
+      subtitle: 'Search jobs for this expense',
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => _ExpenseJobSearchContent(
+        jobs: jobs,
+        selectedJobId: _job?.id,
+      ),
+    );
+    if (chosen != null && mounted) setState(() { _job = chosen; _error = null; });
   }
 
   Future<void> _chooseCategory() async {
@@ -573,5 +547,91 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         selectedIndex: widget.selectedNavigationIndex,
         onSelected: _navigate),
     ),
+  );
+}
+
+ 
+/// Owns its search controller for the *entire route transition*, including
+/// the bottom sheet's reverse animation after Navigator.pop returns.
+class _ExpenseJobSearchContent extends StatefulWidget {
+  const _ExpenseJobSearchContent({
+    required this.jobs,
+    required this.selectedJobId,
+  });
+
+  final List<JobModel> jobs;
+  final String? selectedJobId;
+
+  @override
+  State<_ExpenseJobSearchContent> createState() => _ExpenseJobSearchContentState();
+}
+
+class _ExpenseJobSearchContentState extends State<_ExpenseJobSearchContent> {
+  final TextEditingController _search = TextEditingController();
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      // The surrounding shared sheet owns the header and the available
+      // height. Never request a fixed fraction that can overflow it.
+      final preferredHeight = MediaQuery.sizeOf(context).height * 0.55;
+      final height = constraints.maxHeight.isFinite &&
+              constraints.maxHeight < preferredHeight
+          ? constraints.maxHeight : preferredHeight;
+      final matches = widget.jobs.where((job) => job.matches(_search.text))
+          .toList(growable: false);
+
+      return SizedBox(
+        height: height,
+        child: Column(children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: TextField(
+              key: const Key('expense-job-search'),
+              controller: _search,
+              style: const TextStyle(color: AppColors.dark),
+              decoration: const InputDecoration(
+                hintText: 'Search jobs or reference number',
+                hintStyle: TextStyle(color: AppColors.dark),
+              ),
+              onChanged: (_) => setState(() {}),
+            ),
+          ),
+          Expanded(child: ListView.builder(
+            key: const Key('expense-job-options'),
+            itemCount: matches.isEmpty ? 1 : matches.length,
+            itemBuilder: (context, index) {
+              if (matches.isEmpty) {
+                return const ListTile(
+                  title: Text('No matching jobs',
+                    style: TextStyle(color: AppColors.dark)),
+                );
+              }
+              final job = matches[index];
+              final selected = widget.selectedJobId == job.id;
+              return ListTile(
+                key: Key('expense-job-${job.id}'),
+                selected: selected,
+                trailing: selected
+                    ? const Icon(Icons.check_circle_rounded,
+                        color: AppColors.primary)
+                    : null,
+                title: Text(job.title,
+                  style: const TextStyle(color: AppColors.dark)),
+                subtitle: Text('${job.referenceNumber} • ${job.clientName}',
+                  style: const TextStyle(color: AppColors.dark)),
+                onTap: () => Navigator.of(context).pop(job),
+              );
+            },
+          )),
+        ]),
+      );
+    },
   );
 }
