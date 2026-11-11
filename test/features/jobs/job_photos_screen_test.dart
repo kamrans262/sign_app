@@ -8,7 +8,6 @@ import 'package:sign2digital/features/jobs/data/mock_jobs.dart';
 import 'package:sign2digital/features/jobs/domain/job_photo_model.dart';
 import 'package:sign2digital/features/jobs/presentation/screens/job_details_screen.dart';
 import 'package:sign2digital/features/jobs/presentation/screens/job_photos_screen.dart';
-import 'package:sign2digital/features/jobs/presentation/screens/add_photos_screen.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:sign2digital/features/jobs/presentation/widgets/sign2digital_job_photo_card.dart';
 
@@ -59,28 +58,21 @@ void main() {
     }
   });
 
-  testWidgets('Add Photos button is full width and opens photo editor', (
-    tester,
-  ) async {
+  testWidgets('Add Photos stays on original screen and opens inline picker',
+      (tester) async {
     await setSize(tester, const Size(430, 932));
-    await tester.pumpWidget(
-      MaterialApp(
-        home: JobPhotosScreen(
-          job: job,
-          store: JobPhotoLocalStore(),
-          source: _FakeSource([]),
-        ),
-      ),
-    );
+    final fake = _FakeSource([]);
+    await tester.pumpWidget(MaterialApp(home: JobPhotosScreen(
+      job: job, store: JobPhotoLocalStore(), source: fake)));
     await tester.pumpAndSettle();
     final button = find.byKey(const Key('job-photos-add-button'));
     await tester.ensureVisible(button);
     await tester.pumpAndSettle();
-    final width = tester.getSize(button).width;
-    expect(width, closeTo(390, 1));
+    expect(tester.getSize(button).width, closeTo(390, 1));
     await tester.tap(button);
     await tester.pumpAndSettle();
-    expect(find.byType(AddPhotosScreen), findsOneWidget);
+    expect(fake.uploadCount, 1);
+    expect(find.byType(JobPhotosScreen), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -133,23 +125,44 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.byType(Sign2DigitalJobPhotoCard), findsNWidgets(4));
+    expect(find.byType(Sign2DigitalJobPhotoCard), findsNWidgets(3));
     await tester.tap(find.byKey(const Key('details-tab-1')));
     await tester.pumpAndSettle();
     expect(find.byType(Sign2DigitalJobPhotoCard), findsOneWidget);
     await tester.tap(find.byKey(const Key('details-tab-2')));
     await tester.pumpAndSettle();
-    expect(find.byType(Sign2DigitalJobPhotoCard), findsNWidgets(2));
+    expect(find.byType(Sign2DigitalJobPhotoCard), findsOneWidget);
     await tester.tap(find.byKey(const Key('details-tab-3')));
     await tester.pumpAndSettle();
     expect(find.byType(Sign2DigitalJobPhotoCard), findsOneWidget);
     await tester.tap(find.byKey(const Key('details-tab-0')));
     await tester.pumpAndSettle();
-    expect(find.byType(Sign2DigitalJobPhotoCard), findsNWidgets(4));
+    expect(find.byType(Sign2DigitalJobPhotoCard), findsNWidgets(3));
     await tester.tap(find.byKey(const Key('job-photo-dismiss-banner')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('job-photo-dismiss-banner')), findsNothing);
     expect(find.byKey(const Key('dashboard-tab-1')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('During category is one card with swipeable group photos',
+      (tester) async {
+    await setSize(tester, const Size(430, 932));
+    await tester.pumpWidget(MaterialApp(home: JobPhotosScreen(
+      job: job, store: JobPhotoLocalStore(), source: _FakeSource([]))));
+    await tester.pumpAndSettle();
+    expect(find.text('2 photos · 12 Mar 2026 10:00'), findsOneWidget);
+    final group = find.byKey(Key('job-photo-card-demo-${job.id}-1'));
+    await tester.ensureVisible(group);
+    await tester.tap(group);
+    await tester.pumpAndSettle();
+    expect(find.text('1 / 2'), findsOneWidget);
+    await tester.drag(find.byKey(const Key('job-photo-preview-pages')),
+      const Offset(-320, 0));
+    await tester.pumpAndSettle();
+    expect(find.text('2 / 2'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('job-photo-close-preview')));
+    await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
   });
 
