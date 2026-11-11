@@ -1,6 +1,10 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
 import '../../../auth/data/mobile_auth_repository.dart';
+import '../../../../core/services/active_company_session.dart';
+import '../../../../core/services/sign_api_client.dart';
+import '../../data/remote_job_repository.dart';
+import 'job_details_screen.dart';
 
 import 'create_job_screen.dart';
 import '../../domain/create_job_draft.dart';
@@ -47,9 +51,71 @@ class JobsScreen extends StatefulWidget {
 class _JobsScreenState extends State<JobsScreen> {
   final TextEditingController _search = TextEditingController();
   JobCategory _category = JobCategory.active;
+  List<JobModel> _standaloneJobs = const [];
+  bool _standaloneLoading = false;
+  String? _standaloneError;
+  int _reloadSerial = 0;
+
+  bool get _liveStandalone =>
+      MobileAuthRepository.shared.isSignedIn && widget.onCreateJob == null;
+
+  @override
+  void initState() {
+    super.initState();
+    ActiveCompanySession.selected.addListener(_companyChanged);
+    if (_liveStandalone) _loadStandalone();
+  }
+
+  void _companyChanged() {
+    if (_liveStandalone && mounted) _loadStandalone();
+  }
+
+  Future<void> _loadStandalone() async {
+    final serial = ++_reloadSerial;
+    final company = ActiveCompanySession.companyId;
+    if (!mounted) return;
+    setState(() {
+      _standaloneJobs = const [];
+      _standaloneLoading = true;
+      _standaloneError = null;
+    });
+    try {
+      final jobs = await RemoteJobRepository.shared.listJobs();
+      if (!mounted || serial != _reloadSerial ||
+          ActiveCompanySession.companyId != company) return;
+      setState(() {
+        _standaloneJobs = jobs;
+        _standaloneLoading = false;
+      });
+    } catch (error) {
+      if (!mounted || serial != _reloadSerial ||
+          ActiveCompanySession.companyId != company) return;
+      setState(() {
+        _standaloneError = error is SignApiException
+            ? error.message : 'Unable to load company jobs.';
+        _standaloneLoading = false;
+      });
+    }
+  }
+
+  Future<void> _openStandaloneJob(JobModel job) async {
+    try {
+      final details = await RemoteJobRepository.shared.loadDetails(job);
+      if (!mounted) return;
+      await Sign2DigitalNavigation.open<void>(context,
+          JobDetailsScreen(job: details.job, details: details));
+      if (mounted) await _loadStandalone();
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(error is SignApiException
+              ? error.message : 'Unable to load job details.')));
+    }
+  }
 
   @override
   void dispose() {
+    ActiveCompanySession.selected.removeListener(_companyChanged);
     _search.dispose();
     super.dispose();
   }
@@ -64,11 +130,27 @@ class _JobsScreenState extends State<JobsScreen> {
     if (!mounted || draft == null) {
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Job draft created locally. Not saved to the server.'),
-      ),
-    );
+    if (_liveStandalone) {
+      try {
+        await RemoteJobRepository.shared.createJob(draft);
+        if (!mounted) return;
+        await _loadStandalone();
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Job saved to your company.'),
+        ));
+      } catch (error) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(error is SignApiException
+              ? error.message : 'Unable to create job.'),
+        ));
+      }
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text('Job draft saved in the design preview only.'),
+    ));
   }
 
   void _notify(String label) {
@@ -83,8 +165,9 @@ class _JobsScreenState extends State<JobsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final source = _liveStandalone ? _standaloneJobs : widget.createdJobs;
     final jobs = <JobModel>[
-      ...widget.createdJobs.where(
+      ...source.where(
         (job) => job.category == _category && job.matches(_search.text)),
       if (widget.includeDemoJobs && !MobileAuthRepository.shared.isSignedIn)
         ...MockJobsData.search(category: _category, query: _search.text),
@@ -96,7 +179,7 @@ class _JobsScreenState extends State<JobsScreen> {
           JobCategory.active => 'Active',
           JobCategory.completed => 'Completed',
           JobCategory.archived => 'Archived',
-        }} (${(widget.includeDemoJobs && !MobileAuthRepository.shared.isSignedIn ? MockJobsData.count(category) : 0) + widget.createdJobs.where(
+        }} (${(widget.includeDemoJobs && !MobileAuthRepository.shared.isSignedIn ? MockJobsData.count(category) : 0) + source.where(
           (job) => job.category == category,
         ).length})',
     ];
@@ -175,14 +258,15 @@ class _JobsScreenState extends State<JobsScreen> {
                 ),
               ),
             ),
-            if (widget.loading)
+            if (widget.loading || _standaloneLoading)
               const SliverFillRemaining(
                 hasScrollBody: false,
                 child: Center(child: CircularProgressIndicator(
                   color: AppColors.primary,
                 )),
               )
-            else if (widget.errorMessage != null)
+            else if (widget.errorMessage != null ||
+                _standaloneError != null)
               SliverFillRemaining(
                 hasScrollBody: false,
                 child: Center(
@@ -191,12 +275,13 @@ class _JobsScreenState extends State<JobsScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(widget.errorMessage!,
+                        Text(widget.errorMessage ?? _standaloneError!,
                           style: AppTextStyles.subtitle,
                           textAlign: TextAlign.center),
                         const SizedBox(height: 12),
                         TextButton(
-                          onPressed: widget.onRetry,
+                          onPressed: widget.onRetry ??
+                              (_liveStandalone ? _loadStandalone : null),
                           child: const Text('Try Again'),
                         ),
                       ],
@@ -234,6 +319,8 @@ class _JobsScreenState extends State<JobsScreen> {
                           FocusManager.instance.primaryFocus?.unfocus();
                           if (widget.onJobTap != null) {
                             widget.onJobTap!(job);
+                          } else if (_liveStandalone) {
+                            _openStandaloneJob(job);
                           } else {
                             _notify('Job Details');
                           }
