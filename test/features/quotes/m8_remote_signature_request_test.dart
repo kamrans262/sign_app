@@ -192,10 +192,12 @@ void main() {
       if(request.url.path.endsWith('/101')) {
         return http.Response(jsonEncode({'data':{
           'request':requestRecord(status:'viewed'),
-          'events':[{
-            'id':'301','type':'documentViewed',
-            'occurredAt':'2026-11-04T08:00:00Z',
-          }],
+          'events':[
+            {'id':'300','type':'signatureRequested',
+             'occurredAt':'2026-11-04T07:30:00Z'},
+            {'id':'301','type':'documentViewed',
+             'occurredAt':'2026-11-04T08:00:00Z'},
+          ],
         }}),200);
       }
       throw StateError('Unexpected endpoint');
