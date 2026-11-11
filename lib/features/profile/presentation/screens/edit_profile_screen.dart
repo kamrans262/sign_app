@@ -153,20 +153,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       setState(() => _title = choice);
       return;
     }
-    // Let TextFormField own its controller until the dialog widget unmounts.
-    // Disposing a manual controller when showDialog completes is too early:
-    // the exit animation can still rebuild the TextField.
+    // Use the shared field's internal controller until the dialog unmounts.
     var draftTitle = _title ?? '';
     final entered = await showDialog<String>(
       context: context,
       builder: (dialog) => AlertDialog(
         title: const Text('Job Title'),
-        content: TextFormField(
+        content: Sign2DigitalInputField(
           key: const Key('profile-title-custom-input'),
+          label: 'Job Title',
+          hintText: 'e.g. Project Manager',
           initialValue: draftTitle,
           autofocus: true,
+          iconAsset: '',
+          leadingIcon: Icons.badge_outlined,
+          leadingIconSize: 24,
           onChanged: (value) => draftTitle = value,
-          decoration: const InputDecoration(hintText: 'e.g. Project Manager'),
         ),
         actions: [
           TextButton(
