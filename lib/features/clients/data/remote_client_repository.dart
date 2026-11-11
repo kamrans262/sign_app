@@ -2,6 +2,7 @@ import '../../../core/services/active_company_session.dart';
 import '../../../core/services/sign_api_client.dart';
 import '../../auth/data/mobile_auth_repository.dart';
 import '../domain/client_draft.dart';
+import '../domain/client_details_model.dart';
 import '../domain/client_profile.dart';
 import 'client_repository.dart';
 
@@ -156,6 +157,93 @@ class RemoteClientRepository implements ClientRepository {
       throw const SignApiException('Client belongs to another company.');
     }
     return _parse(raw);
+  }
+
+  /// Loads a complete, company-scoped client dossier. No locally fabricated
+  /// counts or related records may appear for an authenticated user.
+  Future<ClientDetailsModel> details(String clientId) async {
+    final id = int.tryParse(clientId);
+    if (id == null || id <= 0) {
+      throw const SignApiException('Select a saved client.');
+    }
+    final company = _company();
+    final data = _data(await _api.get('/api/v1/clients/$id',
+        companyScoped: true));
+    if (ActiveCompanySession.companyId != company) {
+      throw const SignApiException('Company changed while loading client.');
+    }
+    final raw = data['client'];
+    if (raw is! Map<String, dynamic> || _id(raw['id']) != id ||
+        _id(raw['company_id']) != company) {
+      throw const SignApiException('Invalid client dossier.');
+    }
+    List<Map<String, dynamic>> records(String key) {
+      final list = data[key];
+      if (list is! List || list.any((item) => item is! Map)) {
+        throw SignApiException('Invalid $key history.');
+      }
+      return [for (final item in list) Map<String, dynamic>.from(item as Map)];
+    }
+    final client = _parse(raw);
+    final jobs = [
+      for (final row in records('jobs'))
+        ClientRelatedRecord(
+          id: '${_id(row['id'])}',
+          title: '${row['title'] ?? ''}',
+          description: '${row['reference_number'] ?? ''}',
+          meta: '${row['due_date'] ?? ''}',
+          status: '${row['status'] ?? ''}',
+        ),
+    ];
+    final quotes = [
+      for (final row in records('quotes'))
+        ClientRelatedRecord(
+          id: 'quote-${_id(row['id'])}',
+          title: '${row['reference_number'] ?? ''}',
+          description: '${row['currency'] ?? 'CHF'} '
+              '${(_id(row['total_minor']) / 100).toStringAsFixed(2)}',
+          meta: 'Quote', status: '${row['status'] ?? ''}',
+        ),
+    ];
+    final documents = [
+      for (final row in records('documents'))
+        ClientRelatedRecord(
+          id: '${row['id'] ?? ''}',
+          title: '${row['title'] ?? ''}',
+          description: '${row['number'] ?? ''}',
+          meta: '${row['project'] ?? ''}',
+          status: '${row['status'] ?? ''}',
+        ),
+    ];
+    final invoices = [
+      for (final row in records('invoices'))
+        ClientRelatedRecord(
+          id: 'invoice-${_id(row['id'])}',
+          title: '${row['number'] ?? ''}',
+          description: '${row['currency'] ?? 'CHF'} '
+              '${(_id(row['total_minor']) / 100).toStringAsFixed(2)}',
+          meta: '${row['invoice_date'] ?? ''}',
+          status: '${row['status'] ?? ''}',
+        ),
+    ];
+    final notes = [
+      for (final row in records('notes_history'))
+        ClientRelatedRecord(
+          id: '${row['id'] ?? ''}',
+          title: '${row['title'] ?? ''}',
+          description: '${row['description'] ?? ''}',
+          meta: '${row['created_at'] ?? ''}',
+        ),
+    ];
+    return ClientDetailsModel(
+      client: client, status: 'Active',
+      displayAddress: client.address,
+      totalQuotes: quotes.length,
+      totalDocuments: documents.length,
+      totalInvoices: invoices.length,
+      jobs: jobs, quotes: quotes, documents: documents,
+      invoices: invoices, notes: notes,
+    );
   }
 
   /// Caller must obtain permission, allow selection, and show explicit review
