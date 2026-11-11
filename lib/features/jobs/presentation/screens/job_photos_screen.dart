@@ -1,4 +1,4 @@
-import '../../../../core/navigation/sign2digital_navigation.dart';
+import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -17,7 +17,6 @@ import '../widgets/sign2digital_job_info_banner.dart';
 import '../widgets/sign2digital_job_photo_card.dart';
 import '../widgets/job_photo_gallery_dialog.dart';
 import '../../../../core/services/sign_api_client.dart';
-import 'add_photos_screen.dart';
 
 class JobPhotosScreen extends StatefulWidget {
   const JobPhotosScreen({
@@ -57,6 +56,8 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
   bool _picking = false;
   int _nextId = 0;
   bool _savingPhotos = false;
+  bool _galleryOpen = false;
+  bool _deletingPhoto = false;
 
   // Persisted jobs must never silently fall back to local demo storage.
   bool get _remote => widget.store == null &&
@@ -126,7 +127,10 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
       for (final value in picked) {
         DeviceJobPhotoSource.validate(value.name, value.bytes);
         if (_alreadySelected(value)) continue;
-        _pending.add(_PendingPhoto(value));
+        _pending.add(_PendingPhoto(value)
+          ..category = _selectedTab == 0
+              ? JobPhotoCategory.during
+              : JobPhotoCategory.values[_selectedTab - 1]);
         added++;
       }
       setState(() {});
@@ -208,53 +212,53 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
     );
   }
 
-  Future<void> _openAddPhotos() async {
-    final staged = _pending.isEmpty ? null : _pending.first;
-    final saved = await Sign2DigitalNavigation.push<bool>(context,
-      MaterialPageRoute(
-        builder: (_) => AddPhotosScreen(
-          job: widget.job,
-          store: _remote ? null : _store,
-          source: _source,
-          initialSelection: staged?.value,
-          initialCategory: staged?.category ?? JobPhotoCategory.during,
-          remoteRepository: widget.remoteRepository,
-          onTabSelected: widget.onTabSelected,
-        ),
-      ),
+  Future<bool> _deletePhoto(JobPhotoModel photo) async {
+    if (_deletingPhoto) return false;
+    final chosen = await Sign2DigitalSelectionSheet.show(
+      context, title: 'Delete Job Photo',
+      subtitle: 'Remove this photo from the job? Other photos in the category remain.',
+      icon: Icons.delete_outline,
+      options: const ['Cancel', 'Delete Photo'],
     );
-    if (!mounted || saved != true) return;
-    if (_remote) {
-      if (staged != null && _pending.isNotEmpty &&
-          identical(_pending.first, staged)) {
-        _pending.removeAt(0);
+    if (!mounted || chosen != 'Delete Photo') return false;
+    _deletingPhoto = true;
+    try {
+      if (_remote) {
+        await _remoteRepository.deletePhoto(photo);
+        if (!mounted) return false;
+        await _loadRemotePhotos();
+      } else {
+        _store.remove(widget.job.id, photo.id);
+        if (mounted) setState(() => _photos = _store.photosFor(widget.job.id).toList());
       }
-      await _loadRemotePhotos();
-      if (mounted) setState(() => _selectedTab = 0);
-      return;
+      if (!mounted) return false;
+      _message('Photo deleted from this job.');
+      return true;
+    } catch (error) {
+      if (mounted) _message(error is SignApiException
+          ? error.message : 'Unable to delete photo. Please retry.');
+      return false;
+    } finally {
+      _deletingPhoto = false;
     }
-    setState(() {
-      if (staged != null &&
-          _pending.isNotEmpty &&
-          identical(_pending.first, staged)) {
-        _pending.removeAt(0);
-      }
-      _photos = _store.photosFor(widget.job.id).toList();
-      _selectedTab = 0;
-    });
   }
 
-  void _openPhoto(JobPhotoModel photo) {
-    // The preview pages only through photos visible in the selected tab.
-    final gallery = List<JobPhotoModel>.unmodifiable(_filteredPhotos);
-    showDialog<void>(
-      context: context,
-      barrierColor: const Color(0x80000000),
-      builder: (_) => JobPhotoGalleryDialog(
-        photos: gallery,
-        initialPhotoId: photo.id,
-      ),
-    );
+  Future<void> _openPhoto(JobPhotoModel photo, List<JobPhotoModel> group) async {
+    if (_galleryOpen || group.isEmpty) return;
+    _galleryOpen = true;
+    try {
+      await showDialog<void>(
+        context: context,
+        barrierColor: const Color(0x80000000),
+        builder: (_) => JobPhotoGalleryDialog(
+          photos: List<JobPhotoModel>.unmodifiable(group),
+          initialPhotoId: photo.id,
+          onDelete: _deletePhoto,
+        ),
+      );
+    } finally {
+      _galleryOpen = false;
+    }
   }
 
   void _selectNavigation(int index) {
@@ -266,39 +270,42 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
 
   Widget _photoGrid(double availableWidth) {
     final columns = availableWidth < 300
-        ? 1
-        : availableWidth < 610
-        ? 2
-        : (availableWidth / 205).floor().clamp(3, 5);
+        ? 1 : availableWidth < 610
+        ? 2 : (availableWidth / 205).floor().clamp(3, 5);
     const gap = 14.0;
     final itemWidth = (availableWidth - gap * (columns - 1)) / columns;
-    final items = _filteredPhotos;
-    if (items.isEmpty) {
+    final visible = _filteredPhotos;
+    if (visible.isEmpty) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 30),
-        child: Center(
-          child: Text(
-            'No photos in this category yet.',
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 14,
-              color: AppColors.placeholder,
-            ),
-          ),
-        ),
+        child: Center(child: Text('No photos in this category yet.',
+          style: TextStyle(fontFamily: 'Inter', fontSize: 14,
+            color: AppColors.placeholder))),
       );
     }
+    // One existing photo card per category, containing every saved photo.
+    // The original full-size PageView receives only that group's photos.
+    final groups = <(JobPhotoCategory, List<JobPhotoModel>)>[
+      for (final category in JobPhotoCategory.values)
+        if (visible.any((photo) => photo.category == category))
+          (category, visible.where((photo) => photo.category == category).toList()),
+    ];
     return Wrap(
-      spacing: gap,
-      runSpacing: 20,
+      spacing: gap, runSpacing: 20,
       children: [
-        for (final photo in items)
+        for (final group in groups)
           SizedBox(
-            key: Key('photo-grid-${photo.id}'),
+            key: Key('photo-grid-${group.$2.first.id}'),
             width: itemWidth,
             child: Sign2DigitalJobPhotoCard(
-              photo: photo,
-              onTap: () => _openPhoto(photo),
+              photo: group.$2.first,
+              groupPhotos: group.$2,
+              groupLabel: switch (group.$1) {
+                JobPhotoCategory.before => 'Before Job',
+                JobPhotoCategory.during => 'During Job',
+                JobPhotoCategory.after => 'After Job',
+              },
+              onTap: () => _openPhoto(group.$2.first, group.$2),
             ),
           ),
       ],
@@ -527,7 +534,7 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
                             alignment: Alignment.centerRight,
                             child: TextButton(
                               key: const Key('job-photos-confirm-pending'),
-                              onPressed: _commitPendingPhotos,
+                              onPressed: _savingPhotos ? null : _commitPendingPhotos,
                               child: const Text('Confirm selected photos'),
                             ),
                           ),
@@ -536,7 +543,7 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
                         Sign2DigitalPrimaryButton(
                           key: const Key('job-photos-add-button'),
                           label: '＋ Add Photos',
-                          onPressed: _openAddPhotos,
+                          onPressed: () => _selectPhotos(camera: false),
                         ),
                       ],
                     );
