@@ -19,7 +19,7 @@ abstract final class Sign2DigitalSubscriptionGate {
         title: const Text('Subscription Required',
             style: TextStyle(color: AppColors.dark)),
         content: const Text(
-          'Your free document allowance is complete. '
+          'Your current plan\'s document allowance has been reached. '
           'Existing documents remain available to view or edit. '
           'Choose a plan to create or issue more documents.',
           style: TextStyle(color: AppColors.dark),
