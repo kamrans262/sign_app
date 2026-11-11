@@ -522,7 +522,6 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
         const SizedBox(height: 10),
       ],
       Row(
-    key: const Key('labour-detail-actions'),
     children: [
       Expanded(child: Sign2DigitalOutlinedButton(
         key: const Key('labour-detail-delete'),
