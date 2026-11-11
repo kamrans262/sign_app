@@ -6,6 +6,9 @@ import 'package:flutter/services.dart';
 import '../../../../core/services/sign_api_client.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
+import '../../../../core/widgets/sign2digital_input_field.dart';
+import '../../../../core/widgets/sign2digital_primary_button.dart';
+import '../../../../core/widgets/sign2digital_outlined_button.dart';
 import '../../../auth/data/mobile_auth_repository.dart';
 import '../../../auth/presentation/screens/mobile_auth_gateway.dart';
 
@@ -69,13 +72,15 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
             'It does not delete company records or signed documents. '
             'Active company owners must transfer or close ownership first.'),
           const SizedBox(height: 16),
-          TextField(
+          Sign2DigitalInputField(
             key: const Key('m22-privacy-password'),
             controller: password,
+            label: 'Confirm Password',
+            hintText: 'Enter account password',
+            iconAsset: '',
+            leadingIcon: Icons.lock_outline_rounded,
+            leadingIconSize: 24,
             obscureText: true,
-            decoration: const InputDecoration(
-              labelText: 'Confirm your password',
-              border: OutlineInputBorder()),
           ),
         ]),
         actions: [
@@ -139,20 +144,25 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
                 'and signed documents are retained for legal integrity. '
                 'Transfer company ownership and administrator access first.'),
               const SizedBox(height: 12),
-              TextFormField(
+              Sign2DigitalInputField(
                 key: const Key('m22-delete-type'),
+                label: 'Confirmation',
+                hintText: 'Type DELETE',
+                iconAsset: '',
+                leadingIcon: Icons.warning_amber_outlined,
+                leadingIconSize: 24,
                 onChanged: (value) => refresh(() => confirmation = value),
-                decoration: const InputDecoration(
-                  labelText: 'Type DELETE', border: OutlineInputBorder()),
               ),
               const SizedBox(height: 12),
-              TextFormField(
+              Sign2DigitalInputField(
                 key: const Key('m22-delete-password'),
+                label: 'Confirm Password',
+                hintText: 'Enter account password',
+                iconAsset: '',
+                leadingIcon: Icons.lock_outline_rounded,
+                leadingIconSize: 24,
                 obscureText: true,
                 onChanged: (value) => refresh(() => password = value),
-                decoration: const InputDecoration(
-                  labelText: 'Confirm your password',
-                  border: OutlineInputBorder()),
               ),
             ],
           )),
@@ -227,11 +237,15 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
               style: TextStyle(fontFamily: 'Inter', fontSize: 14,
                 color: AppColors.secondaryText)),
             const SizedBox(height: 16),
-            FilledButton.icon(
+            Sign2DigitalPrimaryButton(
               key: const Key('m22-privacy-export'),
-              onPressed: _busy ? null : _export,
-              icon: const Icon(Icons.copy_outlined),
-              label: const Text('Copy My Account Data')),
+              label: 'Copy My Account Data',
+              enabled: !_busy,
+              loading: _busy,
+              leading: const Icon(Icons.copy_outlined,
+                size: 20, color: AppColors.white),
+              onPressed: _export,
+            ),
             const SizedBox(height: 28),
             const Text('Account Deactivation',
               style: TextStyle(fontFamily: 'Inter', fontSize: 20,
@@ -243,11 +257,15 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
               style: TextStyle(fontFamily: 'Inter', fontSize: 14,
                 color: AppColors.secondaryText)),
             const SizedBox(height: 16),
-            OutlinedButton.icon(
+            Sign2DigitalOutlinedButton(
               key: const Key('m22-privacy-deactivate'),
-              onPressed: _busy ? null : _deactivate,
-              icon: const Icon(Icons.person_off_outlined),
-              label: const Text('Deactivate Account')),
+              label: 'Deactivate Account',
+              enabled: !_busy,
+              primaryOutline: true,
+              leading: const Icon(Icons.person_off_outlined,
+                size: 20, color: AppColors.primary),
+              onPressed: _deactivate,
+            ),
             const SizedBox(height: 28),
             const Text('Delete Personal Account',
               style: TextStyle(fontFamily: 'Inter', fontSize: 20,
@@ -259,11 +277,15 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
               style: TextStyle(fontFamily: 'Inter', fontSize: 14,
                 color: AppColors.secondaryText)),
             const SizedBox(height: 16),
-            OutlinedButton.icon(
+            Sign2DigitalOutlinedButton(
               key: const Key('m22-privacy-delete'),
-              onPressed: _busy ? null : _deleteAccount,
-              icon: const Icon(Icons.delete_forever_outlined),
-              label: const Text('Delete Account')),
+              label: 'Delete Account',
+              enabled: !_busy,
+              destructive: true,
+              leading: const Icon(Icons.delete_forever_outlined,
+                size: 20, color: Color(0xFFFF1B23)),
+              onPressed: _deleteAccount,
+            ),
           ],
         ),
       ))),
