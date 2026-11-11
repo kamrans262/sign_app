@@ -12,6 +12,7 @@ import '../../domain/document_record.dart';
 import 'document_details_screen.dart';
 import 'site_report_wizard_screen.dart';
 import 'meeting_minutes_editor_screen.dart';
+import '../widgets/site_report_review_content.dart';
 
 /// Existing Sign2Digital layout applied to the real report review lifecycle.
 /// AI never approves or sends a document on behalf of the professional.
@@ -109,6 +110,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
     if (mounted && updated != null) {
       setState(() { _report = updated; _suggestion = null; });
       _notify('Draft saved. Review again before approval.');
+      await _reload();
     }
   }
 
@@ -258,7 +260,6 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
   Widget build(BuildContext context) {
     final minutes = _report.meetingMinutesDetails;
     final site = _report.siteReportDetails;
-    final siteSections = site?.sectionContent ?? const <SiteReportSection, String>{};
     final suggestions = _suggestion?['sections'];
     return Scaffold(
       backgroundColor: AppColors.white,
@@ -270,41 +271,33 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
               children: [
-                _section('Report', _report.number),
-                _section('Title', _report.title),
-                _section('Status', _report.status.toUpperCase()),
-                _section('Project', _report.project),
-                _section('Customer', _report.customer),
-                _section('Prepared By', _report.createdBy ?? ''),
-                if (site != null) ...[
-                  _section('Site Location', site.location),
-                  _section('Attendees', site.attendees.join('\n')),
-                  _section('Absentees', site.absentees.join('\n')),
-                  _section('Decisions', site.decisions.join('\n')),
-                  _section('Outstanding Points', site.outstandingPoints.join('\n')),
-                  _section('Next Steps', site.nextSteps.join('\n')),
-                  _section('Action Items', site.actionItems.map((item) =>
-                    item.description).join('\n')),
-                ],
                 if (site != null)
-                  for (final section in siteSections.entries)
-                    _section(section.key.label, section.value),
-                if (minutes != null) ...[
-                  _section('Location', minutes.location),
-                  _section('Summary', minutes.summary),
-                  _section('Attendees', minutes.attendees.join('\n')),
-                  _section('Absentees', minutes.absentees.join('\n')),
-                  _section('Decisions', minutes.decisions.join('\n')),
-                  _section('Next Steps', minutes.nextSteps.join('\n')),
-                  _section('Outstanding Points', minutes.outstandingPoints.join('\n')),
-                  _section('Action Items', minutes.actionDetails.isNotEmpty
-                    ? minutes.actionDetails.map((item) => [
-                        item.description,
-                        if (item.assignee.isNotEmpty) 'Owner: ${item.assignee}',
-                        if (item.dueDate != null)
-                          'Due: ${RemoteSiteReportRepository.dateValue(item.dueDate!)}',
-                      ].join(' • ')).join('\n')
-                    : minutes.actionItems.join('\n')),
+                  SiteReportReviewContent(report: _report)
+                else ...[
+                  _section('Report', _report.number),
+                  _section('Title', _report.title),
+                  _section('Status', _report.status.toUpperCase()),
+                  _section('Project', _report.project),
+                  _section('Customer', _report.customer),
+                  _section('Prepared By', _report.createdBy ?? ''),
+                  if (minutes != null) ...[
+                    _section('Location', minutes.location),
+                    _section('Summary', minutes.summary),
+                    _section('Attendees', minutes.attendees.join('\n')),
+                    _section('Absentees', minutes.absentees.join('\n')),
+                    _section('Decisions', minutes.decisions.join('\n')),
+                    _section('Next Steps', minutes.nextSteps.join('\n')),
+                    _section('Outstanding Points', minutes.outstandingPoints.join('\n')),
+                    _section('Action Items', minutes.actionDetails.isNotEmpty
+                      ? minutes.actionDetails.map((item) => [
+                          item.description,
+                          if (item.assignee.isNotEmpty) 'Owner: ${item.assignee}',
+                          if (item.dueDate != null)
+                            'Due: ${RemoteSiteReportRepository.dateValue(item.dueDate!)}',
+                        ].join(' • ')).join('\n')
+                      : minutes.actionItems.join('\n')),
+                  ],
+  
                 ],
                 if (_suggestion != null) ...[
                   const Divider(height: 25),
@@ -326,26 +319,69 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
                     child: Text(_error!, style: const TextStyle(
                       fontFamily: 'Inter', color: Color(0xFFB42318))),
                   ),
-                if (_isDraft) ...[
-                  Sign2DigitalOutlinedButton(
-                    label: 'Edit Draft', onPressed: _editDraft,
-                  ),
-                  const SizedBox(height: 12),
-                  Sign2DigitalOutlinedButton(
-                    label: 'Prepare with AI',
-                    onPressed: _prepare,
-                  ),
-                  const SizedBox(height: 12),
+                if (_isDraft)
+                  LayoutBuilder(builder: (context, constraints) {
+                    final edit = Sign2DigitalOutlinedButton(
+                      label: 'Edit Draft', onPressed: _editDraft,
+                      enabled: !_busy,
+                    );
+                    final ai = Sign2DigitalOutlinedButton(
+                      label: 'Prepare with AI', onPressed: _prepare,
+                      enabled: !_busy,
+                    );
+                    final approve = Sign2DigitalPrimaryButton(
+                      label: 'Approve Report', loading: _busy,
+                      onPressed: _approve,
+                    );
+                    final archive = Sign2DigitalOutlinedButton(
+                      label: 'Archive Report', onPressed: _archive,
+                      enabled: !_busy,
+                    );
+                    // Preserve equal-width original buttons; only phones with
+                    // insufficient two-column space use the vertical fallback.
+                    if (constraints.maxWidth < 270) {
+                      return Column(children: [
+                        edit, const SizedBox(height: 12), ai,
+                        const SizedBox(height: 12), approve,
+                        const SizedBox(height: 12), archive,
+                      ]);
+                    }
+                    return Column(children: [
+                      Row(crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(child: edit), const SizedBox(width: 10),
+                          Expanded(child: ai),
+                        ]),
+                      const SizedBox(height: 12),
+                      Row(crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(child: approve), const SizedBox(width: 10),
+                          Expanded(child: archive),
+                        ]),
+                    ]);
+                  })
+                else if (_report.status != 'archived') ...[
                   Sign2DigitalPrimaryButton(
-                    label: 'Approve Report', loading: _busy,
-                    onPressed: _approve,
+                    label: 'Already Approved', onPressed: () {},
+                    enabled: false,
                   ),
+                  if (_report.reportManagedDocumentId != null) ...[
+                    const SizedBox(height: 12),
+                    Sign2DigitalOutlinedButton(
+                      label: 'View Approved PDF', onPressed: _openPdf,
+                    ),
+                    const SizedBox(height: 12),
+                    Sign2DigitalPrimaryButton(
+                      label: 'Send to Client', loading: _busy,
+                      onPressed: _send,
+                    ),
+                  ],
                 ] else if (_report.reportManagedDocumentId != null) ...[
                   Sign2DigitalOutlinedButton(
-                    label: 'View Approved PDF',
-                    onPressed: _openPdf,
+                    label: 'View Approved PDF', onPressed: _openPdf,
                   ),
-                  if (_report.status != 'archived') ...[
+                ],
+                if (_report.status != 'archived') ...[
                     const SizedBox(height: 12),
                     Sign2DigitalPrimaryButton(
                       label: 'Send to Client', loading: _busy,
@@ -353,7 +389,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
                     ),
                   ],
                 ],
-                if (_report.status != 'archived') ...[
+                if (!_isDraft && _report.status != 'archived') ...[
                   const SizedBox(height: 12),
                   Sign2DigitalOutlinedButton(
                     label: 'Archive Report', onPressed: _archive,
