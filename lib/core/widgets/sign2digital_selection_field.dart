@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
 import 'sign2digital_outlined_container.dart';
@@ -58,7 +59,8 @@ class Sign2DigitalSelectionField extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (leadingIcon != null)
-                      Icon(leadingIcon, size: leadingIconSize)
+                      Icon(leadingIcon, size: leadingIconSize,
+                color: AppColors.dark)
                     else
                       SvgPicture.asset(
                         iconAsset,
