@@ -171,6 +171,7 @@ class RemoteJobRepository {
       companyScoped: true,
       data: {
         'client_id': client,
+        if (draft.requestKey != null) 'request_key': draft.requestKey,
         if (draft.title != null && draft.title!.trim().isNotEmpty)
           'title': draft.title!.trim(),
         'description': draft.description,

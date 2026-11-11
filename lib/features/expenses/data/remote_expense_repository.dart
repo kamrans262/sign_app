@@ -203,6 +203,8 @@ class RemoteExpenseRepository implements ExpenseRepository {
     }
     return {
       'job_id': jobId,
+      if (expense.id.startsWith('local-expense-'))
+        'request_key': expense.id,
       'category': expense.category.name,
       'supplier': expense.supplier.trim(),
       'description': expense.description.trim(),

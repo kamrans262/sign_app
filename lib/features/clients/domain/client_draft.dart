@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 @immutable
 class ClientDraft {
   const ClientDraft({
+    this.requestKey,
     required this.fullName,
     required this.companyName,
     required this.address,
@@ -15,6 +16,8 @@ class ClientDraft {
     required this.notes,
   });
 
+  /// Stable for retries of one new client, not used on updates.
+  final String? requestKey;
   final String fullName;
   final String companyName;
   final String address;

@@ -115,7 +115,10 @@ class RemoteClientRepository implements ClientRepository {
   Future<ClientProfile> createClient(ClientDraft draft) async {
     final current = _company();
     final data = _data(await _api.post('/api/v1/clients',
-      data: _payload(draft), companyScoped: true));
+      data: {
+        ..._payload(draft),
+        if (draft.requestKey != null) 'request_key': draft.requestKey,
+      }, companyScoped: true));
     final raw = data['client'];
     if (raw is! Map<String, dynamic> || _id(raw['company_id']) != current ||
         ActiveCompanySession.companyId != current) {

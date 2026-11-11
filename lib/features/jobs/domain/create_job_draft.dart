@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 class CreateJobDraft {
   const CreateJobDraft({
     this.title,
+    this.requestKey,
     required this.clientId,
     required this.clientName,
     required this.address,
@@ -18,6 +19,7 @@ class CreateJobDraft {
   /// Explicit job name, independent of the work description.
   /// Null preserves compatibility with previously saved forms.
   final String? title;
+  final String? requestKey;
   final String clientId;
   final String clientName;
   final String address;
