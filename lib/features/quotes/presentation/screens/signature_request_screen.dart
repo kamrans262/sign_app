@@ -170,6 +170,20 @@ class _SignatureRequestScreenState extends State<SignatureRequestScreen> {
   Future<void> _copyLink() async {
     Uri? link=_link;
     if(link==null && _serverRequestId!=null && !_loadingRequest && !_resending) {
+      if (_tracking.signed || _tracking.completed) {
+        _notify('This document is already signed.');
+        return;
+      }
+      if (_tracking.sent) {
+        final choice = await Sign2DigitalSelectionSheet.show(
+          context,
+          title: 'Copy Signing Link',
+          subtitle: 'Generating a new link invalidates the one already emailed.',
+          icon: Icons.link_outlined,
+          options: const ['Generate New Link'],
+        );
+        if (choice != 'Generate New Link' || !mounted) return;
+      }
       setState(() => _loadingRequest=true);
       try {
         final result=await RemoteSignatureRequestRepository.shared.rotateLink(
