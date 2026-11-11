@@ -1,0 +1,39 @@
+name: Stage 2 Quotation Documents and Status Verification
+
+on:
+  push:
+    branches: [fix/m20-android-live-reminder-integration-2026-11-06]
+    paths:
+      - '.github/workflows/qa-quotation-stage2.yml'
+      - 'lib/features/documents/presentation/screens/document_details_screen.dart'
+      - 'lib/features/documents/presentation/screens/documents_screen.dart'
+      - 'lib/features/quotes/presentation/screens/signature_request_screen.dart'
+      - 'lib/features/quotes/domain/quote_document_tracking.dart'
+      - 'test/features/documents/stage2_quote_status_integration_test.dart'
+      - 'test/features/quotes/signature_request_screen_test.dart'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sign2digital-quotation-stage2-flutter
+  cancel-in-progress: true
+
+jobs:
+  quotation-status:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Analyze only the changed quotation and document integration
+        run: |
+          flutter analyze --no-pub --no-fatal-infos lib/features/documents/presentation/screens/document_details_screen.dart lib/features/documents/presentation/screens/documents_screen.dart lib/features/quotes/presentation/screens/signature_request_screen.dart lib/features/quotes/domain/quote_document_tracking.dart test/features/documents/stage2_quote_status_integration_test.dart test/features/quotes/signature_request_screen_test.dart
+      - name: Focused M8-M9 quotation and Documents regressions
+        run: |
+          flutter test --no-pub --concurrency=2 --timeout=2m --reporter=expanded test/features/documents/stage2_quote_status_integration_test.dart test/features/documents/document_details_screen_test.dart test/features/documents/documents_screen_test.dart test/features/quotes/signature_request_screen_test.dart test/features/quotes/m8_remote_signature_request_test.dart
