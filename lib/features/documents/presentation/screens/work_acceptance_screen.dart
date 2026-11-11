@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/sign2digital_subscription_gate.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
 import '../../../../core/widgets/sign2digital_outlined_button.dart';
@@ -132,8 +133,11 @@ class _WorkAcceptanceScreenState extends State<WorkAcceptanceScreen> {
         final fresh=await widget.onRefresh!(_report);
         if(mounted)setState(()=>_report=fresh);
       }
-    } catch (_) {
-      _notice('The report action could not be completed.');
+    } catch (error) {
+      if (mounted && !await Sign2DigitalSubscriptionGate.handle(
+          context, error)) {
+        _notice('The report action could not be completed.');
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
