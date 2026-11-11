@@ -55,6 +55,7 @@ class ExpenseRecord {
     this.updatedAt,
     this.history = const [],
     this.reimbursementRequested = false,
+    this.canApprove = false,
   });
 
   final String id;
@@ -84,6 +85,8 @@ class ExpenseRecord {
   final DateTime? updatedAt;
   final List<ExpenseHistoryEvent> history;
   final bool reimbursementRequested;
+  /// Server-verified reviewer capability, never inferred from visible buttons.
+  final bool canApprove;
 
   bool matches(String input) {
     final query = input.trim().toLowerCase();
@@ -99,7 +102,7 @@ class ExpenseRecord {
     String? customCategory,
     List<LocalJobPhotoSelection>? photos, List<String>? tags,
     String? supplier, DateTime? updatedAt, List<ExpenseHistoryEvent>? history,
-    bool? reimbursementRequested,
+    bool? reimbursementRequested, bool? canApprove,
   }) => ExpenseRecord(
     id: id, category: category ?? this.category,
     title: title ?? this.title, job: job ?? this.job,
@@ -114,6 +117,7 @@ class ExpenseRecord {
     updatedAt: updatedAt ?? this.updatedAt,
     history: history ?? this.history,
     reimbursementRequested: reimbursementRequested ?? this.reimbursementRequested,
+    canApprove: canApprove ?? this.canApprove,
   );
 
   String get formattedAmount => 'CHF ${amount.toStringAsFixed(2)}';
