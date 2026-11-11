@@ -421,14 +421,17 @@ class _SecurityAccessScreenState extends State<SecurityAccessScreen> {
                 ],
                 if (widget.repository is RemoteSecurityAccessRepository) ...[
                   const SizedBox(height: 12),
-                  TextButton.icon(
+                  Sign2DigitalOutlinedButton(
                     key: const Key('m22-change-password'),
-                    onPressed: _busy ? null : () => Sign2DigitalNavigation.push<void>(context,
+                    label: 'Change Password',
+                    enabled: !_busy,
+                    primaryOutline: true,
+                    leading: const Icon(Icons.lock_reset_outlined,
+                      size: 20, color: AppColors.primary),
+                    onPressed: () => Sign2DigitalNavigation.push<void>(context,
                       MaterialPageRoute<void>(builder: (_) => ChangeAccountPasswordScreen(
                         repository: widget.repository as RemoteSecurityAccessRepository))),
-                    icon: const Icon(Icons.lock_reset_outlined),
-                    label: const Text('Change Password'),
-                  ),
+                  )
                 ],
                 const SizedBox(height: 20),
                 Row(children: [
