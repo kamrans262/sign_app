@@ -381,14 +381,6 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
                     label: 'View Approved PDF', onPressed: _openPdf,
                   ),
                 ],
-                if (_report.status != 'archived') ...[
-                    const SizedBox(height: 12),
-                    Sign2DigitalPrimaryButton(
-                      label: 'Send to Client', loading: _busy,
-                      onPressed: _send,
-                    ),
-                  ],
-                ],
                 if (!_isDraft && _report.status != 'archived') ...[
                   const SizedBox(height: 12),
                   Sign2DigitalOutlinedButton(
