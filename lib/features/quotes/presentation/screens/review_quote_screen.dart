@@ -1,4 +1,5 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
+import '../../../../core/widgets/sign2digital_subscription_gate.dart';
 import 'package:flutter/material.dart';
 import '../../../documents/data/document_activity_session.dart';
 
@@ -280,7 +281,10 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
         if (!mounted) return;
         setState(() => _draft = approved);
       } catch (error) {
-        if (mounted) _notice('Server approval failed: $error');
+        if (mounted && !await Sign2DigitalSubscriptionGate.handle(
+            context, error)) {
+          _notice('Server approval failed: $error');
+        }
         return;
       } finally {
         if (mounted) setState(() => _savingToServer = false);
