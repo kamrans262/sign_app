@@ -43,6 +43,7 @@ class LabourEntry {
     this.approvedAt,
     this.history = const [],
     this.isDemo = false,
+    this.canApprove = false,
   });
 
   final String id;
@@ -68,6 +69,8 @@ class LabourEntry {
   final List<LabourHistoryEvent> history;
   double? get totalLabourCost => hourlyRate == null ? null : hours * hourlyRate!;
   final bool isDemo;
+  /// Company reviewer capability verified by the server for this detail.
+  final bool canApprove;
 
   /// Keeps the same record ID and protected approval status on edit.
   LabourEntry copyWith({
@@ -84,6 +87,7 @@ class LabourEntry {
     int? workerId,
     List<LocalJobPhotoSelection>? photos,
     List<LabourHistoryEvent>? history,
+    bool? canApprove,
   }) => LabourEntry(
     id: id,
     kind: kind,
@@ -105,6 +109,7 @@ class LabourEntry {
     approvedBy: approvedBy,
     approvedAt: approvedAt,
     isDemo: isDemo,
+    canApprove: canApprove ?? this.canApprove,
   );
 
   String get initials {
