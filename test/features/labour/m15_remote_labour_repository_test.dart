@@ -76,6 +76,32 @@ void main(){
     client.dispose();
   });
 
+  test('authorized time-entry reviewer approves through existing API',() async {
+    var approvals=0;
+    final client=api((req) async {
+      if (req.url.path.endsWith('/approve')) {
+        approvals++;
+        expect(req.method,'POST');
+        expect(jsonDecode(req.body)['confirm'],true);
+        return http.Response(jsonEncode({'data':{
+          'entry':labour(status:'approved',version:2),
+        }}),200);
+      }
+      return http.Response(jsonEncode({'data':{
+        'entry':labour(status:approvals==0?'pending':'approved',
+            version:approvals==0?1:2),
+        'can_approve':true,'history':[],'evidence':[],
+      }}),200);
+    });
+    final repo=RemoteLabourRepository(api:client);
+    final pending=await repo.detail('labour-31');
+    expect(pending.canApprove, true);
+    final approved=await repo.approveEntry(pending);
+    expect(approved.status,LabourEntryStatus.approved);
+    expect(approvals,1);
+    client.dispose();
+  });
+
   test('manual save sends assigned ID, dates, minutes and rate only',() async {
     final client=api((req) async {
       expect(req.method,'POST');
