@@ -1,6 +1,7 @@
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
+import '../../../../core/widgets/sign2digital_modal_guard.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -50,6 +51,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   final _amount = TextEditingController();
   final _description = TextEditingController();
   final _supplier = TextEditingController();
+  final _customCategory = TextEditingController();
   final _tagInput = TextEditingController();
   JobModel? _job;
   ExpenseCategory? _category;
@@ -72,6 +74,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         if (job.id == existing.jobId) { _job = job; break; }
       }
       _category = existing.category;
+      _customCategory.text = existing.customCategory;
       _date = existing.date;
       _amount.text = existing.amount.toStringAsFixed(2);
       _description.text = existing.description;
@@ -82,12 +85,14 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     _amount.addListener(_refresh);
     _description.addListener(_refresh);
     _supplier.addListener(_refresh);
+    _customCategory.addListener(_refresh);
     _tagInput.addListener(_refresh);
   }
   void _refresh() { if (mounted) setState(() {}); }
   @override
   void dispose() {
-    _amount.dispose(); _description.dispose(); _supplier.dispose(); _tagInput.dispose();
+    _amount.dispose(); _description.dispose(); _supplier.dispose();
+    _customCategory.dispose(); _tagInput.dispose();
     super.dispose();
   }
 
@@ -96,6 +101,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     if (original != null) {
       return (_job?.id ?? original.jobId) != original.jobId ||
           _category != original.category ||
+          _customCategory.text.trim() != original.customCategory ||
           _date != original.date ||
           _amount.text.trim() != original.amount.toStringAsFixed(2) ||
           _description.text != original.description ||
@@ -105,7 +111,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           _tagInput.text.trim().isNotEmpty;
     }
     return _job != widget.initialJob ||
-        _category != null || _date != null || _amount.text.isNotEmpty ||
+        _category != null || _customCategory.text.isNotEmpty ||
+        _date != null || _amount.text.isNotEmpty ||
         _description.text.isNotEmpty || _supplier.text.isNotEmpty ||
         _photos.isNotEmpty || _tags.isNotEmpty ||
         _tagInput.text.isNotEmpty;
@@ -178,13 +185,20 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               onTap: () => Navigator.of(sheet).pop(type)),
         ])),
     );
-    if (chosen != null && mounted) setState(() { _category = chosen; _error = null; });
+    if (chosen != null && mounted) {
+      setState(() {
+        _category = chosen;
+        if (chosen != ExpenseCategory.other) _customCategory.clear();
+        _error = null;
+      });
+    }
   }
 
   Future<void> _chooseDate() async {
-    final result = await showDatePicker(context: context,
+    final result = await Sign2DigitalModalGuard.run<DateTime>(
+      context, () => showDatePicker(context: context,
       initialDate: _date ?? DateTime.now(),
-      firstDate: DateTime(2000), lastDate: DateTime(2100));
+      firstDate: DateTime(2000), lastDate: DateTime(2100)));
     if (result != null && mounted) setState(() { _date = result; _error = null; });
   }
 
@@ -392,6 +406,10 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       return;
     }
     if (_category == null) { setState(() => _error = 'Choose an expense type.'); return; }
+    if (_category == ExpenseCategory.other && _customCategory.text.trim().isEmpty) {
+      setState(() => _error = 'Specify the expense type.');
+      return;
+    }
     if (_date == null) { setState(() => _error = 'Choose the expense date.'); return; }
     if (value == null || !value.isFinite || value <= 0 ||
         (value * 100 - (value * 100).round()).abs() > .001) {
@@ -415,7 +433,11 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               id: 'local-expense-${now.microsecondsSinceEpoch}',
               jobId: _job?.id ?? previous?.jobId,
               job: _job?.title ?? previous?.job ?? '',
-              category: _category!, title: _category!.label,
+              category: _category!,
+              title: _category == ExpenseCategory.other
+                  ? _customCategory.text.trim() : _category!.label,
+              customCategory: _category == ExpenseCategory.other
+                  ? _customCategory.text.trim() : '',
               report: '', amount: value, date: _date!,
               status: ExpenseStatus.toReview,
               description: _description.text.trim(),
@@ -427,7 +449,11 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           : previous.copyWith(
               jobId: _job?.id ?? previous.jobId,
               job: _job?.title ?? previous.job,
-              category: _category!, title: _category!.label,
+              category: _category!,
+              title: _category == ExpenseCategory.other
+                  ? _customCategory.text.trim() : _category!.label,
+              customCategory: _category == ExpenseCategory.other
+                  ? _customCategory.text.trim() : '',
               amount: value, date: _date!,
               description: _description.text.trim(),
 
@@ -485,6 +511,18 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 trailing: const Icon(Icons.keyboard_arrow_down_rounded,
                   color: AppColors.secondaryText),
                 onTap: _chooseCategory),
+              if (_category == ExpenseCategory.other) ...[
+                const SizedBox(height: 20),
+                Sign2DigitalInputField(
+                  key: const Key('expense-add-custom-category'),
+                  label: 'Specify Expense Type',
+                  hintText: 'Enter expense type',
+                  iconAsset: 'assets/icons/description.svg',
+                  controller: _customCategory,
+                  textCapitalization: TextCapitalization.words,
+                  maxLength: 120,
+                ),
+              ],
               const SizedBox(height: 20),
               Sign2DigitalSelectionField(
                 key: const Key('expense-add-date'), label: 'Date',
