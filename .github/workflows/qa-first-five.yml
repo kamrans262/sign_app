@@ -1,0 +1,33 @@
+name: Sign2Digital QA First Five Flutter
+on:
+  push:
+    branches: [fix/m20-android-live-reminder-integration-2026-11-06]
+    paths:
+      - '.github/workflows/qa-first-five.yml'
+      - 'lib/core/widgets/sign2digital_modal_guard.dart'
+      - 'lib/core/widgets/sign2digital_selection_sheet.dart'
+      - 'lib/core/widgets/sign2digital_styled_bottom_sheet.dart'
+      - 'lib/features/company/presentation/screens/company_team_screen.dart'
+      - 'lib/features/home/presentation/screens/home_dashboard_screen.dart'
+      - 'lib/features/expenses/**'
+      - 'test/features/company/team_permissions_labels_test.dart'
+      - 'test/features/expenses/expense_other_type_test.dart'
+      - 'test/navigation/sign2digital_modal_guard_test.dart'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Analyze affected Flutter files
+        run: flutter analyze --no-pub --no-fatal-infos --no-fatal-warnings lib test/features/company/team_permissions_labels_test.dart test/features/expenses/expense_other_type_test.dart test/navigation/sign2digital_modal_guard_test.dart
+      - name: Permission, company switcher, modal and expense regression
+        run: flutter test --no-pub --concurrency=2 --timeout=50s --reporter=expanded test/features/company/team_permissions_labels_test.dart test/features/expenses/expense_other_type_test.dart test/navigation/sign2digital_modal_guard_test.dart test/features/global_search/m21_stage2_search_ui_test.dart test/features/expenses/add_expense_screen_test.dart test/features/expenses/expense_details_screen_test.dart test/navigation/global_navigation_regression_test.dart
