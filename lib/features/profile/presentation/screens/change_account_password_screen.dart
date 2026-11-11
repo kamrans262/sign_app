@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
+import '../../../../core/widgets/sign2digital_input_field.dart';
+import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../../auth/data/mobile_auth_repository.dart';
 import '../../../auth/presentation/screens/mobile_auth_gateway.dart';
 import '../../data/remote_security_access_repository.dart';
@@ -58,15 +60,31 @@ class _PasswordChangeState extends State<ChangeAccountPasswordScreen> {
             ('New password',next,'m22-pass-new'),
             ('Confirm password',confirm,'m22-pass-confirm'),
           ]) ...[
-            TextField(key:Key(entry.$3),controller:entry.$2,obscureText:true,
-              decoration:InputDecoration(labelText:entry.$1,
-                border:const OutlineInputBorder())),
-            const SizedBox(height:16),
+            Sign2DigitalInputField(
+              key:Key(entry.$3),
+              controller:entry.$2,
+              label:entry.$1,
+              hintText:'Enter ${entry.$1.toLowerCase()}',
+              iconAsset:'',
+              leadingIcon:entry.$3=='m22-pass-current'
+                  ? Icons.lock_outline_rounded
+                  : entry.$3=='m22-pass-new'
+                      ? Icons.key_outlined : Icons.verified_user_outlined,
+              leadingIconSize:24,
+              obscureText:true,
+              keyboardType:TextInputType.visiblePassword,
+              textInputAction:entry.$3=='m22-pass-confirm'
+                  ? TextInputAction.done : TextInputAction.next,
+            ),
+            const SizedBox(height:20),
           ],
           if(error!=null)Text(error!,style:const TextStyle(color:Colors.red)),
-          FilledButton(key:const Key('m22-pass-save'),
-            onPressed:saving?null:save,
-            child:Text(saving?'Saving…':'Change Password')),
+          Sign2DigitalPrimaryButton(
+            key:const Key('m22-pass-save'),
+            label:'Change Password',
+            loading:saving,
+            onPressed:save,
+          ),
         ]),
       ))),
     ])),
