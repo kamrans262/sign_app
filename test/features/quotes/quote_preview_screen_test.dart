@@ -57,7 +57,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('approved server quote shows existing Request Signature action',
+  testWidgets('approved quote preview has only Download and Send to Customer actions',
       (tester) async {
     final quote = QuoteReviewDraft(
       id: 'server-quote-7',
@@ -76,9 +76,12 @@ void main() {
       ],
     );
     await tester.pumpWidget(MaterialApp(home: QuotePreviewScreen(quote: quote)));
-    await tester.ensureVisible(
-      find.byKey(const Key('quote-preview-request-signature')));
-    expect(find.text('Request Signature'), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const Key('quote-preview-share')));
+    expect(find.byKey(const Key('quote-preview-request-signature')), findsNothing);
+    expect(find.byKey(const Key('quote-preview-in-person-sign')), findsNothing);
+    expect(find.text('Request Signature'), findsNothing);
+    expect(find.text('In-Person Signature'), findsNothing);
+    expect(find.text('Send to Customer'), findsOneWidget);
     expect(find.byKey(const Key('quote-preview-share')), findsOneWidget);
     expect(find.byKey(const Key('quote-preview-download')), findsOneWidget);
     expect(tester.takeException(), isNull);
