@@ -481,7 +481,9 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                   ],
                 );
               }),
-              if (widget.selectedQuote != null) ...[
+              if (widget.selectedQuote != null &&
+                  (!MobileAuthRepository.shared.isSignedIn ||
+                      !widget.selectedQuote!.isDemo)) ...[
                 // Continue the same rhythm for any following sections.
                 const SizedBox(height: 20),
                 const Text('Signature Tracking',

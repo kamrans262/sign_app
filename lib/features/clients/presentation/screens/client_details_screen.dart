@@ -70,6 +70,7 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
   ClientDetailsModel? _liveDetails;
   bool _detailsLoading = false;
   String? _detailsError;
+  int? _openedCompanyId;
   // Used only when Client Details is opened outside the dashboard shell.
   final DemoCreatedJobRepository _standaloneJobs = DemoCreatedJobRepository();
 
@@ -99,13 +100,41 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
   void initState() {
     super.initState();
     _client = widget.client;
-    if (widget.repository is RemoteClientRepository) _loadDetails();
+    if (widget.repository is RemoteClientRepository) {
+      _openedCompanyId = ActiveCompanySession.companyId;
+      ActiveCompanySession.selected.addListener(_companyChanged);
+      _loadDetails();
+    }
+  }
+
+  @override
+  void dispose() {
+    if (widget.repository is RemoteClientRepository) {
+      ActiveCompanySession.selected.removeListener(_companyChanged);
+    }
+    super.dispose();
+  }
+
+  void _companyChanged() {
+    if (!mounted || widget.repository is! RemoteClientRepository) return;
+    if (_openedCompanyId != ActiveCompanySession.companyId) {
+      setState(() {
+        _liveDetails = null;
+        _detailsLoading = false;
+        _detailsError = 'Company changed. Return to Clients and open a client in the current company.';
+      });
+    }
   }
 
   Future<void> _loadDetails() async {
     final repository = widget.repository;
     if (repository is! RemoteClientRepository || !mounted) return;
     final company = ActiveCompanySession.companyId;
+    if (_openedCompanyId != company) {
+      setState(() => _detailsError =
+          'Company changed. Return to Clients and open a client in the current company.');
+      return;
+    }
     setState(() { _detailsLoading = true; _detailsError = null; });
     try {
       final details = await repository.details(_client.id);
