@@ -38,10 +38,11 @@ import '../widgets/sign2digital_job_section_card.dart';
 import '../widgets/sign2digital_job_status_badge.dart';
 import '../widgets/sign2digital_remaining_balance_card.dart';
 import '../../widgets/m14_verified_job_expenses.dart';
+import '../../data/remote_job_repository.dart';
 
 /// Job-specific details on a separate route. The underlying dashboard shell
 /// keeps its selected filter/search state and bottom bar is never duplicated.
-class JobDetailsScreen extends StatelessWidget {
+class JobDetailsScreen extends StatefulWidget {
   const JobDetailsScreen({
     super.key,
     required this.job,
@@ -63,6 +64,66 @@ class JobDetailsScreen extends StatelessWidget {
   final ClientProfile? client;
   /// Only supplied for authenticated, persisted jobs. Demo layout unchanged.
   final Future<bool> Function(JobModel job, String action)? onManageJob;
+
+  @override
+  State<JobDetailsScreen> createState() => _JobDetailsScreenState();
+}
+
+class _JobDetailsScreenState extends State<JobDetailsScreen> {
+  JobDetailsModel? _freshDetails;
+  int _financialLoadSerial = 0;
+
+  JobModel get job => widget.job;
+  JobDetailsModel? get details => _freshDetails ?? widget.details;
+  ValueChanged<JobSection>? get onSectionTap => widget.onSectionTap;
+  ValueChanged<int>? get onTabSelected => widget.onTabSelected;
+  String? get companyId => widget.companyId;
+  ClientProfile? get client => widget.client;
+  Future<bool> Function(JobModel job, String action)? get onManageJob =>
+      widget.onManageJob;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.details == null && _persistedLiveJob) {
+      _refreshFinancials();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant JobDetailsScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.job.id != widget.job.id ||
+        oldWidget.details != widget.details) {
+      ++_financialLoadSerial;
+      _freshDetails = null;
+      if (widget.details == null && _persistedLiveJob) {
+        _refreshFinancials();
+      }
+    }
+  }
+
+  Future<void> _refreshFinancials() async {
+    if (!mounted || !_persistedLiveJob) return;
+    final company = ActiveCompanySession.companyId;
+    final id = job.id;
+    final version = ++_financialLoadSerial;
+    if (company == null) return;
+    try {
+      final refreshed = await RemoteJobRepository.shared.loadDetails(job);
+      if (!mounted || version != _financialLoadSerial ||
+          ActiveCompanySession.companyId != company || job.id != id) return;
+      setState(() => _freshDetails = refreshed);
+    } catch (_) {
+      // Keep the last verified snapshot. Do not invent any financial amounts.
+    }
+  }
+
+  Future<void> _openAndRefresh(BuildContext context,
+      JobSection section) async {
+    await _openSection(context, section);
+    if (mounted) await _refreshFinancials();
+  }
 
   Future<void> _showJobActions(BuildContext context) async {
     final manage = onManageJob;
@@ -135,7 +196,7 @@ class JobDetailsScreen extends StatelessWidget {
               final index = options.indexOf(choice) - 1;
               if (index >= 0 && index < visible.length) {
                 final selected = visible[index];
-                Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
+                await Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
                   builder: (_) => selected.approvedLocally
                       ? QuotePreviewScreen(quote: selected)
                       : ReviewQuoteScreen(initialDraft: selected),
@@ -151,7 +212,7 @@ class JobDetailsScreen extends StatelessWidget {
           ));
         }
       }
-      Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
+      await Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
         builder: (_) => CreateQuoteScreen(
           jobId: job.id,
           clientId: job.clientId,
@@ -311,7 +372,7 @@ class JobDetailsScreen extends StatelessWidget {
       return;
     }
     if (section == JobSection.photos) {
-      Sign2DigitalNavigation.push<void>(context,
+      await Sign2DigitalNavigation.push<void>(context,
         MaterialPageRoute(
           builder: (_) => JobPhotosScreen(
             job: job,
@@ -322,7 +383,7 @@ class JobDetailsScreen extends StatelessWidget {
       return;
     }
     if (section == JobSection.notes) {
-      Sign2DigitalNavigation.push<void>(context,
+      await Sign2DigitalNavigation.push<void>(context,
         MaterialPageRoute(
           builder: (_) => JobNotesScreen(
             job: job,
@@ -474,7 +535,7 @@ class JobDetailsScreen extends StatelessWidget {
                         count: data.sections.length,
                         builder: (index) => Sign2DigitalJobSectionCard(
                           details: data.sections[index],
-                          onTap: () => _openSection(
+                          onTap: () => _openAndRefresh(
                             context,
                             data.sections[index].section,
                           ),
