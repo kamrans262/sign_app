@@ -76,6 +76,10 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
   final _scroll = ScrollController();
   final _preparer = TextEditingController();
   final _customTitle = TextEditingController();
+  final _otherCondition = TextEditingController();
+  final _otherRisk = TextEditingController();
+  String? _riskSelection;
+  List<MeetingActionItem> _previousActions = const [];
   final _location = TextEditingController();
   final _attendees = TextEditingController();
   final _absentees = TextEditingController();
@@ -130,19 +134,40 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
       if (details != null) {
         _reportDate = details.reportDate;
         _preparer.text = details.preparedBy;
-        _weather = details.weatherCondition;
+        final weather = details.weatherCondition;
+        if (weather.startsWith('Other: ')) {
+          _weather = 'Other';
+          _otherCondition.text = weather.substring(7);
+        } else if (_weatherOptions.contains(weather)) {
+          _weather = weather;
+        } else {
+          // Legacy free-text condition remains editable and is not discarded.
+          _weather = 'Other';
+          _otherCondition.text = weather;
+        }
         _location.text = details.location;
         _attendees.text = details.attendees.join('\n');
         _absentees.text = details.absentees.join('\n');
         _decisions.text = details.decisions.join('\n');
         _outstanding.text = details.outstandingPoints.join('\n');
         _nextSteps.text = details.nextSteps.join('\n');
+        _previousActions = details.actionItems;
         _actions.text = details.actionItems.map((item) => item.description).join('\n');
         _selectedSections
           ..clear()
           ..addAll(details.selectedSections);
         for (final item in details.sectionContent.entries) {
           _contents[item.key]?.text = item.value;
+        }
+        final risk = details.sectionContent[SiteReportSection.issues] ?? '';
+        if (_riskOptions.contains(risk)) {
+          _riskSelection = risk;
+        } else if (risk.startsWith('Other: ')) {
+          _riskSelection = 'Other';
+          _otherRisk.text = risk.substring(7);
+        } else if (risk.isNotEmpty) {
+          _riskSelection = 'Other';
+          _otherRisk.text = risk;
         }
         _photos = List.of(details.photos);
         if (_photos.isNotEmpty) {
@@ -188,6 +213,8 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
     _scroll.dispose();
     _preparer.dispose();
     _customTitle.dispose();
+    _otherCondition.dispose();
+    _otherRisk.dispose();
     for (final controller in [_location,_attendees,_absentees,_decisions,_outstanding,_nextSteps,_actions]) { controller.dispose(); }
     for (final controller in _contents.values) {
       controller.dispose();
@@ -200,19 +227,24 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
 
   List<String> _lines(String value) => value.split('\n').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
 
-  List<MeetingActionItem> _actionRows() => _lines(_actions.text).map((line) {
-    final parts = line.split('|').map((s) => s.trim()).toList();
-    if (parts.length > 3 || parts.first.isEmpty) {
-      throw const FormatException('Use task | owner | YYYY-MM-DD.');
-    }
-    final due = parts.length == 3 && parts[2].isNotEmpty
-        ? DateTime.tryParse(parts[2]) : null;
-    if (parts.length == 3 && parts[2].isNotEmpty && due == null) {
-      throw const FormatException('Action due dates must use YYYY-MM-DD.');
-    }
-    return MeetingActionItem(description: parts.first,
-        assignee: parts.length > 1 ? parts[1] : '', dueDate: due);
-  }).toList();
+  List<MeetingActionItem> _actionRows() {
+    final text = _lines(_actions.text);
+    return List<MeetingActionItem>.generate(text.length, (index) {
+      final description = text[index];
+      // Keep owner/date evidence on legacy records even though the new editor
+      // deliberately shows only task descriptions.
+      final prior = _previousActions.where(
+        (item) => item.description == description,
+      ).firstOrNull;
+      final original = prior ?? (index < _previousActions.length
+          ? _previousActions[index] : null);
+      return MeetingActionItem(
+        description: description,
+        assignee: original?.assignee ?? '',
+        dueDate: original?.dueDate,
+      );
+    });
+  }
 
   String _dateText(DateTime value) {
     const months = ['January', 'February', 'March', 'April', 'May', 'June',
@@ -298,6 +330,9 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
     if (_preparer.text.trim().isEmpty) { return 'Enter who prepared the report.'; }
     if (widget.reportGenerator != null && _location.text.trim().isEmpty) { return 'Enter the site location.'; }
     if ((_weather ?? '').isEmpty) { return 'Choose a weather condition.'; }
+    if (_weather == 'Other' && _otherCondition.text.trim().isEmpty) {
+      return 'Describe the condition.';
+    }
     if (_selectedSections.isEmpty) { return 'Select at least one report section.'; }
     return null;
   }
@@ -305,7 +340,10 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
   String? _contentIssue() {
     if (_picking) { return 'Wait for photo selection to finish.'; }
     if (widget.reportGenerator != null && _photos.length > 8) { return 'Select no more than eight photos.'; }
-    try { _actionRows(); } on FormatException catch (e) { return e.message; }
+    if (_selectedSections.contains(SiteReportSection.issues) &&
+        _riskSelection == 'Other' && _otherRisk.text.trim().isEmpty) {
+      return 'Describe the issues and risks.';
+    }
     for (final section in SiteReportSection.values) {
       if (!_selectedSections.contains(section)) { continue; }
       if (section == SiteReportSection.photos) {
@@ -384,49 +422,18 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
   }
 
   Future<void> _selectRisk() async {
-    final prior = _contents[SiteReportSection.issues]!.text;
     await _pickOption(
       options: _riskOptions,
       title: 'Issues & Risks',
       keyPrefix: 'site-report-risk-option',
-      selected: prior,
-      onSelected: (selection) =>
-          _contents[SiteReportSection.issues]!.text = selection,
+      selected: _riskSelection,
+      onSelected: (selection) {
+        _riskSelection = selection;
+        _contents[SiteReportSection.issues]!.text = selection == 'Other'
+            ? 'Other: ${_otherRisk.text.trim()}'
+            : selection;
+      },
     );
-    if (!mounted || _contents[SiteReportSection.issues]!.text != 'Other') {
-      return;
-    }
-    var description = '';
-    final custom = await showDialog<String>(
-      context: context,
-      builder: (dialog) => AlertDialog(
-        title: const Text('Describe the issue or risk'),
-        content: TextFormField(
-          key: const Key('site-report-custom-risk'),
-          initialValue: prior == 'Other' ? '' : prior,
-          autofocus: true,
-          minLines: 2,
-          maxLines: 5,
-          onChanged: (value) => description = value,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialog).pop(),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            key: const Key('site-report-save-risk'),
-            onPressed: () => Navigator.of(dialog).pop(description.trim()),
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
-    if (!mounted) { return; }
-    setState(() {
-      _contents[SiteReportSection.issues]!.text =
-          custom == null || custom.isEmpty ? prior : custom;
-    });
   }
 
   void _next() {
@@ -544,7 +551,8 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
     final data = SiteReportDetails(
       reportDate: _reportDate!,
       preparedBy: _preparer.text.trim(),
-      weatherCondition: _weather!,
+      weatherCondition: _weather == 'Other'
+          ? 'Other: ${_otherCondition.text.trim()}' : _weather!,
       location: _location.text.trim(),
       attendees: _lines(_attendees.text),
       absentees: _lines(_absentees.text),
@@ -666,8 +674,8 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
         const SizedBox(height: 15),
         Sign2DigitalInputField(
           key: const Key('site-report-custom-title'),
-          label: 'Custom report title',
-          hintText: 'Enter the report title',
+          label: 'Custom Report Title',
+          hintText: 'Enter report title',
           iconAsset: 'assets/icons/description.svg',
           controller: _customTitle,
         ),
@@ -714,6 +722,16 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
           onSelected: (value) => _weather = value,
         ),
       ),
+      if (_weather == 'Other') ...[
+        const SizedBox(height: 15),
+        Sign2DigitalInputField(
+          key: const Key('site-report-other-condition'),
+          label: 'Specify Condition',
+          hintText: 'Describe the condition',
+          iconAsset: 'assets/icons/description.svg',
+          controller: _otherCondition,
+        ),
+      ],
       const SizedBox(height: 20),
       const Text('Report Sections', style: AppTextStyles.fieldLabel),
       const SizedBox(height: 10),
@@ -785,14 +803,7 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
         ),
         const SizedBox(height: 20),
       ],
-      if (widget.reportGenerator != null &&
-          ActiveCompanySession.companyId != null) ...[
-        Sign2DigitalOutlinedButton(
-          label: 'Dictate Report Notes',
-          onPressed: _dictateNotes,
-        ),
-        const SizedBox(height: 15),
-      ],
+
       // The upload control is always available, even when Photos wasn't
       // selected in Details. Uploading automatically selects that section.
       ...[
@@ -871,21 +882,35 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
           label: 'Issues & Risks',
           hintText: 'e.g, Site report',
           iconAsset: 'assets/icons/description.svg',
-          value: _contents[SiteReportSection.issues]!.text.isEmpty
-              ? null : _contents[SiteReportSection.issues]!.text,
+          value: _riskSelection,
           trailing: const Icon(Icons.keyboard_arrow_down_rounded,
             color: AppColors.secondaryText),
           onTap: _selectRisk,
         ),
+        if (_riskSelection == 'Other') ...[
+          const SizedBox(height: 15),
+          Sign2DigitalInputField(
+            key: const Key('site-report-other-risk'),
+            label: 'Describe Issues & Risks',
+            hintText: 'Describe the issues and risks',
+            iconAsset: 'assets/icons/description.svg',
+            controller: _otherRisk,
+            minLines: 2, maxLines: null,
+            onChanged: (value) {
+              _contents[SiteReportSection.issues]!.text =
+                  'Other: ${value.trim()}';
+            },
+          ),
+        ],
         const SizedBox(height: 20),
       ],
       for (final field in <(String, TextEditingController)>[
-        ('Attendees (one per line)', _attendees),
-        ('Absentees (one per line)', _absentees),
-        ('Decisions (one per line)', _decisions),
-        ('Outstanding Points (one per line)', _outstanding),
-        ('Next Steps (one per line)', _nextSteps),
-        ('Action Items (task | owner | YYYY-MM-DD)', _actions),
+        ('Attendees', _attendees),
+        ('Absentees', _absentees),
+        ('Decisions', _decisions),
+        ('Outstanding Points', _outstanding),
+        ('Next Steps', _nextSteps),
+        ('Action Items', _actions),
       ]) ...[
         Sign2DigitalInputField(
           label: field.$1, hintText: field.$1,
