@@ -112,15 +112,16 @@ void main() {
     ).details('quote-7'), throwsA(isA<SignApiException>()));
   });
 
-  test('approved quotes with frozen PDF never ask to rebuild from items',
+  test('approved quotes with frozen PDF retain quote actions without rebuilding PDF',
       () async {
     final calls = <String>[];
     final doc = await RemoteDocumentRepository(
       api: makeApi('approved', 2, hasPdf: true, calls: calls),
     ).details('quote-7');
     expect(doc.verifiedSignedPdfAvailable, isTrue);
-    expect(doc.quote, isNull);
-    expect(calls, ['/api/v1/documents/quote-7']);
+    expect(doc.quote?.approvedLocally, isTrue);
+    expect(doc.quote?.serverId, 7);
+    expect(calls, ['/api/v1/documents/quote-7', '/api/v1/quotes/7']);
   });
 
   testWidgets('legacy approved quote displays original layout with warning',
