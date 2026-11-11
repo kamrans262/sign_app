@@ -7,6 +7,7 @@ import '../../../../core/widgets/sign2digital_information_table.dart';
 import '../../../../core/widgets/sign2digital_outlined_container.dart';
 import '../../../../core/widgets/sign2digital_outlined_button.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
+import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import '../../../clients/presentation/widgets/sign2digital_status_badge.dart';
 import '../../../documents/presentation/widgets/sign2digital_document_history.dart';
@@ -31,6 +32,7 @@ class ExpenseDetailsScreen extends StatefulWidget {
     this.repository,
     this.loadExpense,
     this.onRequestReimbursement,
+    this.onApproveExpense,
     this.receiptPhotoSource,
     this.onReceiptShare,
     this.onReceiptDownload,
@@ -42,6 +44,7 @@ class ExpenseDetailsScreen extends StatefulWidget {
   final ExpenseRepository? repository;
   final ExpenseDetailsLoader? loadExpense;
   final ExpenseReimbursementAction? onRequestReimbursement;
+  final ExpenseReimbursementAction? onApproveExpense;
   final JobPhotoSource? receiptPhotoSource;
   final ReceiptShare? onReceiptShare;
   final ReceiptDownload? onReceiptDownload;
@@ -58,6 +61,7 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
   int _tab = 0;
   bool _loading = false;
   bool _busy = false;
+  bool _confirmingApproval = false;
   String? _error;
 
   @override
@@ -345,6 +349,38 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
     }
   }
 
+  Future<void> _approve() async {
+    if (_busy || _confirmingApproval || !_record.canApprove ||
+        _record.status != ExpenseStatus.toReview) return;
+    final submit = widget.onApproveExpense ??
+        (_repository is RemoteExpenseRepository
+            ? _repository.approveExpense : null);
+    if (submit == null) return;
+    _confirmingApproval = true;
+    try {
+      final choice = await Sign2DigitalSelectionSheet.show(
+        context, title: 'Approve Expense',
+        subtitle: 'Approve ${_record.formattedAmount}? This will lock the expense.',
+        icon: Icons.check_circle_outline,
+        options: const ['Cancel', 'Approve'],
+      );
+      if (!mounted || choice != 'Approve') return;
+      setState(() => _busy = true);
+      final result = await submit(_record);
+      if (!mounted) return;
+      if (result.id != _record.id || result.status != ExpenseStatus.approved) {
+        throw StateError('Expense approval response did not match.');
+      }
+      setState(() => _record = result);
+      _notice('Expense approved successfully.');
+    } catch (_) {
+      _notice('Expense approval failed. Refresh and try again.');
+    } finally {
+      _confirmingApproval = false;
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   Future<void> _reimburse() async {
     if (_busy) return;
     if (_record.status != ExpenseStatus.approved ||
@@ -398,22 +434,32 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
         enabled: !_busy && (_record.demoOnly ||
             _record.status == ExpenseStatus.toReview), onPressed: _edit,
       );
-      final reimburse = Sign2DigitalPrimaryButton(
-        key: const Key('expense-request-reimburse'),
-        label: 'Request Reimburse',
-        loading: _busy,
-        enabled: !_busy && _record.status == ExpenseStatus.approved &&
-            !_record.reimbursementRequested,
-        onPressed: _reimburse,
-      );
+      final canApprove = _record.status == ExpenseStatus.toReview &&
+          _record.canApprove;
+      final action = canApprove
+          ? Sign2DigitalPrimaryButton(
+              key: const Key('expense-approve'),
+              label: 'Approve',
+              loading: _busy,
+              enabled: !_busy && !_confirmingApproval,
+              onPressed: _approve,
+            )
+          : Sign2DigitalPrimaryButton(
+              key: const Key('expense-request-reimburse'),
+              label: 'Reimburse',
+              loading: _busy,
+              enabled: !_busy && _record.status == ExpenseStatus.approved &&
+                  !_record.reimbursementRequested,
+              onPressed: _reimburse,
+            );
       return KeyedSubtree(
         key: const Key('expense-detail-actions'),
-        child: constraints.maxWidth < 345
+        child: constraints.maxWidth < 290
             ? Column(crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [edit, const SizedBox(height: 10), reimburse])
+                children: [edit, const SizedBox(height: 10), action])
             : Row(children: [
                 Expanded(child: edit), const SizedBox(width: 10),
-                Expanded(child: reimburse),
+                Expanded(child: action),
               ]),
       );
     },
