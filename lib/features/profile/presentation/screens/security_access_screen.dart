@@ -149,7 +149,7 @@ class _SecurityAccessScreenState extends State<SecurityAccessScreen> {
             : TwoFactorProofScreen(repository: repo,
                 password: _password.text, regenerate: false);
         final updated = await Sign2DigitalNavigation.open<bool>(context, screen);
-        if (!mounted) return;
+        if (!mounted) { return; }
         await _load();
         if (updated == true) {
           _message(enabled
