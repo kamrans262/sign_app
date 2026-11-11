@@ -7,7 +7,6 @@ import 'package:sign2digital/core/theme/app_colors.dart';
 import 'package:sign2digital/core/widgets/sign2digital_bottom_navigation_bar.dart';
 import 'package:sign2digital/features/documents/domain/document_record.dart';
 import 'package:sign2digital/features/documents/domain/work_acceptance_data.dart';
-import 'package:sign2digital/features/documents/presentation/screens/reports_screen.dart';
 import 'package:sign2digital/features/documents/presentation/screens/work_acceptance_editor_screen.dart';
 import 'package:sign2digital/features/documents/presentation/screens/work_acceptance_screen.dart';
 import 'package:sign2digital/features/documents/presentation/widgets/sign2digital_document_history.dart';
