@@ -92,7 +92,10 @@ class RemoteExpenseRepository implements ExpenseRepository {
     return ExpenseRecord(
       id: 'expense-$id',
       category: category,
-      title: category.label,
+      title: category == ExpenseCategory.other &&
+              '${row['custom_category'] ?? ''}'.trim().isNotEmpty
+          ? '${row['custom_category']}'.trim() : category.label,
+      customCategory: '${row['custom_category'] ?? ''}',
       jobId: '$job',
       job: '${row['job'] ?? ''}',
       report: '',
@@ -186,6 +189,11 @@ class RemoteExpenseRepository implements ExpenseRepository {
           id: '${_map(row)['id']}',
           title: '${_map(row)['type']}'.replaceAll('_', ' '),
           occurredAt: _date(_map(row)['created_at']),
+          description: _map(row)['metadata'] is Map &&
+                  '${(_map(row)['metadata'] as Map)['custom_category'] ?? ''}'
+                      .trim().isNotEmpty
+              ? '${(_map(row)['metadata'] as Map)['custom_category']}'.trim()
+              : null,
           actorName: _map(row)['actor_id'] == null
               ? null : 'User #${_map(row)['actor_id']}',
         ),
@@ -201,11 +209,17 @@ class RemoteExpenseRepository implements ExpenseRepository {
         (expense.amount * 100 - (expense.amount * 100).round()).abs() > 0.001) {
       throw const SignApiException('Select a saved job and a valid CHF amount.');
     }
+    if (expense.category == ExpenseCategory.other &&
+        expense.customCategory.trim().isEmpty) {
+      throw const SignApiException('Specify the expense type when Other is selected.');
+    }
     return {
       'job_id': jobId,
       if (expense.id.startsWith('local-expense-'))
         'request_key': expense.id,
       'category': expense.category.name,
+      'custom_category': expense.category == ExpenseCategory.other
+          ? expense.customCategory.trim() : null,
       'supplier': expense.supplier.trim(),
       'description': expense.description.trim(),
       'expense_date': [
