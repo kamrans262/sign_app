@@ -290,7 +290,7 @@ void main() {
     await tester.pumpAndSettle();
     final field = tester.widget<Sign2DigitalInputField>(
       find.byKey(const Key('reminder-title')));
-    expect(field.controller.text, 'Manual title');
+    expect(field.controller!.text, 'Manual title');
     expect(recorder.disposed, isTrue);
     expect(tester.takeException(), isNull);
   });
