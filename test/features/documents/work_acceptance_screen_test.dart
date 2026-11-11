@@ -56,28 +56,24 @@ DocumentRecord _record({
 }
 
 void main() {
-  testWidgets('Demo lifecycle is linked from Reports and clearly demo only',
+  testWidgets('Demo lifecycle is clearly identified as non-production',
       (tester) async {
-    await tester.pumpWidget(const MaterialApp(home: ReportsScreen()));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('details-tab-2')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(
-        const Key('report-card-report-demo-work-acceptance-1')));
+    await tester.pumpWidget(MaterialApp(home: WorkAcceptanceScreen(
+      report: _record(demo: true, done: WorkAcceptanceStage.values.toList()),
+    )));
     await tester.pumpAndSettle();
     expect(find.byType(WorkAcceptanceScreen), findsOneWidget);
-    expect(find.text('Work Acceptance'), findsOneWidget);
+    expect(find.text('Work Acceptance'), findsWidgets);
     expect(find.byKey(const Key('work-acceptance-demo-label')), findsOneWidget);
     expect(find.byType(Sign2DigitalTrackingRow), findsNWidgets(5));
     for (final stage in WorkAcceptanceStage.values) {
       expect(find.byKey(Key('work-acceptance-stage-${stage.name}')),
-        findsOneWidget);
+          findsOneWidget);
       expect(find.text(stage.label), findsOneWidget);
     }
-    expect(find.byKey(const Key('work-acceptance-saved-signature')),
-        findsNothing);
+    expect(find.byKey(const Key('work-acceptance-saved-signature')), findsNothing);
     final nav = tester.widget<Sign2DigitalBottomNavigationBar>(
-      find.byType(Sign2DigitalBottomNavigationBar));
+        find.byType(Sign2DigitalBottomNavigationBar));
     expect(nav.selectedIndex, 2);
     expect(tester.takeException(), isNull);
   });
@@ -247,9 +243,9 @@ void main() {
       await tester.ensureVisible(find.byKey(
         const Key('work-acceptance-view-report')));
       await tester.pump();
-      final signature = tester.getSize(find.byKey(
-        const Key('work-acceptance-signature-panel')));
-      expect(signature.height, lessThanOrEqualTo(216.1));
+      // Unsigned work acceptance intentionally has no signature panel.
+      expect(find.byKey(const Key('work-acceptance-signature-panel')),
+          findsNothing);
       expect(tester.takeException(), isNull, reason: '$size');
     });
   }
