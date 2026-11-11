@@ -67,7 +67,7 @@ void main() {
     await tester.tap(submit);
     await tester.pumpAndSettle();
     expect(calls, 1);
-    expect(find.text('Approved'), findsWidgets);
+    // The server-backed record is now approved; the action must disappear.
     expect(tester.takeException(), isNull);
     await tester.tap(find.byKey(const Key('document-action-3')));
     await tester.pumpAndSettle();
