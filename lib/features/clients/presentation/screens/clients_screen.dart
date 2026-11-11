@@ -17,9 +17,11 @@ import '../../../invoices/domain/invoice_record.dart';
 import '../../../expenses/presentation/screens/expenses_screen.dart';
 import '../../../expenses/presentation/screens/add_expense_screen.dart';
 import '../../../expenses/data/demo_expense_repository.dart';
+import '../../../expenses/data/remote_expense_repository.dart';
 import '../../../expenses/domain/expense_record.dart';
 import '../../../labour/presentation/screens/add_labour_entry_screen.dart';
 import '../../../labour/data/demo_labour_repository.dart';
+import '../../../labour/data/remote_labour_repository.dart';
 import '../../../labour/domain/labour_entry.dart';
 import '../../../reminders/presentation/screens/reminders_screen.dart';
 import '../../../reminders/presentation/screens/notification_inbox_screen.dart';
@@ -281,8 +283,11 @@ class _ClientsScreenState extends State<ClientsScreen> {
       context, const AddExpenseScreen(selectedNavigationIndex: 0));
     if (draft == null || !mounted) return;
     try {
-      await const DemoExpenseRepository().saveDraft(draft);
-      _notifyHome('Expense saved locally for review.');
+      final remote = MobileAuthRepository.shared.isSignedIn;
+      await (remote ? RemoteExpenseRepository.shared
+          : const DemoExpenseRepository()).saveDraft(draft);
+      _notifyHome(remote ? 'Expense saved for review.'
+          : 'Expense saved locally for review.');
     } catch (_) {
       _notifyHome('Unable to save the expense draft.');
     }
@@ -290,18 +295,36 @@ class _ClientsScreenState extends State<ClientsScreen> {
   }
 
   Future<void> _createTimeFromHome() async {
+    final remote = MobileAuthRepository.shared.isSignedIn;
+    List<JobModel> availableJobs;
+    try {
+      availableJobs = remote ? await RemoteLabourRepository.shared.jobs()
+          : LabourDemoJobs.all;
+    } catch (error) {
+      _notifyHome(error is SignApiException ? error.message
+          : 'Unable to load your jobs.');
+      return;
+    }
+    if (!mounted) return;
+    final company = ActiveCompanySession.companyId;
     final entry = await Sign2DigitalNavigation.open<LabourEntry>(
       context,
       AddLabourEntryScreen(
         kind: LabourEntryKind.timeSheet,
-        jobs: LabourDemoJobs.all,
+        jobs: availableJobs,
         selectedNavigationIndex: 0,
       ),
     );
     if (entry == null || !mounted) return;
+    if (remote && company != ActiveCompanySession.companyId) {
+      _notifyHome('Company changed. Please add the time entry again.');
+      return;
+    }
     try {
-      await const DemoLabourRepository().save(entry);
-      _notifyHome('Time entry saved locally as Pending.');
+      await (remote ? RemoteLabourRepository.shared
+          : const DemoLabourRepository()).save(entry);
+      _notifyHome(remote ? 'Time entry saved as Pending.'
+          : 'Time entry saved locally as Pending.');
     } catch (_) {
       _notifyHome('Unable to save the time entry.');
     }
