@@ -422,7 +422,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
       return;
     }
 
-    final reviewedDraft = draft!;
+    final reviewedDraft = draft;
     final approved = await showSign2DigitalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
