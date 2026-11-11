@@ -1,8 +1,10 @@
+import 'dart:convert';
 import '../../../core/services/active_company_session.dart';
 import '../../../core/services/sign_api_client.dart';
 import '../../auth/data/mobile_auth_repository.dart';
 import '../domain/quote_document_tracking.dart';
 import '../domain/quote_review_models.dart';
+import '../domain/quote_signature_draft.dart';
 
 /// M8 signing requests are issued, validated and audited by Laravel.
 /// The app never mints signing tokens or marks a PDF as signed locally.
@@ -122,13 +124,60 @@ class RemoteSignatureRequestRepository {
     );
   }
 
+  /// Server-minted, short-lived context. No fabricated signer IDs in Flutter.
+  Future<BusinessSignatureContext> prepareBusiness(QuoteReviewDraft quote) async {
+    final id = _serverId(quote);
+    final company = _company();
+    final response = _data(await _api.request(
+      'GET', '/api/v1/quotes/$id/business-signature-context',
+      companyScoped: true,
+    ));
+    if (company != ActiveCompanySession.companyId) {
+      throw const SignApiException('Company changed during issuer signing.');
+    }
+    final context = _map(response['context']);
+    if (context['quote_id'] != '$id' ||
+        ['document_id', 'request_id', 'signer_id', 'document_version',
+         'consent_reference', 'authorization']
+          .any((key) => (context[key] ?? '').toString().isEmpty)) {
+      throw const SignApiException('Invalid issuer signing authorization.');
+    }
+    return BusinessSignatureContext(
+      quoteId: context['quote_id'] as String,
+      documentId: context['document_id'] as String,
+      requestId: context['request_id'] as String,
+      signerId: context['signer_id'] as String,
+      documentVersion: context['document_version'] as String,
+      consentReference: context['consent_reference'] as String,
+      authorization: context['authorization'] as String,
+    );
+  }
+
   Future<RemoteSigningRequest> create(
     QuoteReviewDraft quote, {
     required String signerName,
     required String signerEmail,
     required String delivery,
+    String? message,
+    bool attachPdf = false,
+    BusinessSignatureContext? businessContext,
+    QuoteSignatureDraft? businessSignature,
   }) async {
     final serverId = _serverId(quote);
+    if ((businessContext == null) != (businessSignature == null)) {
+      throw const SignApiException('Issuer authorization and signature must be provided together.');
+    }
+    if (businessContext != null && (
+        businessContext.quoteId != '$serverId' ||
+        businessContext.documentId != businessSignature!.documentId ||
+        businessContext.requestId != businessSignature.requestId ||
+        businessContext.signerId != businessSignature.signerId ||
+        businessContext.documentVersion != businessSignature.documentVersion ||
+        businessContext.consentReference != businessSignature.consentReference ||
+        !businessSignature.consentAccepted ||
+        businessSignature.pngBytes.isEmpty)) {
+      throw const SignApiException('Issuer signature does not match the approved quote.');
+    }
     if (!['email', 'link'].contains(delivery)) {
       throw const SignApiException('Invalid signature delivery method.');
     }
@@ -140,6 +189,15 @@ class RemoteSignatureRequestRepository {
         'signer_email': signerEmail.trim(),
         'delivery': delivery,
         'expires_in_days': 7,
+        'message': message?.trim(),
+        'attach_pdf': attachPdf,
+        if (businessContext != null) ...{
+          'business_authorization': businessContext.authorization,
+          'business_signature_png_base64': base64Encode(businessSignature!.pngBytes),
+          'business_signature_method': businessSignature.method.name,
+          'business_signature_typed_name': businessSignature.typedName,
+          'business_consent_accepted': true,
+        },
       },
       companyScoped: true,
     ));
@@ -234,4 +292,21 @@ class RemoteSigningRequest {
   final int id;
   final String status;
   final QuoteDocumentTracking tracking;
+}
+
+
+/// Ephemeral issuer signing authorization issued by Laravel for one quote revision.
+class BusinessSignatureContext {
+  const BusinessSignatureContext({
+    required this.quoteId, required this.documentId, required this.requestId,
+    required this.signerId, required this.documentVersion,
+    required this.consentReference, required this.authorization,
+  });
+  final String quoteId;
+  final String documentId;
+  final String requestId;
+  final String signerId;
+  final String documentVersion;
+  final String consentReference;
+  final String authorization;
 }
