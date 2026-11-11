@@ -6,6 +6,8 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:sign2digital/core/services/active_company_session.dart';
 import 'package:sign2digital/core/services/sign_api_client.dart';
+import 'package:sign2digital/core/widgets/sign2digital_outlined_button.dart';
+import 'package:sign2digital/core/widgets/sign2digital_primary_button.dart';
 import 'package:sign2digital/features/documents/data/remote_site_report_repository.dart';
 import 'package:sign2digital/features/documents/domain/document_record.dart';
 import 'package:sign2digital/features/documents/presentation/screens/report_review_screen.dart';
@@ -131,11 +133,24 @@ void main() {
         final ai = find.text('Prepare with AI');
         final approve = find.text('Approve Report');
         final archive = find.text('Archive Report');
-        expect((tester.getTopLeft(edit).dy - tester.getTopLeft(ai).dy).abs(),
-          lessThan(5));
-        expect((tester.getTopLeft(approve).dy - tester.getTopLeft(archive).dy).abs(),
-          lessThan(5));
-        expect(tester.getTopLeft(approve).dy, greaterThan(tester.getTopLeft(edit).dy));
+        final editButton = find.ancestor(
+          of: edit, matching: find.byType(Sign2DigitalOutlinedButton));
+        final aiButton = find.ancestor(
+          of: ai, matching: find.byType(Sign2DigitalOutlinedButton));
+        final approveButton = find.ancestor(
+          of: approve, matching: find.byType(Sign2DigitalPrimaryButton));
+        final archiveButton = find.ancestor(
+          of: archive, matching: find.byType(Sign2DigitalOutlinedButton));
+        expect((tester.getTopLeft(editButton).dy -
+          tester.getTopLeft(aiButton).dy).abs(), lessThan(2));
+        expect((tester.getTopLeft(approveButton).dy -
+          tester.getTopLeft(archiveButton).dy).abs(), lessThan(2));
+        expect((tester.getSize(editButton).width -
+          tester.getSize(aiButton).width).abs(), lessThan(2));
+        expect((tester.getSize(approveButton).width -
+          tester.getSize(archiveButton).width).abs(), lessThan(2));
+        expect(tester.getTopLeft(approveButton).dy,
+          greaterThan(tester.getTopLeft(editButton).dy));
       } else if (status == 'archived') {
         expect(find.text('Edit Draft'), findsNothing);
         expect(find.text('Already Approved'), findsNothing);
