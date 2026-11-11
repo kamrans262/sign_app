@@ -778,7 +778,11 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
               title: const Text('Review and Approve Addendum'),
               onTap: () {
                 Navigator.pop(sheet);
-                _approveAddendum();
+                // Do not open a second modal while the More sheet is still
+                // processing its pop; this affects both Job and Documents.
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) _approveAddendum();
+                });
               },
             ),
           if (record.category == DocumentCategory.addends &&
