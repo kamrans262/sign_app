@@ -133,8 +133,18 @@ void main() {
 
     // Android system Back works even when the approved header has no
     // standard Material/Cupertino AppBar back icon.
+    final addRouteBefore = ModalRoute.of(
+      tester.element(find.byType(AddInvoiceScreen)),
+    );
+    debugPrint('system back: before route=${addRouteBefore.runtimeType}, isCurrent=${addRouteBefore?.isCurrent}, canPop=${Navigator.of(tester.element(find.byType(AddInvoiceScreen))).canPop()}');
     await tester.binding.handlePopRoute();
-    await _frame(tester);
+    await tester.pumpAndSettle();
+    if (find.byType(AddInvoiceScreen).evaluate().isNotEmpty) {
+      final addRouteAfter = ModalRoute.of(
+        tester.element(find.byType(AddInvoiceScreen)),
+      );
+      debugPrint('system back: after route=${addRouteAfter.runtimeType}, isCurrent=${addRouteAfter?.isCurrent}, canPop=${Navigator.of(tester.element(find.byType(AddInvoiceScreen))).canPop()}');
+    }
     expect(find.byType(InvoicesScreen), findsOneWidget);
     expect(find.byType(AddInvoiceScreen), findsNothing);
 
