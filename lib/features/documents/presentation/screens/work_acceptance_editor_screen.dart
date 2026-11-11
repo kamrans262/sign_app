@@ -131,8 +131,10 @@ class _WorkAcceptanceEditorScreenState extends State<WorkAcceptanceEditorScreen>
         }
       });
     }catch(error) {
-      if(mounted)setState(()=>_error=
-          'Some saved acceptance photos could not be previewed: $error');
+      if(mounted) {
+        setState(()=>_error=
+            'Some saved acceptance photos could not be previewed: $error');
+      }
     }
   }
 
