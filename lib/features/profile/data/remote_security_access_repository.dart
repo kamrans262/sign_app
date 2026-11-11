@@ -48,6 +48,57 @@ class RemoteSecurityAccessRepository implements SecurityAccessRepository {
     );
   }
 
+  Future<TwoFactorEnrollment> beginTwoFactorSetup(String password) async {
+    final result = _object((await _api.post('/api/v1/me/2fa/setup',
+      data: {'password': password}))['data']);
+    final secret = result['secret'];
+    final uri = result['otpauth_uri'];
+    if (secret is! String || secret.isEmpty ||
+        uri is! String || !uri.startsWith('otpauth://totp/')) {
+      throw const SignApiException('Invalid authenticator enrollment response.');
+    }
+    return TwoFactorEnrollment(secret: secret, otpauthUri: uri);
+  }
+
+  Future<List<String>> confirmTwoFactor(String code) async {
+    final data = _object((await _api.post('/api/v1/me/2fa/confirm',
+      data: {'code': code}))['data']);
+    if (data['enabled'] != true || data['recovery_codes'] is! List) {
+      throw const SignApiException('Authenticator was not activated.');
+    }
+    return List<String>.unmodifiable(
+      (data['recovery_codes'] as List).map((item) {
+        if (item is! String || item.isEmpty) {
+          throw const SignApiException('Invalid recovery code response.');
+        }
+        return item;
+      }),
+    );
+  }
+
+  Future<bool> disableTwoFactor(String password, String code) async {
+    final data = _object((await _api.post('/api/v1/me/2fa/disable',
+      data: {'password': password, 'code': code}))['data']);
+    return data['enabled'] == false;
+  }
+
+  Future<List<String>> regenerateRecoveryCodes(
+      String password, String code) async {
+    final data = _object((await _api.post('/api/v1/me/2fa/recovery/regenerate',
+      data: {'password': password, 'code': code}))['data']);
+    if (data['recovery_codes'] is! List) {
+      throw const SignApiException('Recovery code rotation failed.');
+    }
+    return List<String>.unmodifiable(
+      (data['recovery_codes'] as List).map((item) {
+        if (item is! String || item.isEmpty) {
+          throw const SignApiException('Invalid recovery code response.');
+        }
+        return item;
+      }),
+    );
+  }
+
   @override
   Future<bool> changeTwoFactor({
     required bool enable,
@@ -95,4 +146,10 @@ class RemoteSecurityAccessRepository implements SecurityAccessRepository {
     });
     return _object(response['data'])['requires_login'] == true;
   }
+}
+
+class TwoFactorEnrollment {
+  const TwoFactorEnrollment({required this.secret, required this.otpauthUri});
+  final String secret;
+  final String otpauthUri;
 }
