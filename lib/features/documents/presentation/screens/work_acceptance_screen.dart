@@ -237,16 +237,18 @@ class _WorkAcceptanceScreenState extends State<WorkAcceptanceScreen> {
                 ],
                 _tracking(),
                 const SizedBox(height: 40),
-                const Text('Client Signature', style: TextStyle(
-                  fontFamily: 'Inter', fontSize: 18,
-                  fontWeight: FontWeight.w600, color: AppColors.dark,
-                )),
-                const SizedBox(height: 10),
-                Sign2DigitalSignatureDisplay(
-                  signaturePng: _hasVerifiedSignature
-                      ? _evidence!.verifiedSignaturePng : null,
-                ),
-                const SizedBox(height: 25),
+                if (_report.status == 'signed' &&
+                    _hasVerifiedSignature) ...[
+                  const Text('Client Signature', style: TextStyle(
+                    fontFamily: 'Inter', fontSize: 18,
+                    fontWeight: FontWeight.w600, color: AppColors.dark,
+                  )),
+                  const SizedBox(height: 10),
+                  Sign2DigitalSignatureDisplay(
+                    signaturePng: _evidence!.verifiedSignaturePng,
+                  ),
+                  const SizedBox(height: 25),
+                ],
                 if(!_report.demoOnly &&
                     _evidence?.acceptanceResult!=null) ...[
                   Text(_evidence!.acceptanceResult=='accepted_with_reservations'
