@@ -71,7 +71,7 @@ void main() {
       items: [
         QuoteReviewWorkItem(
           id: 'line-1', title: 'Bathroom repair',
-          quantity: '1', unitPrice: '1493.00',
+          description: 'Repair fixtures', quantity: '1', unitPrice: '1493.00',
         ),
       ],
     );
