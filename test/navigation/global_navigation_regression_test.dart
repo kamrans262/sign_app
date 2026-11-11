@@ -150,6 +150,12 @@ void main() {
     ).hitTestable().first);
     await _frame(tester);
     expect(find.byType(MoreScreen), findsOneWidget);
+    // Route correctness is immediate; outgoing widgets can remain mounted
+    // while Flutter completes their unchanged reverse transition.
+    expect(ModalRoute.of(
+      tester.element(find.byType(MoreScreen)))?.isCurrent, isTrue);
+    await tester.pump(const Duration(milliseconds: 850));
+    await tester.pump();
     expect(find.byType(InvoicesScreen), findsNothing);
     expect(find.byType(AddInvoiceScreen), findsNothing);
 
@@ -172,21 +178,14 @@ void main() {
       of: find.byType(AddInvoiceScreen),
       matching: find.byKey(const Key('dashboard-tab-4')),
     ).hitTestable().first;
-    final ink = tester.widget<InkWell>(moreFromForm);
-    debugPrint('ACTIVE FORM TAB: onTap=${ink.onTap != null}, center=${tester.getCenter(moreFromForm)}, routeCurrent=${ModalRoute.of(tester.element(moreFromForm))?.isCurrent}');
     await tester.tap(moreFromForm);
-    // Two stacked routes exit; bounded pumps avoid background dashboard
-    // animations preventing pumpAndSettle.
+    await _frame(tester);
+    expect(find.byType(MoreScreen), findsOneWidget);
+    expect(ModalRoute.of(
+      tester.element(find.byType(MoreScreen)))?.isCurrent, isTrue);
+    // Both nested routes dispose after their normal exit transitions.
     await tester.pump(const Duration(milliseconds: 850));
     await tester.pump();
-    if (find.byType(InvoicesScreen).evaluate().isNotEmpty) {
-      debugPrint('ACTIVE FORM TAB NOT ROUTED: tab still mounted; invoke callback only for diagnostic');
-      ink.onTap?.call();
-      await tester.pump(const Duration(milliseconds: 850));
-      await tester.pump();
-      debugPrint('AFTER CALLBACK: invoiceMounted=${find.byType(InvoicesScreen).evaluate().isNotEmpty}');
-    }
-    expect(find.byType(MoreScreen), findsOneWidget);
     expect(find.byType(InvoicesScreen), findsNothing);
 
     await tester.tap(find.byKey(const Key('dashboard-tab-1')).last);
