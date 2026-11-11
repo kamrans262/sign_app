@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../../core/navigation/sign2digital_navigation.dart';
+import '../../../company/presentation/screens/create_company_screen.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -267,14 +269,34 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
             : company.companyName,
     ];
     final selectedIndex = companies.indexWhere((item) => item.id == _companyId);
+    // Only the verified active company owner can create another tenant.
+    const createOption = '__sign2digital_create_company__';
+    final canCreate = MobileAuthRepository.shared.isSignedIn &&
+        widget.companyRepository == null && _company?.role == 'owner';
     final selected = await Sign2DigitalSelectionSheet.show(
       context,
       title: 'Switch company',
-      options: names,
+      options: [...names, if (canCreate) createOption],
       selected: selectedIndex < 0 ? null : names[selectedIndex],
       icon: Icons.business_outlined,
+      labelForOption: (option) =>
+          option == createOption ? 'Create Company' : option,
+      iconForOption: (option) => option == createOption
+          ? Icons.add_business_outlined : Icons.business_outlined,
     );
     if (selected == null || !mounted) return;
+    if (selected == createOption) {
+      final created = await Sign2DigitalNavigation.push<bool>(
+        context,
+        MaterialPageRoute<bool>(
+          builder: (_) => CreateCompanyScreen(
+            onCompleted: () => Navigator.of(context).pop(true),
+          ),
+        ),
+      );
+      if (created == true && mounted) await _reload();
+      return;
+    }
     final index = names.indexOf(selected);
     if (index < 0) return;
     final next = companies[index].id;
