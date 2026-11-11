@@ -10,7 +10,6 @@ import '../../../../core/widgets/sign2digital_checkbox.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
 import '../../../../core/widgets/sign2digital_input_field.dart';
 import '../../../../core/widgets/sign2digital_outlined_container.dart';
-import '../../../../core/widgets/sign2digital_info_banner.dart';
 import '../../../../core/widgets/sign2digital_outlined_button.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../../../core/widgets/sign2digital_selection_field.dart';
@@ -26,6 +25,7 @@ import '../../../jobs/domain/job_model.dart';
 import '../../../jobs/presentation/widgets/sign2digital_photo_preview.dart';
 import '../../domain/document_record.dart';
 import '../../data/remote_site_report_repository.dart';
+import '../widgets/site_report_review_content.dart';
 
 /// UI-only three-step site report wizard, never claims remote submission.
 class SiteReportWizardScreen extends StatefulWidget {
@@ -934,212 +934,12 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
     ],
   );
 
-  Widget _reviewValue({
-    required String label,
-    required String hint,
-    required String icon,
-    required String value,
-    VoidCallback? onTap,
-    bool withArrow = false,
-  }) {
-    final content = Sign2DigitalOutlinedContainer(
-      constraints: const BoxConstraints(minHeight: 71),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          SvgPicture.asset(icon, width: 24, height: 24),
-          const SizedBox(width: 15),
-          Expanded(child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: AppTextStyles.fieldLabel),
-              const SizedBox(height: 5),
-              Text(
-                value.isEmpty ? hint : value,
-                style: value.isEmpty
-                    ? AppTextStyles.fieldHint : AppTextStyles.fieldInput,
-                softWrap: true,
-              ),
-            ],
-          )),
-          if (withArrow) ...[
-            const SizedBox(width: 8),
-            const Icon(Icons.keyboard_arrow_down_rounded,
-                color: AppColors.secondaryText),
-          ],
-        ],
-      ),
-    );
-    return onTap == null ? content : InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: content,
-    );
-  }
-
-  Widget _reviewCover() {
-    // Display every uploaded image, including photos carried by older drafts
-    // whose Photos section flag was not set. A single image retains the Figma
-    // full-width cover; multiple images use the existing 2-column proportions.
-    final photos = _photos;
-    return Container(
-      key: const Key('review-report-cover'),
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.lightBorder),
-        boxShadow: const [BoxShadow(
-          color: Color(0x0D000000),
-          offset: Offset(0, 4),
-          blurRadius: 24,
-        )],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(10),
-        child: photos.length > 1
-            ? GridView.builder(
-                key: const Key('review-report-photo-grid'),
-                padding: const EdgeInsets.all(10),
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 10,
-                  crossAxisSpacing: 10,
-                  childAspectRatio: 188 / 118,
-                ),
-                itemCount: photos.length,
-                itemBuilder: (context, index) => ClipRRect(
-                  key: Key('review-report-photo-$index'),
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.memory(
-                    photos[index].bytes,
-                    key: index == 0
-                        ? const Key('review-report-cover-image')
-                        : Key('review-report-photo-image-$index'),
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => const Center(
-                      child: Icon(Icons.broken_image_outlined),
-                    ),
-                  ),
-                ),
-              )
-            : AspectRatio(
-                aspectRatio: 390 / 182,
-                child: photos.isEmpty
-                    ? const ColoredBox(
-                        color: Color(0xFFF3F5F7),
-                        child: Center(child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.image_outlined,
-                              color: AppColors.placeholder, size: 26),
-                            SizedBox(height: 5),
-                            Text('No report photo selected',
-                              style: TextStyle(
-                                fontFamily: 'Inter', fontSize: 13,
-                                color: AppColors.placeholder)),
-                          ],
-                        )),
-                      )
-                    : Image.memory(
-                        photos.first.bytes,
-                        key: const Key('review-report-cover-image'),
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) => const Center(
-                          child: Icon(Icons.broken_image_outlined)),
-                      ),
-              ),
-      ),
-    );
-  }
-
-  Widget _review() => Column(
-    key: const Key('review-reports-body'),
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      _reviewCover(),
-      const SizedBox(height: 20),
-      Text(_actualTitle,
-        key: const Key('review-report-title'),
-        style: const TextStyle(
-          fontFamily: 'Inter', fontSize: 20,
-          fontWeight: FontWeight.w600,
-          color: AppColors.dark,
-        ),
-      ),
-      const SizedBox(height: 20),
-      _reviewValue(
-        label: 'Job', hint: 'e.g, Site renovation',
-        icon: 'assets/icons/description.svg',
-        value: _projectName,
-        withArrow: true,
-        onTap: _chooseJob,
-      ),
-      const SizedBox(height: 15),
-      _reviewValue(
-        label: 'Client', hint: 'e.g, Marc dupont',
-        icon: 'assets/icons/user.svg',
-        value: _clientName,
-      ),
-      const SizedBox(height: 15),
-      _reviewValue(
-        label: 'Report Date', hint: 'Select date',
-        icon: 'assets/icons/calendar-outlined.svg',
-        value: _reportDate == null ? '' : _dateText(_reportDate!),
-        onTap: _chooseDate,
-      ),
-      const SizedBox(height: 15),
-      _reviewValue(
-        label: 'Site Location', hint: 'Enter site location',
-        icon: 'assets/icons/description.svg', value: _location.text.trim(),
-        onTap: () => _showStep(0),
-      ),
-      const SizedBox(height: 15),
-      _reviewValue(
-        label: 'Prepared By', hint: 'e.g, Jean Dupont',
-        icon: 'assets/icons/user.svg',
-        value: _preparer.text.trim(),
-        onTap: () => _showStep(0),
-      ),
-      const SizedBox(height: 20),
-      for (final section in SiteReportSection.values)
-        if (_selectedSections.contains(section)) ...[
-          Row(children: [
-            IgnorePointer(child: Sign2DigitalCheckbox(
-              key: Key('review-report-section-${section.name}'),
-              value: true,
-              label: section.label,
-              showLabel: false,
-              boxSize: 16,
-              onChanged: (_) {},
-            )),
-            const SizedBox(width: 10),
-            Expanded(child: Text(
-              section.label,
-              style: const TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                letterSpacing: -0.3,
-                color: AppColors.placeholder,
-              ),
-            )),
-          ]),
-          const SizedBox(height: 15),
-        ],
-      const SizedBox(height: 5),
-      const Sign2DigitalInfoBanner(
-        key: Key('review-report-info'),
-        message: 'Please review all information before generating the report',
-        verticalPadding: 10,
-        iconSize: 24,
-        iconGap: 10,
-        fontSize: 13,
-      ),
-    ],
+  Widget _review() => SiteReportReviewContent(
+    report: _draftRecord(),
+    showInstruction: true,
+    onChooseJob: _chooseJob,
+    onChooseDate: _chooseDate,
+    onEditDetails: () => _showStep(0),
   );
 
   @override
