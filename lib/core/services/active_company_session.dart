@@ -38,8 +38,13 @@ abstract final class ActiveCompanySession {
   static void setVerified(int id, {required String role,
     required Iterable<String> permissions}) {
     if (id <= 0) { clear(); return; }
-    access.value = CompanyAccess(companyId: id, role: role,
-      permissions: permissions);
+    final nextPermissions = Set<String>.from(permissions);
+    final current = access.value;
+    if (current == null || current.companyId != id || current.role != role ||
+        !setEquals(current.permissions, nextPermissions)) {
+      access.value = CompanyAccess(companyId: id, role: role,
+        permissions: nextPermissions);
+    }
     selected.value = id;
   }
 
