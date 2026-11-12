@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import 'package:flutter/services.dart';
 import 'package:printing/printing.dart';
@@ -73,7 +74,7 @@ class _GeneralDocumentIssuedActionsState
   Future<void> _issue() async{
     if(_busy||_loading||_metadata!=null)return;
     final yes=await showDialog<bool>(
-      context:context,builder:(dialog)=>AlertDialog(
+      context:context,builder:(dialog)=>Sign2DigitalApprovedConfirmation(
         title:const Text('Issue Official Document'),
         content:const Text('Freeze this exact approved revision into an '
           'immutable server-generated PDF? Issuance cannot be undone.'),
@@ -238,7 +239,7 @@ class _GeneralDocumentIssuedActionsState
       await _refresh();
       if(!mounted)return;
       final email=await showDialog<bool>(context:context,
-        builder:(dialog)=>AlertDialog(
+        builder:(dialog)=>Sign2DigitalApprovedConfirmation(
           title:const Text('Email Signing Invitation?'),
           content:Text('The private signing link was copied. '
             'Send a separate invitation email to '+(entry['email']??'')+'?'),
@@ -270,7 +271,7 @@ class _GeneralDocumentIssuedActionsState
   Future<void> _revoke(int id,{required bool signature}) async{
     if(_busy)return;
     final yes=await showDialog<bool>(context:context,
-      builder:(dialog)=>AlertDialog(
+      builder:(dialog)=>Sign2DigitalApprovedConfirmation(
         title:Text(signature?'Revoke Signing Request?':'Revoke Customer Link?'),
         content:const Text('This permanently disables the selected private link.'),
         actions:[
