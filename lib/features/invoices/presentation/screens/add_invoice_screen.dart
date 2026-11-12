@@ -1,6 +1,7 @@
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
+import '../../../../core/widgets/sign2digital_confirmation_dialog.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -320,19 +321,14 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
     );
     if(selected==null||!mounted||_job?.id!=job.id)return;
     if(_items.isNotEmpty){
-      final replace=await showDialog<bool>(
-        context:context,
-        builder:(dialog)=>AlertDialog(
-          title:const Text('Replace invoice items?'),
-          content:const Text('Current invoice line items will be replaced. '
-              'Review all amounts after importing.'),
-          actions:[
-            TextButton(onPressed:()=>Navigator.of(dialog).pop(false),
-              child:const Text('Cancel')),
-            TextButton(onPressed:()=>Navigator.of(dialog).pop(true),
-              child:const Text('Replace Items')),
-          ],
-        ),
+      final replace = await Sign2DigitalConfirmationDialog.show(
+        context,
+        title: 'Replace Invoice Items?',
+        message: 'Current invoice line items will be replaced. '
+          'Review all amounts after importing.',
+        confirmLabel: 'Replace Items',
+        confirmKey: const Key('invoice-import-confirm-replace'),
+        icon: Icons.receipt_long_outlined,
       );
       if(replace!=true||!mounted)return;
     }
@@ -628,24 +624,17 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
     ].contains(true);
     var replace = false;
     if (conflicts) {
-      replace = await showDialog<bool>(
-        context: context,
-        builder: (dialog) => AlertDialog(
-          title: const Text('Replace entered values?'),
-          content: const Text('AI found different details. '
-            'Keep your existing values or replace them with the recording.'),
-          actions: [
-            TextButton(
-              key: const Key('invoice-ai-keep'),
-              onPressed: () => Navigator.of(dialog).pop(false),
-              child: const Text('Keep existing')),
-            TextButton(
-              key: const Key('invoice-ai-replace'),
-              onPressed: () => Navigator.of(dialog).pop(true),
-              child: const Text('Replace')),
-          ],
-        ),
-      ) ?? false;
+      replace = await Sign2DigitalConfirmationDialog.show(
+        context,
+        title: 'Replace Entered Values?',
+        message: 'AI found different details. Keep your existing values '
+          'or replace them with the recording.',
+        cancelLabel: 'Keep Existing',
+        confirmLabel: 'Replace',
+        icon: Icons.mic_outlined,
+        cancelKey: const Key('invoice-ai-keep'),
+        confirmKey: const Key('invoice-ai-replace'),
+      );
     }
     if (!mounted) { return; }
     setState(() {
@@ -728,22 +717,15 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
   Future<bool> _confirmDiscard() async {
     if (_saving) { return false; }
     if (!_dirty) { return true; }
-    return await showDialog<bool>(
-      context: context,
-      builder: (dialog) => AlertDialog(
-        title: const Text('Discard invoice?'),
-        content: const Text('Unsaved invoice details will be lost.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialog).pop(false),
-            child: const Text('Keep editing')),
-          TextButton(
-            key: const Key('invoice-discard-confirm'),
-            onPressed: () => Navigator.of(dialog).pop(true),
-            child: const Text('Discard')),
-        ],
-      ),
-    ) ?? false;
+    return Sign2DigitalConfirmationDialog.show(
+      context,
+      title: 'Discard Invoice?',
+      message: 'Unsaved invoice details will be lost.',
+      cancelLabel: 'Keep Editing',
+      confirmLabel: 'Discard',
+      icon: Icons.delete_outline,
+      confirmKey: const Key('invoice-discard-confirm'),
+    );
   }
 
   Future<void> _cancel() async {
