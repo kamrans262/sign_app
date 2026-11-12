@@ -101,7 +101,14 @@ void main() {
       expect(tester.getCenter(checkbox).dx, lessThan(tester.getCenter(agreement).dx));
       expect(tester.widget<CheckboxListTile>(
         find.byKey(const Key('signature-consent-checkbox'))).value, isFalse);
-      expect(tester.getSize(find.byType(Dialog)).height, lessThan(450));
+      // Dialog's outer widget can occupy the full route height; measure
+      // actual laid-out content instead of the full-screen wrapper.
+      expect(
+        tester.getBottomLeft(
+              find.byKey(const Key('signature-consent-continue'))).dy -
+            tester.getTopLeft(find.text('Confirm agreement')).dy,
+        lessThan(350),
+      );
       expect(find.widgetWithText(Sign2DigitalOutlinedButton, 'Cancel'),
           findsOneWidget);
       expect((tester.getCenter(find.text('Cancel')).dy -
