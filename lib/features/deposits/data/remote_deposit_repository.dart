@@ -32,6 +32,15 @@ class RemoteDepositRepository extends DepositRepository {
   }
   static Map<String,dynamic> _data(Map<String,dynamic> raw)=>_map(raw['data']);
   static int _int(Object? raw)=>raw is int?raw:int.tryParse('$raw')??0;
+  // A persisted Laravel datetime is a UTC instant, not a calendar date.
+  static DateTime _timestamp(Object? raw) {
+    final value = Sign2DigitalServerTimestamp.tryParse(raw);
+    if (value == null) {
+      throw const SignApiException('Invalid server timestamp.');
+    }
+    return value;
+  }
+
   static DateTime _date(Object? raw){
     final d=DateTime.tryParse('$raw');
     if(d==null)throw const SignApiException('Invalid deposit date.');
@@ -78,7 +87,7 @@ class RemoteDepositRepository extends DepositRepository {
       referenceNumber:(r['reference_number']??'').toString(),
       notes:(r['notes']??'').toString(),photos:photos,history:history,
       receivedBy:r['received_by']==null?null:'User #${r['received_by']}',
-      receivedAt:Sign2DigitalServerTimestamp.tryParse(r['received_at']),
+      receivedAt:_timestamp(r['received_at']),
       refundedAt:Sign2DigitalServerTimestamp.tryParse(r['refunded_at']),
       demoOnly:false,
     );
@@ -145,8 +154,7 @@ class RemoteDepositRepository extends DepositRepository {
         DepositHistoryEvent(
           id:_map(raw)['id'].toString(),
           title:_map(raw)['type'].toString().replaceAll('_',' '),
-          occurredAt:Sign2DigitalServerTimestamp.tryParse(_map(raw)['created_at']) ??
-           throw const SignApiException('Invalid deposit history timestamp'),
+          occurredAt:Sign2DigitalServerTimestamp.tryParse(_map(raw)['created_at']),
           description:_map(raw)['actor_user_id']==null?null:
               'User #${_map(raw)['actor_user_id']}',
         ),
