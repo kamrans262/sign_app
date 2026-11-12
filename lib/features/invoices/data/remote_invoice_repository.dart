@@ -289,7 +289,7 @@ class RemoteInvoiceRepository extends InvoiceRepository {
         InvoicePaymentRecord(
           id:_map(raw)['id'].toString(),
           amountMinor:_int(_map(raw)['amount_minor']),
-          paidAt:_timestamp(_map(raw)['paid_at']),
+          paidAt:_date(_map(raw)['paid_at']),
           method:(_map(raw)['method']??'').toString(),
           referenceNumber:_map(raw)['reference_number']?.toString(),
           status:(_map(raw)['status']??'').toString(),
