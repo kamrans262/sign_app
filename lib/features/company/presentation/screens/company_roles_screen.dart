@@ -127,7 +127,8 @@ class _CompanyRolesScreenState extends State<CompanyRolesScreen> {
                       content: Text('Enter a role name of 2–60 characters.')));
                     return;
                   }
-                  Navigator.of(sheet).pop(_RoleDraft(value, selected.toList()));
+                  Navigator.of(sheet).pop(_RoleDraft(value,
+                    selected.toList()..sort()));
                 },
               ),
             ),
