@@ -490,16 +490,16 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
 
   Future<void> _editItem([int? index]) async {
     final previous = index == null ? null : _items[index];
-    final description = TextEditingController(
-      text: previous?.description ?? '');
-    final quantity = TextEditingController(
-      text: previous?.quantity.toString() ?? '1');
-    final price = TextEditingController(
-      text: previous?.unitPriceMinor == null ? ''
-          : (previous!.unitPriceMinor! / 100).toStringAsFixed(2));
+    // Let FormFields own their editing controllers until the sheet route
+    // finishes its exit animation. Disposing temporary controllers when the
+    // Navigator.pop future completes can rebuild still-visible TextFields
+    // against disposed controllers on iOS.
+    var description = previous?.description ?? '';
+    var quantity = previous?.quantity.toString() ?? '1';
+    var price = previous?.unitPriceMinor == null ? ''
+        : (previous!.unitPriceMinor! / 100).toStringAsFixed(2);
     String? error;
-    try {
-      await showSign2DigitalBottomSheet<void>(
+    await showSign2DigitalBottomSheet<void>(
         context: context, isScrollControlled: true,
         builder: (sheet) => StatefulBuilder(
           builder: (sheet, update) => SafeArea(
@@ -515,20 +515,23 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
                       fontSize: 18, color: AppColors.dark,
                       fontWeight: FontWeight.w600)),
                   const SizedBox(height: 15),
-                  TextField(
+                  TextFormField(
                     key: const Key('invoice-item-description'),
-                    controller: description,
+                    initialValue: description,
+                    onChanged: (value) => description = value,
                     decoration: const InputDecoration(labelText: 'Description')),
                   const SizedBox(height: 10),
-                  TextField(
+                  TextFormField(
                     key: const Key('invoice-item-quantity'),
-                    controller: quantity,
+                    initialValue: quantity,
+                    onChanged: (value) => quantity = value,
                     keyboardType: TextInputType.number,
                     decoration: const InputDecoration(labelText: 'Quantity')),
                   const SizedBox(height: 10),
-                  TextField(
+                  TextFormField(
                     key: const Key('invoice-item-unit-price'),
-                    controller: price,
+                    initialValue: price,
+                    onChanged: (value) => price = value,
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true),
                     decoration: InputDecoration(
@@ -554,18 +557,18 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
                       key: const Key('invoice-item-apply'),
                       label: index == null ? 'Add item' : 'Update item',
                       onPressed: () {
-                        final qty = int.tryParse(quantity.text.trim());
-                        final unit = price.text.trim().isEmpty
-                            ? null : parseQuoteMinorUnits(price.text.trim());
-                        if (description.text.trim().isEmpty ||
+                        final qty = int.tryParse(quantity.trim());
+                        final unit = price.trim().isEmpty
+                            ? null : parseQuoteMinorUnits(price.trim());
+                        if (description.trim().isEmpty ||
                             qty == null || qty <= 0 || qty > 100000 ||
-                            (price.text.trim().isNotEmpty && unit == null)) {
+                            (price.trim().isNotEmpty && unit == null)) {
                           update(() => error =
                             'Enter a description, valid quantity and price.');
                           return;
                         }
                         final value = InvoiceLineItem(
-                          description: description.text.trim(),
+                          description: description.trim(),
                           quantity: qty, unitPriceMinor: unit);
                         setState(() {
                           if (index == null) { _items.add(value); }
@@ -582,11 +585,6 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
           ),
         ),
       );
-    } finally {
-      description.dispose();
-      quantity.dispose();
-      price.dispose();
-    }
   }
 
   Future<void> _applyVoice(InvoiceVoiceSuggestion result) async {
