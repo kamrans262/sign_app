@@ -254,7 +254,9 @@ void main() {
     final pendingViewport = tester.getCenter(
       find.byKey(const Key('pending-invitation-scroll')));
     final pendingCard = tester.getCenter(
-      find.byType(Sign2DigitalQuoteShadowPanel));
+      find.descendant(
+        of: find.byKey(const Key('pending-invitation-scroll')),
+        matching: find.byType(Sign2DigitalQuoteShadowPanel)));
     expect((pendingViewport.dy - pendingCard.dy).abs(), lessThan(20));
     await tester.tap(find.byKey(const Key('join-invited-company')));
     await tester.pump();
@@ -263,7 +265,9 @@ void main() {
     final codeViewport = tester.getCenter(
       find.byKey(const Key('company-invitation-code-scroll')));
     final codeCard = tester.getCenter(
-      find.byType(Sign2DigitalQuoteShadowPanel));
+      find.descendant(
+        of: find.byKey(const Key('company-invitation-code-scroll')),
+        matching: find.byType(Sign2DigitalQuoteShadowPanel)));
     expect((codeViewport.dy - codeCard.dy).abs(), lessThan(20));
     await tester.enterText(find.byKey(const Key('company-invitation-code')), code);
     await tester.tap(find.byKey(const Key('accept-company-invitation')));
