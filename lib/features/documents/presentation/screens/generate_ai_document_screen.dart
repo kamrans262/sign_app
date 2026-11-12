@@ -2,6 +2,7 @@ import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'dart:io';
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -213,7 +214,7 @@ class _GenerateAiDocumentScreenState extends State<GenerateAiDocumentScreen> {
         ));
       if(!mounted||transcript.isEmpty)return;
       final accepted=await showDialog<bool>(context:context,
-        builder:(dialog)=>AlertDialog(
+        builder:(dialog)=>Sign2DigitalApprovedConfirmation(
           title:const Text('Use dictated document notes?'),
           content:Text(transcript),
           actions:[
@@ -269,7 +270,7 @@ class _GenerateAiDocumentScreenState extends State<GenerateAiDocumentScreen> {
       }
       final approved = await showDialog<bool>(
         context: context,
-        builder: (dialog) => AlertDialog(
+        builder: (dialog) => Sign2DigitalApprovedConfirmation(
           title: const Text('Use AI suggestions?'),
           content: Text([
             if (canFillDate) 'Document Date: ${_dateText(suggestedDate)}',
@@ -346,7 +347,7 @@ class _GenerateAiDocumentScreenState extends State<GenerateAiDocumentScreen> {
       clientId:client,jobId:job);
     if(!mounted)throw StateError('Editor is closed.');
     final approved=await showDialog<bool>(context:context,
-      builder:(dialog)=>AlertDialog(
+      builder:(dialog)=>Sign2DigitalApprovedConfirmation(
         title:const Text('Review Document Suggestion'),
         content:SizedBox(height:240,child:SingleChildScrollView(
           child:Text(suggestion.title+'\n\n'+
@@ -373,7 +374,7 @@ class _GenerateAiDocumentScreenState extends State<GenerateAiDocumentScreen> {
     if (generator == null) {
       final openNotes = await showDialog<bool>(
         context: context,
-        builder: (dialog) => AlertDialog(
+        builder: (dialog) => Sign2DigitalApprovedConfirmation(
           title: const Text('AI document generation not connected'),
           content: const Text(
             'This six-section document form has no connected AI generator. '
