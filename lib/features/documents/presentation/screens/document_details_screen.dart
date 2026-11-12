@@ -521,6 +521,19 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
               icon: const Icon(Icons.copy_outlined),
               label: const Text('Copy secure link'),
             ),
+            if (draft.serverId != null &&
+                MobileAuthRepository.shared.isSignedIn &&
+                response.confirmedSentAt == null) ...[
+              const SizedBox(height: 14),
+              Sign2DigitalPrimaryButton(
+                key: const Key('addendum-email-existing-link'),
+                label: 'Email Customer',
+                onPressed: () {
+                  Navigator.pop(sheet);
+                  _emailExistingReadyAddendumLink(draft, source);
+                },
+              ),
+            ],
           ],
         ]),
       )),
@@ -592,6 +605,44 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
       if (mounted) _message('Could not verify the current signing request.');
     }
     return null;
+  }
+
+  /// A cached copyable link remains accessible, but Email Customer must
+  /// explicitly replace it using the guarded server workflow.
+  Future<void> _emailExistingReadyAddendumLink(
+    AddendumDraft draft,
+    DocumentRecord source,
+  ) async {
+    if (_requestingAddendum || !mounted || draft.serverId == null) return;
+    setState(() => _requestingAddendum = true);
+    try {
+      final current = await RemoteAddendumRepository.shared.get(draft.serverId!);
+      if (current.linkedDocumentId != source.id) {
+        throw const SignApiException('Signed original mismatch.');
+      }
+      final receipt = await _handleActiveAddendumRequest(current, source);
+      if (receipt == null || !mounted) return;
+      if (!receipt.valid) {
+        throw const SignApiException('Email transport was not confirmed.');
+      }
+      AddendumSignatureRequestSession.remember(current, source, receipt);
+      final record = _record;
+      if (record != null && widget.loadDocument != null) {
+        try {
+          final refreshed = await widget.loadDocument!(record.id);
+          if (refreshed != null && refreshed.id == record.id && mounted) {
+            setState(() { _record = refreshed; _pdfFuture = null; });
+          }
+        } catch (_) {}
+      }
+      if (mounted) await _showAddendumSigningLink(current, source, receipt);
+    } on SignApiException catch (error) {
+      if (mounted) _message('Could not send addendum: ${error.message}');
+    } catch (_) {
+      if (mounted) _message('Could not email the existing addendum link.');
+    } finally {
+      if (mounted) setState(() => _requestingAddendum = false);
+    }
   }
 
   Future<void> _sendAddendumForSignature() async {
