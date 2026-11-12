@@ -17,6 +17,7 @@ import '../../../auth/data/mobile_auth_repository.dart';
 import '../../../../core/services/active_company_session.dart';
 import '../../domain/deposit_record.dart';
 import '../../../labour/data/demo_labour_repository.dart';
+import '../../../jobs/domain/job_model.dart';
 import 'add_deposit_screen.dart';
 import 'deposit_details_screen.dart';
 
@@ -36,6 +37,7 @@ class DepositsScreen extends StatefulWidget {
     this.onNavigationSelected, this.onNotificationTap, this.onProfileTap,
     this.selectedNavigationIndex = 4,
     this.jobId,
+    this.initialJob,
   });
 
   final DepositRepository? repository;
@@ -47,6 +49,7 @@ class DepositsScreen extends StatefulWidget {
   final int selectedNavigationIndex;
   /// A Job Details route filters this screen to its persisted job ID.
   final String? jobId;
+  final JobModel? initialJob;
 
   @override
   State<DepositsScreen> createState() => _DepositsScreenState();
@@ -226,7 +229,7 @@ class _DepositsScreenState extends State<DepositsScreen> {
           builder: (_) => AddDepositScreen(
             jobs: jobs,
             initialDeposit: _retryNeedsEditing ? deposit : null,
-            initialJob: widget.jobId == null ? null : jobs.first,
+            initialJob: widget.initialJob ?? (widget.jobId == null ? null : jobs.first),
             selectedNavigationIndex: widget.selectedNavigationIndex,
             onNavigationSelected: widget.onNavigationSelected,
           ),
