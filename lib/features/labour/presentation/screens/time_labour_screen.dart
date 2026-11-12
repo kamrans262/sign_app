@@ -84,8 +84,6 @@ class _TimeLabourScreenState extends State<TimeLabourScreen> {
     _load();
   }
 
-  LabourEntryKind get _kind =>
-      _tab == 0 ? LabourEntryKind.labour : LabourEntryKind.timeSheet;
   JobModel? get _selectedJob {
     for (final job in _jobs) {
       if (job.id == _jobId) return job;
@@ -143,14 +141,10 @@ class _TimeLabourScreenState extends State<TimeLabourScreen> {
 
   List<LabourEntry> get _visible {
     final result = _all.where((item) =>
-      // Manually recorded labour belongs in the Labour list even when an
-      // older client saved the entry with the time_sheet kind. The Time
-      // Sheet tab keeps its dedicated view, including timer-recorded time.
-      (_tab == 0
-          ? item.kind == LabourEntryKind.labour ||
-              (item.kind == LabourEntryKind.timeSheet &&
-                  item.source == 'manual' && !item.isDemo)
-          : item.kind == LabourEntryKind.timeSheet) &&
+      // Labour is the overall job-hours list, including timer-created
+      // time_sheet records. Time Sheet is the dedicated timesheet view.
+      // Never hide an existing labour record because of its entry kind.
+      (_tab == 0 || item.kind == LabourEntryKind.timeSheet) &&
       (_jobId == null || item.jobId == _jobId) &&
       item.matches(_search.text)).toList();
     result.sort((a,b) {
