@@ -1,5 +1,6 @@
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import '../../../../core/widgets/sign2digital_modal_guard.dart';
 
@@ -127,7 +128,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
   Future<bool> _confirmDiscard() async {
     if (!_dirty) return true;
-    return await showDialog<bool>(context: context, builder: (dialog) => AlertDialog(
+    return await showDialog<bool>(context: context, builder: (dialog) => Sign2DigitalApprovedConfirmation(
       title: const Text('Discard expense?'),
       content: const Text('Your unsaved expense information will be lost.'),
       actions: [
