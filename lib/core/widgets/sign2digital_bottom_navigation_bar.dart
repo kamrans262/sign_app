@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../assets/dashboard_assets.dart';
 import '../theme/app_colors.dart';
 import '../navigation/sign2digital_navigation.dart';
+import '../services/active_company_session.dart';
 
 class Sign2DigitalBottomNavigationBar extends StatelessWidget {
   const Sign2DigitalBottomNavigationBar({
@@ -26,14 +27,25 @@ class Sign2DigitalBottomNavigationBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return ValueListenableBuilder<CompanyAccess?>(
+      valueListenable: ActiveCompanySession.access,
+      builder: (context, _, __) {
+        // Preserve approved tab order and original numeric destinations.
+        final visible = <int>[
+          0,
+          if (ActiveCompanySession.canRead('jobs')) 1,
+          if (ActiveCompanySession.canRead('clients')) 2,
+          if (ActiveCompanySession.canRead('documents')) 3,
+          4,
+        ];
+        return Container(
       color: AppColors.white,
       child: SafeArea(
         top: false,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(8, 12, 8, 10),
           child: Row(
-            children: List.generate(labels.length, (index) {
+            children: visible.map((index) {
               final active = index == selectedIndex;
               final color = active
                   ? AppColors.primary
@@ -99,10 +111,12 @@ class Sign2DigitalBottomNavigationBar extends StatelessWidget {
                   ),
                 ),
               );
-            }),
+            }).toList(),
           ),
         ),
       ),
+    );
+      },
     );
   }
 }
