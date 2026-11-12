@@ -1,4 +1,5 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
+import '../../../../core/services/active_company_session.dart';
 import '../../../../core/widgets/sign2digital_subscription_gate.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -357,6 +358,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
   }
 
   bool _canApproveAddendum(DocumentRecord record) =>
+      ActiveCompanySession.canWrite('documents') &&
       record.category == DocumentCategory.addends &&
       record.status.toLowerCase() == 'draft' &&
       RegExp(r'^addendum-[1-9][0-9]*$').hasMatch(record.id) &&
@@ -922,7 +924,8 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
                 _openLinkedSignedQuote(record);
               },
             ),
-          if (_isApprovedUnsignedQuote(record))
+          if (_isApprovedUnsignedQuote(record) &&
+              ActiveCompanySession.canWrite('quotes'))
             ListTile(
               key: const Key('document-send-quote'),
               leading: const Icon(Icons.send_outlined),
@@ -977,7 +980,8 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
                 });
               },
             ),
-          if (record.category == DocumentCategory.addends &&
+          if (ActiveCompanySession.canWrite('documents') &&
+              record.category == DocumentCategory.addends &&
               AddendumDraftSession.load(record.addendumDraftId ?? '')
                   ?.isCreatedLocally == true &&
               (AddendumDraftSession.load(record.addendumDraftId ?? '')
@@ -1007,7 +1011,8 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
                 _chooseAttachment();
               },
             ),
-          if (widget.onAddAttachment != null &&
+          if (ActiveCompanySession.canWrite('documents') &&
+              widget.onAddAttachment != null &&
               RegExp(r'^(quote|signed|managed)-').hasMatch(record.id))
             ListTile(
               key: const Key('document-add-attachment'),
@@ -1018,7 +1023,8 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
                 _addDocumentFile(newVersion: false);
               },
             ),
-          if (widget.onAddVersion != null &&
+          if (ActiveCompanySession.canWrite('documents') &&
+              widget.onAddVersion != null &&
               record.id.startsWith('managed-'))
             ListTile(
               key: const Key('document-add-version'),
@@ -1029,7 +1035,8 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
                 _addDocumentFile(newVersion: true);
               },
             ),
-          if (record.category == DocumentCategory.quotes &&
+          if (ActiveCompanySession.canWrite('documents') &&
+              record.category == DocumentCategory.quotes &&
               (widget.loadDocument == null ||
                   record.id.startsWith('signed-') &&
                       record.verifiedSignedPdfAvailable))
