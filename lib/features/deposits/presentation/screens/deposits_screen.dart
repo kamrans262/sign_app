@@ -409,6 +409,7 @@ class _DepositsScreenState extends State<DepositsScreen> {
                   ),
               ],
             ),
+            if (ActiveCompanySession.canWrite('invoices'))
             Positioned(right: 20, bottom: 20,
               child: SizedBox(width: 50, height: 50,
                 child: FloatingActionButton(
