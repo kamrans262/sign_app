@@ -187,6 +187,7 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
     ];
     return Sign2DigitalInformationTable(
       key: const Key('invoice-details-table'),
+      rightAlignValues: true,
       rows: rows);
   }
 
@@ -254,6 +255,7 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
         for (final payment in payments) ...[
           Sign2DigitalInformationTable(
             key: Key('invoice-payment-${payment.id}'),
+            rightAlignValues: true,
             rows: [
               Sign2DigitalInformationRow('Amount',
                 _money(payment.amountMinor)),
@@ -268,7 +270,7 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
           ),
           const SizedBox(height: 15),
         ],
-        Sign2DigitalInformationTable(rows: [
+        Sign2DigitalInformationTable(rightAlignValues: true, rows: [
           Sign2DigitalInformationRow('Amount Received',
             _money(_record.receivedMinor)),
           Sign2DigitalInformationRow('Amount Due',
