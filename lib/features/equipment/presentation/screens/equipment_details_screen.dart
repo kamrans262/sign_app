@@ -1,4 +1,5 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
+import '../../../../core/services/active_company_session.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -352,6 +353,7 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
   }
 
   Widget _actions() => Column(children: [
+    if (ActiveCompanySession.canWrite('equipment')) ...[
     Row(children: [
       Expanded(child: Sign2DigitalOutlinedButton(
         key: const Key('equipment-details-edit'), label: 'Edit',
@@ -363,6 +365,7 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
         enabled: !_busy, onPressed: _logUsage)),
     ]),
     const SizedBox(height: 15),
+    ],
     if(_record.serverId!=null)
       Sign2DigitalOutlinedButton(
         key:const Key('equipment-details-loan-history'),
@@ -384,8 +387,9 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
             _notice('Unable to load loan history for equipment.');
           }
         }),
-    if(_record.serverId!=null)const SizedBox(height:15),
-    FractionallySizedBox(
+    if(_record.serverId!=null && ActiveCompanySession.canWrite('equipment'))
+      const SizedBox(height:15),
+    if (ActiveCompanySession.canWrite('equipment')) FractionallySizedBox(
       widthFactor: .6,
       child: Sign2DigitalPrimaryButton(
         key: const Key('equipment-details-schedule'),
