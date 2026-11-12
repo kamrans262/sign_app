@@ -1,3 +1,4 @@
+import '../../../core/utils/sign2digital_server_timestamp.dart';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
@@ -78,7 +79,7 @@ class RemoteDocumentRepository implements DocumentRepository {
       if (value is! Map) continue;
       final map = Map<String, dynamic>.from(value);
       final type = _historyType(map['type']);
-      final time = DateTime.tryParse((map['occurred_at'] ?? '').toString());
+      final time = Sign2DigitalServerTimestamp.tryParse(map['occurred_at']);
       if (type == null || time == null) continue;
       result.add(DocumentHistoryEvent(
         id: (map['id'] ?? '').toString(),
@@ -124,7 +125,7 @@ class RemoteDocumentRepository implements DocumentRepository {
     if (!RegExp(r'^(quote|signed|managed|addendum|general)-[1-9][0-9]*$').hasMatch(id)) {
       throw const SignApiException('Invalid document identity.');
     }
-    final created = DateTime.tryParse((raw['created_at'] ?? '').toString());
+    final created = Sign2DigitalServerTimestamp.tryParse(raw['created_at']);
     if (created == null) {
       throw const SignApiException('Document has no verified creation date.');
     }
@@ -150,7 +151,7 @@ class RemoteDocumentRepository implements DocumentRepository {
       jobId: raw['job_id']?.toString(),
       verifiedSignedPdfAvailable: hasPdf,
       createdAt: created,
-      updatedAt: DateTime.tryParse((raw['updated_at'] ?? '').toString()),
+      updatedAt: Sign2DigitalServerTimestamp.tryParse(raw['updated_at']),
       history: _events(history, id),
       related: List.unmodifiable(related),
       attachmentNames: List.unmodifiable(
