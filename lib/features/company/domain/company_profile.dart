@@ -15,11 +15,13 @@ class CompanyProfile {
     required this.qrIban,
     required this.documentNumbering,
     this.role = 'member',
+    this.permissions = const [],
     this.logoFileName,
     this.termsFileName,
   });
 
   final String role;
+  final List<String> permissions;
   final String id;
   final String companyName;
   final String address;
