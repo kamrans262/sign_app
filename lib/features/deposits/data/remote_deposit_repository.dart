@@ -70,7 +70,10 @@ class RemoteDepositRepository extends DepositRepository {
       jobReference:(r['job_reference']??'').toString(),
       quoteId:r['quote_id']==null?null:_int(r['quote_id']),
       lockVersion:version,
-      paymentMethod:(r['payment_method']??'').toString(),
+      paymentMethod: r['payment_method'] == 'other' &&
+          (r['payment_method_custom'] ?? '').toString().trim().isNotEmpty
+          ? r['payment_method_custom'].toString()
+          : (r['payment_method'] ?? '').toString(),
       referenceNumber:(r['reference_number']??'').toString(),
       notes:(r['notes']??'').toString(),photos:photos,history:history,
       receivedBy:r['received_by']==null?null:'User #${r['received_by']}',
@@ -158,6 +161,9 @@ class RemoteDepositRepository extends DepositRepository {
     final normalized=method=='cash'?'cash':
       const ['bank transfer','bank_transfer','bank'].contains(method)
           ?'bank_transfer':'other';
+    final custom = normalized == 'other' &&
+        !const ['other', ''].contains(method)
+        ? r.paymentMethod.trim() : null;
     return {
       'job_id':job,'quote_id':r.quoteId,
       // Laravel derives the customer from the scoped, persisted job.
@@ -169,6 +175,7 @@ class RemoteDepositRepository extends DepositRepository {
         r.date.day.toString().padLeft(2,'0'),
       ].join('-'),
       'payment_method':normalized,
+      'payment_method_custom':custom,
       'reference_number':r.referenceNumber.trim(),
       'notes':r.notes.trim(),
       if(r.id.startsWith('deposit-'))'lock_version':r.lockVersion,
