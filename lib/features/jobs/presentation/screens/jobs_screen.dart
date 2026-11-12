@@ -216,7 +216,7 @@ class _JobsScreenState extends State<JobsScreen> {
                     const SizedBox(height: 20),
                     // Reuse the existing primary button without modifying its API.
                     // The icon and label are painted as one centered overlay.
-                    Semantics(
+                    if (ActiveCompanySession.canWrite('jobs')) Semantics(
                       label: 'Create Job',
                       button: true,
                       child: Stack(
