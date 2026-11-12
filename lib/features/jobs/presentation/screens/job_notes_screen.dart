@@ -1,4 +1,5 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
+import '../../../../core/services/active_company_session.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -373,6 +374,7 @@ class _JobNotesScreenState extends State<JobNotesScreen> {
                         const SizedBox(height: 20),
                         _noteList(constraints.maxWidth, notes),
                         const SizedBox(height: 36),
+                        if (ActiveCompanySession.canWrite('jobs'))
                         Sign2DigitalPrimaryButton(
                           label: '＋ Add Notes',
                           onPressed: _addNotes,
