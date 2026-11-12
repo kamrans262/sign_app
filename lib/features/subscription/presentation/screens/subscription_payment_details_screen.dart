@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -65,7 +66,7 @@ class _SubscriptionPaymentDetailsScreenState
         // The modal itself prevents duplicate purchase taps.
         setState(()=>_working=false);
         final confirm=await showDialog<bool>(context:context,
-          builder:(dialog)=>AlertDialog(
+          builder:(dialog)=>Sign2DigitalApprovedConfirmation(
             title:const Text('Confirm Plan Change'),
             content:Text('Estimated upcoming invoice: $currency '
                 '${(amount/100).toStringAsFixed(2)}. '
