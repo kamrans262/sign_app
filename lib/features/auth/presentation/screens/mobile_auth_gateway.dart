@@ -5,6 +5,7 @@ import '../../../../core/services/sign_api_client.dart';
 import '../../../company/data/remote_company_repository.dart';
 import 'company_entry_gate.dart';
 import '../../data/mobile_auth_repository.dart';
+import '../../services/google_sign_in_client.dart';
 import 'create_account_screen.dart';
 import 'forgot_password_screen.dart';
 import 'login_screen.dart';
@@ -17,9 +18,11 @@ import 'reset_password_screen.dart';
 /// Reuses the approved Login, Create Account, Forgot Password and OTP layouts.
 /// The mobile dashboard is never entered before the server verifies email OTP.
 class MobileAuthGateway extends StatefulWidget {
-  const MobileAuthGateway({super.key, this.repository});
+  const MobileAuthGateway({super.key, this.repository, this.googleIdTokenProvider});
 
   final MobileAuthRepository? repository;
+  /// Injected for deterministic tests without native Google UI.
+  final Future<String?> Function()? googleIdTokenProvider;
 
   @override
   State<MobileAuthGateway> createState() => _MobileAuthGatewayState();
@@ -49,7 +52,9 @@ class _MobileAuthGatewayState extends State<MobileAuthGateway> {
 
   void _openRegistration() {
     Sign2DigitalNavigation.push(context,MaterialPageRoute<void>(
-      builder: (_) => CreateAccountScreen(onCreateAccount: _register),
+      builder: (_) => CreateAccountScreen(
+        onCreateAccount: _register,
+        onGoogle: () => _googleLogin(true)),
     ));
   }
 
@@ -57,6 +62,38 @@ class _MobileAuthGatewayState extends State<MobileAuthGateway> {
     Sign2DigitalNavigation.push(context,MaterialPageRoute<void>(
       builder: (_) => ForgotPasswordScreen(onResetRequested: _forgot),
     ));
+  }
+
+  void _googleLogin(bool rememberMe) {
+    _execute(() async {
+      final provider = widget.googleIdTokenProvider ??
+          GoogleSignInClient.shared.idToken;
+      final idToken = await provider();
+      if (idToken == null || !mounted) return; // user canceled
+      final outcome = await _auth.signInWithGoogle(idToken,
+        rememberMe: rememberMe);
+      if (!mounted) return;
+      if (outcome.requiresTwoFactor) {
+        final ticket = outcome.twoFactorTicket!;
+        await Sign2DigitalNavigation.push(context, MaterialPageRoute<void>(
+          builder: (_) => TwoFactorLoginScreen(onVerify: (code) async {
+            await _auth.verifyTwoFactor(ticket, code,
+              rememberMe: rememberMe);
+            if (!mounted) return;
+            _openCompanyGate();
+          }),
+        ));
+        return;
+      }
+      _openCompanyGate();
+    });
+  }
+
+  void _openCompanyGate() {
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute<void>(builder: (_) => CompanyEntryGate(
+        repository: RemoteCompanyRepository(api: _auth.api),
+      )), (_) => false);
   }
 
   void _login(String email, String password, bool rememberMe) {
@@ -182,6 +219,7 @@ class _MobileAuthGatewayState extends State<MobileAuthGateway> {
   Widget build(BuildContext context) {
     return LoginScreen(
       onSubmit: _login,
+      onGoogleSignIn: _googleLogin,
       onCreateAccount: _openRegistration,
       onForgotPassword: _openForgotPassword,
     );
