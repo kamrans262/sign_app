@@ -1,3 +1,4 @@
+import '../../../core/utils/sign2digital_server_timestamp.dart';
 import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import '../../../core/services/active_company_session.dart';
@@ -58,7 +59,7 @@ class RemoteGeneralDocumentRepository extends DocumentRepository {
       blocks:blocks,source:source,
       clientName:(row['client_name']??'').toString(),
       jobTitle:(row['job']??'').toString(),
-      createdAt:DateTime.tryParse((row['created_at']??'').toString()));
+      createdAt:Sign2DigitalServerTimestamp.tryParse(row['created_at']));
   }
 
   Future<List<GeneralDocumentDraft>> list() async {
