@@ -445,34 +445,6 @@ class _ClientsScreenState extends State<ClientsScreen> {
     }
   }
 
-  Future<bool> _updateJobProgress(JobModel job, int percentage) async {
-    if (!_usesRemoteJobs || job.category != JobCategory.active ||
-        percentage < 0 || percentage > 100) return false;
-    final jobId = int.tryParse(job.id);
-    if (jobId == null || jobId <= 0) return false;
-    final company = ActiveCompanySession.companyId;
-    try {
-      await RemoteJobRepository.shared.updateJob(jobId, {
-        'progress_percentage': percentage,
-        // Work completion is explicit; billing/expenses never change it.
-        if (percentage == 100) 'stage': 'completed',
-        if (percentage > 0 && percentage < 100 &&
-            job.stage == JobStage.planning) 'stage': 'in_progress',
-      });
-      if (!mounted || ActiveCompanySession.companyId != company) return false;
-      await _loadJobs();
-      if (!mounted || ActiveCompanySession.companyId != company) return false;
-      _notifyHome('Job progress updated to $percentage%.');
-      return true;
-    } catch (error) {
-      if (mounted && ActiveCompanySession.companyId == company) {
-        _notifyHome(error is SignApiException
-            ? error.message : 'Unable to update job progress.');
-      }
-      return false;
-    }
-  }
-
   Future<void> _openJobDetails(JobModel job) async {
     await Sign2DigitalNavigation.runOnce<void>(
       context, 'job-details-load:${job.id}',
@@ -516,7 +488,6 @@ class _ClientsScreenState extends State<ClientsScreen> {
           job: realDetails?.job ?? job,
           details: realDetails,
           onManageJob: _usesRemoteJobs ? _manageJobAction : null,
-          onProgressChanged: _usesRemoteJobs ? _updateJobProgress : null,
           companyId: _selectedCompanyId,
           client: linkedClient,
           onTabSelected: (index) {
