@@ -2,6 +2,7 @@ import '../../../../core/navigation/sign2digital_navigation.dart';
 // Sign2Digital Login UI Package — UI-only Figma login composition.
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -296,12 +297,14 @@ class _LoginPanel extends StatelessWidget {
                     iconAsset: 'assets/icons/google.svg',
                     onPressed: onGoogle,
                   ),
-                  const SizedBox(height: 15),
-                  Sign2DigitalOutlinedButton(
-                    label: 'Continue with Apple',
-                    iconAsset: 'assets/icons/apple.svg',
-                    onPressed: onApple,
-                  ),
+                  if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) ...[
+                    const SizedBox(height: 15),
+                    Sign2DigitalOutlinedButton(
+                      label: 'Continue with Apple',
+                      iconAsset: 'assets/icons/apple.svg',
+                      onPressed: onApple,
+                    ),
+                  ],
                   const SizedBox(height: 20),
                   Sign2DigitalPrimaryButton(
                     label: 'Log In',
