@@ -103,7 +103,7 @@ class RemoteInvoiceRepository extends InvoiceRepository {
         if(row['source_addenda_ids'] is List)
           for(final raw in row['source_addenda_ids'] as List)_int(raw),
       ],
-      sentAt:_timestamp(row['sent_at']),
+      sentAt:Sign2DigitalServerTimestamp.tryParse(row['sent_at']),
       items:items,payments:payments,history:history,photos:photos,
       payment:QuotePaymentDetails(iban:(row['iban']??'').toString()),
     );
@@ -289,7 +289,7 @@ class RemoteInvoiceRepository extends InvoiceRepository {
         InvoicePaymentRecord(
           id:_map(raw)['id'].toString(),
           amountMinor:_int(_map(raw)['amount_minor']),
-          paidAt:Sign2DigitalServerTimestamp.tryParse(_map(raw)['paid_at']),
+          paidAt:_timestamp(_map(raw)['paid_at']),
           method:(_map(raw)['method']??'').toString(),
           referenceNumber:_map(raw)['reference_number']?.toString(),
           status:(_map(raw)['status']??'').toString(),
