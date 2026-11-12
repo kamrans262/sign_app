@@ -10,6 +10,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
 import '../../../../core/widgets/sign2digital_information_table.dart';
+import '../../../../core/widgets/sign2digital_modal_surface.dart';
 import '../../../../core/widgets/sign2digital_outlined_button.dart';
 import '../../../../core/widgets/sign2digital_outlined_container.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
@@ -139,6 +140,12 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
     ],
   );
 
+  static String _paymentMethodLabel(String value) {
+    final normalized = value.trim().replaceAll('_', ' ');
+    if (normalized.isEmpty) return 'Not recorded';
+    return '${normalized[0].toUpperCase()}${normalized.substring(1)}';
+  }
+
   Widget _details() => Sign2DigitalInformationTable(
     key: const Key('deposit-details-table'),
     rows: [
@@ -147,8 +154,7 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
       Sign2DigitalInformationRow('Client', _record.clientName),
       Sign2DigitalInformationRow('Amount', _record.formattedAmount),
       Sign2DigitalInformationRow('Payment Method',
-        _record.paymentMethod.trim().isEmpty
-            ? 'Not recorded' : _record.paymentMethod),
+        _paymentMethodLabel(_record.paymentMethod)),
       Sign2DigitalInformationRow('Reference Number',
         _record.referenceNumber.trim().isEmpty
             ? 'Not recorded' : _record.referenceNumber),
@@ -246,7 +252,8 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
   Widget _receipts() {
     final photos = _record.photos;
     if (photos.isEmpty) {
-      return Sign2DigitalOutlinedContainer(
+      return Column(children: [
+        Sign2DigitalOutlinedContainer(
         child: InkWell(
           key: const Key('deposit-receipts-empty'),
           onTap: _busy || _record.status!=DepositStatus.pending ? null : _edit,
@@ -267,11 +274,24 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
             )),
           ),
         ),
-      );
+        ),
+        const SizedBox(height: 15),
+        Sign2DigitalPrimaryButton(
+          key: const Key('deposit-receipts-edit'),
+          label: 'Add or remove photos',
+          enabled: !_busy && _record.status == DepositStatus.pending,
+          onPressed: _edit),
+      ]);
     }
     return Column(
       key: const Key('deposit-receipts-grid'),
       children: [
+        Sign2DigitalPrimaryButton(
+          key: const Key('deposit-receipts-edit'),
+          label: 'Add or remove photos',
+          enabled: !_busy && _record.status == DepositStatus.pending,
+          onPressed: _edit),
+        const SizedBox(height: 15),
         for (var i = 0; i < photos.length; i++) ...[
           Sign2DigitalOutlinedContainer(
             child: Padding(
@@ -307,12 +327,6 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
           ),
           const SizedBox(height: 15),
         ],
-        TextButton.icon(
-          key: const Key('deposit-receipts-edit'),
-          onPressed: _busy || _record.status!=DepositStatus.pending ? null : _edit,
-          icon: const Icon(Icons.edit_outlined),
-          label: const Text('Add or remove photos'),
-        ),
       ],
     );
   }
@@ -346,22 +360,70 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
     );
   }
 
+  Future<bool> _confirmAction({
+    required String title,
+    required String description,
+    required String confirmLabel,
+    required IconData icon,
+    required Key confirmKey,
+  }) async {
+    if (!mounted) return false;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: const Color(0x80000000),
+      builder: (dialog) => Sign2DigitalModalSurface(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircleAvatar(
+              radius: 25,
+              backgroundColor: const Color(0xFFE3ECF0),
+              child: Icon(icon, size: 26, color: AppColors.primary),
+            ),
+            const SizedBox(height: 15),
+            Text(title,
+              key: const Key('deposit-confirm-heading'),
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontFamily: 'Inter', fontSize: 18,
+                fontWeight: FontWeight.w600, color: AppColors.dark,
+                decoration: TextDecoration.none)),
+            const SizedBox(height: 5),
+            Text(description,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontFamily: 'Inter', fontSize: 14,
+                fontWeight: FontWeight.w500, color: AppColors.placeholder,
+                decoration: TextDecoration.none)),
+            const SizedBox(height: 20),
+            Row(children: [
+              Expanded(child: Sign2DigitalOutlinedButton(
+                key: const Key('deposit-confirm-cancel'),
+                label: 'Cancel',
+                primaryOutline: true,
+                onPressed: () => Navigator.of(dialog).pop(false),
+              )),
+              const SizedBox(width: 15),
+              Expanded(child: Sign2DigitalPrimaryButton(
+                key: confirmKey,
+                label: confirmLabel,
+                onPressed: () => Navigator.of(dialog).pop(true),
+              )),
+            ]),
+          ],
+        ),
+      ),
+    );
+    return confirmed == true;
+  }
+
   Future<void> _delete() async {
     if (_busy || _record.status!=DepositStatus.pending) { return; }
-    final yes = await showDialog<bool>(
-      context: context, builder: (dialog) => AlertDialog(
-        title: const Text('Delete deposit?'),
-        content: Text('Delete ${_record.formattedAmount} for ${_record.title}?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialog).pop(false),
-            child: const Text('Cancel')),
-          TextButton(
-            key: const Key('deposit-confirm-delete'),
-            onPressed: () => Navigator.of(dialog).pop(true),
-            child: const Text('Delete')),
-        ],
-      ),
+    final yes = await _confirmAction(
+      title: 'Delete Deposit',
+      description: 'Delete ${_record.formattedAmount} for ${_record.title}? This action cannot be undone.',
+      confirmLabel: 'Delete',
+      icon: Icons.delete_outline,
+      confirmKey: const Key('deposit-confirm-delete'),
     );
     if (yes != true || !mounted) { return; }
     setState(() => _busy = true);
@@ -378,19 +440,12 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
 
   Future<void> _receive() async {
     if (_busy || _record.status != DepositStatus.pending) { return; }
-    final yes=await showDialog<bool>(
-      context:context,builder:(dialog)=>AlertDialog(
-        title:const Text('Confirm deposit received?'),
-        content:Text('Confirm that ${_record.formattedAmount} was actually '
-          'received outside Sign2Digital? No card or bank charge will be made.'),
-        actions:[
-          TextButton(onPressed:()=>Navigator.of(dialog).pop(false),
-            child:const Text('Cancel')),
-          TextButton(key:const Key('deposit-confirm-receive'),
-            onPressed:()=>Navigator.of(dialog).pop(true),
-            child:const Text('Mark Received')),
-        ],
-      ),
+    final yes = await _confirmAction(
+      title: 'Mark as Received',
+      description: 'Confirm that ${_record.formattedAmount} was received outside Sign2Digital. No card or bank charge will be made.',
+      confirmLabel: 'Mark Received',
+      icon: Icons.fact_check_outlined,
+      confirmKey: const Key('deposit-confirm-receive'),
     );
     if(yes!=true||!mounted)return;
     setState(()=>_busy=true);
@@ -411,21 +466,12 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
 
   Future<void> _refund() async {
     if (_busy || _record.status != DepositStatus.received) { return; }
-    final yes = await showDialog<bool>(
-      context: context, builder: (dialog) => AlertDialog(
-        title: const Text('Refund deposit?'),
-        content: Text('Record ${_record.formattedAmount} as already refunded? '
-          'This does not initiate a bank transfer.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialog).pop(false),
-            child: const Text('Cancel')),
-          TextButton(
-            key: const Key('deposit-confirm-refund'),
-            onPressed: () => Navigator.of(dialog).pop(true),
-            child: const Text('Refund')),
-        ],
-      ),
+    final yes = await _confirmAction(
+      title: 'Refund Deposit',
+      description: 'Record ${_record.formattedAmount} as already refunded? This does not initiate a bank transfer.',
+      confirmLabel: 'Refund',
+      icon: Icons.assignment_return_outlined,
+      confirmKey: const Key('deposit-confirm-refund'),
     );
     if (yes != true || !mounted) { return; }
     setState(() => _busy = true);
@@ -501,13 +547,11 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
           onPressed: _record.status==DepositStatus.pending ? _receive : _refund)),
       ]),
       const SizedBox(height: 15),
-      FractionallySizedBox(
-        widthFactor: .5,
-        child: Sign2DigitalPrimaryButton(
-          key: const Key('deposit-detail-edit'),
-          label: 'Edit',
-          enabled: !_busy && _record.status == DepositStatus.pending,
-          onPressed: _edit)),
+      Sign2DigitalPrimaryButton(
+        key: const Key('deposit-detail-edit'),
+        label: 'Edit',
+        enabled: !_busy && _record.status == DepositStatus.pending,
+        onPressed: _edit),
     ],
   );
 
@@ -545,8 +589,10 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
             if (_tab == 0) _details()
             else if (_tab == 1) _receipts()
             else _history(),
-            const SizedBox(height: 25),
-            _actions(),
+            if (_tab == 0) ...[
+              const SizedBox(height: 25),
+              _actions(),
+            ],
           ],
         ),
       ))),
