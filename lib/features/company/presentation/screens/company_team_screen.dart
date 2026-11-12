@@ -261,10 +261,14 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
       options: _isOwner ? ['member', 'admin'] : ['member'],
       selected: member.role, icon: Icons.manage_accounts_outlined,
     );
-    if (role == null || !mounted) return;
+    if (role == null || !mounted || role == member.role) return;
+    // A role change starts from its selected defaults, then lets the owner
+    // review/customize those grants before changing an existing account.
+    final grants = await _selectPermissions(defaultPermissions(role).toSet());
+    if (grants == null || !mounted) return;
     try {
       await _repo.updateMember(widget.companyId, member.id, role,
-        permissions: member.permissions);
+        permissions: grants);
       await _load();
       _message('Team member updated.');
     } catch (error) {
