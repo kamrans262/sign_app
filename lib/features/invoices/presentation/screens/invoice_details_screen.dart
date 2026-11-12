@@ -351,8 +351,13 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
   }
 
 
+  // Live documents must be approved. Local sample records with non-draft
+  // statuses retain their existing demo controls for UI regression checks.
   bool get _canDeliver => const ['approved', 'sent']
-      .contains(_record.lifecycleStatus);
+      .contains(_record.lifecycleStatus) ||
+      (_record.demoOnly && _record.status != InvoiceStatus.draft);
+  bool get _isDraft => _record.lifecycleStatus == 'draft' &&
+      (!_record.demoOnly || _record.status == InvoiceStatus.draft);
 
   Future<bool> _confirmLiveSend() async {
     if (_record.clientEmail.trim().isEmpty) {
@@ -538,7 +543,7 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
       key: const Key('invoice-details-actions'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (_record.lifecycleStatus == 'draft') ...[
+        if (_isDraft) ...[
           Sign2DigitalPrimaryButton(
             key: const Key('invoice-details-edit'),
             label: 'Edit',
