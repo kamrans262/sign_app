@@ -578,8 +578,12 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
               if (_tab == 0) _details()
               else if (_tab == 1) _photos()
               else _history(),
-              const SizedBox(height: 25),
-              _actions(),
+              // Details owns record-changing actions. Photos and History
+              // are read-only tabs and must not show Edit/Void/Approve.
+              if (_tab == 0) ...[
+                const SizedBox(height: 25),
+                _actions(),
+              ],
             ],
           ),
       ),
