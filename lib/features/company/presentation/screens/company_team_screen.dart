@@ -14,6 +14,10 @@ import '../../data/remote_company_repository.dart';
 /// M3 team management built with the approved Sign2Digital header, cards,
 /// shared Switch Company bottom sheet and existing primary color.
 class CompanyTeamScreen extends StatefulWidget {
+  /// Checked by the invite form and the regression suite; owners are implicit.
+  static List<String> defaultPermissions(String role) =>
+      _CompanyTeamScreenState.defaultPermissions(role);
+
   /// Presentation-only permission labels; server keys stay unchanged.
   static String permissionLabel(String key) {
     final parts = key.split('.');
