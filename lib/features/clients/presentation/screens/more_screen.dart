@@ -52,7 +52,7 @@ class MoreScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ValueListenableBuilder<CompanyAccess?>(
     valueListenable: ActiveCompanySession.access,
-    builder: (context, _, __) => Center(
+    builder: (context, currentAccess, child) => Center(
     child: ConstrainedBox(
       constraints: BoxConstraints(maxWidth:
             MediaQuery.orientationOf(context) == Orientation.landscape
