@@ -15,6 +15,7 @@ InvoiceRecord _invoice([InvoiceStatus status = InvoiceStatus.pending]) =>
       amount: 78.80,
       date: DateTime(2026, 8, 23),
       status: status,
+      lifecycleStatus: status == InvoiceStatus.draft ? 'draft' : 'approved',
     );
 
 class _ControlledRepository extends InvoiceRepository {
