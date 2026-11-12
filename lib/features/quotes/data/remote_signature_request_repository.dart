@@ -1,3 +1,4 @@
+import '../../../core/utils/sign2digital_server_timestamp.dart';
 import 'dart:convert';
 import '../../../core/services/active_company_session.dart';
 import '../../../core/services/sign_api_client.dart';
@@ -54,7 +55,7 @@ class RemoteSignatureRequestRepository {
     List<dynamic> rawEvents, {String? secureLink}
   ) {
     final requestId = (request['request_id'] ?? '').toString();
-    final expiresAt = DateTime.tryParse((request['expires_at'] ?? '').toString());
+    final expiresAt = Sign2DigitalServerTimestamp.tryParse(request['expires_at']);
     if (requestId.isEmpty || expiresAt == null) {
       throw const SignApiException('The signature request is incomplete.');
     }
@@ -65,7 +66,7 @@ class RemoteSignatureRequestRepository {
       final types = QuoteDocumentEventType.values.where(
         (type) => type.name == event['type'],
       );
-      final when = DateTime.tryParse((event['occurredAt'] ?? '').toString());
+      final when = Sign2DigitalServerTimestamp.tryParse(event['occurredAt']);
       if (types.isEmpty || when == null) continue;
       events.add(QuoteDocumentEvent(
         id: (event['id'] ?? '').toString(),
