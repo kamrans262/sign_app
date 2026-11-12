@@ -121,10 +121,10 @@ class RemoteExpenseRepository implements ExpenseRepository {
       tags: tags,
       clientName: '${row['client_name'] ?? ''}',
       approvedAt: row['approved_at'] == null
-          ? null : _timestamp(row['approved_at']),
+          ? null : Sign2DigitalServerTimestamp.tryParse(row['approved_at']),
       approvedBy: row['approved_by'] == null
           ? null : 'User #${row['approved_by']}',
-      updatedAt: Sign2DigitalServerTimestamp.tryParse(row['updated_at']),
+      updatedAt: _timestamp(row['updated_at']),
       history: history,
       reimbursementRequested: row['reimbursement_requested_at'] != null,
       canApprove: canApprove,
