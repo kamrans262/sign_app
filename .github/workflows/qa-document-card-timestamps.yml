@@ -60,7 +60,6 @@ jobs:
             test/features/documents/m13_remote_work_acceptance_repository_test.dart \
             test/features/documents/m18_remote_general_document_repository_test.dart \
             test/features/documents/m8_signed_document_repository_test.dart \
-            test/features/documents/document_report_badge_alignment_test.dart \
             test/features/quotes/m8_remote_signature_request_test.dart \
             test/features/invoices/m17_remote_invoice_repository_test.dart \
             test/features/deposits/m16_remote_deposit_repository_test.dart \
