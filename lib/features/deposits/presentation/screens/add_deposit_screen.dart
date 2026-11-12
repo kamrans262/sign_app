@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/sign2digital_ai_voice_button.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
@@ -73,6 +74,10 @@ class _AddDepositScreenState extends State<AddDepositScreen> {
     super.initState();
     final original = widget.initialDeposit;
     _job = widget.initialJob;
+    if (_job != null && original == null) {
+      // The persisted job is the source of truth for deposit ownership.
+      _client.text = _job!.clientName;
+    }
     if (original != null) {
       for (final job in widget.jobs) {
         if (job.id == original.jobId || job.title == original.title) {
@@ -159,9 +164,8 @@ class _AddDepositScreenState extends State<AddDepositScreen> {
       if (chosen != null && mounted) {
         setState(() {
           _job = chosen;
-          if (_client.text.trim().isEmpty) {
-            _client.text = chosen.clientName;
-          }
+          // Deposits must always use the original linked job's client.
+          _client.text = chosen.clientName;
           _voiceJobHint = null;
           _error = null;
         });
@@ -354,6 +358,9 @@ class _AddDepositScreenState extends State<AddDepositScreen> {
             RegExp(r'^CHF\s*', caseSensitive: false), ''
           ).replaceAll(',', '.'))
         : null;
+    // Voice extraction and stale manual text must never reassign a deposit
+    // to another customer. Server independently checks the job's client.
+    if (_job != null) _client.text = _job!.clientName;
     if (_job == null || _client.text.trim().isEmpty ||
         _date == null || _method.text.trim().isEmpty ||
         amount == null || !amount.isFinite ||
@@ -396,7 +403,9 @@ class _AddDepositScreenState extends State<AddDepositScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return Theme(
+      data: AppTheme.light,
+      child: Scaffold(
       backgroundColor: AppColors.white,
       resizeToAvoidBottomInset: true,
       body: SafeArea(
@@ -434,6 +443,7 @@ class _AddDepositScreenState extends State<AddDepositScreen> {
                       hintText: 'e.g, Marc dupont',
                       iconAsset: 'assets/icons/user.svg',
                       controller: _client,
+                      readOnly: true,
                       textCapitalization: TextCapitalization.words,
                     ),
                     const SizedBox(height: 20),
@@ -512,7 +522,9 @@ class _AddDepositScreenState extends State<AddDepositScreen> {
                       Expanded(
                         child: Sign2DigitalPrimaryButton(
                           key: const Key('deposit-form-save'),
-                          label: widget.initialDeposit == null ? 'Save Deposit' : 'Save Changes',
+                          label: widget.initialDeposit == null ||
+                              widget.initialDeposit!.id.startsWith('local-deposit-')
+                                ? 'Save Deposit' : 'Save Changes',
                           loading: _saving,
                           onPressed: _save,
                         ),
@@ -529,6 +541,6 @@ class _AddDepositScreenState extends State<AddDepositScreen> {
         selectedIndex: widget.selectedNavigationIndex,
         onSelected: _navigate,
       ),
-    );
+    ));
   }
 }
