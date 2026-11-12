@@ -62,6 +62,8 @@ class _WorkAcceptanceScreenState extends State<WorkAcceptanceScreen> {
 
   bool get _hasVerifiedSignature =>
       !_report.demoOnly &&
+      const ['accepted', 'accepted_with_reservations']
+          .contains(_report.status.toLowerCase()) &&
       (_evidence?.verifiedSignaturePng?.isNotEmpty ?? false);
 
   WorkAcceptanceEvent? _event(WorkAcceptanceStage stage) {
