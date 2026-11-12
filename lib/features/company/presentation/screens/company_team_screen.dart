@@ -407,9 +407,6 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
           key: const Key('company-team-scroll'),
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 25),
           children: [
-            Text(widget.companyName, style: const TextStyle(fontFamily: 'Inter',
-              fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.dark)),
-            const SizedBox(height: 20),
             if (_isOwner) ...[
               Sign2DigitalQuoteShadowPanel(
                 padding: const EdgeInsets.all(20),
