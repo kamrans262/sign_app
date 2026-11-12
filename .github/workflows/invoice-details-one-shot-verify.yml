@@ -1,9 +1,12 @@
 name: Invoice Details one-shot verification
 on:
   push:
-    branches: [ui-development]
+    branches: [ui-development, fix/m20-android-live-reminder-integration-2026-11-06]
     paths:
       - '.github/workflows/invoice-details-one-shot-verify.yml'
+      - 'lib/features/invoices/presentation/screens/invoice_details_screen.dart'
+      - 'test/features/invoices/invoice_details_screen_test.dart'
+      - 'test/features/invoices/mark_invoice_paid_dialog_test.dart'
   workflow_dispatch:
 permissions:
   contents: read
