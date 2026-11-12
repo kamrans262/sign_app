@@ -8,6 +8,9 @@ import 'package:sign2digital/core/widgets/sign2digital_primary_button.dart';
 import 'package:sign2digital/core/widgets/sign2digital_selection_sheet.dart';
 import 'package:sign2digital/core/widgets/sign2digital_styled_bottom_sheet.dart';
 import 'package:sign2digital/features/quotes/presentation/widgets/sign2digital_signature_consent.dart';
+import 'package:sign2digital/features/quotes/presentation/widgets/sign2digital_temporary_ai_key_dialog.dart';
+import 'package:sign2digital/features/jobs/domain/job_photo_model.dart';
+import 'package:sign2digital/features/jobs/presentation/widgets/job_photo_gallery_dialog.dart';
 
 double _contrast(Color first, Color second) {
   final a = first.computeLuminance();
@@ -185,6 +188,51 @@ void main() {
       await tester.tap(find.text('Choose option'));
       await tester.pumpAndSettle();
       expect(result, 7);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('temporary quote AI key input is readable on white modal in $mode',
+        (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        theme: appTheme,
+        home: Scaffold(body: Builder(builder: (context) => TextButton(
+          onPressed: () => Sign2DigitalTemporaryAiKeyDialog.request(context),
+          child: const Text('Open quote AI key'),
+        ))),
+      ));
+      await tester.tap(find.text('Open quote AI key'));
+      await tester.pumpAndSettle();
+      final input = find.byKey(const Key('quote-openai-api-key'));
+      expect(input, findsOneWidget);
+      expect(Theme.of(tester.element(input)).brightness, Brightness.light);
+      _expectReadableWhiteSurface(tester.element(find.text('Connect Quote AI')));
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('job photo gallery close control stays visible on white in $mode',
+        (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        theme: appTheme,
+        home: Scaffold(body: Builder(builder: (context) => TextButton(
+          onPressed: () => showDialog<void>(
+            context: context,
+            builder: (_) => JobPhotoGalleryDialog(
+              photos: JobPhotoModel.demoFor('job-photo-ios'),
+              initialPhotoId: 'demo-job-photo-ios-0',
+            ),
+          ),
+          child: const Text('Open job gallery'),
+        ))),
+      ));
+      await tester.tap(find.text('Open job gallery'));
+      await tester.pumpAndSettle();
+      final close = find.byKey(const Key('job-photo-close-preview'));
+      expect(close, findsOneWidget);
+      expect(Theme.of(tester.element(close)).brightness, Brightness.light);
+      await tester.tap(close);
+      await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
     });
 
