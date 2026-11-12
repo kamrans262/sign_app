@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'sign2digital_approved_confirmation.dart';
 
 import '../navigation/sign2digital_navigation.dart';
 import '../services/sign_api_client.dart';
@@ -15,7 +16,7 @@ abstract final class Sign2DigitalSubscriptionGate {
     }
     final viewPlans = await showDialog<bool>(
       context: context,
-      builder: (dialog) => AlertDialog(
+      builder: (dialog) => Sign2DigitalApprovedConfirmation(
         title: const Text('Subscription Required',
             style: TextStyle(color: AppColors.dark)),
         content: const Text(
