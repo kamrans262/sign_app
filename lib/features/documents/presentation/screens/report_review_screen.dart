@@ -1,6 +1,7 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import '../../../../core/widgets/sign2digital_subscription_gate.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
@@ -74,7 +75,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
   Future<bool> _confirm(String title, String message) async {
     return await showDialog<bool>(
       context: context,
-      builder: (dialog) => AlertDialog(
+      builder: (dialog) => Sign2DigitalApprovedConfirmation(
         title: Text(title),
         content: Text(message),
         actions: [
