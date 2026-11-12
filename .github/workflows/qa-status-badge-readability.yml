@@ -1,0 +1,38 @@
+name: Sign2Digital status badge readability
+on:
+  push:
+    branches: [fix/m20-android-live-reminder-integration-2026-11-06]
+    paths:
+      - '.github/workflows/qa-status-badge-readability.yml'
+      - 'lib/features/clients/presentation/widgets/sign2digital_status_badge.dart'
+      - 'lib/features/jobs/presentation/widgets/sign2digital_job_status_badge.dart'
+      - 'lib/features/jobs/presentation/widgets/sign2digital_job_card.dart'
+      - 'test/core/widgets/sign2digital_status_badge_readability_test.dart'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  badge-ui:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Analyze badge components and widget tests
+        run: |
+          flutter analyze --no-pub --no-fatal-infos --no-fatal-warnings \
+            lib/features/clients/presentation/widgets/sign2digital_status_badge.dart \
+            lib/features/jobs/presentation/widgets/sign2digital_job_status_badge.dart \
+            lib/features/jobs/presentation/widgets/sign2digital_job_card.dart \
+            test/core/widgets/sign2digital_status_badge_readability_test.dart
+      - name: Badge font and responsive regression tests
+        run: |
+          flutter test --no-pub --reporter expanded --timeout 60s \
+            test/core/widgets/sign2digital_status_badge_readability_test.dart \
+            test/features/jobs/jobs_screen_test.dart \
+            test/features/deposits/deposits_screen_test.dart \
+            test/features/documents/reports_screen_test.dart
