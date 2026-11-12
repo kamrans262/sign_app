@@ -34,6 +34,15 @@ class RemoteInvoiceRepository extends InvoiceRepository {
   }
   static Map<String,dynamic> _data(Map<String,dynamic> raw)=>_map(raw['data']);
   static int _int(Object? raw)=>raw is int?raw:int.tryParse('$raw')??0;
+  // A persisted Laravel datetime is a UTC instant, not a calendar date.
+  static DateTime _timestamp(Object? raw) {
+    final value = Sign2DigitalServerTimestamp.tryParse(raw);
+    if (value == null) {
+      throw const SignApiException('Invalid server timestamp.');
+    }
+    return value;
+  }
+
   static DateTime _date(Object? raw){
     final d=DateTime.tryParse('$raw');
     if(d==null)throw const SignApiException('Invalid invoice date.');
@@ -94,7 +103,7 @@ class RemoteInvoiceRepository extends InvoiceRepository {
         if(row['source_addenda_ids'] is List)
           for(final raw in row['source_addenda_ids'] as List)_int(raw),
       ],
-      sentAt:Sign2DigitalServerTimestamp.tryParse(row['sent_at']),
+      sentAt:_timestamp(row['sent_at']),
       items:items,payments:payments,history:history,photos:photos,
       payment:QuotePaymentDetails(iban:(row['iban']??'').toString()),
     );
@@ -280,8 +289,7 @@ class RemoteInvoiceRepository extends InvoiceRepository {
         InvoicePaymentRecord(
           id:_map(raw)['id'].toString(),
           amountMinor:_int(_map(raw)['amount_minor']),
-          paidAt:Sign2DigitalServerTimestamp.tryParse(_map(raw)['paid_at']) ??
-            throw const SignApiException('Invalid invoice payment timestamp'),
+          paidAt:Sign2DigitalServerTimestamp.tryParse(_map(raw)['paid_at']),
           method:(_map(raw)['method']??'').toString(),
           referenceNumber:_map(raw)['reference_number']?.toString(),
           status:(_map(raw)['status']??'').toString(),
@@ -292,8 +300,7 @@ class RemoteInvoiceRepository extends InvoiceRepository {
         InvoiceHistoryEvent(
           id:_map(raw)['id'].toString(),
           title:(_map(raw)['type']??'').toString().replaceAll('_',' '),
-          occurredAt:Sign2DigitalServerTimestamp.tryParse(_map(raw)['created_at']) ??
-            throw const SignApiException('Invalid invoice history timestamp'),
+          occurredAt:_timestamp(_map(raw)['created_at']),
           description:_map(raw)['actor_user_id']==null?null:
             'User #${_map(raw)['actor_user_id']}',
         ),
