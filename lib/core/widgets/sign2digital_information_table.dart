@@ -11,10 +11,12 @@ class Sign2DigitalInformationTable extends StatelessWidget {
     super.key,
     required this.rows,
     this.heading,
+    this.rightAlignValues = false,
   });
 
   final String? heading;
   final List<Sign2DigitalInformationRow> rows;
+  final bool rightAlignValues;
 
   static const _label = TextStyle(
     fontFamily: 'Inter', fontSize: 14, fontWeight: FontWeight.w500,
@@ -36,10 +38,12 @@ class Sign2DigitalInformationTable extends StatelessWidget {
         const SizedBox(width: 10),
         Expanded(child: Row(children: [
           Expanded(child: Align(
-            alignment: Alignment.centerLeft,
+            alignment: rightAlignValues ? Alignment.centerRight : Alignment.centerLeft,
             child: entry.isStatus
                 ? Sign2DigitalStatusBadge(status: entry.value)
-                : Text(entry.value, softWrap: true, style: _value),
+                : Text(entry.value, softWrap: true,
+                    textAlign: rightAlignValues ? TextAlign.right : TextAlign.left,
+                    style: _value),
           )),
           if (entry.onCopy != null)
             IconButton(
