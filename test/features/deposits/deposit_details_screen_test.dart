@@ -129,6 +129,7 @@ void main() {
     expect(find.byKey(const Key('deposit-receipts-empty')), findsOneWidget);
     expect(find.byKey(const Key('deposit-detail-actions')), findsNothing);
     expect(find.byKey(const Key('deposit-receipts-edit')), findsOneWidget);
+    expect(find.text('Add or remove receipt'), findsOneWidget);
     await tester.tap(find.byKey(const Key('details-tab-2')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('deposit-history-empty')), findsOneWidget);
@@ -158,7 +159,10 @@ void main() {
     await tester.pumpAndSettle();
     final photoEdit = find.byKey(const Key('deposit-receipts-edit'));
     expect(find.byType(Sign2DigitalPrimaryButton), findsOneWidget);
-    expect(tester.getSize(photoEdit).width, closeTo(680, 1));
+    expect(tester.getSize(photoEdit).width, closeTo(660, 1));
+    expect(find.text('Add or remove receipt'), findsOneWidget);
+    expect(tester.getTopLeft(photoEdit).dy,
+      greaterThan(tester.getBottomLeft(find.byKey(const Key('deposit-receipt-0'))).dy));
     expect(tester.getTopLeft(photoEdit).dy,
       lessThan(tester.getTopLeft(find.byKey(const Key('deposit-receipt-share-0'))).dy));
     expect(find.byKey(const Key('deposit-detail-actions')), findsNothing);
@@ -211,6 +215,14 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(Sign2DigitalModalSurface), findsOneWidget);
     expect(find.byType(AlertDialog), findsNothing);
+    final confirmLabel = find.descendant(
+      of: find.byKey(const Key('deposit-confirm-receive')),
+      matching: find.text('Mark Received'));
+    final confirmText = tester.widget<Text>(confirmLabel);
+    expect(confirmText.maxLines, 1);
+    expect(confirmText.softWrap, false);
+    expect(find.ancestor(of: confirmLabel,
+      matching: find.byType(FittedBox)), findsOneWidget);
     await tester.tap(find.byKey(const Key('deposit-confirm-cancel')));
     await tester.pumpAndSettle();
     expect(repo.receives,0);
