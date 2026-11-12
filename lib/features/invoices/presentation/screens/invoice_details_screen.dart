@@ -606,13 +606,18 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
             else if (_tab == 1) _items()
             else if (_tab == 2) _payments()
             else _history(),
-            if (_tab < 2) ...[
-              const SizedBox(height: 25),
-              _actions(),
-            ],
           ],
         ),
       ))),
+      if (_tab < 2)
+        Center(child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 720),
+          child: Padding(
+            key: const Key('invoice-details-sticky-actions'),
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+            child: _actions(),
+          ),
+        )),
     ])),
   );
 }
