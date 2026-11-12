@@ -54,6 +54,9 @@ void main() {
       (tester) async {
     var requests = 0;
     final repo = _repository((request) async {
+      if (request.url.path == '/api/v1/companies/invitations/mine') {
+        return http.Response('{"data":{"invitations":[]}}', 200);
+      }
       requests++;
       expect(request.url.path, '/api/v1/companies');
       expect(request.method, 'GET');
@@ -88,6 +91,9 @@ void main() {
     var lists = 0;
     var creates = 0;
     final repo = _repository((request) async {
+      if (request.url.path == '/api/v1/companies/invitations/mine') {
+        return http.Response('{"data":{"invitations":[]}}', 200);
+      }
       if (request.url.path == '/api/v1/companies' &&
           request.method == 'GET') {
         lists++;
@@ -179,6 +185,9 @@ void main() {
       (tester) async {
     var attempts = 0;
     final repo = _repository((request) async {
+      if (request.url.path == '/api/v1/companies/invitations/mine') {
+        return http.Response('{"data":{"invitations":[]}}', 200);
+      }
       attempts++;
       if (attempts == 1) {
         return http.Response('{"message":"Offline"}', 503);
@@ -198,6 +207,63 @@ void main() {
     expect(attempts, 2);
     expect(find.byType(CreateCompanyScreen), findsOneWidget);
     expect(find.byType(ClientsScreen), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('invited verified member joins existing company without creating one',
+      (tester) async {
+    final code = List.filled(64, 'x').join();
+    var accepted = false;
+    final repo = _repository((request) async {
+      if (request.url.path == '/api/v1/companies' &&
+          request.method == 'GET') {
+        return http.Response(jsonEncode({'data': {
+          'companies': accepted ? [
+            {..._company(45), 'role': 'member',
+              'permissions': ['clients.read', 'clients.write', 'jobs.read',
+                'jobs.write', 'invoices.read']}
+          ] : [],
+          'active_company_id': accepted ? 45 : null,
+        }}), 200);
+      }
+      if (request.url.path == '/api/v1/companies/invitations/mine') {
+        return http.Response(jsonEncode({'data': {'invitations': [
+          {'id': 7, 'company_name': 'Alpine Construction AG',
+            'role': 'member', 'expires_at': '2026-11-20T00:00:00Z'}
+        ]}}), 200);
+      }
+      if (request.url.path == '/api/v1/companies/invitations/accept') {
+        expect((jsonDecode(request.body) as Map)['code'], code);
+        accepted = true;
+        return http.Response(jsonEncode({'data': {
+          'active_company_id': 45,
+          'company': {..._company(45), 'role': 'member',
+            'permissions': ['clients.read', 'clients.write', 'jobs.read',
+              'jobs.write', 'invoices.read']},
+        }}), 200);
+      }
+      return http.Response('{"message":"Unexpected request"}', 404);
+    });
+
+    await _openGate(tester, repo);
+    expect(find.byType(CreateCompanyScreen), findsNothing);
+    expect(find.byKey(const Key('join-invited-company')), findsOneWidget);
+    expect(find.text('Alpine Construction AG'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('join-invited-company')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
+    await tester.enterText(find.byKey(const Key('company-invitation-code')), code);
+    await tester.tap(find.byKey(const Key('accept-company-invitation')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(accepted, isTrue);
+    expect(ActiveCompanySession.companyId, 45);
+    expect(ActiveCompanySession.canWrite('jobs'), isTrue);
+    expect(ActiveCompanySession.canRead('invoices'), isTrue);
+    expect(ActiveCompanySession.canWrite('invoices'), isFalse);
+    expect(find.byType(ClientsScreen), findsOneWidget);
+    expect(find.byType(CreateCompanyScreen), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
