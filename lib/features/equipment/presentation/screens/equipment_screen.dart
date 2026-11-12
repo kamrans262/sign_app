@@ -296,6 +296,7 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
                   ),
               ],
             ),
+            if (ActiveCompanySession.canWrite('equipment'))
             Positioned(right: 20, bottom: 20,
               child: SizedBox(width: 50, height: 50,
                 child: FloatingActionButton(
