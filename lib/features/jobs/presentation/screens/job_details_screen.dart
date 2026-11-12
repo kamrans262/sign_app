@@ -424,7 +424,8 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
             Sign2DigitalHeader(
               title: job.title,
               onBack: () => Navigator.of(context).maybePop(),
-              trailing: onManageJob == null ? null : SizedBox(
+              trailing: onManageJob == null || !ActiveCompanySession.canWrite('jobs')
+                  ? null : SizedBox(
                 width: 40, height: 40,
                 child: Material(
                   color: AppColors.white,
