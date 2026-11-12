@@ -1,5 +1,6 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -215,7 +216,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
     if (_busy || !_canEdit || index >= _attachments.length) return;
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (dialog) => AlertDialog(
+      builder: (dialog) => Sign2DigitalApprovedConfirmation(
         title: const Text('Remove receipt?'),
         content: Text('Remove ${_fileName(_attachments[index])} from this expense?'),
         actions: [
