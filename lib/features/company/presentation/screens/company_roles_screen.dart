@@ -17,6 +17,107 @@ class _RoleDraft {
   final List<String> permissions;
 }
 
+class _CompanyRoleEditorForm extends StatefulWidget {
+  const _CompanyRoleEditorForm({required this.role, required this.onSubmit});
+  final CompanyRole? role;
+  final ValueChanged<_RoleDraft> onSubmit;
+
+  @override
+  State<_CompanyRoleEditorForm> createState() => _CompanyRoleEditorFormState();
+}
+
+class _CompanyRoleEditorFormState extends State<_CompanyRoleEditorForm> {
+  late final TextEditingController _name;
+  late final Set<String> _selected;
+
+  static const _keys = [
+    'clients.read', 'clients.write', 'jobs.read', 'jobs.write',
+    'documents.read', 'documents.write',
+    'quotes.read', 'quotes.write', 'invoices.read', 'invoices.write',
+    'reports.read', 'reports.write', 'expenses.read', 'expenses.write',
+    'labour.read', 'labour.write', 'equipment.read', 'equipment.write',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _name = TextEditingController(text: widget.role?.name ?? '');
+    _selected = Set<String>.from(widget.role?.permissions ?? const <String>[]);
+  }
+
+  @override
+  void dispose() {
+    // The sheet owns this controller until its reverse animation is complete.
+    _name.dispose();
+    super.dispose();
+  }
+
+  void _save() {
+    final value = _name.text.trim();
+    if (value.length < 2 || value.length > 60) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Enter a role name of 2–60 characters.')));
+      return;
+    }
+    FocusManager.instance.primaryFocus?.unfocus();
+    widget.onSubmit(_RoleDraft(value, _selected.toList()..sort()));
+  }
+
+  @override
+  Widget build(BuildContext context) => Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+        child: Sign2DigitalInputField(
+          key: const Key('custom-role-name'),
+          label: 'Role Name',
+          hintText: 'e.g. Project Supervisor',
+          controller: _name,
+          iconAsset: '',
+          leadingIcon: Icons.badge_outlined,
+          leadingIconSize: 24,
+        ),
+      ),
+      Flexible(child: ListView(
+        key: const Key('custom-role-permission-list'),
+        children: [
+          for (final key in _keys)
+            CheckboxListTile(
+              key: Key('custom-role-permission-$key'),
+              title: Text(CompanyTeamScreen.permissionLabel(key),
+                style: const TextStyle(fontFamily: 'Inter',
+                  fontSize: 14, color: AppColors.dark)),
+              activeColor: AppColors.primary,
+              value: _selected.contains(key),
+              onChanged: (checked) => setState(() {
+                if (checked == true) {
+                  _selected.add(key);
+                  if (key.endsWith('.write')) {
+                    _selected.add(key.replaceFirst('.write', '.read'));
+                  }
+                } else {
+                  _selected.remove(key);
+                  if (key.endsWith('.read')) {
+                    _selected.remove(key.replaceFirst('.read', '.write'));
+                  }
+                }
+              }),
+            ),
+        ],
+      )),
+      Padding(
+        padding: const EdgeInsets.all(16),
+        child: Sign2DigitalPrimaryButton(
+          key: const Key('custom-role-save'),
+          label: widget.role == null ? 'Create Role' : 'Save Role',
+          onPressed: _save,
+        ),
+      ),
+    ],
+  );
+}
+
 /// Company owner role definitions. Reuses the approved team cards and sheets;
 /// backend authorization still determines who may make any change.
 class CompanyRolesScreen extends StatefulWidget {
@@ -59,86 +160,17 @@ class _CompanyRolesScreenState extends State<CompanyRolesScreen> {
     }
   }
 
-  Future<_RoleDraft?> _editor(CompanyRole? role) async {
-    final name = TextEditingController(text: role?.name ?? '');
-    final selected = Set<String>.from(role?.permissions ?? const <String>[]);
-    try {
-      return await Sign2DigitalSelectionSheet.showCustom<_RoleDraft>(
+  Future<_RoleDraft?> _editor(CompanyRole? role) =>
+      Sign2DigitalSelectionSheet.showCustom<_RoleDraft>(
         context: context,
         title: role == null ? 'Create Role' : 'Edit Role',
         icon: Icons.shield_outlined,
         subtitle: 'Assign View or Manage access to each module',
-        builder: (sheet) => StatefulBuilder(builder: (context, update) =>
-          Column(children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
-              child: Sign2DigitalInputField(
-                key: const Key('custom-role-name'),
-                label: 'Role Name',
-                hintText: 'e.g. Project Supervisor',
-                controller: name,
-                iconAsset: '',
-                leadingIcon: Icons.badge_outlined,
-                leadingIconSize: 24,
-              ),
-            ),
-            Expanded(child: ListView(
-              key: const Key('custom-role-permission-list'),
-              children: [
-                for (final key in const [
-                  'clients.read', 'clients.write', 'jobs.read', 'jobs.write',
-                  'documents.read', 'documents.write',
-                  'quotes.read', 'quotes.write', 'invoices.read', 'invoices.write',
-                  'reports.read', 'reports.write', 'expenses.read', 'expenses.write',
-                  'labour.read', 'labour.write', 'equipment.read', 'equipment.write',
-                ])
-                  CheckboxListTile(
-                    key: Key('custom-role-permission-$key'),
-                    title: Text(CompanyTeamScreen.permissionLabel(key),
-                      style: const TextStyle(fontFamily: 'Inter',
-                        fontSize: 14, color: AppColors.dark)),
-                    activeColor: AppColors.primary,
-                    value: selected.contains(key),
-                    onChanged: (checked) => update(() {
-                      if (checked == true) {
-                        selected.add(key);
-                        if (key.endsWith('.write')) {
-                          selected.add(key.replaceFirst('.write', '.read'));
-                        }
-                      } else {
-                        selected.remove(key);
-                        if (key.endsWith('.read')) {
-                          selected.remove(key.replaceFirst('.read', '.write'));
-                        }
-                      }
-                    }),
-                  ),
-              ],
-            )),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Sign2DigitalPrimaryButton(
-                key: const Key('custom-role-save'),
-                label: role == null ? 'Create Role' : 'Save Role',
-                onPressed: () {
-                  final value = name.text.trim();
-                  if (value.length < 2 || value.length > 60) {
-                    ScaffoldMessenger.of(sheet).showSnackBar(const SnackBar(
-                      content: Text('Enter a role name of 2–60 characters.')));
-                    return;
-                  }
-                  Navigator.of(sheet).pop(_RoleDraft(value,
-                    selected.toList()..sort()));
-                },
-              ),
-            ),
-          ]),
+        builder: (sheet) => _CompanyRoleEditorForm(
+          role: role,
+          onSubmit: (draft) => Navigator.of(sheet).pop(draft),
         ),
       );
-    } finally {
-      name.dispose();
-    }
-  }
 
   Future<void> _save(CompanyRole? existing) async {
     if (_saving) return;
