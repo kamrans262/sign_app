@@ -5,6 +5,7 @@ on:
     paths:
       - '.github/workflows/generate-native-splash-resources.yml'
       - 'pubspec.yaml'
+      - 'tool/normalize_android_native_splash.dart'
       - 'android/app/src/main/res/values/styles.xml'
       - 'android/app/src/main/res/values-night/styles.xml'
       - 'android/app/src/main/res/drawable-v21/launch_background.xml'
@@ -33,6 +34,8 @@ jobs:
       - run: flutter pub get
       - name: Generate native splash from the same logo on every Android version
         run: dart run flutter_native_splash:create
+      - name: Force white Android 12+ light/dark transition
+        run: dart run tool/normalize_android_native_splash.dart
       - name: Check generated light and dark Android 12 splash assets
         run: |
           test -f android/app/src/main/res/values-v31/styles.xml
