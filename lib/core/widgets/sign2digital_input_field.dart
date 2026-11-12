@@ -19,6 +19,7 @@ class Sign2DigitalInputField extends StatelessWidget {
     this.keyboardType,
     this.textCapitalization = TextCapitalization.none,
     this.obscureText = false,
+    this.readOnly = false,
     this.validator,
     this.textInputAction,
     this.trailing,
@@ -44,6 +45,7 @@ class Sign2DigitalInputField extends StatelessWidget {
   final TextInputType? keyboardType;
   final TextCapitalization textCapitalization;
   final bool obscureText;
+  final bool readOnly;
   final String? Function(String?)? validator;
   final TextInputAction? textInputAction;
   final Widget? trailing;
@@ -114,6 +116,7 @@ class Sign2DigitalInputField extends StatelessWidget {
                         keyboardType: keyboardType,
                         textCapitalization: textCapitalization,
                         obscureText: obscureText,
+                        readOnly: readOnly,
                         validator: validator,
                         textInputAction: textInputAction,
                         onFieldSubmitted: onFieldSubmitted,
