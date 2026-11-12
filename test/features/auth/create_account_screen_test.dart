@@ -1,5 +1,5 @@
 // Sign2Digital Create Account regression tests.
-import 'package:flutter/foundation.dart' show debugDefaultTargetPlatformOverride, kIsWeb, TargetPlatform;
+import 'package:flutter/foundation.dart' show debugDefaultTargetPlatformOverride, defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -46,7 +46,9 @@ void main() {
     expect(find.text('Create Your Account'), findsOneWidget);
     expect(find.byType(Sign2DigitalInputField), findsNWidgets(5));
     expect(find.text('Continue with Google'), findsOneWidget);
-    expect(find.text('Continue with Apple'), findsOneWidget);
+    expect(find.text('Continue with Apple'),
+        kIsWeb || defaultTargetPlatform != TargetPlatform.android
+            ? findsOneWidget : findsNothing);
     await scrollToVisibleAction(
       tester,
       scrollKey: const Key('create-account-scroll'),
