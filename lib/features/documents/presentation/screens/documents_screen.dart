@@ -1,4 +1,5 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
+import '../../../../core/services/active_company_session.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import 'package:file_picker/file_picker.dart';
@@ -379,7 +380,8 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                       onTrailingTap: _openDocumentFilters,
                     ),
                     if (widget.repository == null &&
-                        MobileAuthRepository.shared.isSignedIn) ...[
+                        MobileAuthRepository.shared.isSignedIn &&
+                        ActiveCompanySession.canWrite('documents')) ...[
                       const SizedBox(height: 15),
                       Sign2DigitalPrimaryButton(
                         key: const Key('documents-upload-pdf'),
