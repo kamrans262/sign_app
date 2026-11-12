@@ -573,8 +573,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                     onOpenJob: _openJobDetails,
                     companyId: _selectedCompanyId,
                     showNotReady: _showNotReady,
-                    onTabSelected: (index) =>
-                        setState(() => _selectedIndex = index),
+                    onTabSelected: _selectDashboardTab,
                   ),
                   DocumentsScreen(
                     repository: widget.documentRepository,
@@ -583,9 +582,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                   ),
                   MoreScreen(
                     invoiceRepository: widget.invoiceRepository,
-                    onTabSelected: (index) {
-                      if (mounted) setState(() => _selectedIndex = index);
-                    },
+                    onTabSelected: _selectDashboardTab,
                     onNotReady: _showNotReady,
                   ),
                 ],
