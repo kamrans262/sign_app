@@ -452,6 +452,7 @@ class _TimeLabourScreenState extends State<TimeLabourScreen> {
                         const SizedBox(height: 15),
                         M15LabourSummary(
                           jobId: _jobId!,
+                          repository: _repository as RemoteLabourRepository,
                           refreshKey: _all.length,
                         ),
                       ],
