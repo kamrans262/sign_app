@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:sign2digital/core/theme/app_colors.dart';
+import 'package:sign2digital/core/theme/app_theme.dart';
 import 'package:sign2digital/core/widgets/sign2digital_selection_sheet.dart';
 
 void main() {
@@ -71,6 +72,42 @@ void main() {
     await tester.tap(find.byKey(const Key('selection-sheet-close')));
     await tester.pumpAndSettle();
     expect(chosen, 'English');
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('custom white selection sheets never inherit iOS dark text',
+      (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      theme: AppTheme.dark,
+      home: Scaffold(body: Builder(builder: (context) => TextButton(
+        onPressed: () => Sign2DigitalSelectionSheet.showCustom<void>(
+          context: context,
+          title: 'Select document',
+          icon: Icons.description_outlined,
+          builder: (sheet) => Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              const Text('Original signed quotation'),
+              TextButton(
+                onPressed: () => Navigator.of(sheet).pop(),
+                child: const Text('Done'),
+              ),
+            ]),
+          ),
+        ),
+        child: const Text('Open picker'),
+      ))),
+    ));
+    await tester.tap(find.text('Open picker'));
+    await tester.pumpAndSettle();
+    final label = find.text('Original signed quotation');
+    final context = tester.element(label);
+    expect(Theme.of(context).brightness, Brightness.light);
+    final foreground = DefaultTextStyle.of(context).style.color;
+    expect(foreground, isNotNull);
+    expect(foreground!.computeLuminance(), lessThan(.25));
+    await tester.tap(find.text('Done'));
+    await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
   });
 
