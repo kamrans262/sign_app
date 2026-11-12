@@ -1,5 +1,6 @@
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -320,7 +321,7 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
     if (!mounted) return;
     final approved = await showDialog<bool>(
       context: context,
-      builder: (dialog) => AlertDialog(
+      builder: (dialog) => Sign2DigitalApprovedConfirmation(
         title: const Text('Use extracted equipment details?'),
         content: const Text('Only empty text fields and missing selections '
           'will be filled. Review and correct every field before saving.'),
