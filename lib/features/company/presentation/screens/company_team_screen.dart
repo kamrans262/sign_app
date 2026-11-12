@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/services/sign_api_client.dart';
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
@@ -10,6 +11,7 @@ import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../../../core/widgets/sign2digital_outlined_button.dart';
 import '../../../quotes/presentation/widgets/sign2digital_quote_shadow_panel.dart';
 import '../../data/remote_company_repository.dart';
+import 'company_roles_screen.dart';
 
 /// M3 team management built with the approved Sign2Digital header, cards,
 /// shared Switch Company bottom sheet and existing primary color.
@@ -65,6 +67,7 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
   final TextEditingController _email = TextEditingController();
   List<CompanyMember> _members = [];
   List<CompanyInvite> _invitations = [];
+  List<CompanyRole> _roles = [];
   bool _loading = true;
   bool _saving = false;
   String _role = 'member';
@@ -87,6 +90,27 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
   ];
 
   bool get _isOwner => widget.role == 'owner';
+  int? _customRoleId(String key) => key.startsWith('custom:')
+      ? int.tryParse(key.substring(7)) : null;
+
+  CompanyRole? _findRole(int id) {
+    for (final role in _roles) {
+      if (role.id == id) return role;
+    }
+    return null;
+  }
+
+  String _roleLabel(String value) {
+    final id = _customRoleId(value);
+    if (id != null) return _findRole(id)?.name ?? 'Custom Role';
+    return value == 'admin' ? 'Admin' : 'Member';
+  }
+
+  List<String> get _roleOptions => [
+    'member',
+    if (_isOwner) 'admin',
+    if (_isOwner) for (final role in _roles) 'custom:${role.id}',
+  ];
   bool get _canEdit => widget.role == 'owner' || widget.role == 'admin';
 
   @override
@@ -112,13 +136,23 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
     setState(() => _loading = true);
     try {
       final members = await _repo.members(widget.companyId);
+      final roles = _isOwner ? await _repo.roles(widget.companyId)
+          : <CompanyRole>[];
       final invites = _canEdit
           ? await _repo.invitations(widget.companyId)
           : <CompanyInvite>[];
       if (!mounted) return;
       setState(() {
         _members = members;
+        _roles = roles;
         _invitations = invites;
+        if (_customRoleId(_role) != null &&
+            !_roles.any((role) => role.id == _customRoleId(_role))) {
+          _role = 'member';
+          _permissions..clear()..addAll(defaultPermissions('member'));
+        } else if (_customRoleId(_role) != null) {
+          _permissions..clear()..addAll(_findRole(_customRoleId(_role)!)!.permissions);
+        }
       });
     } catch (error) {
       _message(error is SignApiException
@@ -129,17 +163,21 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
   }
 
   Future<void> _chooseRole() async {
-    final choices = _isOwner ? ['member', 'admin'] : ['member'];
     final selected = await Sign2DigitalSelectionSheet.show(
-      context, title: 'Company role',
-      options: choices, selected: _role, icon: Icons.people_outline,
-      iconForOption: (role) => role == 'admin'
+      context, title: 'Company Role',
+      options: _roleOptions, selected: _role, icon: Icons.people_outline,
+      labelForOption: _roleLabel,
+      iconForOption: (value) => value == 'admin'
           ? Icons.admin_panel_settings_outlined
-          : Icons.person_outline_rounded,
+          : (_customRoleId(value) != null ? Icons.shield_outlined
+              : Icons.person_outline_rounded),
     );
     if (selected != null && mounted) setState(() {
       _role = selected;
-      _permissions..clear()..addAll(defaultPermissions(selected));
+      final customId = _customRoleId(selected);
+      _permissions..clear()..addAll(customId != null
+          ? (_findRole(customId)?.permissions ?? const <String>[])
+          : defaultPermissions(selected));
     });
   }
 
@@ -191,6 +229,10 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
   }
 
   Future<void> _choosePermissions() async {
+    if (_customRoleId(_role) != null) {
+      _message('Permissions are managed in Roles & Permissions.');
+      return;
+    }
     final result = await _selectPermissions(_permissions);
     if (result != null && mounted) {
       setState(() { _permissions..clear()..addAll(result); });
@@ -199,6 +241,7 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
 
   Future<void> _editPermissions(CompanyMember member) async {
     if (!_canEdit || member.role == 'owner' ||
+        member.companyRoleId != null ||
         (!_isOwner && member.role == 'admin')) {
       return;
     }
@@ -224,8 +267,11 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
     }
     setState(() => _saving = true);
     try {
-      await _repo.invite(widget.companyId, email, role: _role,
-        permissions: _permissions.toList());
+      final customId = _customRoleId(_role);
+      await _repo.invite(widget.companyId, email,
+        role: customId == null ? _role : 'member',
+        companyRoleId: customId,
+        permissions: customId == null ? _permissions.toList() : const []);
       _email.clear();
       setState(() { _role = 'member';
         _permissions..clear()..addAll(defaultPermissions('member')); });
@@ -242,8 +288,12 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
   Future<void> _memberActions(CompanyMember member) async {
     final choice = await Sign2DigitalSelectionSheet.show(
       context,
-      title: 'Member actions',
-      options: const ['Change Role', 'Edit Permissions', 'Remove'],
+      title: 'Member Actions',
+      options: [
+        'Change Role',
+        if (member.companyRoleId == null) 'Edit Permissions',
+        'Remove',
+      ],
       icon: Icons.manage_accounts_outlined,
     );
     if (!mounted) return;
@@ -253,22 +303,28 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
   }
 
   Future<void> _changeRole(CompanyMember member) async {
-    if (!_canEdit || member.role == 'owner' || (!_isOwner && member.role == 'admin')) {
-      return;
-    }
+    if (!_canEdit || member.role == 'owner' ||
+        (!_isOwner && (member.role == 'admin' ||
+          member.companyRoleId != null))) return;
+    final current = member.companyRoleId == null
+        ? member.role : 'custom:${member.companyRoleId}';
     final role = await Sign2DigitalSelectionSheet.show(
-      context, title: 'Change team role',
-      options: _isOwner ? ['member', 'admin'] : ['member'],
-      selected: member.role, icon: Icons.manage_accounts_outlined,
+      context, title: 'Change Team Role',
+      options: _roleOptions, labelForOption: _roleLabel,
+      selected: current, icon: Icons.manage_accounts_outlined,
     );
-    if (role == null || !mounted || role == member.role) return;
-    // A role change starts from its selected defaults, then lets the owner
-    // review/customize those grants before changing an existing account.
-    final grants = await _selectPermissions(defaultPermissions(role).toSet());
-    if (grants == null || !mounted) return;
+    if (role == null || !mounted || role == current) return;
+    final customId = _customRoleId(role);
+    // Standard-role grants can still be individually customized.
+    // Custom role permissions always come from the saved owner-defined role.
+    final grants = customId == null
+        ? await _selectPermissions(defaultPermissions(role).toSet()) : null;
+    if (customId == null && grants == null || !mounted) return;
     try {
-      await _repo.updateMember(widget.companyId, member.id, role,
-        permissions: grants);
+      await _repo.updateMember(widget.companyId, member.id,
+        customId == null ? role : 'member',
+        companyRoleId: customId,
+        permissions: grants ?? const []);
       await _load();
       _message('Team member updated.');
     } catch (error) {
@@ -302,7 +358,9 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
   }
 
   Future<void> _remove(CompanyMember member) async {
-    if (!_canEdit || member.role == 'owner' || (!_isOwner && member.role == 'admin')) return;
+    if (!_canEdit || member.role == 'owner' ||
+        (!_isOwner && (member.role == 'admin' ||
+            member.companyRoleId != null))) return;
     if (!await _confirm('Remove team member?')) return;
     try {
       await _repo.removeMember(widget.companyId, member.id);
@@ -324,6 +382,14 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
     }
   }
 
+  Future<void> _manageRoles() async {
+    if (!_isOwner) return;
+    await Sign2DigitalNavigation.push<void>(context,
+      MaterialPageRoute<void>(builder: (_) => CompanyRolesScreen(
+        companyId: widget.companyId, repository: _repo)));
+    if (mounted) await _load();
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: AppColors.white,
@@ -340,6 +406,28 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
             Text(widget.companyName, style: const TextStyle(fontFamily: 'Inter',
               fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.dark)),
             const SizedBox(height: 20),
+            if (_isOwner) ...[
+              Sign2DigitalQuoteShadowPanel(
+                padding: const EdgeInsets.all(20),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Text('Roles & Permissions', style: TextStyle(
+                      fontFamily: 'Inter', fontSize: 16,
+                      fontWeight: FontWeight.w600, color: AppColors.dark)),
+                    const SizedBox(height: 10),
+                    const Text('Create reusable roles and assign permissions to your team.',
+                      style: TextStyle(fontFamily: 'Inter', fontSize: 14,
+                        color: AppColors.secondaryText)),
+                    const SizedBox(height: 15),
+                    Sign2DigitalOutlinedButton(
+                      key: const Key('company-manage-roles'),
+                      label: 'Manage Roles',
+                      primaryOutline: true,
+                      onPressed: _manageRoles),
+                  ]),
+              ),
+              const SizedBox(height: 20),
+            ],
             if (_canEdit) ...[
               Sign2DigitalQuoteShadowPanel(
                 padding: const EdgeInsets.all(20),
@@ -363,7 +451,7 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
                   Sign2DigitalSelectionField(
                     key: const Key('company-role-picker'),
                     label: 'Role',
-                    value: 'Role: $_role',
+                    value: 'Role: ${_roleLabel(_role)}',
                     hintText: 'Select team role',
                     iconAsset: '',
                     leadingIcon: Icons.people_outline,
@@ -376,7 +464,9 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
                   Sign2DigitalSelectionField(
                     key: const Key('company-permissions-picker'),
                     label: 'Permissions',
-                    value: 'Permissions (${_permissions.length})',
+                    value: _customRoleId(_role) != null
+                        ? 'Inherited from role (${_permissions.length})'
+                        : 'Permissions (${_permissions.length})',
                     hintText: 'Choose team permissions',
                     iconAsset: '',
                     leadingIcon: Icons.shield_outlined,
@@ -409,9 +499,10 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
                   ListTile(
                     contentPadding: EdgeInsets.zero,
                     title: Text(member.name),
-                    subtitle: Text('${member.email} · ${member.role}'),
+                    subtitle: Text('${member.email} · ${member.roleName}'),
                     trailing: _canEdit && member.role != 'owner' &&
-                        (_isOwner || member.role == 'member')
+                        (_isOwner || (member.role == 'member' &&
+                          member.companyRoleId == null))
                         ? IconButton(
                             key: Key('member-actions-${member.id}'),
                             icon: const Icon(Icons.more_vert_rounded),
@@ -437,7 +528,7 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
                     ListTile(
                       contentPadding: EdgeInsets.zero,
                       title: Text(invitation.email),
-                      subtitle: Text('${invitation.role} · ${invitation.status}'),
+                      subtitle: Text('${invitation.roleName} · ${invitation.status}'),
                       trailing: invitation.status == 'pending'
                           ? IconButton(
                               icon: const Icon(Icons.cancel_outlined,
