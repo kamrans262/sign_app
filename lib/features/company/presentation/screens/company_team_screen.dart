@@ -65,6 +65,10 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
   bool _saving = false;
   String _role = 'member';
   final Set<String> _permissions = <String>{};
+  static List<String> defaultPermissions(String role) => role == 'admin'
+      ? List<String>.from(permissionOptions)
+      : permissionOptions.where((permission) => permission.endsWith('.read') ||
+          const ['clients.write', 'jobs.write'].contains(permission)).toList();
 
   static const permissionOptions = <String>[
     'clients.read', 'clients.write',
@@ -85,6 +89,12 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
   void initState() {
     super.initState();
     _load();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _permissions.addAll(defaultPermissions(_role));
   }
 
   @override
@@ -128,7 +138,10 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
           ? Icons.admin_panel_settings_outlined
           : Icons.person_outline_rounded,
     );
-    if (selected != null && mounted) setState(() => _role = selected);
+    if (selected != null && mounted) setState(() {
+      _role = selected;
+      _permissions..clear()..addAll(defaultPermissions(selected));
+    });
   }
 
   Future<List<String>?> _selectPermissions(Set<String> original) async {
@@ -153,8 +166,14 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
                   onChanged: (value) => update(() {
                     if (value == true) {
                       selected.add(permission);
+                      if (permission.endsWith('.write')) {
+                        selected.add(permission.replaceFirst('.write', '.read'));
+                      }
                     } else {
                       selected.remove(permission);
+                      if (permission.endsWith('.read')) {
+                        selected.remove(permission.replaceFirst('.read', '.write'));
+                      }
                     }
                   }),
                 ),
@@ -209,6 +228,8 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
       await _repo.invite(widget.companyId, email, role: _role,
         permissions: _permissions.toList());
       _email.clear();
+      setState(() { _role = 'member';
+        _permissions..clear()..addAll(defaultPermissions('member')); });
       _message('Company invitation sent by email.');
       await _load();
     } catch (error) {
