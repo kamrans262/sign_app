@@ -1,5 +1,6 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
@@ -397,7 +398,7 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
     }
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (dialog) => AlertDialog(
+      builder: (dialog) => Sign2DigitalApprovedConfirmation(
         title: const Text('Request reimbursement?'),
         content: Text('Submit ${_record.formattedAmount} for reimbursement?'),
         actions: [
