@@ -1,4 +1,5 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
+import '../../../../core/services/active_company_session.dart';
 import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
 
@@ -291,12 +292,14 @@ class _WorkAcceptanceScreenState extends State<WorkAcceptanceScreen> {
                     onPressed: _view,
                   )),
                 ]),
-                if(_report.status=='draft'&&widget.onEditDraft!=null) ...[
+                if(ActiveCompanySession.canWrite('reports') &&
+                    _report.status=='draft'&&widget.onEditDraft!=null) ...[
                   const SizedBox(height:12),
                   Sign2DigitalOutlinedButton(label:'Edit Acceptance Draft',
                     enabled:!_busy,onPressed:()=>_run(widget.onEditDraft!)),
                 ],
-                if(_report.status=='draft'&&widget.onApprove!=null) ...[
+                if(ActiveCompanySession.canWrite('reports') &&
+                    _report.status=='draft'&&widget.onApprove!=null) ...[
                   const SizedBox(height:12),
                   Sign2DigitalPrimaryButton(label:'Approve Acceptance PDF',
                     enabled:!_busy,onPressed:() async {
@@ -306,7 +309,8 @@ class _WorkAcceptanceScreenState extends State<WorkAcceptanceScreen> {
                       }
                     }),
                 ],
-                if(_report.status=='approved'&&widget.onSend!=null) ...[
+                if(ActiveCompanySession.canWrite('reports') &&
+                    _report.status=='approved'&&widget.onSend!=null) ...[
                   const SizedBox(height:12),
                   Sign2DigitalPrimaryButton(label:'Send to Customer',
                     enabled:!_busy,onPressed:() async {
@@ -316,7 +320,8 @@ class _WorkAcceptanceScreenState extends State<WorkAcceptanceScreen> {
                       }
                     }),
                 ],
-                if(['sent','viewed'].contains(_report.status)&&
+                if(ActiveCompanySession.canWrite('reports') &&
+                    ['sent','viewed'].contains(_report.status)&&
                     widget.onRevoke!=null) ...[
                   const SizedBox(height:12),
                   Sign2DigitalOutlinedButton(label:'Revoke Signing Link',
