@@ -304,6 +304,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                   ),
               ],
             ),
+            if (ActiveCompanySession.canWrite('expenses'))
             Positioned(right: 20, bottom: 20,
               child: SizedBox(width: 50, height: 50,
                 child: FloatingActionButton(
