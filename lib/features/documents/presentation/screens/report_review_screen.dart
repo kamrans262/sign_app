@@ -1,4 +1,5 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
+import '../../../../core/services/active_company_session.dart';
 import '../../../../core/widgets/sign2digital_subscription_gate.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
@@ -309,7 +310,8 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
                   ],
   
                 ],
-                if (_suggestion != null) ...[
+                if (_suggestion != null &&
+                    ActiveCompanySession.canWrite('reports')) ...[
                   const Divider(height: 25),
                   _section('AI Suggested Title', (_suggestion!['title'] ?? '').toString()),
                   if (suggestions is Map)
@@ -329,7 +331,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
                     child: Text(_error!, style: const TextStyle(
                       fontFamily: 'Inter', color: Color(0xFFB42318))),
                   ),
-                if (_isDraft)
+                if (_isDraft && ActiveCompanySession.canWrite('reports'))
                   LayoutBuilder(builder: (context, constraints) {
                     final edit = Sign2DigitalOutlinedButton(
                       label: 'Edit Draft', onPressed: _editDraft,
@@ -383,6 +385,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
                       enabled: _latestServerReportLoaded,
                     ),
                     const SizedBox(height: 12),
+                    if (ActiveCompanySession.canWrite('reports'))
                     Sign2DigitalPrimaryButton(
                       label: 'Send to Client', loading: _busy,
                       enabled: _latestServerReportLoaded,
@@ -394,7 +397,8 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
                     label: 'View Approved PDF', onPressed: _openPdf,
                   ),
                 ],
-                if (!_isDraft && _report.status != 'archived') ...[
+                if (!_isDraft && _report.status != 'archived' &&
+                    ActiveCompanySession.canWrite('reports')) ...[
                   const SizedBox(height: 12),
                   Sign2DigitalOutlinedButton(
                     label: 'Archive Report', onPressed: _archive,
