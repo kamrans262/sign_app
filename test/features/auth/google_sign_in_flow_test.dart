@@ -13,11 +13,11 @@ import 'package:sign2digital/features/auth/presentation/screens/two_factor_login
 class _MemoryTokens implements AuthTokenStorage {
   String? saved;
   @override
-  Future<void> delete() async => saved = null;
+  Future<void> delete() async { saved = null; }
   @override
   Future<String?> read() async => saved;
   @override
-  Future<void> write(String token) async => saved = token;
+  Future<void> write(String token) async { saved = token; }
 }
 
 void main() {
@@ -107,12 +107,12 @@ void main() {
           if (request.url.path == '/api/v1/auth/google') {
             return http.Response(jsonEncode({'data': {
               'purpose': 'login', 'requires_two_factor': true,
-              'two_factor_ticket': 'a' * 64,
+              'two_factor_ticket': List.filled(64, 'a').join(),
             }}), 200);
           }
           if (request.url.path == '/api/v1/auth/2fa/verify') {
             secondFactorVerified = true;
-            expect((jsonDecode(request.body) as Map)['ticket'], 'a' * 64);
+            expect((jsonDecode(request.body) as Map)['ticket'], List.filled(64, 'a').join());
             return http.Response(jsonEncode({'data': {
               'purpose': 'login', 'access_token': 'two-factor-bearer',
             }}), 200);
