@@ -40,6 +40,8 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
+      - name: Generate one branded Android native launch splash
+        run: dart run flutter_native_splash:create
       - name: Android compile smoke — no signing, release or deployment
         run: |
           timeout --signal=TERM --kill-after=10s 1500s flutter build apk --debug --no-pub
