@@ -7,6 +7,13 @@ on:
       - 'lib/features/invoices/presentation/screens/invoice_details_screen.dart'
       - 'test/features/invoices/invoice_details_screen_test.dart'
       - 'test/features/invoices/mark_invoice_paid_dialog_test.dart'
+      - 'lib/core/widgets/sign2digital_confirmation_dialog.dart'
+      - 'lib/core/widgets/sign2digital_information_table.dart'
+      - 'lib/features/invoices/presentation/screens/add_invoice_screen.dart'
+      - 'lib/features/invoices/presentation/screens/invoices_screen.dart'
+      - 'lib/features/invoices/services/invoice_pdf_service.dart'
+      - 'test/features/invoices/add_invoice_screen_test.dart'
+      - 'test/features/invoices/invoices_screen_test.dart'
   workflow_dispatch:
 permissions:
   contents: read
@@ -28,8 +35,13 @@ jobs:
         run: |
           flutter analyze --no-pub --no-fatal-infos \
             lib/features/invoices \
+            lib/core/widgets/sign2digital_confirmation_dialog.dart \
+            lib/core/widgets/sign2digital_information_table.dart \
             test/features/invoices/invoice_details_screen_test.dart \
             test/features/invoices/mark_invoice_paid_dialog_test.dart \
+            test/features/invoices/add_invoice_screen_test.dart \
+            test/features/invoices/invoices_screen_test.dart \
+            test/features/invoices/m17_issued_pdf_delivery_test.dart \
             test/features/invoices/invoice_details_visual_test.dart
       - name: Invoice Details and Mark as Paid widget tests
         run: |
