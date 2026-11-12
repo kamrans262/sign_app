@@ -224,6 +224,48 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('emailed addendum receipt has no raw link and does not resend', (tester) async {
+    final original = source();
+    final created = draft();
+    AddendumDraftSession.create(created);
+    final doc = DocumentRecord(
+      id: created.id, category: DocumentCategory.addends,
+      number: created.number, title: 'Addendum A-500',
+      project: original.project, customer: original.customer,
+      timestamp: DateTime.now(), status: 'Approved',
+      related: [original], addendumDraftId: created.id,
+    );
+    var calls = 0;
+    await tester.pumpWidget(MaterialApp(home: DocumentDetailsScreen(
+      documentId: doc.id, document: doc,
+      requestAddendumSignature: (draft, source) async {
+        calls++;
+        return AddendumSignatureRequest(
+          requestId: 'sent-email-500', addendumId: draft.id,
+          originalDocumentId: source.id,
+          secureUrl: null,
+          expiresAt: DateTime.now().add(const Duration(days: 3)),
+          confirmedSentAt: DateTime.now().toUtc(),
+        );
+      },
+    )));
+    await tester.pumpAndSettle();
+    for (var attempt = 0; attempt < 2; attempt++) {
+      await tester.tap(find.byKey(const Key('document-action-3')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('addendum-send-for-signature')));
+      await tester.pumpAndSettle();
+      expect(find.text('Status: Email sent (awaiting signature)'), findsOneWidget);
+      expect(find.textContaining('Inbox delivery is not yet confirmed'),
+          findsOneWidget);
+      expect(find.byKey(const Key('addendum-copy-secure-link')), findsNothing);
+      await tester.tapAt(const Offset(15, 120));
+      await tester.pumpAndSettle();
+    }
+    expect(calls, 1);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('dark iPhone signature link is readable and reopening does not POST again',
       (tester) async {
     tester.view.physicalSize = const Size(390, 844);
