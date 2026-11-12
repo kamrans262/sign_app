@@ -37,7 +37,9 @@ void main() {
 
   testWidgets('app automatically shows Login after two seconds',
       (tester) async {
-    await tester.pumpWidget(const Sign2DigitalApp());
+    await tester.pumpWidget(Sign2DigitalApp(
+      restoreSession: () async => false,
+    ));
     await tester.pump(const Duration(milliseconds: 1900));
     expect(find.byType(SplashScreen), findsOneWidget);
 
