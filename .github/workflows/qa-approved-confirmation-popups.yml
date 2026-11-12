@@ -1,0 +1,54 @@
+name: Sign2Digital approved confirmation popups
+on:
+  push:
+    branches: [fix/m20-android-live-reminder-integration-2026-11-06]
+    paths:
+      - '.github/workflows/qa-approved-confirmation-popups.yml'
+      - 'lib/core/widgets/sign2digital_approved_confirmation.dart'
+      - 'lib/core/widgets/sign2digital_subscription_gate.dart'
+      - 'lib/features/**/presentation/**'
+      - 'test/core/widgets/sign2digital_approved_confirmation_test.dart'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  confirmations:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Analyze shared confirmation widget and affected features
+        run: |
+          flutter analyze --no-pub --no-fatal-infos --no-fatal-warnings \
+            lib/core/widgets/sign2digital_approved_confirmation.dart \
+            lib/core/widgets/sign2digital_subscription_gate.dart \
+            lib/features/documents/presentation \
+            lib/features/equipment/presentation \
+            lib/features/expenses/presentation \
+            lib/features/profile/presentation \
+            lib/features/subscription/presentation \
+            lib/features/jobs/presentation \
+            lib/features/labour/presentation \
+            lib/features/quotes/presentation \
+            lib/features/reminders/presentation \
+            test/core/widgets/sign2digital_approved_confirmation_test.dart
+      - name: Confirm style, callbacks and high-risk workflows
+        run: |
+          timeout --signal=TERM --kill-after=10s 420s flutter test --no-pub \
+            --concurrency=2 --reporter expanded --timeout 60s \
+            test/core/widgets/sign2digital_approved_confirmation_test.dart \
+            test/core/widgets/sign2digital_subscription_gate_test.dart \
+            test/features/documents/m18_issued_document_actions_test.dart \
+            test/features/equipment/m19_equipment_reminder_stage2_test.dart \
+            test/features/profile/m22_privacy_data_screen_test.dart \
+            test/features/profile/security_access_screen_test.dart \
+            test/features/expenses/expense_details_screen_test.dart \
+            test/features/labour/labour_entry_details_screen_test.dart \
+            test/features/quotes/send_quote_screen_test.dart \
+            test/features/reminders/reminders_module_test.dart \
+            test/features/subscription/subscription_management_screen_test.dart
