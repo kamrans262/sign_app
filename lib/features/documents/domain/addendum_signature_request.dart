@@ -16,7 +16,9 @@ class AddendumSignatureRequest {
   final String requestId;
   final String addendumId;
   final String originalDocumentId;
-  final Uri secureUrl;
+  /// Null when Laravel successfully queued email transport instead of issuing
+  /// a copyable link. A sent receipt never exposes a signing token.
+  final Uri? secureUrl;
   final DateTime expiresAt;
   /// Must be a genuine service-issued delivery receipt; null means unsent.
   final DateTime? confirmedSentAt;
@@ -24,8 +26,13 @@ class AddendumSignatureRequest {
   bool get valid => requestId.trim().isNotEmpty &&
       addendumId.trim().isNotEmpty &&
       originalDocumentId.trim().isNotEmpty &&
-      secureUrl.scheme == 'https' && secureUrl.host.isNotEmpty &&
-      expiresAt.isAfter(DateTime.now());
+      expiresAt.isAfter(DateTime.now()) &&
+      (secureUrl != null
+          ? secureUrl!.scheme == 'https' && secureUrl!.host.isNotEmpty
+          : confirmedSentAt != null);
+
+  bool get emailTransportAccepted =>
+      secureUrl == null && confirmedSentAt != null;
 
   String get status => expiresAt.isBefore(DateTime.now())
       ? 'Expired'
