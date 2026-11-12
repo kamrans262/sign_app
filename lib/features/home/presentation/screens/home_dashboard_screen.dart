@@ -198,23 +198,31 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
         ));
       }
     }
-    try {
-      final records = await _documentRepo.listDocuments();
-      quotes = HomeOverview.countPendingQuotes(records);
-      documents = HomeOverview.countRecent(records, DateTime.now());
-    } catch (_) {}
-    try {
-      invoices = HomeOverview.countOutstanding(
-        await _invoiceRepo.listInvoices());
-    } catch (_) {}
+    if (ActiveCompanySession.canRead('documents')) {
+      try {
+        final records = await _documentRepo.listDocuments();
+        if (ActiveCompanySession.canRead('quotes')) {
+          quotes = HomeOverview.countPendingQuotes(records);
+        }
+        documents = HomeOverview.countRecent(records, DateTime.now());
+      } catch (_) {}
+    }
+    if (ActiveCompanySession.canRead('invoices')) {
+      try {
+        invoices = HomeOverview.countOutstanding(
+          await _invoiceRepo.listInvoices());
+      } catch (_) {}
+    }
     try {
       reminders = HomeOverview.countUpcoming(
         await _reminderRepo.listReminders(), DateTime.now());
     } catch (_) {}
-    try {
-      expenses = HomeOverview.totalExpenses(
-        await _expenseRepo.listExpenses());
-    } catch (_) {}
+    if (ActiveCompanySession.canRead('expenses')) {
+      try {
+        expenses = HomeOverview.totalExpenses(
+          await _expenseRepo.listExpenses());
+      } catch (_) {}
+    }
     if (MobileAuthRepository.shared.isSignedIn &&
         widget.companyRepository == null && loadedCompanies &&
         companies.isNotEmpty && ActiveCompanySession.companyId == null) {
@@ -337,16 +345,20 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     final value = _overview;
     final company = _company;
     final cards = [
+          if (ActiveCompanySession.canRead('jobs'))
       _HomeMetric('Active Jobs',
           value == null ? '…' : '${value.activeJobs + widget.additionalActiveJobs}',
           'Open jobs',
           Icons.work_outline_rounded, HomeAction.jobs, 'jobs'),
+          if (ActiveCompanySession.canRead('quotes'))
       _HomeMetric('Pending Quotes',
           _count(value?.pendingQuotes), 'Awaiting action',
           Icons.request_quote_outlined, HomeAction.quotes, 'quotes'),
+          if (ActiveCompanySession.canRead('invoices'))
       _HomeMetric('Outstanding Invoices',
           _count(value?.outstandingInvoices), 'Awaiting payment',
           Icons.receipt_long_outlined, HomeAction.invoices, 'invoices'),
+          if (ActiveCompanySession.canRead('documents'))
       _HomeMetric('Recent Documents',
           _count(value?.recentDocuments), 'Last 30 days',
           Icons.description_outlined, HomeAction.documents, 'documents'),
@@ -354,22 +366,29 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
           _count(value?.upcomingReminders), 'Not completed',
           Icons.notifications_active_outlined, HomeAction.reminders,
           'reminders'),
+          if (ActiveCompanySession.canRead('expenses'))
       _HomeMetric('Job Expenses',
           _expensesText(value?.jobExpensesChf), 'Recorded expenses',
           Icons.account_balance_wallet_outlined, HomeAction.expenses,
           'expenses'),
     ];
     final actions = [
+          if (ActiveCompanySession.canWrite('quotes'))
       _HomeShortcut('Create Quote', Icons.note_add_outlined,
           HomeAction.createQuote, 'create-quote'),
+          if (ActiveCompanySession.canWrite('jobs'))
       _HomeShortcut('New Job', Icons.add_business_outlined,
           HomeAction.newJob, 'new-job'),
+          if (ActiveCompanySession.canWrite('clients'))
       _HomeShortcut('Add Client', Icons.person_add_alt_1_outlined,
           HomeAction.addClient, 'add-client'),
+          if (ActiveCompanySession.canWrite('documents'))
       _HomeShortcut('Create Document', Icons.post_add_outlined,
           HomeAction.createDocument, 'create-document'),
+          if (ActiveCompanySession.canWrite('expenses'))
       _HomeShortcut('Add Expense', Icons.receipt_outlined,
           HomeAction.addExpense, 'add-expense'),
+          if (ActiveCompanySession.canWrite('labour'))
       _HomeShortcut('Add Time', Icons.schedule_outlined,
           HomeAction.addTime, 'add-time'),
     ];
@@ -503,7 +522,8 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                   ],
                 );
               }),
-              if (widget.selectedQuote != null &&
+              if (ActiveCompanySession.canRead('quotes') &&
+                  widget.selectedQuote != null &&
                   (!MobileAuthRepository.shared.isSignedIn ||
                       !widget.selectedQuote!.isDemo)) ...[
                 // Continue the same rhythm for any following sections.
