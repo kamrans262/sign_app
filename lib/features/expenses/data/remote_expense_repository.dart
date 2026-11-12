@@ -1,3 +1,4 @@
+import '../../../core/utils/sign2digital_server_timestamp.dart';
 import 'package:crypto/crypto.dart';
 
 import '../../../core/services/active_company_session.dart';
@@ -111,10 +112,11 @@ class RemoteExpenseRepository implements ExpenseRepository {
       tags: tags,
       clientName: '${row['client_name'] ?? ''}',
       approvedAt: row['approved_at'] == null
-          ? null : _date(row['approved_at']),
+          ? null : Sign2DigitalServerTimestamp.tryParse(row['approved_at']),
       approvedBy: row['approved_by'] == null
           ? null : 'User #${row['approved_by']}',
-      updatedAt: _date(row['updated_at']),
+      updatedAt: Sign2DigitalServerTimestamp.tryParse(row['updated_at']) ??
+          throw const SignApiException('Invalid expense update timestamp'),
       history: history,
       reimbursementRequested: row['reimbursement_requested_at'] != null,
       canApprove: canApprove,
@@ -190,7 +192,8 @@ class RemoteExpenseRepository implements ExpenseRepository {
         ExpenseHistoryEvent(
           id: '${_map(row)['id']}',
           title: _historyTitle('${_map(row)['type']}'),
-          occurredAt: _date(_map(row)['created_at']),
+          occurredAt: Sign2DigitalServerTimestamp.tryParse(_map(row)['created_at']) ??
+              throw const SignApiException('Invalid expense history timestamp'),
           description: _map(row)['metadata'] is Map &&
                   '${(_map(row)['metadata'] as Map)['custom_category'] ?? ''}'
                       .trim().isNotEmpty
