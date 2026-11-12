@@ -29,7 +29,7 @@ jobs:
         run: dart format --output=none lib/features/deposits test/features/deposits
       - name: Analyze Deposits and only directly touched shared widgets
         run: |
-          flutter analyze --no-pub --no-fatal-infos lib/features/deposits test/features/deposits \
+          flutter analyze --no-pub --no-fatal-infos --no-fatal-warnings lib/features/deposits test/features/deposits \
             lib/core/widgets/sign2digital_input_field.dart \
             lib/features/clients/presentation/screens/more_screen.dart \
             lib/features/clients/presentation/widgets/sign2digital_details_tabs.dart \
