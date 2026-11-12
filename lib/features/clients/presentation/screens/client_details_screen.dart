@@ -429,7 +429,7 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
+        if (ActiveCompanySession.canWrite('clients')) Expanded(
           child: Sign2DigitalClientActionCard(
             key: const Key('edit-client-action'),
             label: 'Edit Client',
@@ -438,7 +438,7 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
           ),
         ),
         const SizedBox(width: 16),
-        Expanded(
+        if (ActiveCompanySession.canWrite('quotes')) Expanded(
           child: Sign2DigitalClientActionCard(
             label: 'New Quote',
             fallbackIcon: Icons.request_quote_outlined,
@@ -459,7 +459,7 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
           ),
         ),
         const SizedBox(width: 16),
-        Expanded(
+        if (ActiveCompanySession.canWrite('jobs')) Expanded(
           child: Sign2DigitalClientActionCard(
             label: 'New Job',
             iconAsset: 'assets/icons/jobs.svg',
