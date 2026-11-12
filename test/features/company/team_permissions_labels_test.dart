@@ -3,10 +3,17 @@ import 'package:sign2digital/features/company/presentation/screens/company_team_
 
 void main() {
   test('readable labels never change API permission keys', () {
-    expect(CompanyTeamScreen.permissionLabel('clients.read'), 'View Clients');
-    expect(CompanyTeamScreen.permissionLabel('jobs.write'), 'Manage Jobs');
-    expect(CompanyTeamScreen.permissionLabel('labour.read'), 'View Time & Labour');
-    expect(CompanyTeamScreen.permissionLabel('equipment.write'), 'Manage Equipment');
+    expect(CompanyTeamScreen.permissionLabel('clients.read'), 'Client - Read');
+    expect(CompanyTeamScreen.permissionLabel('clients.write'), 'Client - Write');
+    expect(CompanyTeamScreen.permissionLabel('jobs.read'), 'Job - Read');
+    expect(CompanyTeamScreen.permissionLabel('jobs.write'), 'Job - Write');
+    expect(CompanyTeamScreen.permissionLabel('documents.read'), 'Document - Read');
+    expect(CompanyTeamScreen.permissionLabel('quotes.read'), 'Quote - Read');
+    expect(CompanyTeamScreen.permissionLabel('invoices.read'), 'Invoice - Read');
+    expect(CompanyTeamScreen.permissionLabel('reports.read'), 'Report - Read');
+    expect(CompanyTeamScreen.permissionLabel('expenses.read'), 'Expense - Read');
+    expect(CompanyTeamScreen.permissionLabel('labour.read'), 'Time & Labour - Read');
+    expect(CompanyTeamScreen.permissionLabel('equipment.write'), 'Equipment - Write');
   });
   test('member preset manages clients/jobs but views other modules', () {
     final grants = CompanyTeamScreen.defaultPermissions('member').toSet();
