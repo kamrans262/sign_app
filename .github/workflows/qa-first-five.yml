@@ -16,6 +16,11 @@ on:
       - 'test/features/company/team_permissions_labels_test.dart'
       - 'test/features/company/company_entry_gate_test.dart'
       - 'test/features/auth/login_screen_test.dart'
+      - 'test/features/auth/google_sign_in_flow_test.dart'
+      - 'lib/features/auth/services/google_sign_in_client.dart'
+      - 'lib/features/auth/data/mobile_auth_repository.dart'
+      - 'lib/features/auth/presentation/screens/mobile_auth_gateway.dart'
+      - 'pubspec.yaml'
       - 'test/features/auth/create_account_screen_test.dart'
       - 'lib/features/auth/presentation/screens/login_screen.dart'
       - 'lib/features/auth/presentation/screens/create_account_screen.dart'
@@ -44,6 +49,6 @@ jobs:
           cache: true
       - run: flutter pub get
       - name: Analyze affected Flutter files
-        run: flutter analyze --no-pub --no-fatal-infos --no-fatal-warnings lib test/features/company/team_permissions_labels_test.dart test/features/company/company_custom_roles_test.dart test/features/company/company_entry_gate_test.dart test/features/auth/login_screen_test.dart test/features/auth/create_account_screen_test.dart test/features/company/m3_landscape_layout_test.dart test/features/company/member_permission_navigation_test.dart test/features/company/remote_company_repository_test.dart test/features/expenses/expense_other_type_test.dart test/navigation/sign2digital_modal_guard_test.dart
+        run: flutter analyze --no-pub --no-fatal-infos --no-fatal-warnings lib test/features/company/team_permissions_labels_test.dart test/features/company/company_custom_roles_test.dart test/features/company/company_entry_gate_test.dart test/features/auth/login_screen_test.dart test/features/auth/create_account_screen_test.dart test/features/auth/google_sign_in_flow_test.dart test/features/company/m3_landscape_layout_test.dart test/features/company/member_permission_navigation_test.dart test/features/company/remote_company_repository_test.dart test/features/expenses/expense_other_type_test.dart test/navigation/sign2digital_modal_guard_test.dart
       - name: Permission, company switcher, modal and expense regression
-        run: flutter test --no-pub --concurrency=2 --timeout=50s --reporter=expanded test/features/company/team_permissions_labels_test.dart test/features/company/company_custom_roles_test.dart test/features/company/company_entry_gate_test.dart test/features/auth/login_screen_test.dart test/features/auth/create_account_screen_test.dart test/features/company/m3_landscape_layout_test.dart test/features/company/member_permission_navigation_test.dart test/features/company/remote_company_repository_test.dart test/features/expenses/expense_other_type_test.dart test/navigation/sign2digital_modal_guard_test.dart test/features/global_search/m21_stage2_search_ui_test.dart test/features/expenses/add_expense_screen_test.dart test/features/expenses/expense_details_screen_test.dart test/navigation/global_navigation_regression_test.dart
+        run: flutter test --no-pub --concurrency=2 --timeout=50s --reporter=expanded test/features/company/team_permissions_labels_test.dart test/features/company/company_custom_roles_test.dart test/features/company/company_entry_gate_test.dart test/features/auth/login_screen_test.dart test/features/auth/create_account_screen_test.dart test/features/auth/google_sign_in_flow_test.dart test/features/company/m3_landscape_layout_test.dart test/features/company/member_permission_navigation_test.dart test/features/company/remote_company_repository_test.dart test/features/expenses/expense_other_type_test.dart test/navigation/sign2digital_modal_guard_test.dart test/features/global_search/m21_stage2_search_ui_test.dart test/features/expenses/add_expense_screen_test.dart test/features/expenses/expense_details_screen_test.dart test/navigation/global_navigation_regression_test.dart
