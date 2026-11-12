@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sign2digital/core/theme/app_colors.dart';
 import 'package:sign2digital/core/widgets/sign2digital_bottom_navigation_bar.dart';
+import 'package:sign2digital/core/widgets/sign2digital_outlined_button.dart';
 import 'package:sign2digital/features/documents/domain/document_record.dart';
 import 'package:sign2digital/features/documents/domain/work_acceptance_data.dart';
 import 'package:sign2digital/features/documents/presentation/screens/work_acceptance_editor_screen.dart';
@@ -23,6 +24,7 @@ DocumentRecord _record({
   bool signature = false,
   bool reportPdf = false,
   String name = 'Signer One',
+  String? status,
 }) {
   return DocumentRecord(
     id: 'wa-test-1',
@@ -33,8 +35,8 @@ DocumentRecord _record({
     project: 'Kitchen renovation',
     customer: name,
     timestamp: DateTime(2026, 8, 12, 10, 15),
-    status: done.contains(WorkAcceptanceStage.completed)
-        ? 'accepted' : 'Pending',
+    status: status ?? (done.contains(WorkAcceptanceStage.completed)
+        ? 'accepted' : 'Pending'),
     demoOnly: demo,
     workAcceptance: WorkAcceptanceEvidence(
       events: [
@@ -213,6 +215,44 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(WorkAcceptanceScreen), findsNothing);
     expect(find.text('Open work acceptance'), findsOneWidget);
+  });
+
+  testWidgets('Approve Acceptance sheet is compact and both actions align on iPhone',
+      (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    var approvals = 0;
+    await tester.pumpWidget(MaterialApp(home: WorkAcceptanceScreen(
+      report: _record(status: 'draft'),
+      onApprove: (_) async { approvals++; },
+    )));
+    await tester.ensureVisible(find.text('Approve Acceptance PDF'));
+    await tester.tap(find.text('Approve Acceptance PDF'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Approve Acceptance'), findsOneWidget);
+    expect(find.text('Freeze this exact report version for customer signing?'),
+        findsOneWidget);
+    final cancel = find.widgetWithText(Sign2DigitalOutlinedButton, 'Cancel');
+    expect(cancel, findsOneWidget);
+    final cancelSize = tester.getSize(cancel);
+    expect(cancelSize.height, inInclusiveRange(48, 70),
+        reason: 'Cancel must not expand to the full bottom sheet height');
+    expect(tester.getSize(find.byType(BottomSheet)).height, lessThan(400));
+    expect((tester.getCenter(cancel).dy - tester.getCenter(find.text('Confirm')).dy).abs(),
+        lessThan(6), reason: 'Cancel and Confirm must share an action row');
+
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(approvals, 0);
+    await tester.tap(find.text('Approve Acceptance PDF'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Confirm'));
+    await tester.pumpAndSettle();
+    expect(approvals, 1);
+    expect(tester.takeException(), isNull);
   });
 
   for (final size in [
