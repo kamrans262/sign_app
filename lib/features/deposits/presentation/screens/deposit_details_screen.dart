@@ -7,6 +7,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
 import '../../../../core/widgets/sign2digital_information_table.dart';
 import '../../../../core/widgets/sign2digital_outlined_button.dart';
@@ -511,7 +512,9 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
   );
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) => Theme(
+    data: AppTheme.light,
+    child: Scaffold(
     backgroundColor: AppColors.white,
     body: SafeArea(child: Column(children: [
       Sign2DigitalHeader(
@@ -548,5 +551,5 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
         ),
       ))),
     ])),
-  );
+  ));
 }
