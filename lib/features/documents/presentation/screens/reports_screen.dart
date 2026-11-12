@@ -489,7 +489,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     alignListBadgeTop: true,
                     projectName: report.project,
                     customerName: report.customer,
-                    documentDate: report.timestamp,
+                    documentDate: report.createdAt ?? report.timestamp,
                     status: report.status,
                     listStyle: true,
                     subtitleGap: 5,
