@@ -507,7 +507,8 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
     }
   }
 
-  Widget _actions() => Column(
+  Widget _actions() => !ActiveCompanySession.canWrite('labour')
+      ? const SizedBox.shrink() : Column(
     key: const Key('labour-detail-actions'),
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
