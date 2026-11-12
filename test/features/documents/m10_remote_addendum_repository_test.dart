@@ -145,6 +145,108 @@ void main() {
     expect(calls.single, '/api/v1/addenda/8');
   });
 
+  test('email signing receipt has no URL and is accepted only when SMTP confirms', () async {
+    final posts = <Map<String, dynamic>>[];
+    final expires = DateTime.now().add(const Duration(days: 3)).toUtc();
+    final sent = DateTime.now().toUtc();
+    final api = SignApiClient(
+      baseUrl: Uri.parse('https://example.test'),
+      tokenProvider: () async => 'secure-token',
+      activeCompanyId: () => ActiveCompanySession.companyId,
+      httpClient: MockClient((request) async {
+        if (request.method == 'GET' && request.url.path == '/api/v1/quotes/11') {
+          return http.Response(jsonEncode({'data': {'quote': {
+            'id': 11, 'company_id': 5, 'items': [],
+            'client_name': 'Original Customer',
+            'client_email': 'customer@example.test',
+            'quote_date': '2026-11-04', 'reference_number': 'Q-11',
+            'status': 'sent',
+          }}}), 200);
+        }
+        if (request.method == 'POST' &&
+            request.url.path == '/api/v1/addenda/8/signature-requests') {
+          posts.add(jsonDecode(request.body) as Map<String, dynamic>);
+          return http.Response(jsonEncode({'data': {
+            'request': {
+              'id': 99, 'request_id': 'request-99', 'addendum_id': 8,
+              'status': 'sent', 'expires_at': expires.toIso8601String(),
+              'sent_at': sent.toIso8601String(),
+            },
+            'secure_link': null, 'transport_accepted': true,
+            'delivered': false,
+          }}), 201);
+        }
+        throw StateError('Unexpected request: ${request.url.path}');
+      }),
+    );
+    final source = DocumentRecord(
+      id: 'signed-4', category: DocumentCategory.quotes,
+      number: 'Q-11', title: 'Signed quote',
+      project: 'Roof', customer: 'Customer',
+      timestamp: DateTime(2026, 11, 4), status: 'signed',
+      verifiedSignedPdfAvailable: true,
+    );
+    final draft = newDraft().copyWith(
+      serverId: 8, serverRevision: 1, quoteServerId: 11,
+      serverStatus: 'approved',
+    );
+    final repo = RemoteAddendumRepository(api: api);
+    final receipt = await repo.requestSignature(draft, source);
+    expect(posts.single['delivery'], 'email');
+    expect(posts.single.containsKey('replace_ready_link'), isFalse);
+    expect(receipt?.valid, isTrue);
+    expect(receipt?.emailTransportAccepted, isTrue);
+    expect(receipt?.secureUrl, isNull);
+    expect(receipt?.confirmedSentAt, isNotNull);
+
+    final replaced = await repo.requestSignature(draft, source,
+        replaceReadyLink: true);
+    expect(posts.last['replace_ready_link'], isTrue);
+    expect(replaced?.valid, isTrue);
+  });
+
+  test('email request never treats an unsigned ready-link response as sent', () async {
+    final api = SignApiClient(
+      baseUrl: Uri.parse('https://example.test'),
+      tokenProvider: () async => 'secure-token',
+      activeCompanyId: () => ActiveCompanySession.companyId,
+      httpClient: MockClient((request) async {
+        if (request.url.path == '/api/v1/quotes/11') {
+          return http.Response(jsonEncode({'data': {'quote': {
+            'id': 11, 'company_id': 5, 'items': [],
+            'client_name': 'Original Customer',
+            'client_email': 'customer@example.test',
+            'quote_date': '2026-11-04',
+          }}}), 200);
+        }
+        return http.Response(jsonEncode({'data': {
+          'request': {
+            'id': 99, 'request_id': 'request-99', 'addendum_id': 8,
+            'status': 'ready',
+            'expires_at': DateTime.now().add(const Duration(days: 3))
+                .toUtc().toIso8601String(),
+            'sent_at': null,
+          },
+          'secure_link': 'https://example.test/addendum-sign/token',
+          'transport_accepted': false,
+        }}), 201);
+      }),
+    );
+    final source = DocumentRecord(
+      id: 'signed-4', category: DocumentCategory.quotes,
+      number: 'Q-11', title: 'Signed quote',
+      project: 'Roof', customer: 'Customer',
+      timestamp: DateTime(2026, 11, 4), status: 'signed',
+      verifiedSignedPdfAvailable: true,
+    );
+    await expectLater(
+      RemoteAddendumRepository(api: api).requestSignature(
+        newDraft().copyWith(serverId: 8, serverRevision: 1,
+          quoteServerId: 11, serverStatus: 'approved'), source),
+      throwsA(isA<SignApiException>()),
+    );
+  });
+
   test('request signature needs verified signed original and approved state',
       () async {
     final api = SignApiClient(
