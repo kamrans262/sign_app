@@ -88,13 +88,8 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
   @override
   void initState() {
     super.initState();
-    _load();
-  }
-
-  @override
-  void initState() {
-    super.initState();
     _permissions.addAll(defaultPermissions(_role));
+    _load();
   }
 
   @override
