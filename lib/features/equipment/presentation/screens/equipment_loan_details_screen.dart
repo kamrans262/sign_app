@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/services/active_company_session.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -206,7 +207,8 @@ class _EquipmentLoanDetailsScreenState
                     Sign2DigitalInformationRow('Notes',r.notes),
                 ]),
               const SizedBox(height:22),
-              if(r.status!=EquipmentLoanStatus.returned)...[
+              if(ActiveCompanySession.canWrite('equipment') &&
+                  r.status!=EquipmentLoanStatus.returned)...[
                 Sign2DigitalPrimaryButton(
                   key:const Key('equipment-loan-return-action'),
                   label:'Mark Returned',onPressed:_returned,
@@ -217,6 +219,7 @@ class _EquipmentLoanDetailsScreenState
                   label:'Extend Return Date',onPressed:_extend,
                   enabled:!_busy&&!_loading),
               ],
+              if (ActiveCompanySession.canWrite('equipment'))
               EquipmentLoanReminderActions(
                 key:ValueKey('loan-reminders-'+r.id.toString()),
                 loan:r,repository:widget.repository,
