@@ -1,4 +1,5 @@
 // Sign2Digital Create Account — presentation-only, no backend authentication.
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -302,14 +303,16 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                                       widget.onGoogle ??
                                       () => _showNotConnected('Google sign in'),
                                 ),
-                                const SizedBox(height: 15),
-                                Sign2DigitalOutlinedButton(
-                                  label: 'Continue with Apple',
-                                  iconAsset: 'assets/icons/apple.svg',
-                                  onPressed:
-                                      widget.onApple ??
-                                      () => _showNotConnected('Apple sign in'),
-                                ),
+                                if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) ...[
+                                  const SizedBox(height: 15),
+                                  Sign2DigitalOutlinedButton(
+                                    label: 'Continue with Apple',
+                                    iconAsset: 'assets/icons/apple.svg',
+                                    onPressed:
+                                        widget.onApple ??
+                                        () => _showNotConnected('Apple sign in'),
+                                  ),
+                                ],
                               ],
                             ),
                           ),
