@@ -6,6 +6,7 @@ import 'package:sign2digital/features/jobs/domain/job_details_model.dart';
 import 'package:sign2digital/features/jobs/domain/job_model.dart';
 import 'package:sign2digital/features/jobs/widgets/m14_verified_job_expenses.dart';
 import 'package:sign2digital/features/jobs/presentation/screens/job_details_screen.dart';
+import 'package:sign2digital/features/jobs/presentation/screens/jobs_screen.dart';
 import 'package:sign2digital/features/jobs/presentation/widgets/sign2digital_remaining_balance_card.dart';
 
 // The existing Home dashboard has unrelated ongoing asynchronous widgets.
@@ -17,6 +18,54 @@ Future<void> pumpUi(WidgetTester tester) async {
 
 void main() {
   final job = MockJobsData.jobs.first;
+
+  testWidgets('list and detail show backend progress, with no manual editor',
+      (tester) async {
+    tester.view.physicalSize = const Size(430, 932);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final live = JobModel(
+      id: 'live-progress-preview',
+      title: 'Window refurbishment',
+      clientId: '8',
+      clientName: 'Company Client',
+      description: 'Replace windows',
+      referenceNumber: 'JOB-P-001',
+      imageAsset: 'assets/images/jobs_image.jpg',
+      amountChf: 12000,
+      progressPercentage: 45,
+      dueDate: DateTime(2026, 12, 30),
+      stage: JobStage.inProgress,
+      category: JobCategory.active,
+    );
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(body: JobsScreen(
+        includeDemoJobs: false,
+        createdJobs: [live],
+        onCreateJob: () {},
+        onJobTap: (_) {},
+      )),
+    ));
+    await pumpUi(tester);
+    expect(find.text('45%'), findsOneWidget);
+
+    await tester.pumpWidget(MaterialApp(
+      home: JobDetailsScreen(
+        job: live,
+        details: JobDetailsModel.liveUnconnected(live),
+        onManageJob: (_, _) async => false,
+      ),
+    ));
+    await pumpUi(tester);
+    expect(find.text('45%'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('manage-job-action')));
+    await pumpUi(tester);
+    expect(find.text('Update Progress'), findsNothing);
+    expect(find.text('Edit Job'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 
   test('details use the selected JobModel and independent demo values', () {
     final details = JobDetailsModel.demoFor(job);
