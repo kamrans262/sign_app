@@ -26,6 +26,7 @@ class LoginScreen extends StatefulWidget {
     this.onCreateAccount,
     this.onSubmit,
     this.onGoogle,
+    this.onGoogleSignIn,
     this.onApple,
     super.key,
   });
@@ -34,6 +35,8 @@ class LoginScreen extends StatefulWidget {
   final VoidCallback? onCreateAccount;
   final void Function(String email, String password, bool rememberMe)? onSubmit;
   final VoidCallback? onGoogle;
+  /// Receives the current 'Keep me signed in' value for OAuth sessions.
+  final ValueChanged<bool>? onGoogleSignIn;
   final VoidCallback? onApple;
 
   @override
@@ -162,9 +165,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                 );
                               },
-                          onGoogle:
-                              widget.onGoogle ??
-                              () => _showUnavailable('Google sign in'),
+                          onGoogle: widget.onGoogleSignIn != null
+                              ? () => widget.onGoogleSignIn!(_keepSignedIn)
+                              : widget.onGoogle ??
+                                  () => _showUnavailable('Google sign in'),
                           onApple:
                               widget.onApple ??
                               () => _showUnavailable('Apple sign in'),
