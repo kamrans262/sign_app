@@ -10,16 +10,13 @@ class Sign2DigitalStatusBadge extends StatelessWidget {
   /// Display-only normalization. API, filters and saved statuses stay intact.
   static String displayLabel(String value) {
     final clean = value.trim().replaceAll(RegExp(r'[_]+'), ' ')
-        .replaceAll(RegExp(r'\\s+'), ' ');
+        .replaceAll(RegExp(r'\s+'), ' ');
     if (clean.isEmpty) return '';
     const acronyms = {'pdf', 'ai', 'vat', 'qr', 'id'};
     return clean.split(' ').map((part) {
       if (part.isEmpty) return part;
       if (acronyms.contains(part.toLowerCase())) {
         return part.toUpperCase();
-      }
-      if (part.length > 1 && part == part.toUpperCase()) {
-        return part;
       }
       return '${part[0].toUpperCase()}${part.substring(1).toLowerCase()}';
     }).join(' ');
