@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sign2digital/core/theme/app_theme.dart';
 import 'package:sign2digital/features/documents/domain/addendum_draft.dart';
 import 'package:sign2digital/features/documents/domain/addendum_signature_request.dart';
 import 'package:sign2digital/features/documents/domain/document_record.dart';
@@ -220,6 +221,59 @@ void main() {
     expect(() => AddendumDraftSession.create(
       createdDraft.copyWith(description: 'Changed after sending'),
     ), throwsStateError);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('dark iPhone signature link is readable and reopening does not POST again',
+      (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final original = source();
+    final createdDraft = draft();
+    AddendumDraftSession.create(createdDraft);
+    final doc = DocumentRecord(
+      id: createdDraft.id, category: DocumentCategory.addends,
+      number: createdDraft.number, title: 'Addendum',
+      project: original.project, customer: original.customer,
+      timestamp: DateTime.now(), status: 'Approved',
+      related: [original], addendumDraftId: createdDraft.id,
+    );
+    var calls = 0;
+    await tester.pumpWidget(MaterialApp(
+      theme: AppTheme.dark,
+      home: DocumentDetailsScreen(
+        documentId: doc.id, document: doc,
+        requestAddendumSignature: (draft, source) async {
+          calls++;
+          return AddendumSignatureRequest(
+            requestId: 'existing-501', addendumId: draft.id,
+            originalDocumentId: source.id,
+            secureUrl: Uri.parse('https://sign.example.org/link-501'),
+            expiresAt: DateTime.now().add(const Duration(days: 3)),
+            confirmedSentAt: null,
+          );
+        },
+      ),
+    ));
+    await tester.pumpAndSettle();
+    for (var attempt = 0; attempt < 2; attempt++) {
+      await tester.tap(find.byKey(const Key('document-action-3')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('addendum-send-for-signature')));
+      await tester.pumpAndSettle();
+      expect(find.text('Status: Link ready (not emailed)'), findsOneWidget);
+      final label = find.text('Original document: Q-500');
+      final ctx = tester.element(label);
+      expect(DefaultTextStyle.of(ctx).style.color!.computeLuminance(),
+        lessThan(.25));
+      expect(find.byKey(const Key('addendum-copy-secure-link')),
+        findsOneWidget);
+      await tester.tapAt(const Offset(15, 120));
+      await tester.pumpAndSettle();
+    }
+    expect(calls, 1, reason: 'Opening the saved link must not send a second request');
     expect(tester.takeException(), isNull);
   });
 
