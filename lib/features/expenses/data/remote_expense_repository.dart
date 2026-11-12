@@ -42,6 +42,15 @@ class RemoteExpenseRepository implements ExpenseRepository {
   static Map<String, dynamic> _data(Map<String, dynamic> response) =>
       _map(response['data']);
 
+  // A persisted Laravel datetime is a UTC instant, not a calendar date.
+  static DateTime _timestamp(Object? raw) {
+    final value = Sign2DigitalServerTimestamp.tryParse(raw);
+    if (value == null) {
+      throw const SignApiException('Invalid server timestamp.');
+    }
+    return value;
+  }
+
   static DateTime _date(Object? raw) {
     final result = DateTime.tryParse('${raw ?? ''}');
     if (result == null) {
@@ -112,11 +121,10 @@ class RemoteExpenseRepository implements ExpenseRepository {
       tags: tags,
       clientName: '${row['client_name'] ?? ''}',
       approvedAt: row['approved_at'] == null
-          ? null : Sign2DigitalServerTimestamp.tryParse(row['approved_at']),
+          ? null : _timestamp(row['approved_at']),
       approvedBy: row['approved_by'] == null
           ? null : 'User #${row['approved_by']}',
-      updatedAt: Sign2DigitalServerTimestamp.tryParse(row['updated_at']) ??
-          throw const SignApiException('Invalid expense update timestamp'),
+      updatedAt: Sign2DigitalServerTimestamp.tryParse(row['updated_at']),
       history: history,
       reimbursementRequested: row['reimbursement_requested_at'] != null,
       canApprove: canApprove,
@@ -192,8 +200,7 @@ class RemoteExpenseRepository implements ExpenseRepository {
         ExpenseHistoryEvent(
           id: '${_map(row)['id']}',
           title: _historyTitle('${_map(row)['type']}'),
-          occurredAt: Sign2DigitalServerTimestamp.tryParse(_map(row)['created_at']) ??
-              throw const SignApiException('Invalid expense history timestamp'),
+          occurredAt: _timestamp(_map(row)['created_at']),
           description: _map(row)['metadata'] is Map &&
                   '${(_map(row)['metadata'] as Map)['custom_category'] ?? ''}'
                       .trim().isNotEmpty
