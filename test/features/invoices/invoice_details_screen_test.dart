@@ -59,6 +59,18 @@ Future<void> _reach(WidgetTester tester, String key) async {
   await tester.pumpAndSettle();
 }
 
+Future<void> _selectTab(WidgetTester tester, int index) async {
+  final target = find.byKey(Key('details-tab-$index'));
+  await tester.scrollUntilVisible(target, -125,
+    scrollable: find.descendant(
+      of: find.byKey(const Key('invoice-details-scroll')),
+      matching: find.byType(Scrollable)).first);
+  await tester.ensureVisible(target);
+  await tester.pumpAndSettle();
+  await tester.tap(target);
+  await tester.pumpAndSettle();
+}
+
 void main() {
   setUp(DemoInvoiceRepository.clearLocalChanges);
 
@@ -225,10 +237,7 @@ void main() {
     await _reach(tester, 'invoice-details-edit');
     expect(find.byKey(const Key('invoice-details-send')), findsNothing);
     expect(find.byKey(const Key('invoice-details-edit')), findsOneWidget);
-    await tester.ensureVisible(find.byKey(const Key('details-tab-1')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('details-tab-1')));
-    await tester.pumpAndSettle();
+    await _selectTab(tester, 1);
     await _reach(tester, 'invoice-details-download');
     final disabledDownload = tester.widget<InkWell>(
       find.descendant(of: find.byKey(const Key('invoice-details-download')),
@@ -267,10 +276,7 @@ void main() {
     expect(find.byKey(const Key('invoice-details-send')), findsOneWidget);
     expect(find.byKey(const Key('invoice-details-edit')), findsNothing);
     expect(find.byKey(const Key('invoice-details-approve')), findsNothing);
-    await tester.ensureVisible(find.byKey(const Key('details-tab-1')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('details-tab-1')));
-    await tester.pumpAndSettle();
+    await _selectTab(tester, 1);
     expect(find.byKey(const Key('invoice-details-send')), findsNothing);
     expect(find.byKey(const Key('invoice-details-download')), findsOneWidget);
     expect(find.byKey(const Key('invoice-details-preview')), findsOneWidget);
@@ -291,10 +297,7 @@ void main() {
       await _reach(tester, 'invoice-details-edit');
       expect(find.byKey(const Key('invoice-details-edit')), findsOneWidget);
       expect(find.byKey(const Key('invoice-details-send')), findsNothing);
-      await tester.ensureVisible(find.byKey(const Key('details-tab-1')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('details-tab-1')));
-      await tester.pumpAndSettle();
+      await _selectTab(tester, 1);
       await _reach(tester, 'invoice-details-preview');
       final download = tester.getRect(
         find.byKey(const Key('invoice-details-download')));
@@ -303,15 +306,9 @@ void main() {
       expect(download.top, closeTo(preview.top, 1), reason: '$size');
       expect(download.width, closeTo(preview.width, 1), reason: '$size');
       expect(tester.takeException(), isNull, reason: '$size');
-      await tester.ensureVisible(find.byKey(const Key('details-tab-2')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('details-tab-2')));
-      await tester.pumpAndSettle();
+      await _selectTab(tester, 2);
       expect(find.byKey(const Key('invoice-details-actions')), findsNothing);
-      await tester.ensureVisible(find.byKey(const Key('details-tab-3')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('details-tab-3')));
-      await tester.pumpAndSettle();
+      await _selectTab(tester, 3);
       expect(find.byKey(const Key('invoice-details-actions')), findsNothing);
       expect(tester.takeException(), isNull, reason: '$size');
     });
