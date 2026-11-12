@@ -1,4 +1,5 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
+import '../../../../core/services/active_company_session.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 
@@ -289,7 +290,7 @@ class _AiDocumentsScreenState extends State<AiDocumentsScreen> {
             key: const Key('ai-documents-scroll'),
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 95),
             children: [
-              if (!widget.showAll) ...[
+              if (!widget.showAll && ActiveCompanySession.canWrite('documents')) ...[
                 _actionCard(
                   title: 'Generate Document', id: 'generate',
                   onTap: _generate),
@@ -300,6 +301,7 @@ class _AiDocumentsScreenState extends State<AiDocumentsScreen> {
               _recentItems(),
             ],
           ),
+          if (ActiveCompanySession.canWrite('documents'))
           Positioned(
             right: 20, bottom: 20,
             child: SizedBox(
