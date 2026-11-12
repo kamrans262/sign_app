@@ -153,7 +153,13 @@ void main() {
     await tester.tap(find.byKey(
       const Key('deposit-select-job-labour-demo-riverside')));
     await tester.pumpAndSettle();
-    await _enter(tester, 'deposit-form-client', 'Jean Dupont');
+    final jobClient = find.descendant(
+      of: find.byKey(const Key('deposit-form-client')),
+      matching: find.byType(TextFormField),
+    );
+    expect(tester.widget<TextFormField>(jobClient).readOnly, isTrue);
+    expect(tester.widget<TextFormField>(jobClient).controller?.text,
+        LabourDemoJobs.riverside.clientName);
     await _enter(tester, 'deposit-form-amount', 'CHF 98.00');
     await _reach(tester, 'deposit-form-date');
     await tester.tap(find.byKey(const Key('deposit-form-date')));
@@ -169,7 +175,7 @@ void main() {
 
     expect(saved, isNotNull);
     expect(saved!.title, 'Riverside Villa');
-    expect(saved!.clientName, 'Jean Dupont');
+    expect(saved!.clientName, LabourDemoJobs.riverside.clientName);
     expect(saved!.amount, 98);
     expect(saved!.date, DateTime(2026, 8, 25));
     expect(saved!.status, DepositStatus.pending);
