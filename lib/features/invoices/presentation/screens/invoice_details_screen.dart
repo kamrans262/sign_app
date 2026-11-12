@@ -515,8 +515,9 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
     // Only the Items tab exposes document output, and only after approval
     // can the customer-facing issued PDF be downloaded.
     if (_tab == 1) {
-      return Row(
+      return IntrinsicHeight(child: Row(
         key: const Key('invoice-details-actions'),
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(child: Sign2DigitalOutlinedButton(
             key: const Key('invoice-details-download'),
@@ -532,7 +533,7 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
             enabled: !_busy,
             onPressed: _preview)),
         ],
-      );
+      ));
     }
 
     // The Details tab controls the workflow. Payments and History have no
