@@ -174,10 +174,10 @@ class Sign2DigitalJobCard extends StatelessWidget {
 
   static double _badgeReserve(JobStage stage) {
     return switch (stage) {
-      JobStage.inProgress => 102,
-      JobStage.planning => 76,
-      JobStage.completed => 88,
-      JobStage.overdue => 86,
+      JobStage.inProgress => 120,
+      JobStage.planning => 89,
+      JobStage.completed => 108,
+      JobStage.overdue => 100,
     };
   }
 }
