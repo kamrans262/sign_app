@@ -112,7 +112,8 @@ class _ClientsScreenState extends State<ClientsScreen> {
       );
 
   Future<void> _loadJobs() async {
-    if (!_usesRemoteJobs || !mounted) return;
+    if (!_usesRemoteJobs || !mounted ||
+        !ActiveCompanySession.canRead('jobs')) return;
     final version = ++_jobFetchVersion;
     final companyId = ActiveCompanySession.companyId;
     setState(() {
@@ -164,11 +165,28 @@ class _ClientsScreenState extends State<ClientsScreen> {
     super.initState();
     _selectedIndex = widget.initialTab;
     _selectedCompanyId = ActiveCompanySession.companyId?.toString();
+    ActiveCompanySession.access.addListener(_onCompanyAccessChanged);
     _repository = widget.repository ??
         (MobileAuthRepository.shared.isSignedIn
           ? RemoteClientRepository.shared
           : DemoClientRepository());
     if (_usesRemoteJobs) _loadJobs();
+  }
+
+  void _onCompanyAccessChanged() {
+    if (!mounted) return;
+    final index = _selectedIndex;
+    final disallowed = (index == 1 && !ActiveCompanySession.canRead('jobs')) ||
+        (index == 2 && !ActiveCompanySession.canRead('clients')) ||
+        (index == 3 && !ActiveCompanySession.canRead('documents'));
+    setState(() {
+      if (disallowed) _selectedIndex = 0;
+      _remoteJobs = const [];
+      _clientsRevision++;
+      _documentsRevision++;
+      _homeRevision++;
+    });
+    if (ActiveCompanySession.canRead('jobs')) _loadJobs();
   }
 
   @override
@@ -194,6 +212,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
 
   @override
   void dispose() {
+    ActiveCompanySession.access.removeListener(_onCompanyAccessChanged);
     if (_dashboardNavigator != null && _dashboardRoute != null) {
       Sign2DigitalNavigation.detachDashboard(
         _dashboardNavigator!, _dashboardRoute!);
@@ -221,6 +240,9 @@ class _ClientsScreenState extends State<ClientsScreen> {
 
   void _selectDashboardTab(int index, {DocumentCategory? category}) {
     if (!mounted || index < 0 || index > 4) return;
+    if ((index == 1 && !ActiveCompanySession.canRead('jobs')) ||
+        (index == 2 && !ActiveCompanySession.canRead('clients')) ||
+        (index == 3 && !ActiveCompanySession.canRead('documents'))) return;
     // An already selected tab has no new route or expensive refresh.
     if (_selectedIndex == index &&
         (index != 3 || category == null || category == _documentsCategory)) {
@@ -260,6 +282,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
   }
 
   Future<void> _createJobFromHome() async {
+    if (!ActiveCompanySession.canWrite('jobs')) return;
     final draft = await Sign2DigitalNavigation.open<CreateJobDraft>(
       context, CreateJobScreen(clientRepository: _repository));
     if (!mounted || draft == null) return;
@@ -273,6 +296,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
   }
 
   Future<void> _createClientFromHome() async {
+    if (!ActiveCompanySession.canWrite('clients')) return;
     final draft = await Sign2DigitalNavigation.open<ClientDraft>(
       context, const AddClientScreen());
     if (draft == null || !mounted) return;
@@ -288,6 +312,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
   }
 
   Future<void> _createExpenseFromHome() async {
+    if (!ActiveCompanySession.canWrite('expenses')) return;
     final draft = await Sign2DigitalNavigation.open<ExpenseRecord>(
       context, const AddExpenseScreen(selectedNavigationIndex: 0));
     if (draft == null || !mounted) return;
@@ -304,6 +329,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
   }
 
   Future<void> _createTimeFromHome() async {
+    if (!ActiveCompanySession.canWrite('labour')) return;
     final remote = MobileAuthRepository.shared.isSignedIn;
     List<JobModel> availableJobs;
     try {
@@ -355,6 +381,21 @@ class _ClientsScreenState extends State<ClientsScreen> {
   }
 
   void _onHomeAction(HomeAction action) {
+    final required = switch (action) {
+      HomeAction.jobs || HomeAction.newJob => 'jobs',
+      HomeAction.addClient => 'clients',
+      HomeAction.quotes || HomeAction.createQuote ||
+      HomeAction.signatureTracking => 'quotes',
+      HomeAction.documents || HomeAction.createDocument => 'documents',
+      HomeAction.invoices => 'invoices',
+      HomeAction.expenses || HomeAction.addExpense => 'expenses',
+      HomeAction.addTime => 'labour',
+      HomeAction.reminders => null,
+    };
+    if (required != null && !ActiveCompanySession.can(
+      required, const <HomeAction>{HomeAction.createQuote, HomeAction.newJob,
+      HomeAction.addClient, HomeAction.createDocument, HomeAction.addExpense,
+      HomeAction.addTime}.contains(action) ? 'write' : 'read')) return;
     switch (action) {
       case HomeAction.jobs:
         _selectDashboardTab(1);
@@ -398,7 +439,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
   }
 
   Future<bool> _manageJobAction(JobModel job, String action) async {
-    if (!_usesRemoteJobs) return false;
+    if (!_usesRemoteJobs || !ActiveCompanySession.canWrite('jobs')) return false;
     final jobId = int.tryParse(job.id);
     if (jobId == null || jobId <= 0) return false;
     try {
@@ -555,7 +596,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                     onCompanySelected: _selectCompany,
                     onAction: _onHomeAction,
                   ),
-                  JobsScreen(
+                  ActiveCompanySession.canRead('jobs') ? JobsScreen(
                     createdJobs: _dashboardJobs,
                     includeDemoJobs: !_usesRemoteJobs,
                     loading: _usesRemoteJobs && _jobsLoading,
@@ -564,8 +605,8 @@ class _ClientsScreenState extends State<ClientsScreen> {
                     onCreateJob: _createJobFromHome,
                     onNotReady: _showNotReady,
                     onJobTap: _openJobDetails,
-                  ),
-                  _ClientsContent(
+                  ) : const SizedBox.shrink(),
+                  ActiveCompanySession.canRead('clients') ? _ClientsContent(
                     key: ValueKey('clients-content-$_clientsRevision'),
                     repository: _repository,
                     createdJobsForClient: _jobsForClient,
@@ -574,12 +615,12 @@ class _ClientsScreenState extends State<ClientsScreen> {
                     companyId: _selectedCompanyId,
                     showNotReady: _showNotReady,
                     onTabSelected: _selectDashboardTab,
-                  ),
-                  DocumentsScreen(
+                  ) : const SizedBox.shrink(),
+                  ActiveCompanySession.canRead('documents') ? DocumentsScreen(
                     repository: widget.documentRepository,
                     initialCategory: _documentsCategory,
                     refreshRevision: _documentsRevision,
-                  ),
+                  ) : const SizedBox.shrink(),
                   MoreScreen(
                     invoiceRepository: widget.invoiceRepository,
                     onTabSelected: _selectDashboardTab,
