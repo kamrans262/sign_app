@@ -1,5 +1,5 @@
 // Sign2Digital Login UI Package — UI-only widget and responsive regression tests.
-import 'package:flutter/foundation.dart' show debugDefaultTargetPlatformOverride, kIsWeb, TargetPlatform;
+import 'package:flutter/foundation.dart' show debugDefaultTargetPlatformOverride, defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sign2digital/core/theme/app_colors.dart';
@@ -44,7 +44,9 @@ void main() {
     expect(find.text('E-mail'), findsOneWidget);
     expect(find.text('Password'), findsOneWidget);
     expect(find.text('Continue with Google'), findsOneWidget);
-    expect(find.text('Continue with Apple'), findsOneWidget);
+    expect(find.text('Continue with Apple'),
+        kIsWeb || defaultTargetPlatform != TargetPlatform.android
+            ? findsOneWidget : findsNothing);
     expect(find.text('Log In'), findsOneWidget);
     expect(find.text('Create an account'), findsOneWidget);
     expect(find.byType(TextFormField), findsNWidgets(2));
