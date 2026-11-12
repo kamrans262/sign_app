@@ -279,7 +279,7 @@ class _TimeLabourScreenState extends State<TimeLabourScreen> {
       builder: (sheet) => SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
         child: M15LiveTimerPanel(
-          repository: _repository as RemoteLabourRepository,
+          repository: _repository,
           job: selected,
           onUpdated: () {
             if (mounted) {
@@ -452,7 +452,7 @@ class _TimeLabourScreenState extends State<TimeLabourScreen> {
                         const SizedBox(height: 15),
                         M15LabourSummary(
                           jobId: _jobId!,
-                          repository: _repository as RemoteLabourRepository,
+                          repository: _repository,
                           refreshKey: _all.length,
                         ),
                       ],
