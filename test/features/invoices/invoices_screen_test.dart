@@ -46,13 +46,15 @@ Future<void> _reveal(WidgetTester tester, String id) async {
 
 Future<void> _openPaidDialog(WidgetTester tester) async {
   final action = find.byKey(const Key('invoice-details-mark-paid'));
-  await tester.scrollUntilVisible(
-    action, 120,
-    scrollable: find.descendant(
-      of: find.byKey(const Key('invoice-details-scroll')),
-      matching: find.byType(Scrollable),
-    ).first,
-  );
+  if (action.evaluate().isEmpty) {
+    await tester.scrollUntilVisible(
+      action, 120,
+      scrollable: find.descendant(
+        of: find.byKey(const Key('invoice-details-scroll')),
+        matching: find.byType(Scrollable),
+      ).first,
+    );
+  }
   await tester.ensureVisible(action);
   await tester.pumpAndSettle();
   await tester.tap(action);
