@@ -46,7 +46,7 @@ class Sign2DigitalJobStatusBadge extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
           fontFamily: 'Inter',
-          fontSize: 10,
+          fontSize: 12,
           fontWeight: FontWeight.w500,
           color: foreground,
         ),
