@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 
 import '../../../../core/services/active_company_session.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -109,7 +110,7 @@ class _EquipmentLoanReminderActionsState
       final approved=await showDialog<bool>(
         context:context,
         builder:(dialog)=>StatefulBuilder(
-          builder:(context,refresh)=>AlertDialog(
+          builder:(context,refresh)=>Sign2DigitalApprovedConfirmation(
             title:const Text('Send Equipment Return Reminder?'),
             content:SizedBox(width:320,child:Column(
               mainAxisSize:MainAxisSize.min,
@@ -175,7 +176,7 @@ class _EquipmentLoanReminderActionsState
     final result=await showDialog<int>(
       context:context,
       builder:(dialog)=>StatefulBuilder(
-        builder:(context,refresh)=>AlertDialog(
+        builder:(context,refresh)=>Sign2DigitalApprovedConfirmation(
           title:Text(enable?'Enable Overdue Reminders?':
             'Disable Overdue Reminders?'),
           content:SizedBox(width:320,child:Column(
