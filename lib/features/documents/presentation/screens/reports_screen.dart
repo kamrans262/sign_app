@@ -1,4 +1,5 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
+import '../../../../core/services/active_company_session.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import 'package:printing/printing.dart';
@@ -517,6 +518,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
           constraints: const BoxConstraints(maxWidth: 720),
           child: Stack(children: [
             _list(),
+            if (ActiveCompanySession.canWrite('reports'))
             Positioned(
               right: 20, bottom: 20,
               child: SizedBox(
