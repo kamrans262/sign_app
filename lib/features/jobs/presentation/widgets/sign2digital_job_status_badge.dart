@@ -14,7 +14,7 @@ class Sign2DigitalJobStatusBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final (label, background, foreground) = switch (stage) {
       JobStage.inProgress => (
-        'In progress',
+        'In Progress',
         const Color(0xFFE3ECF0),
         AppColors.primary,
       ),
@@ -29,7 +29,7 @@ class Sign2DigitalJobStatusBadge extends StatelessWidget {
         const Color(0xFF18733D),
       ),
       JobStage.overdue => (
-        'Over due',
+        'Overdue',
         const Color(0xFFFFD7D9),
         const Color(0xFFFA2D36),
       ),
