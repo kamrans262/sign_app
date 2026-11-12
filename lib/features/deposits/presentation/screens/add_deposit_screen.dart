@@ -125,7 +125,7 @@ class _AddDepositScreenState extends State<AddDepositScreen> {
   static bool _isCustomMethod(String value) {
     final method = value.trim().toLowerCase().replaceAll('_', ' ');
     return method.isNotEmpty &&
-        !const ['cash', 'bank transfer', 'other'].contains(method);
+        !const ['cash', 'bank transfer', 'card', 'cheque', 'other'].contains(method);
   }
 
   String? get _methodChoice {
