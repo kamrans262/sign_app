@@ -43,7 +43,8 @@ class Sign2DigitalQuoteSummaryCard extends StatelessWidget {
   final bool alignListBadgeTop;
   final VoidCallback? onRemoveLink;
 
-  String _shortDate(DateTime date) {
+  String _shortDate(DateTime input) {
+    final date = input.toLocal();
     const months = [
       'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
@@ -51,7 +52,8 @@ class Sign2DigitalQuoteSummaryCard extends StatelessWidget {
     return '${months[date.month - 1]} ${date.day}, ${date.year}';
   }
 
-  String _time(DateTime date) {
+  String _time(DateTime input) {
+    final date = input.toLocal();
     final hour = date.hour % 12 == 0 ? 12 : date.hour % 12;
     return '$hour:${date.minute.toString().padLeft(2, '0')} '
         '${date.hour < 12 ? 'AM' : 'PM'}';
@@ -101,7 +103,8 @@ class Sign2DigitalQuoteSummaryCard extends StatelessWidget {
     },
   );
 
-  String _aiDate(DateTime date) {
+  String _aiDate(DateTime input) {
+    final date = input.toLocal();
     const months = [
       'January', 'February', 'March', 'April', 'May', 'June',
       'July', 'August', 'September', 'October', 'November', 'December',
