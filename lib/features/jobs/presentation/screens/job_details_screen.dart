@@ -73,7 +73,8 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
   JobDetailsModel? _freshDetails;
   int _financialLoadSerial = 0;
 
-  JobModel get job => widget.job;
+  // The backend refresh includes the current derived progress percentage.
+  JobModel get job => _freshDetails?.job ?? widget.job;
   JobDetailsModel? get details => _freshDetails ?? widget.details;
   ValueChanged<JobSection>? get onSectionTap => widget.onSectionTap;
   ValueChanged<int>? get onTabSelected => widget.onTabSelected;
