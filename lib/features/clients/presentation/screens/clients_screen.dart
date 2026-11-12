@@ -787,7 +787,7 @@ class _ClientsContentState extends State<_ClientsContent> {
                       },
                     ),
                     const SizedBox(height: 20),
-                    LayoutBuilder(
+                    if (ActiveCompanySession.canWrite('clients')) LayoutBuilder(
                       builder: (context, constraints) {
                         final narrow = constraints.maxWidth < 330;
                         final importButton = _ClientsActionButton(
