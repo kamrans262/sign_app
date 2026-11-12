@@ -157,7 +157,10 @@ void main() {
       of: find.byKey(const Key('deposit-form-client')),
       matching: find.byType(TextFormField),
     );
-    expect(tester.widget<TextFormField>(jobClient).readOnly, isTrue);
+    expect(tester.widget<EditableText>(find.descendant(
+      of: find.byKey(const Key('deposit-form-client')),
+      matching: find.byType(EditableText),
+    )).readOnly, isTrue);
     expect(tester.widget<TextFormField>(jobClient).controller?.text,
         LabourDemoJobs.riverside.clientName);
     await _enter(tester, 'deposit-form-amount', 'CHF 98.00');
