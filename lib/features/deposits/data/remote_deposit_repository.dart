@@ -160,7 +160,8 @@ class RemoteDepositRepository extends DepositRepository {
           ?'bank_transfer':'other';
     return {
       'job_id':job,'quote_id':r.quoteId,
-      'client_name':r.clientName.trim(),
+      // Laravel derives the customer from the scoped, persisted job.
+      // Never submit a stale/voice-entered label that causes a 422 mismatch.
       'amount':r.amount.toStringAsFixed(2),
       'deposit_date':[
         r.date.year.toString().padLeft(4,'0'),
