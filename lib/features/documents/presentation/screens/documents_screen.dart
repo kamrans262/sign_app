@@ -264,6 +264,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
       if (!mounted) return;
     }
     if (selected.addendumDraftId != null &&
+        ActiveCompanySession.canWrite('documents') &&
         AddendumDraftSession.load(selected.addendumDraftId!)
                 ?.isCreatedLocally != true) {
       await Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
