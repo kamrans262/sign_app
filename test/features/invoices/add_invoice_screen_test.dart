@@ -168,6 +168,86 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('new invoice has no sample rows and Add item saves real values',
+      (tester) async {
+    await _launch(tester, AddInvoiceScreen(repository: _Invoices()));
+    await _scroll(tester, 'invoice-items-table');
+    expect(find.byKey(const Key('invoice-no-items')), findsOneWidget);
+    expect(find.text('Electric Installation'), findsNothing);
+    expect(find.text('Material'), findsNothing);
+    expect(find.text('Labour'), findsNothing);
+    expect(find.byKey(const Key('invoice-example-items-notice')), findsNothing);
+    expect(find.text('CHF 98.00'), findsNothing);
+    final addButton = find.byKey(const Key('invoice-add-item'));
+    expect(addButton, findsOneWidget);
+    final addIcon = find.descendant(
+      of: addButton, matching: find.byIcon(Icons.add));
+    expect(tester.widget<Icon>(addIcon).color,
+        const Color(0xFF166282));
+    await tester.tap(addButton);
+    await tester.pumpAndSettle();
+    expect(find.text('Add invoice item'), findsOneWidget);
+    expect(find.byKey(const Key('invoice-item-description')), findsOneWidget);
+    await tester.enterText(
+        find.byKey(const Key('invoice-item-description')),
+        'Repair kitchen tap');
+    await tester.enterText(
+        find.byKey(const Key('invoice-item-quantity')), '2');
+    await tester.enterText(
+        find.byKey(const Key('invoice-item-unit-price')), '65.50');
+    await tester.tap(find.byKey(const Key('invoice-item-apply')));
+    await tester.pumpAndSettle();
+    expect(find.text('Repair kitchen tap'), findsOneWidget);
+    expect(find.text('CHF 131.00'), findsWidgets);
+    expect(find.byKey(const Key('invoice-no-items')), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Add item validates inputs, stays open and accepts correction',
+      (tester) async {
+    await _launch(tester, AddInvoiceScreen(repository: _Invoices()));
+    await _scroll(tester, 'invoice-add-item');
+    await tester.tap(find.byKey(const Key('invoice-add-item')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('invoice-item-apply')));
+    await tester.pumpAndSettle();
+    expect(find.text('Enter a description, valid quantity and price.'),
+        findsOneWidget);
+    expect(find.text('Add invoice item'), findsOneWidget);
+    await tester.enterText(
+        find.byKey(const Key('invoice-item-description')), 'Materials');
+    await tester.enterText(
+        find.byKey(const Key('invoice-item-quantity')), '1');
+    await tester.enterText(
+        find.byKey(const Key('invoice-item-unit-price')), '20.00');
+    await tester.tap(find.byKey(const Key('invoice-item-apply')));
+    await tester.pumpAndSettle();
+    expect(find.text('Materials'), findsOneWidget);
+    expect(find.text('CHF 20.00'), findsWidgets);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('invoice item editor remains readable on dark iPhone',
+      (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(MaterialApp(
+      theme: ThemeData.dark(),
+      home: AddInvoiceScreen(repository: _Invoices()),
+    ));
+    await tester.pumpAndSettle();
+    await _scroll(tester, 'invoice-add-item');
+    await tester.tap(find.byKey(const Key('invoice-add-item')));
+    await tester.pumpAndSettle();
+    expect(find.text('Add invoice item'), findsOneWidget);
+    expect(Theme.of(tester.element(
+        find.byKey(const Key('invoice-item-description')))).brightness,
+        Brightness.light);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('Selected job client, received deposit and completed lines save',
       (tester) async {
     final repo = _Invoices();
