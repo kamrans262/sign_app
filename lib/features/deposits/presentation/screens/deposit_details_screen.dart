@@ -275,12 +275,6 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
           ),
         ),
         ),
-        const SizedBox(height: 15),
-        Sign2DigitalPrimaryButton(
-          key: const Key('deposit-receipts-edit'),
-          label: 'Add or remove receipt',
-          enabled: !_busy && _record.status == DepositStatus.pending,
-          onPressed: _edit),
       ]);
     }
     return Column(
@@ -303,15 +297,8 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
                         showRemove: false, onRemove: () {}),
                 ),
                 const SizedBox(height: 10),
-                if (i == 0) ...[
-                  Sign2DigitalPrimaryButton(
-                    key: const Key('deposit-receipts-edit'),
-                    label: 'Add or remove receipt',
-                    enabled: !_busy && _record.status == DepositStatus.pending,
-                    onPressed: _edit),
-                  const SizedBox(height: 15),
-                ],
-                Row(children: [
+                if (photos.length > 1)
+                  Row(children: [
                   Expanded(child: Sign2DigitalOutlinedButton(
                     key: Key('deposit-receipt-share-$i'),
                     label: 'Share', enabled: !_busy,
@@ -328,6 +315,37 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
             ),
           ),
           const SizedBox(height: 15),
+        ],
+      ],
+    );
+  }
+
+  Widget _receiptActions() {
+    final hasOne = _record.photos.length == 1;
+    return Column(
+      key: const Key('deposit-receipt-bottom-actions'),
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Sign2DigitalPrimaryButton(
+          key: const Key('deposit-receipts-edit'),
+          label: 'Add or remove receipt',
+          enabled: !_busy && _record.status == DepositStatus.pending,
+          onPressed: _edit),
+        if (hasOne) ...[
+          const SizedBox(height: 15),
+          Row(children: [
+            Expanded(child: Sign2DigitalOutlinedButton(
+              key: const Key('deposit-receipt-share-0'),
+              label: 'Share', enabled: !_busy,
+              primaryOutline: true,
+              onPressed: () => _receiptAction(0, share: true))),
+            const SizedBox(width: 10),
+            Expanded(child: Sign2DigitalOutlinedButton(
+              key: const Key('deposit-receipt-download-0'),
+              label: 'Download', enabled: !_busy,
+              primaryOutline: true,
+              onPressed: () => _receiptAction(0, share: false))),
+          ]),
         ],
       ],
     );
@@ -592,13 +610,18 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
             if (_tab == 0) _details()
             else if (_tab == 1) _receipts()
             else _history(),
-            if (_tab == 0) ...[
-              const SizedBox(height: 25),
-              _actions(),
-            ],
           ],
         ),
       ))),
+      if (_tab != 2)
+        Center(child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 720),
+          child: Padding(
+            key: const Key('deposit-sticky-actions'),
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+            child: _tab == 0 ? _actions() : _receiptActions(),
+          ),
+        )),
     ])),
   ));
 }
