@@ -13,6 +13,7 @@ class Sign2DigitalPrimaryButton extends StatelessWidget {
     this.enabled = true,
     this.height = 48,
     this.leading,
+    this.compactLabel = false,
     super.key,
   });
 
@@ -22,6 +23,8 @@ class Sign2DigitalPrimaryButton extends StatelessWidget {
   final bool enabled;
   final double height;
   final Widget? leading;
+  /// Keep long labels to one line on constrained confirmation dialogs.
+  final bool compactLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +53,15 @@ class Sign2DigitalPrimaryButton extends StatelessWidget {
                 ),
               )
             : leading == null
-                ? Text(label, style: AppTextStyles.primaryButton)
+                ? compactLabel
+                    ? FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(label,
+                          maxLines: 1, softWrap: false,
+                          style: AppTextStyles.primaryButton.copyWith(
+                            fontSize: 14)),
+                      )
+                    : Text(label, style: AppTextStyles.primaryButton)
                 : Row(mainAxisSize: MainAxisSize.min, children: [
                     leading!,
                     const SizedBox(width: 10),
