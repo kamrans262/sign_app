@@ -8,6 +8,7 @@ import 'package:sign2digital/features/clients/presentation/screens/clients_scree
 import 'package:sign2digital/features/clients/presentation/screens/more_screen.dart';
 import 'package:sign2digital/features/clients/presentation/widgets/sign2digital_status_badge.dart';
 import 'package:sign2digital/features/labour/data/demo_labour_repository.dart';
+import 'package:sign2digital/features/labour/data/remote_labour_repository.dart';
 import 'package:sign2digital/features/labour/domain/labour_entry.dart';
 import 'package:sign2digital/features/labour/presentation/screens/time_labour_screen.dart';
 import 'package:sign2digital/features/labour/presentation/screens/labour_entry_details_screen.dart';
@@ -43,6 +44,28 @@ class _SwitchingLabourStub extends LabourRepository {
   @override
   Future<void> save(LabourEntry entry) async =>
       throw UnsupportedError('Read-only test fixture.');
+}
+
+/// Backend-connected widget fixture. Any timer request is a regression:
+/// only the approved manual Labour/Time Sheet entry screens are available.
+class _ManualOnlyRemoteLabourRepository extends RemoteLabourRepository {
+  int timerRequests = 0;
+
+  @override
+  Future<List<LabourEntry>> list() async => [
+    record('server-manual-1', name: 'Manual Worker'),
+    record('server-timesheet-1',
+        kind: LabourEntryKind.timeSheet, name: 'Time Sheet Worker'),
+  ];
+
+  @override
+  Future<List<JobModel>> jobs() async => [LabourDemoJobs.riverside];
+
+  @override
+  Future<LabourTimerSnapshot> timerCurrent() async {
+    timerRequests++;
+    throw StateError('Live timer must not be accessed by manual entry UI.');
+  }
 }
 
 LabourEntry record(String id, {LabourEntryKind kind=LabourEntryKind.labour,
@@ -119,6 +142,47 @@ void main() {
     expect(tester.widget<Sign2DigitalBottomNavigationBar>(
       find.byType(Sign2DigitalBottomNavigationBar).last).selectedIndex,4);
     expect(tester.takeException(),isNull);
+  });
+
+  testWidgets('backend-connected Time & Labour restores original manual UI only',
+      (tester) async {
+    ActiveCompanySession.set(7);
+    addTearDown(ActiveCompanySession.clear);
+    final repository = _ManualOnlyRemoteLabourRepository();
+    await tester.pumpWidget(MaterialApp(
+      home: TimeLabourScreen(repository: repository),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Labour'), findsOneWidget);
+    expect(find.text('Time Sheet'), findsOneWidget);
+    expect(find.text('Search time entries'), findsOneWidget);
+    expect(find.byKey(const Key('labour-job-filter')), findsOneWidget);
+    expect(find.byKey(const Key('labour-sort')), findsOneWidget);
+    expect(find.byKey(const Key('labour-card-server-manual-1')), findsOneWidget);
+    expect(find.byKey(const Key('m15-live-timer-panel')), findsNothing);
+    expect(find.text('Work Timer'), findsNothing);
+    expect(repository.timerRequests, 0);
+
+    await tester.tap(find.byKey(const Key('details-tab-1')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('labour-card-server-timesheet-1')),
+        findsOneWidget);
+    expect(find.byKey(const Key('m15-live-timer-panel')), findsNothing);
+    expect(repository.timerRequests, 0);
+
+    // Plus continues to open the original manual form, not a timer screen.
+    await tester.tap(find.byKey(const Key('labour-create')));
+    await tester.pumpAndSettle();
+    expect(find.byType(AddLabourEntryScreen), findsOneWidget);
+    expect(find.byKey(const Key('labour-form-start'), skipOffstage: false),
+        findsOneWidget);
+    expect(find.byKey(const Key('labour-form-end'), skipOffstage: false),
+        findsOneWidget);
+    expect(find.byKey(const Key('labour-form-save'), skipOffstage: false),
+        findsOneWidget);
+    expect(repository.timerRequests, 0);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('Labour/Time Sheet tabs filter different records',
