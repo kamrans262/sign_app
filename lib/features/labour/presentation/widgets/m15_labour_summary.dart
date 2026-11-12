@@ -8,9 +8,11 @@ import '../../data/remote_labour_repository.dart';
 class M15LabourSummary extends StatefulWidget {
   const M15LabourSummary({
     super.key,required this.jobId,this.asFinancialCard=false,
-    this.refreshKey,
+    this.refreshKey,this.repository,
   });
   final String jobId;
+  /// Use the same scoped repository as the current screen.
+  final RemoteLabourRepository? repository;
   final bool asFinancialCard;
   final Object? refreshKey;
 
@@ -42,6 +44,7 @@ class _M15LabourSummaryState extends State<M15LabourSummary> {
   void didUpdateWidget(covariant M15LabourSummary oldWidget){
     super.didUpdateWidget(oldWidget);
     if(widget.jobId!=oldWidget.jobId||
+        widget.repository!=oldWidget.repository||
         widget.refreshKey!=oldWidget.refreshKey) {
       _load();
     }
@@ -55,7 +58,7 @@ class _M15LabourSummaryState extends State<M15LabourSummary> {
 
   void _load(){
     _summary=ActiveCompanySession.companyId==null?null:
-        RemoteLabourRepository.shared.summary(widget.jobId);
+        (widget.repository??RemoteLabourRepository.shared).summary(widget.jobId);
   }
 
   static int? _integer(Object? raw) {
