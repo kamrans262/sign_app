@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sign2digital/core/theme/app_colors.dart';
 import 'package:sign2digital/core/theme/app_theme.dart';
 import 'package:sign2digital/core/widgets/sign2digital_modal_surface.dart';
+import 'package:sign2digital/core/widgets/sign2digital_outlined_button.dart';
+import 'package:sign2digital/core/widgets/sign2digital_primary_button.dart';
 import 'package:sign2digital/core/widgets/sign2digital_selection_sheet.dart';
 import 'package:sign2digital/core/widgets/sign2digital_styled_bottom_sheet.dart';
 import 'package:sign2digital/features/quotes/presentation/widgets/sign2digital_signature_consent.dart';
@@ -55,17 +57,58 @@ void main() {
       expect(label, findsOneWidget);
       _expectReadableWhiteSurface(tester.element(label));
       _expectReadableWhiteSurface(tester.element(find.text('Cancel')));
-      expect(tester.widget<TextButton>(
+      expect(tester.widget<Sign2DigitalPrimaryButton>(
         find.byKey(const Key('signature-consent-continue')),
-      ).onPressed, isNull);
+      ).enabled, isFalse);
       await tester.tap(find.byKey(const Key('signature-consent-checkbox')));
       await tester.pumpAndSettle();
-      expect(tester.widget<TextButton>(
+      expect(tester.widget<Sign2DigitalPrimaryButton>(
         find.byKey(const Key('signature-consent-continue')),
-      ).onPressed, isNotNull);
+      ).enabled, isTrue);
       await tester.tap(find.text('Continue'));
       await tester.pumpAndSettle();
       expect(result, true);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('short agreement terms remain left-aligned with compact actions in $mode',
+        (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      bool? result;
+      await tester.pumpWidget(MaterialApp(
+        theme: appTheme,
+        home: Scaffold(body: Builder(builder: (context) => TextButton(
+          onPressed: () async {
+            result = await showSign2DigitalSignatureConsent(context, '100');
+          },
+          child: const Text('Open agreement'),
+        ))),
+      ));
+      await tester.tap(find.text('Open agreement'));
+      await tester.pumpAndSettle();
+      final terms = find.byKey(const Key('signature-consent-terms'));
+      expect(find.text('100'), findsOneWidget);
+      expect(tester.getTopLeft(find.text('100')).dx,
+          closeTo(tester.getTopLeft(terms).dx + 12, 1.0));
+      final checkbox = find.descendant(
+        of: find.byKey(const Key('signature-consent-checkbox')),
+        matching: find.byType(Checkbox),
+      );
+      final agreement = find.text('I have read and agree to these terms.');
+      expect(tester.getCenter(checkbox).dx, lessThan(tester.getCenter(agreement).dx));
+      expect(tester.widget<CheckboxListTile>(
+        find.byKey(const Key('signature-consent-checkbox'))).value, isFalse);
+      expect(tester.getSize(find.byType(Dialog)).height, lessThan(450));
+      expect(find.widgetWithText(Sign2DigitalOutlinedButton, 'Cancel'),
+          findsOneWidget);
+      expect((tester.getCenter(find.text('Cancel')).dy -
+              tester.getCenter(find.text('Continue')).dy).abs(), lessThan(8));
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(result, isFalse);
       expect(tester.takeException(), isNull);
     });
 
