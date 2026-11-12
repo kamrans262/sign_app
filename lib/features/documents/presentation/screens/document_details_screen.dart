@@ -9,6 +9,7 @@ import 'package:printing/printing.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
+import '../../../../core/widgets/sign2digital_outlined_button.dart';
 import '../../../../core/widgets/sign2digital_information_table.dart';
 import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import '../../../quotes/presentation/widgets/sign2digital_quote_summary_card.dart';
@@ -471,12 +472,14 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
     }
   }
 
+  /// Show the authoritative receipt. Email delivery has no raw capability
+  /// token; legacy/manual link receipts still offer Copy secure link.
   Future<void> _showAddendumSigningLink(
     AddendumDraft draft,
     DocumentRecord source,
     AddendumSignatureRequest response,
   ) async {
-    final link = response.secureUrl.toString();
+    final link = response.secureUrl?.toString();
     await showSign2DigitalBottomSheet<void>(
       context: context,
       builder: (sheet) => SafeArea(child: Padding(
@@ -489,29 +492,106 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
           const SizedBox(height: 10),
           Text('Addendum: ${draft.number}'),
           Text('Original document: ${source.number}'),
-          Text('Status: ${response.confirmedSentAt == null ? 'Link ready (not emailed)' : response.status}',
+          Text(
+            response.emailTransportAccepted
+                ? 'Status: Email sent (awaiting signature)'
+                : 'Status: ${response.confirmedSentAt == null ? 'Link ready (not emailed)' : response.status}',
             key: const Key('addendum-signature-request-status')),
           const SizedBox(height: 10),
           const Text('The customer must sign the separate addendum. '
             'The original signed document remains unchanged.'),
-          const SizedBox(height: 10),
-          SelectableText(link),
-          TextButton.icon(
-            key: const Key('addendum-copy-secure-link'),
-            onPressed: () async {
-              await Clipboard.setData(ClipboardData(text: link));
-              if (!sheet.mounted) return;
-              ScaffoldMessenger.of(sheet).showSnackBar(
-                const SnackBar(content: Text('Secure link copied. '
-                  'Copying does not confirm delivery.')),
-              );
-            },
-            icon: const Icon(Icons.copy_outlined),
-            label: const Text('Copy secure link'),
-          ),
+          if (response.emailTransportAccepted) ...[
+            const SizedBox(height: 10),
+            const Text('The email was accepted by the sending service. '
+              'Inbox delivery is not yet confirmed.'),
+          ],
+          if (link != null) ...[
+            const SizedBox(height: 10),
+            SelectableText(link),
+            TextButton.icon(
+              key: const Key('addendum-copy-secure-link'),
+              onPressed: () async {
+                await Clipboard.setData(ClipboardData(text: link));
+                if (!sheet.mounted) return;
+                ScaffoldMessenger.of(sheet).showSnackBar(
+                  const SnackBar(content: Text('Secure link copied. '
+                    'Copying does not confirm delivery.')),
+                );
+              },
+              icon: const Icon(Icons.copy_outlined),
+              label: const Text('Copy secure link'),
+            ),
+          ],
         ]),
       )),
     );
+  }
+
+  Future<bool> _confirmReplacingReadyAddendumLink() async {
+    final answer = await showSign2DigitalBottomSheet<bool>(
+      context: context,
+      builder: (sheet) => SafeArea(child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text('Replace Unsent Link?',
+              style: TextStyle(fontFamily: 'Inter', fontSize: 18,
+                fontWeight: FontWeight.w600, color: AppColors.dark)),
+            const SizedBox(height: 12),
+            const Text('An active signing link was created but not emailed. '
+              'Replacing it will invalidate that old link and email a new '
+              'secure link to the original verified customer.'),
+            const SizedBox(height: 20),
+            Row(children: [
+              Expanded(child: Sign2DigitalOutlinedButton(
+                label: 'Cancel',
+                onPressed: () => Navigator.pop(sheet, false),
+              )),
+              const SizedBox(width: 12),
+              Expanded(child: Sign2DigitalPrimaryButton(
+                label: 'Send Email',
+                onPressed: () => Navigator.pop(sheet, true),
+              )),
+            ]),
+          ],
+        ),
+      )),
+    );
+    return answer == true;
+  }
+
+  Future<AddendumSignatureRequest?> _handleActiveAddendumRequest(
+    AddendumDraft current,
+    DocumentRecord source,
+  ) async {
+    if (current.serverId == null || !MobileAuthRepository.shared.isSignedIn) {
+      _message('A signing request is already active. Check its status.');
+      return null;
+    }
+    try {
+      final status = await RemoteAddendumRepository.shared
+          .activeSignatureRequestStatus(current.serverId!);
+      if (!mounted) return null;
+      if (status == 'sent' || status == 'viewed') {
+        _message('The customer has already been emailed this addendum. '
+          'Do not send another signing request.');
+        return null;
+      }
+      if (status != 'ready') {
+        _message('The signing request changed. Reopen the document to refresh.');
+        return null;
+      }
+      if (!await _confirmReplacingReadyAddendumLink() || !mounted) return null;
+      return await RemoteAddendumRepository.shared.requestSignature(
+        current, source, replaceReadyLink: true);
+    } on SignApiException catch (error) {
+      if (mounted) _message('Could not send the addendum: ${error.message}');
+    } catch (_) {
+      if (mounted) _message('Could not verify the current signing request.');
+    }
+    return null;
   }
 
   Future<void> _sendAddendumForSignature() async {
@@ -538,8 +618,8 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
       return;
     }
     final source = sources.single;
-    // Reopening an existing service-confirmed link must never create a second
-    // request. The backend intentionally rejects multiple active links.
+    // Session-confirmed email receipts and legacy copied-link receipts are
+    // not submitted again. Laravel remains authoritative after app restart.
     final existing = AddendumSignatureRequestSession.forAddendum(draft.id);
     if (existing != null && existing.valid &&
         existing.originalDocumentId == source.id) {
@@ -549,11 +629,9 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
 
     setState(() => _requestingAddendum = true);
     AddendumSignatureRequest? response;
-    AddendumDraft? current;
+    AddendumDraft current = draft;
     try {
-      // The document status is refreshed after approval, but the previous
-      // local draft may still say "draft". Always use Laravel's current
-      // revision/status when requesting a real customer signing link.
+      // Refresh status and revision from Laravel rather than a cached draft.
       current = draft.serverId != null && MobileAuthRepository.shared.isSignedIn
           ? await RemoteAddendumRepository.shared.get(draft.serverId!)
           : draft;
@@ -561,34 +639,48 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
           current.validationIssues.isNotEmpty) {
         throw const FormatException('The signed original has changed.');
       }
-      response = await service(current, source);
+      try {
+        response = await service(current, source);
+      } on SignApiException catch (error) {
+        if (error.statusCode != 409) rethrow;
+        response = await _handleActiveAddendumRequest(current, source);
+        if (response == null) return;
+      }
       if (response == null || !response.valid) {
         throw const FormatException(
-            'The service did not return a valid signing link.');
+            'The service did not return a valid signing receipt.');
       }
-      // The request is server-confirmed before this receipt is remembered.
+      // Only server-confirmed receipts are cached. No signature is fabricated.
       AddendumSignatureRequestSession.remember(current, source, response);
-    } on SignApiException catch (error) {
-      if (mounted) {
-        _message(error.statusCode == 409
-            ? 'An active signing request already exists. Use its saved link '
-              'or revoke it before issuing another request.'
-            : 'Could not create signing request: ${error.message}');
+      if (widget.loadDocument != null && mounted) {
+        try {
+          final latest = await widget.loadDocument!(record.id);
+          if (latest != null && latest.id == record.id && mounted) {
+            setState(() {
+              _record = latest;
+              _pdfFuture = null;
+            });
+          }
+        } catch (_) {
+          // Receipt remains genuine even when refreshing the list fails.
+        }
       }
+    } on SignApiException catch (error) {
+      if (mounted) _message('Could not send addendum: ${error.message}');
       return;
-    } catch (error) {
-      if (mounted) _message('Could not create the signing request. '
-          'Check the addendum status and try again.');
+    } catch (_) {
+      if (mounted) _message('Could not send the addendum for signature. '
+          'Please check its saved status.');
       return;
     } finally {
       if (mounted) setState(() => _requestingAddendum = false);
     }
-    if (!mounted) return;
+    if (!mounted || response == null) return;
     try {
       await _showAddendumSigningLink(current, source, response);
     } catch (_) {
-      if (mounted) _message('The signing link was created successfully, '
-          'but its preview could not be opened.');
+      if (mounted) _message('The signing request was accepted, '
+          'but its confirmation could not be displayed.');
     }
   }
 
