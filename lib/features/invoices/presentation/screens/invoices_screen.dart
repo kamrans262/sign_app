@@ -17,6 +17,7 @@ import '../../../../core/services/active_company_session.dart';
 import '../../domain/invoice_record.dart';
 import 'add_invoice_screen.dart';
 import '../../../jobs/domain/job_model.dart';
+import '../../../labour/data/demo_labour_repository.dart';
 import 'invoice_details_screen.dart';
 
 enum InvoiceSort {
@@ -35,6 +36,7 @@ class InvoicesScreen extends StatefulWidget {
     this.onNavigationSelected, this.onNotificationTap, this.onProfileTap,
     this.selectedNavigationIndex = 4,
     this.jobId,
+    this.initialJob,
   });
 
   final InvoiceRepository? repository;
@@ -46,6 +48,7 @@ class InvoicesScreen extends StatefulWidget {
   final int selectedNavigationIndex;
   /// A Job Details route filters this screen to its persisted job ID.
   final String? jobId;
+  final JobModel? initialJob;
 
   @override
   State<InvoicesScreen> createState() => _InvoicesScreenState();
@@ -220,7 +223,8 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
         return;
       }
     }
-    if (widget.jobId != null && jobs != null) {
+    if (widget.jobId != null) {
+      jobs ??= LabourDemoJobs.all;
       jobs = jobs.where((job) => job.id == widget.jobId).toList();
       if (jobs.isEmpty) { _notice('Job is no longer available.'); return; }
     }
@@ -229,6 +233,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
       MaterialPageRoute<InvoiceRecord>(
         builder: (_) => AddInvoiceScreen(
           jobs:jobs,
+          initialJob: widget.initialJob ?? (widget.jobId == null ? null : jobs?.first),
           repository: _repository,
           selectedNavigationIndex: widget.selectedNavigationIndex,
           onNavigationSelected: widget.onNavigationSelected,
