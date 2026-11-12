@@ -1,3 +1,4 @@
+import '../../../core/utils/sign2digital_server_timestamp.dart';
 import 'package:crypto/crypto.dart';
 
 import '../../../core/services/active_company_session.dart';
@@ -77,8 +78,8 @@ class RemoteDepositRepository extends DepositRepository {
       referenceNumber:(r['reference_number']??'').toString(),
       notes:(r['notes']??'').toString(),photos:photos,history:history,
       receivedBy:r['received_by']==null?null:'User #${r['received_by']}',
-      receivedAt:r['received_at']==null?null:_date(r['received_at']),
-      refundedAt:r['refunded_at']==null?null:_date(r['refunded_at']),
+      receivedAt:Sign2DigitalServerTimestamp.tryParse(r['received_at']),
+      refundedAt:Sign2DigitalServerTimestamp.tryParse(r['refunded_at']),
       demoOnly:false,
     );
   }
@@ -144,7 +145,8 @@ class RemoteDepositRepository extends DepositRepository {
         DepositHistoryEvent(
           id:_map(raw)['id'].toString(),
           title:_map(raw)['type'].toString().replaceAll('_',' '),
-          occurredAt:_date(_map(raw)['created_at']),
+          occurredAt:Sign2DigitalServerTimestamp.tryParse(_map(raw)['created_at']) ??
+           throw const SignApiException('Invalid deposit history timestamp'),
           description:_map(raw)['actor_user_id']==null?null:
               'User #${_map(raw)['actor_user_id']}',
         ),
