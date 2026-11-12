@@ -1,3 +1,4 @@
+import '../../../core/utils/sign2digital_server_timestamp.dart';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
@@ -129,8 +130,8 @@ class RemoteWorkAcceptanceRepository implements DocumentRepository {
       timestamp:_date(row['completion_date']),
       status:status,version:_id(row['revision']),demoOnly:false,
       verifiedSignedPdfAvailable:_signed(status),
-      jobId:job.toString(),createdAt:_date(row['created_at']),
-      updatedAt:DateTime.tryParse((row['updated_at']??'').toString()),
+      jobId:job.toString(),createdAt:Sign2DigitalServerTimestamp.tryParse(row['created_at']),
+      updatedAt:Sign2DigitalServerTimestamp.tryParse(row['updated_at']),
       reportKind:ReportKind.workAcceptance,
       reportManagedDocumentId:row['managed_document_id']==null
           ?null:_id(row['managed_document_id']),
@@ -266,7 +267,8 @@ class RemoteWorkAcceptanceRepository implements DocumentRepository {
         events.add(WorkAcceptanceEvent(
           id:'${item['id']}-${stage.name}',
           documentId:id,stage:stage,
-          occurredAt:_date(item['created_at']),
+          occurredAt:Sign2DigitalServerTimestamp.tryParse(item['created_at']) ??
+             throw const SignApiException('Invalid acceptance event timestamp'),
           actorName:item['actor_id']==null?'Customer':'Sign2Digital User',
         ));
       }
@@ -290,7 +292,7 @@ class RemoteWorkAcceptanceRepository implements DocumentRepository {
       outstandingIssues:(row['customer_outstanding_issues']??'').toString(),
       customerComment:(row['customer_comment']??'').toString(),
       customerRating:row['customer_rating']==null?null:_id(row['customer_rating']),
-      signedAt:row['signed_at']==null?null:_date(row['signed_at']),
+      signedAt:Sign2DigitalServerTimestamp.tryParse(row['signed_at']),
     );
     final result=_record(row,company,evidence:evidence);
     if(result.id!=id)throw const SignApiException('Acceptance ID changed.');
