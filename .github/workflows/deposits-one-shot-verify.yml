@@ -2,9 +2,12 @@ name: Deposits focused verification
 
 on:
   push:
-    branches: [ui-development]
+    branches: [fix/m20-android-live-reminder-integration-2026-11-06]
     paths:
       - '.github/workflows/deposits-one-shot-verify.yml'
+      - 'lib/features/deposits/**'
+      - 'lib/core/widgets/sign2digital_input_field.dart'
+      - 'test/features/deposits/**'
   workflow_dispatch:
 
 permissions:
@@ -26,14 +29,18 @@ jobs:
         run: dart format --output=none lib/features/deposits test/features/deposits
       - name: Analyze Deposits and only directly touched shared widgets
         run: |
-          flutter analyze --no-pub lib/features/deposits test/features/deposits \
+          flutter analyze --no-pub --no-fatal-infos lib/features/deposits test/features/deposits \
+            lib/core/widgets/sign2digital_input_field.dart \
             lib/features/clients/presentation/screens/more_screen.dart \
             lib/features/clients/presentation/widgets/sign2digital_details_tabs.dart \
             lib/features/clients/presentation/widgets/sign2digital_status_badge.dart
-      - name: Run Deposits listing and Create Deposit tests only
+      - name: Run Deposit creation, retry, details and iOS appearance regression
         run: |
-          flutter test --no-pub --concurrency=1 --reporter expanded --timeout 45s \
+          timeout --signal=TERM --kill-after=10s 220s flutter test --no-pub --concurrency=2 --reporter expanded --timeout 60s \
             test/features/deposits/deposits_screen_test.dart \
-            test/features/deposits/add_deposit_screen_test.dart
+            test/features/deposits/add_deposit_screen_test.dart \
+            test/features/deposits/deposit_details_screen_test.dart \
+            test/features/deposits/m16_remote_deposit_repository_test.dart \
+            test/features/deposits/m16_remote_deposit_voice_test.dart
 
 # Final Create Deposit verification after reported lint fixes.
