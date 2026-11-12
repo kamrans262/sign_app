@@ -11,7 +11,6 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
-import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../domain/job_details_model.dart';
 import 'job_photos_screen.dart';
 import 'job_notes_screen.dart';
@@ -53,7 +52,6 @@ class JobDetailsScreen extends StatefulWidget {
     this.companyId,
     this.client,
     this.onManageJob,
-    this.onProgressChanged,
   });
 
   final JobModel job;
@@ -66,8 +64,6 @@ class JobDetailsScreen extends StatefulWidget {
   final ClientProfile? client;
   /// Only supplied for authenticated, persisted jobs. Demo layout unchanged.
   final Future<bool> Function(JobModel job, String action)? onManageJob;
-  /// Persists work completion on the verified job, not its financial records.
-  final Future<bool> Function(JobModel job, int percentage)? onProgressChanged;
 
   @override
   State<JobDetailsScreen> createState() => _JobDetailsScreenState();
@@ -77,7 +73,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
   JobDetailsModel? _freshDetails;
   int _financialLoadSerial = 0;
 
-  JobModel get job => _freshDetails?.job ?? widget.job;
+  JobModel get job => widget.job;
   JobDetailsModel? get details => _freshDetails ?? widget.details;
   ValueChanged<JobSection>? get onSectionTap => widget.onSectionTap;
   ValueChanged<int>? get onTabSelected => widget.onTabSelected;
@@ -85,8 +81,6 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
   ClientProfile? get client => widget.client;
   Future<bool> Function(JobModel job, String action)? get onManageJob =>
       widget.onManageJob;
-  Future<bool> Function(JobModel job, int percentage)? get onProgressChanged =>
-      widget.onProgressChanged;
 
   @override
   void initState() {
@@ -138,8 +132,6 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
         ? const ['Restore Job']
         : <String>[
             'Edit Job',
-            if (onProgressChanged != null && job.category != JobCategory.completed)
-              'Update Progress',
             if (job.stage == JobStage.planning) 'Start Job',
             if (job.stage == JobStage.inProgress ||
                 job.stage == JobStage.overdue) 'Set to Planning',
@@ -152,10 +144,6 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
       subtitle: job.referenceNumber, options: options,
     );
     if (!context.mounted || action == null) return;
-    if (action == 'Update Progress') {
-      await _editJobProgress(context);
-      return;
-    }
     if (action == 'Archive Job') {
       final confirmation = await Sign2DigitalSelectionSheet.show(
         context, title: 'Archive Job',
@@ -168,80 +156,6 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
     final updated = await manage(job, action);
     if (context.mounted && updated) {
       Navigator.of(context).pop();
-    }
-  }
-
-
-  Future<void> _editJobProgress(BuildContext context) async {
-    final update = onProgressChanged;
-    if (update == null || job.category != JobCategory.active) return;
-    var percentage = job.progressPercentage.round().clamp(0, 100);
-    final selected = await Sign2DigitalSelectionSheet.showCustom<int>(
-      context: context,
-      title: 'Update Job Progress',
-      icon: Icons.trending_up_rounded,
-      subtitle: 'Adjust the percentage of work completed.',
-      builder: (sheet) => StatefulBuilder(
-        builder: (sheetContext, setSheetState) => Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                '$percentage%',
-                key: const Key('job-progress-value'),
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.primary,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Slider(
-                key: const Key('job-progress-slider'),
-                value: percentage.toDouble(),
-                min: 0,
-                max: 100,
-                divisions: 100,
-                activeColor: AppColors.primary,
-                onChanged: (value) =>
-                    setSheetState(() => percentage = value.round()),
-              ),
-              const Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('0%', style: AppTextStyles.subtitle),
-                  Text('100%', style: AppTextStyles.subtitle),
-                ],
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Setting 100% also marks the job as Completed.',
-                style: AppTextStyles.subtitle,
-              ),
-              const SizedBox(height: 20),
-              Sign2DigitalPrimaryButton(
-                key: const Key('save-job-progress'),
-                label: 'Save Progress',
-                onPressed: () => Navigator.of(sheet).pop(percentage),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-    if (!context.mounted || selected == null ||
-        selected == job.progressPercentage.round()) {
-      return;
-    }
-    final saved = await update(job, selected);
-    if (context.mounted && saved) {
-      // Refresh the same screen from the authoritative API; the Jobs tab is
-      // independently refreshed by the parent dashboard handler.
-      await _refreshFinancials();
     }
   }
 
