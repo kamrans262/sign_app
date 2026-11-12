@@ -6,6 +6,18 @@
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+    <!-- M23 Stripe Checkout returns via this mobile URL scheme. -->
+    <key>FlutterDeepLinkingEnabled</key>
+    <false/>
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLName</key>
+            <string>Sign2Digital Checkout</string>
+            <key>CFBundleURLSchemes</key>
+            <array><string>sign2digital</string></array>
+        </dict>
+    </array>
 	<key>CFBundleDisplayName</key>
 	<string>Sign2Digital</string>
 	<key>CFBundleExecutable</key>
