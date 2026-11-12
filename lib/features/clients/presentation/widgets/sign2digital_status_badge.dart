@@ -7,9 +7,28 @@ class Sign2DigitalStatusBadge extends StatelessWidget {
   const Sign2DigitalStatusBadge({super.key, required this.status});
   final String status;
 
+  /// Display-only normalization. API, filters and saved statuses stay intact.
+  static String displayLabel(String value) {
+    final clean = value.trim().replaceAll(RegExp(r'[_]+'), ' ')
+        .replaceAll(RegExp(r'\\s+'), ' ');
+    if (clean.isEmpty) return '';
+    const acronyms = {'pdf', 'ai', 'vat', 'qr', 'id'};
+    return clean.split(' ').map((part) {
+      if (part.isEmpty) return part;
+      if (acronyms.contains(part.toLowerCase())) {
+        return part.toUpperCase();
+      }
+      if (part.length > 1 && part == part.toUpperCase()) {
+        return part;
+      }
+      return '${part[0].toUpperCase()}${part.substring(1).toLowerCase()}';
+    }).join(' ');
+  }
+
   @override
   Widget build(BuildContext context) {
-    final colors = switch (status.toLowerCase()) {
+    final colors = switch (status.trim().toLowerCase()
+        .replaceAll(RegExp(r'[_]+'), ' ')) {
       'active' => (const Color(0xFFC4F0D0), const Color(0xFF18733D)),
       'customer-facing' => (const Color(0xFFC4F0D0), const Color(0xFF18733D)),
       'quote' => (DashboardColors.paleBlue, AppColors.primary),
@@ -35,12 +54,12 @@ class Sign2DigitalStatusBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
       ),
       child: Text(
-        status,
+        displayLabel(status),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
           fontFamily: 'Inter',
-          fontSize: 10,
+          fontSize: 12,
           fontWeight: FontWeight.w500,
           color: colors.$2,
         ),
