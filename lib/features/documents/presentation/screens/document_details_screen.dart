@@ -1331,7 +1331,8 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
           const SizedBox(height: 20),
           if (_tab != 3) ...[
             _actions(),
-            if (_isApprovedUnsignedQuote(record)) ...[
+            if (_isApprovedUnsignedQuote(record) &&
+                ActiveCompanySession.canWrite('quotes')) ...[
               const SizedBox(height: 12),
               Sign2DigitalPrimaryButton(
                 key: const Key('document-request-signature'),
