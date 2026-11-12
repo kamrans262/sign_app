@@ -92,6 +92,11 @@ Future<void> _show(WidgetTester tester, DepositRecord deposit,
 
 Future<void> _reach(WidgetTester tester, String id) async {
   final target = find.byKey(Key(id));
+  if (target.evaluate().isNotEmpty) {
+    await tester.ensureVisible(target);
+    await tester.pumpAndSettle();
+    return;
+  }
   await tester.scrollUntilVisible(target, 130,
     scrollable: find.descendant(
       of: find.byKey(const Key('deposit-details-scroll')),
@@ -160,13 +165,17 @@ void main() {
     final photoEdit = find.byKey(const Key('deposit-receipts-edit'));
     expect(find.byType(Sign2DigitalPrimaryButton), findsOneWidget);
     expect(tester.getSize(photoEdit).width,
-      closeTo(tester.getSize(find.byKey(const Key('deposit-receipts-grid'))).width - 22, 1));
+      closeTo(tester.getSize(find.byKey(const Key('deposit-receipts-grid'))).width, 1));
+    expect(find.ancestor(of: photoEdit,
+      matching: find.byKey(const Key('deposit-sticky-actions'))),
+      findsOneWidget);
     expect(find.text('Add or remove receipt'), findsOneWidget);
-    expect(tester.getTopLeft(photoEdit).dy,
-      greaterThan(tester.getBottomLeft(find.byKey(const Key('deposit-receipt-0'))).dy));
+
     expect(tester.getTopLeft(photoEdit).dy,
       lessThan(tester.getTopLeft(find.byKey(const Key('deposit-receipt-share-0'))).dy));
     expect(find.byKey(const Key('deposit-detail-actions')), findsNothing);
+    await tester.ensureVisible(find.byKey(const Key('deposit-receipt-0')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('deposit-receipt-0')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('deposit-receipt-close')), findsOneWidget);
