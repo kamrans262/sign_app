@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/widgets/sign2digital_primary_button.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -89,16 +90,16 @@ void main() {
     await tester.tap(find.byKey(const Key('m22-privacy-delete')));
     await tester.pumpAndSettle();
     expect(find.text('Permanently Delete Account?'), findsOneWidget);
-    TextButton button = tester.widget<TextButton>(
+    Sign2DigitalPrimaryButton button = tester.widget<Sign2DigitalPrimaryButton>(
         find.byKey(const Key('m22-delete-confirm')));
-    expect(button.onPressed, isNull);
+    expect(button.enabled, isFalse);
     await tester.enterText(find.byKey(const Key('m22-delete-type')), 'DELETE');
     await tester.enterText(find.byKey(const Key('m22-delete-password')),
       'sample-password');
     await tester.pumpAndSettle();
-    button = tester.widget<TextButton>(
+    button = tester.widget<Sign2DigitalPrimaryButton>(
         find.byKey(const Key('m22-delete-confirm')));
-    expect(button.onPressed, isNotNull);
+    expect(button.enabled, isTrue);
     await tester.tap(find.text('Keep Account'));
     await tester.pumpAndSettle();
     expect(writes, 0);
