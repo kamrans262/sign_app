@@ -7,6 +7,9 @@ on:
       - 'lib/main.dart'
       - 'lib/features/splash/presentation/splash_screen.dart'
       - 'pubspec.yaml'
+      - 'tool/normalize_android_native_splash.dart'
+      - 'android/app/src/main/res/values-v31/styles.xml'
+      - 'android/app/src/main/res/values-night-v31/styles.xml'
       - 'test/features/splash/splash_navigation_test.dart'
       - 'test/widget_test.dart'
   workflow_dispatch:
@@ -32,10 +35,13 @@ jobs:
         run: flutter test --no-pub test/features/splash/splash_navigation_test.dart test/widget_test.dart
       - name: Generate branded native splash for Android 12 and older Android
         run: dart run flutter_native_splash:create
+      - name: Ensure native Android 12+ white transition
+        run: dart run tool/normalize_android_native_splash.dart
       - name: Verify Android 12 launch icon is generated and no app icon is used as splash source
         run: |
           grep -q 'image: "assets/logo_splash.png"' pubspec.yaml
           if sed -n '/^flutter_native_splash:/,$p' pubspec.yaml | grep -q 'image: "assets/sign_app_icon.png"'; then exit 1; fi
           test -f android/app/src/main/res/values-v31/styles.xml
           grep -q 'windowSplashScreenAnimatedIcon' android/app/src/main/res/values-v31/styles.xml
+          if grep -R -e 'Theme.Black.NoTitleBar' -e '?android:colorBackground' android/app/src/main/res/values-v31/styles.xml android/app/src/main/res/values-night-v31/styles.xml; then exit 1; fi
           grep -q 'launch_background' android/app/src/main/res/values/styles.xml
