@@ -373,7 +373,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
                         ]),
                     ]);
                   })
-                else if (_report.status != 'archived') ...[
+                else if (!_isDraft && _report.status != 'archived') ...[
                   Sign2DigitalPrimaryButton(
                     label: 'Already Approved', onPressed: () {},
                     enabled: false,
