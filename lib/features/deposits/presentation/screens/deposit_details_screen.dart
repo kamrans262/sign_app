@@ -267,7 +267,7 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
                 Text('No receipt attached',
                   style: TextStyle(fontFamily: 'Inter',
                     fontSize: 14, color: AppColors.placeholder)),
-                Text('Edit the deposit to add a photo',
+                Text('Edit the deposit to add a receipt',
                   style: TextStyle(fontFamily: 'Inter',
                     fontSize: 12, color: AppColors.placeholder)),
               ],
@@ -278,7 +278,7 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
         const SizedBox(height: 15),
         Sign2DigitalPrimaryButton(
           key: const Key('deposit-receipts-edit'),
-          label: 'Add or remove photos',
+          label: 'Add or remove receipt',
           enabled: !_busy && _record.status == DepositStatus.pending,
           onPressed: _edit),
       ]);
@@ -286,12 +286,6 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
     return Column(
       key: const Key('deposit-receipts-grid'),
       children: [
-        Sign2DigitalPrimaryButton(
-          key: const Key('deposit-receipts-edit'),
-          label: 'Add or remove photos',
-          enabled: !_busy && _record.status == DepositStatus.pending,
-          onPressed: _edit),
-        const SizedBox(height: 15),
         for (var i = 0; i < photos.length; i++) ...[
           Sign2DigitalOutlinedContainer(
             child: Padding(
@@ -309,6 +303,14 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
                         showRemove: false, onRemove: () {}),
                 ),
                 const SizedBox(height: 10),
+                if (i == 0) ...[
+                  Sign2DigitalPrimaryButton(
+                    key: const Key('deposit-receipts-edit'),
+                    label: 'Add or remove receipt',
+                    enabled: !_busy && _record.status == DepositStatus.pending,
+                    onPressed: _edit),
+                  const SizedBox(height: 15),
+                ],
                 Row(children: [
                   Expanded(child: Sign2DigitalOutlinedButton(
                     key: Key('deposit-receipt-share-$i'),
@@ -406,6 +408,7 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
               Expanded(child: Sign2DigitalPrimaryButton(
                 key: confirmKey,
                 label: confirmLabel,
+                compactLabel: confirmLabel == 'Mark Received',
                 onPressed: () => Navigator.of(dialog).pop(true),
               )),
             ]),
