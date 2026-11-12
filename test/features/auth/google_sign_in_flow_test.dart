@@ -59,6 +59,7 @@ void main() {
       repository: repository,
       googleIdTokenProvider: () async => 'signed-id-token-from-google',
     )));
+    await tester.ensureVisible(find.text('Continue with Google'));
     await tester.tap(find.text('Continue with Google'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 350));
@@ -85,6 +86,7 @@ void main() {
     await tester.pumpWidget(MaterialApp(home: MobileAuthGateway(
       repository: repository, googleIdTokenProvider: () async => null,
     )));
+    await tester.ensureVisible(find.text('Continue with Google'));
     await tester.tap(find.text('Continue with Google'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 250));
@@ -131,6 +133,7 @@ void main() {
     await tester.pumpWidget(MaterialApp(home: MobileAuthGateway(
       repository: repository, googleIdTokenProvider: () async => 'id-token',
     )));
+    await tester.ensureVisible(find.text('Continue with Google'));
     await tester.tap(find.text('Continue with Google'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 250));
