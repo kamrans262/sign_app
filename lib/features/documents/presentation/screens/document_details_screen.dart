@@ -583,7 +583,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
     } finally {
       if (mounted) setState(() => _requestingAddendum = false);
     }
-    if (!mounted || response == null || current == null) return;
+    if (!mounted) return;
     try {
       await _showAddendumSigningLink(current, source, response);
     } catch (_) {
