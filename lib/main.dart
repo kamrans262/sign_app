@@ -14,6 +14,7 @@ import 'features/auth/data/mobile_auth_repository.dart';
 import 'features/auth/presentation/screens/mobile_auth_gateway.dart';
 import 'features/splash/presentation/splash_screen.dart';
 import 'features/reminders/services/m20_push_coordinator.dart';
+import 'features/subscription/services/m23_billing_deep_links.dart';
 import 'features/reminders/presentation/screens/notification_inbox_screen.dart';
 import 'features/quotes/presentation/screens/public_customer_signing_screen.dart';
 
@@ -25,6 +26,8 @@ Future<void> m20BackgroundMessage(RemoteMessage message) async {}
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Catch Checkout links before splash/session restore, including cold starts.
+  M23BillingDeepLinks.start();
   // Existing platforms with native Firebase configuration initialize here.
   // Missing configuration is nonfatal while M20 push delivery is disabled.
   if (!kIsWeb && (defaultTargetPlatform == TargetPlatform.android ||
