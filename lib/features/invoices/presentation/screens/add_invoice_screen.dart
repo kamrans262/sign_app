@@ -38,6 +38,7 @@ class AddInvoiceScreen extends StatefulWidget {
     this.repository,
     this.depositRepository,
     this.jobs,
+    this.initialJob,
     this.initialIban = '',
     this.currency = 'CHF',
     this.vatBasisPoints = 0,
@@ -53,6 +54,7 @@ class AddInvoiceScreen extends StatefulWidget {
   final InvoiceRepository? repository;
   final DepositRepository? depositRepository;
   final List<JobModel>? jobs;
+  final JobModel? initialJob;
   final String initialIban, currency;
   final int vatBasisPoints;
   final List<InvoiceLineItem> initialItems;
@@ -140,6 +142,13 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
     _items.addAll(initial?.items ?? widget.initialItems);
     _number.text = initial?.number ??
         'INV-${DateTime.now().microsecondsSinceEpoch}';
+    if (initial == null && widget.initialJob != null) {
+      _job = widget.initialJob;
+      _client.text = _job!.clientName;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _job != null) _refreshDeposits(_job!.id);
+      });
+    }
     if (initial != null) {
       _client.text = initial.clientName;
       _notes.text = initial.notes;
@@ -402,7 +411,7 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
       if (job != null && mounted) {
         setState(() {
           _job = job;
-          if (_client.text.trim().isEmpty) { _client.text = job.clientName; }
+          _client.text = job.clientName;
           _voiceJobHint = null;
           _error = null;
           _depositPaidMinor = 0;
