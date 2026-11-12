@@ -523,9 +523,9 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
                       Sign2DigitalRemainingBalanceCard(
                         balanceChf: data.remainingBalanceChf,
                         showAmount: data.financialAvailableFor('remaining_balance'),
-                        emptyLabel: data.financialAvailableFor('invoiced') &&
-                            data.invoicedChf == 0
-                            ? 'Not yet invoiced' : 'Not available',
+                        emptyLabel: data.financialAvailableFor('quote_amount') &&
+                            data.financialAvailableFor('received')
+                            ? 'No accepted quotation' : 'Not available',
                       ),
                       if (int.tryParse(job.id) != null) ...[
                         const SizedBox(height: 20),
