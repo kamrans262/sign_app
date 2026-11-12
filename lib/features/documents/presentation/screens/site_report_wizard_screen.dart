@@ -1,5 +1,6 @@
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -572,7 +573,7 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
     if (generator == null) {
       final saveDraft = await showDialog<bool>(
         context: context,
-        builder: (dialog) => AlertDialog(
+        builder: (dialog) => Sign2DigitalApprovedConfirmation(
           title: const Text('Report generation unavailable'),
           content: const Text(
             'Report generation is not connected yet. '
