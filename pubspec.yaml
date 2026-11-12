@@ -161,15 +161,20 @@ flutter_launcher_icons:
     generate: true
     image_path: "assets/sign_app_icon.png"
 
-# Use one branded startup image on every platform. Native Android/iOS splash
-# stays visible through initialization; no second Flutter splash on mobile.
+# One light, branded launch screen across Android (including dark mode),
+# iOS and web. Never use the launcher app icon as the launch-splash artwork.
 flutter_native_splash:
   color: "#FFFFFF"
+  color_dark: "#FFFFFF"
   image: "assets/logo_splash.png"
+  image_dark: "assets/logo_splash.png"
   android: true
   ios: true
   web: true
   android_12:
     color: "#FFFFFF"
+    color_dark: "#FFFFFF"
     image: "assets/logo_splash.png"
+    image_dark: "assets/logo_splash.png"
     icon_background_color: "#FFFFFF"
+    icon_background_color_dark: "#FFFFFF"
