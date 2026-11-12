@@ -57,6 +57,8 @@ void main(){
       expect(body['amount'],'123.45');
       expect(body['payment_method'],'bank_transfer');
       expect(body['request_key'],'local-deposit-1');
+      expect(body.containsKey('client_name'), isFalse, reason:
+          'Laravel resolves the job customer and rejects stale client labels');
       expect(body.containsKey('status'),false);
       expect(body.containsKey('paid'),false);
       return http.Response(jsonEncode({'data':{'deposit':deposit()}}),201);
@@ -67,6 +69,33 @@ void main(){
       status:DepositStatus.pending,jobId:'34',
       paymentMethod:'Bank Transfer',referenceNumber:'WIRE-123',
     ));
+    client.dispose();
+  });
+
+  test('validation error shows server reason without reporting an uncertain save',
+      () async {
+    final client=api((request) async {
+      expect(request.url.path, '/api/v1/deposits');
+      final body=jsonDecode(request.body) as Map<String, dynamic>;
+      expect(body.containsKey('client_name'), isFalse);
+      return http.Response(jsonEncode({
+        'message': 'The selected job is no longer available.',
+        'errors': {'job_id': ['The selected job is invalid.']},
+      }),422);
+    });
+    final draft=DepositRecord(
+      id:'local-deposit-validation-1',title:'Kitchen',
+      clientName:'Stale Name',amount:123.45,date:DateTime(2026,11,5),
+      status:DepositStatus.pending,jobId:'34',
+      paymentMethod:'Bank Transfer',
+    );
+    await expectLater(
+      RemoteDepositRepository(api:client).saveDeposit(draft),
+      throwsA(isA<SignApiException>()
+        .having((error) => error.statusCode, 'status', 422)
+        .having((error) => error.message, 'message',
+            contains('selected job'))),
+    );
     client.dispose();
   });
 
