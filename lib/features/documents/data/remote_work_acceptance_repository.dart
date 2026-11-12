@@ -276,7 +276,7 @@ class RemoteWorkAcceptanceRepository implements DocumentRepository {
         events.add(WorkAcceptanceEvent(
           id:'${item['id']}-${stage.name}',
           documentId:id,stage:stage,
-          occurredAt:Sign2DigitalServerTimestamp.tryParse(item['created_at']),
+          occurredAt:_timestamp(item['created_at']),
           actorName:item['actor_id']==null?'Customer':'Sign2Digital User',
         ));
       }
