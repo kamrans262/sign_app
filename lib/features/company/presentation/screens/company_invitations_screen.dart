@@ -61,14 +61,22 @@ class _CompanyInvitationsScreenState extends State<CompanyInvitationsScreen> {
     backgroundColor: AppColors.white,
     body: SafeArea(child: Column(children: [
       const Sign2DigitalHeader(title: 'Company Invitations'),
-      Expanded(child: Center(child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth:
-            MediaQuery.orientationOf(context) == Orientation.landscape
-                ? double.infinity : 720),
-        child: ListView(
+      Expanded(child: LayoutBuilder(builder: (context, viewport) =>
+        ListView(
+          key: const Key('company-invitation-code-scroll'),
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 25),
           children: [
-            Sign2DigitalQuoteShadowPanel(
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: viewport.maxHeight > 25
+                    ? viewport.maxHeight - 25 : 0,
+              ),
+              child: Center(child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth:
+                    MediaQuery.orientationOf(context) == Orientation.landscape
+                        ? double.infinity : 720),
+                child: SizedBox(width: double.infinity,
+                  child: Sign2DigitalQuoteShadowPanel(
               padding: const EdgeInsets.all(20),
               child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                 const Text('Accept Company Invitation', style: TextStyle(
@@ -98,10 +106,13 @@ class _CompanyInvitationsScreenState extends State<CompanyInvitationsScreen> {
                   onPressed: _accept,
                 ),
               ]),
+                  ),
+                ),
+              )),
             ),
           ],
         ),
-      ))),
+      )),
     ])),
   );
 }
