@@ -29,7 +29,7 @@ class Sign2DigitalBottomNavigationBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return ValueListenableBuilder<CompanyAccess?>(
       valueListenable: ActiveCompanySession.access,
-      builder: (context, _, __) {
+      builder: (context, currentAccess, child) {
         // Preserve approved tab order and original numeric destinations.
         final visible = <int>[
           0,
