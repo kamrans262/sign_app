@@ -119,6 +119,29 @@ void main() {
     expect(invalid.hasSuggestions, isFalse);
   });
 
+  testWidgets('Jobs context pre-fills client and custom method accepts text',
+      (tester) async {
+    await tester.pumpWidget(MaterialApp(home: AddDepositScreen(
+      jobs: [LabourDemoJobs.riverside],
+      initialJob: LabourDemoJobs.riverside,
+    )));
+    await tester.pumpAndSettle();
+    expect(find.text('Riverside Villa'), findsWidgets);
+    final clientField = tester.widget<TextFormField>(
+      find.descendant(of: find.byKey(const Key('deposit-form-client')),
+        matching: find.byType(TextFormField)));
+    expect(clientField.controller?.text,
+      LabourDemoJobs.riverside.clientName);
+    await _reach(tester, 'deposit-form-method');
+    await tester.tap(find.byKey(const Key('deposit-form-method')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('deposit-payment-option-custom')));
+    await tester.pumpAndSettle();
+    await _enter(tester, 'deposit-form-custom-method', 'Mobile cheque pickup');
+    expect(find.text('Mobile cheque pickup'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('Create Deposit has fields, validates and returns typed draft',
       (tester) async {
     DepositRecord? saved;
@@ -167,7 +190,12 @@ void main() {
     await _reach(tester, 'deposit-form-date');
     await tester.tap(find.byKey(const Key('deposit-form-date')));
     await tester.pumpAndSettle();
-    await _enter(tester, 'deposit-form-method', 'Bank transfer');
+    await _reach(tester, 'deposit-form-method');
+    await tester.tap(find.byKey(const Key('deposit-form-method')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(
+      const Key('deposit-payment-option-bank-transfer')));
+    await tester.pumpAndSettle();
     await _enter(tester, 'deposit-form-reference', 'A-0005');
     await _enter(tester, 'deposit-form-notes', 'Terrace deposit');
     FocusManager.instance.primaryFocus?.unfocus();
