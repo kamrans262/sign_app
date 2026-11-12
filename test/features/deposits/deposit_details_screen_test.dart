@@ -325,6 +325,8 @@ void main() {
       expect(find.byKey(const Key('deposit-detail-edit')), findsNothing);
       expect(find.byKey(const Key('deposit-detail-delete')), findsNothing);
       expect(find.byKey(const Key('deposit-detail-refund')), findsNothing);
+      await tester.ensureVisible(find.byKey(const Key('details-tab-0')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('details-tab-0')));
       await tester.pumpAndSettle();
       await _reach(tester, 'deposit-detail-edit');
