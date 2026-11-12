@@ -55,7 +55,13 @@ Future<T?> showSign2DigitalBottomSheet<T>({
           ),
         ),
       ),
-      child: builder(sheetContext),
+      // BottomSheet's own Material is ABOVE this Theme. Reset its inherited
+      // DefaultTextStyle here as well, otherwise iOS/system dark mode can
+      // render plain Text in nearly white ink on this white modal surface.
+      child: material.Material(
+        type: material.MaterialType.transparency,
+        child: builder(sheetContext),
+      ),
     ),
     isScrollControlled: isScrollControlled,
     scrollControlDisabledMaxHeightRatio: scrollControlDisabledMaxHeightRatio,
