@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../../core/services/sign_api_client.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
 import '../../../../core/widgets/sign2digital_dashboard_header.dart';
 import '../../../../core/widgets/sign2digital_entry_list_card.dart';
@@ -60,11 +62,14 @@ class _DepositsScreenState extends State<DepositsScreen> {
   DepositSort _sort = DepositSort.newest;
   int _loadSerial=0;
   DepositRecord? _retryDraft;
+  bool _retryNeedsEditing = false;
+  bool _savingDeposit = false;
 
   void _companyChanged() {
     if(!mounted)return;
     // A pending draft must never be retried against a different company.
     _retryDraft=null;
+    _retryNeedsEditing=false;
     if(widget.repository==null){
       _repository=(!MobileAuthRepository.shared.isSignedIn &&
           ActiveCompanySession.companyId==null)
@@ -153,9 +158,16 @@ class _DepositsScreenState extends State<DepositsScreen> {
   }
 
   void _notice(String message) {
-    if (!mounted) { return; }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: AppColors.dark,
+        duration: const Duration(seconds: 6),
+        content: Text(message, style: const TextStyle(
+          fontFamily: 'Inter', fontSize: 14, color: AppColors.white)),
+      ));
   }
 
   Future<void> _open(DepositRecord deposit) async {
@@ -185,6 +197,7 @@ class _DepositsScreenState extends State<DepositsScreen> {
   }
 
   Future<void> _create() async {
+    if (_savingDeposit) return;
     if (widget.onCreateDeposit != null) {
       widget.onCreateDeposit!();
       return;
@@ -192,7 +205,7 @@ class _DepositsScreenState extends State<DepositsScreen> {
     // On an ambiguous network failure preserve the identical draft/key.
     // Creating a new draft would risk two pending payment requests.
     DepositRecord? deposit=_retryDraft;
-    if(deposit==null) {
+    if(deposit==null || _retryNeedsEditing) {
       var jobs=LabourDemoJobs.all;
       final remote=_repository;
       if(remote is RemoteDepositRepository) {
@@ -212,6 +225,7 @@ class _DepositsScreenState extends State<DepositsScreen> {
         MaterialPageRoute<DepositRecord>(
           builder: (_) => AddDepositScreen(
             jobs: jobs,
+            initialDeposit: _retryNeedsEditing ? deposit : null,
             initialJob: widget.jobId == null ? null : jobs.first,
             selectedNavigationIndex: widget.selectedNavigationIndex,
             onNavigationSelected: widget.onNavigationSelected,
@@ -219,25 +233,52 @@ class _DepositsScreenState extends State<DepositsScreen> {
         ),
       );
     }
-    if(deposit==null||!mounted)return;
-    final company=ActiveCompanySession.companyId;
+    if (deposit == null || !mounted) return;
+    final company = ActiveCompanySession.companyId;
+    setState(() => _savingDeposit = true);
     try {
       await _repository.saveDeposit(deposit);
-      if(!mounted||ActiveCompanySession.companyId!=company)return;
-      _retryDraft=null;
+      if (!mounted || ActiveCompanySession.companyId != company) return;
+      _retryDraft = null;
+      _retryNeedsEditing = false;
       _search.clear();
       setState(() => _tab = 0);
       await _load();
-      _notice('Deposit saved as Pending.');
-    }catch(_) {
-      if(!mounted||ActiveCompanySession.companyId!=company)return;
-      if(_repository is RemoteDepositRepository) {
-        _retryDraft=deposit;
-        _notice('Unable to verify the deposit save. Tap + to retry the same '
-            'draft safely, or reopen Deposits to review existing requests.');
-      }else{
-        _notice('Unable to save the deposit. Please try again.');
+      if (mounted) _notice('Deposit saved as Pending.');
+    } on SignApiException catch (error) {
+      if (!mounted || ActiveCompanySession.companyId != company) return;
+      final code = error.statusCode;
+      if (code == 400 || code == 422) {
+        // Laravel rejected these values. No deposit was created; let the
+        // user correct this same draft rather than replaying it unchanged.
+        _retryDraft = deposit;
+        _retryNeedsEditing = true;
+        _notice('Deposit not accepted: ${error.message} '
+            'Tap + to correct the entry.');
+      } else if (code == 401 || code == 403 || code == 404 || code == 409) {
+        // A definitive authorization, missing job or conflict response is
+        // not a network timeout and must not be blindly retried.
+        _retryDraft = null;
+        _retryNeedsEditing = false;
+        _notice('Deposit not saved: ${error.message}');
+      } else {
+        // A lost response may occur AFTER the deposit was committed.
+        // Retain the exact request key and fields to avoid duplicates.
+        _retryDraft = deposit;
+        _retryNeedsEditing = false;
+        await _load();
+        if (mounted) _notice('Could not confirm the deposit save. '
+            'Check the list, or tap + to retry the same draft safely.');
       }
+    } catch (_) {
+      if (!mounted || ActiveCompanySession.companyId != company) return;
+      _retryDraft = deposit;
+      _retryNeedsEditing = false;
+      await _load();
+      if (mounted) _notice('Could not confirm the deposit save. '
+          'Check the list, or tap + to retry the same draft safely.');
+    } finally {
+      if (mounted) setState(() => _savingDeposit = false);
     }
   }
 
@@ -285,7 +326,9 @@ class _DepositsScreenState extends State<DepositsScreen> {
   @override
   Widget build(BuildContext context) {
     final visible = _visible;
-    return Scaffold(
+    return Theme(
+      data: AppTheme.light,
+      child: Scaffold(
       backgroundColor: AppColors.white,
       body: SafeArea(bottom: false, child: Column(children: [
         Sign2DigitalDashboardHeader(
@@ -306,7 +349,7 @@ class _DepositsScreenState extends State<DepositsScreen> {
                     children: [
                       Sign2DigitalSearchField(
                         controller: _search,
-                        hintText: 'Search documents',
+                        hintText: 'Search deposits',
                         onChanged: (_) => setState(() {}),
                         onTrailingTap: () =>
                           FocusManager.instance.primaryFocus?.unfocus()),
@@ -368,7 +411,7 @@ class _DepositsScreenState extends State<DepositsScreen> {
                 child: FloatingActionButton(
                   key: const Key('deposits-create'),
                   heroTag: 'deposits-create',
-                  onPressed: _create, elevation: 3,
+                  onPressed: _savingDeposit ? null : _create, elevation: 3,
                   backgroundColor: AppColors.primary,
                   foregroundColor: AppColors.white,
                   child: const Icon(Icons.add, size: 30)))),
@@ -378,6 +421,6 @@ class _DepositsScreenState extends State<DepositsScreen> {
       bottomNavigationBar: Sign2DigitalBottomNavigationBar(
         selectedIndex: widget.selectedNavigationIndex,
         onSelected: _navigation),
-    );
+    ));
   }
 }
