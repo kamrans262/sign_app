@@ -8,6 +8,8 @@ on:
       - 'lib/core/widgets/sign2digital_subscription_gate.dart'
       - 'lib/features/**/presentation/**'
       - 'test/core/widgets/sign2digital_approved_confirmation_test.dart'
+      - 'test/features/equipment/m19_equipment_reminder_stage2_test.dart'
+      - 'test/features/profile/m22_privacy_data_screen_test.dart'
   workflow_dispatch:
 permissions:
   contents: read
