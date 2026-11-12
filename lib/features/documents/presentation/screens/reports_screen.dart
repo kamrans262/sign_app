@@ -352,7 +352,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
     }
     if (_repository is RemoteSiteReportRepository &&
         report.reportKind == ReportKind.workAcceptance) {
-      if(report.status == 'draft') {
+      if(report.status == 'draft' &&
+          ActiveCompanySession.canWrite('reports')) {
         await _openAcceptance(report);
       }else{
         await _showAcceptance(report);
@@ -361,7 +362,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
     }
     if (_repository is RemoteSiteReportRepository) {
       if (report.status.toLowerCase() == 'draft' &&
-          report.reportKind == ReportKind.meetingMinutes) {
+          report.reportKind == ReportKind.meetingMinutes &&
+          ActiveCompanySession.canWrite('reports')) {
         await _openMinutes(report);
       } else {
         final latest = await (_repository)
