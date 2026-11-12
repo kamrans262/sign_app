@@ -1,5 +1,6 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 import 'package:flutter/services.dart';
 import 'package:printing/printing.dart';
 
@@ -400,7 +401,7 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
     final real=_repository is RemoteLabourRepository;
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (dialog) => AlertDialog(
+      builder: (dialog) => Sign2DigitalApprovedConfirmation(
         title: Text(real ? 'Void labour entry?' : 'Delete labour entry?'),
         content: Text(real
           ? 'Void the entry for ${_record.workerName}? The original remains in the audit trail.'
