@@ -42,6 +42,20 @@ class CompanyInvite {
     status: (m['status'] ?? 'pending').toString());
 }
 
+class PendingCompanyInvitation {
+  const PendingCompanyInvitation({required this.id, required this.companyName,
+    required this.role, required this.expiresAt});
+  final int id;
+  final String companyName, role, expiresAt;
+  factory PendingCompanyInvitation.fromJson(Map<String, dynamic> data) =>
+      PendingCompanyInvitation(
+        id: _asInt(data['id']),
+        companyName: (data['company_name'] ?? '').toString(),
+        role: (data['role'] ?? 'member').toString(),
+        expiresAt: (data['expires_at'] ?? '').toString(),
+      );
+}
+
 /// Real API repository for M3. The demo repository remains available for
 /// isolated UI/widget previews only.
 class RemoteCompanyRepository implements CompanyRepository {
@@ -52,6 +66,7 @@ class RemoteCompanyRepository implements CompanyRepository {
   static CompanyProfile _parse(Map<String, dynamic> m) => CompanyProfile(
     id: _asInt(m['id']).toString(),
     role: (m['role'] ?? 'member').toString(),
+    permissions: _asPermissions(m['permissions']),
     companyName: (m['name'] ?? '').toString(),
     address: (m['address'] ?? '').toString(),
     countryIsoCode: (m['country_iso_code'] ?? 'CH').toString(),
@@ -94,7 +109,8 @@ class RemoteCompanyRepository implements CompanyRepository {
       if (_asInt(data['active_company_id']) != _asInt(saved.id)) {
         throw const SignApiException('Invalid active company response.');
       }
-      ActiveCompanySession.set(_asInt(saved.id));
+      ActiveCompanySession.setVerified(_asInt(saved.id),
+        role: saved.role, permissions: saved.permissions);
     }
     return saved;
   }
@@ -127,7 +143,13 @@ class RemoteCompanyRepository implements CompanyRepository {
       throw const SignApiException('Active company is not in the company listing.');
     }
     // Only replace the current tenant after validating the complete response.
-    ActiveCompanySession.set(active);
+    if (active == 0) {
+      ActiveCompanySession.clear();
+    } else {
+      final current = companies.firstWhere((item) => _asInt(item.id) == active);
+      ActiveCompanySession.setVerified(active,
+        role: current.role, permissions: current.permissions);
+    }
     return companies;
   }
 
@@ -143,7 +165,8 @@ class RemoteCompanyRepository implements CompanyRepository {
     if (_asInt(data['active_company_id']) != n || _asInt(selected.id) != n) {
       throw const SignApiException('Invalid company switch response.');
     }
-    ActiveCompanySession.set(n);
+    ActiveCompanySession.setVerified(n,
+      role: selected.role, permissions: selected.permissions);
     return selected;
   }
 
@@ -190,7 +213,19 @@ class RemoteCompanyRepository implements CompanyRepository {
     if (active <= 0 || _asInt(selected.id) != active) {
       throw const SignApiException('Invalid invitation company response.');
     }
-    ActiveCompanySession.set(active);
+    ActiveCompanySession.setVerified(active,
+      role: selected.role, permissions: selected.permissions);
+  }
+
+  /// Pending invitations belong only to the authenticated, verified email.
+  Future<List<PendingCompanyInvitation>> pendingInvitations() async {
+    final data = _data(await _api.get('/api/v1/companies/invitations/mine'));
+    final records = data['invitations'];
+    if (records is! List || records.any((item) => item is! Map<String, dynamic>)) {
+      throw const SignApiException('Invalid company invitation response.');
+    }
+    return records.cast<Map<String, dynamic>>()
+        .map(PendingCompanyInvitation.fromJson).toList(growable: false);
   }
 
   Future<void> uploadFile(String companyId, String kind, PlatformFile file) async {
