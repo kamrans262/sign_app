@@ -1,11 +1,12 @@
 import 'features/auth/presentation/screens/company_entry_gate.dart';
 
-// Sign2Digital Navigation Fix — permanent splash -> login startup.
+// Sign2Digital: single native mobile splash, existing Flutter desktop/web splash.
 import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform;
 
 import 'core/theme/app_theme.dart';
@@ -25,7 +26,15 @@ import 'features/quotes/presentation/screens/public_customer_signing_screen.dart
 Future<void> m20BackgroundMessage(RemoteMessage message) async {}
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  final binding = WidgetsFlutterBinding.ensureInitialized();
+  // Android/iOS already show an OS launch splash. Keep that single splash
+  // until authentication is restored; do not display a second Flutter page.
+  final mobileNativeSplash = !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.android ||
+       defaultTargetPlatform == TargetPlatform.iOS);
+  if (mobileNativeSplash) {
+    FlutterNativeSplash.preserve(widgetsBinding: binding);
+  }
   // Catch Checkout links before splash/session restore, including cold starts.
   M23BillingDeepLinks.start();
   // Existing platforms with native Firebase configuration initialize here.
@@ -51,7 +60,21 @@ Future<void> main() async {
   } catch (_) {
     // A damaged local settings file must never prevent app startup.
   }
-  runApp(const Sign2DigitalApp());
+  bool? initiallySignedIn;
+  if (mobileNativeSplash) {
+    try {
+      initiallySignedIn =
+          await MobileAuthRepository.shared.restoreRememberedSession();
+    } catch (_) {
+      // A failed restore never authenticates a user.
+      initiallySignedIn = false;
+    }
+  }
+  runApp(Sign2DigitalApp(initiallySignedIn: initiallySignedIn));
+  if (mobileNativeSplash) {
+    // Remove the native cover only after Flutter has rendered the destination.
+    binding.addPostFrameCallback((_) => FlutterNativeSplash.remove());
+  }
 }
 
 String? get _guestSigningToken {
@@ -65,7 +88,12 @@ String? get _guestSigningToken {
 }
 
 class Sign2DigitalApp extends StatelessWidget {
-  const Sign2DigitalApp({super.key});
+  const Sign2DigitalApp({super.key, this.initiallySignedIn});
+
+  /// A non-null value indicates native mobile startup already completed
+  /// the guarded session restore while the OS splash was still visible.
+  /// Desktop/web keep their existing standalone Flutter splash.
+  final bool? initiallySignedIn;
 
   @override
   Widget build(BuildContext context) {
@@ -86,9 +114,13 @@ class Sign2DigitalApp extends StatelessWidget {
       ),
       // Customers can use a hosted /sign/<opaqueToken> link without an account.
       // This never bypasses server token, signer and document authorization.
-      home: _guestSigningToken == null
-          ? const _AppEntry()
-          : PublicCustomerSigningScreen(token: _guestSigningToken!),
+      home: _guestSigningToken != null
+          ? PublicCustomerSigningScreen(token: _guestSigningToken!)
+          : initiallySignedIn == null
+              ? const _AppEntry()
+              : initiallySignedIn!
+                  ? const CompanyEntryGate()
+                  : const MobileAuthGateway(),
     ));
   }
 }
