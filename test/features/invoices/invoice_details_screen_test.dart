@@ -11,6 +11,7 @@ InvoiceRecord _invoice({
   List<InvoiceLineItem> items = const [],
   List<InvoicePaymentRecord> payments = const [],
   List<InvoiceHistoryEvent> history = const [],
+  String lifecycleStatus = 'draft',
 }) => InvoiceRecord(
   id: 'detail-test',
   number: 'INV-2026-0098',
@@ -22,6 +23,7 @@ InvoiceRecord _invoice({
   iban: 'CH93 0076 2011 6238 5295 7',
   jobId: 'labour-demo-riverside',
   status: status,
+  lifecycleStatus: lifecycleStatus,
   vatBasisPoints: 810,
   items: items,
   payments: payments,
@@ -100,6 +102,10 @@ void main() {
     expect(find.text('CHF 100.00'), findsWidgets);
     expect(find.text('CHF 8.10'), findsOneWidget);
     expect(find.text('CHF 108.10'), findsWidgets);
+    expect(find.byKey(const Key('invoice-details-download')), findsOneWidget);
+    expect(find.byKey(const Key('invoice-details-preview')), findsOneWidget);
+    expect(find.byKey(const Key('invoice-details-send')), findsNothing);
+    expect(find.byKey(const Key('invoice-details-edit')), findsNothing);
     await tester.tap(find.byKey(const Key('details-tab-0')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('invoice-details-table')), findsOneWidget);
@@ -123,10 +129,16 @@ void main() {
     expect(find.text('A-0005'), findsOneWidget);
     expect(find.text('CHF 25.00'), findsWidgets);
     expect(find.text('CHF 83.10'), findsWidgets);
+    expect(find.byKey(const Key('invoice-details-actions')), findsNothing);
+    expect(find.byKey(const Key('invoice-details-download')), findsNothing);
+    expect(find.byKey(const Key('invoice-details-send')), findsNothing);
     await tester.tap(find.byKey(const Key('details-tab-3')));
     await tester.pumpAndSettle();
     expect(find.text('Invoice sent'), findsOneWidget);
     expect(find.byKey(const Key('invoice-history-event-1')), findsOneWidget);
+    expect(find.byKey(const Key('invoice-details-actions')), findsNothing);
+    expect(find.byKey(const Key('invoice-details-download')), findsNothing);
+    expect(find.byKey(const Key('invoice-details-preview')), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -150,7 +162,8 @@ void main() {
       (tester) async {
     var downloaded = 0;
     var shared = 0;
-    await _open(tester, _invoice(items: _items),
+    await _open(tester, _invoice(
+      items: _items, lifecycleStatus: 'approved'),
       onDownload: (record, bytes) async {
         expect(record.number, 'INV-2026-0098');
         expect(bytes.length, greaterThan(100));
@@ -163,10 +176,14 @@ void main() {
         shared++;
       },
     );
+    await tester.tap(find.byKey(const Key('details-tab-1')));
+    await tester.pumpAndSettle();
     await _reach(tester, 'invoice-details-download');
     await tester.tap(find.byKey(const Key('invoice-details-download')));
     await tester.pumpAndSettle();
     expect(downloaded, 1);
+    await tester.tap(find.byKey(const Key('details-tab-0')));
+    await tester.pumpAndSettle();
     await _reach(tester, 'invoice-details-send');
     await tester.tap(find.byKey(const Key('invoice-details-send')));
     await tester.pumpAndSettle();
@@ -201,14 +218,25 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Paid invoices prevent opening the edit form',
+  testWidgets('Drafts never show Send; paid invoices never expose Edit',
       (tester) async {
-    await _open(tester, _invoice(status: InvoiceStatus.paid, items: _items));
-    await _reach(tester, 'invoice-details-edit');
-    await tester.tap(find.byKey(const Key('invoice-details-edit')));
-    await tester.pump();
+    await _open(tester, _invoice(status: InvoiceStatus.draft,
+      items: _items));
+    expect(find.byKey(const Key('invoice-details-send')), findsNothing);
+    expect(find.byKey(const Key('invoice-details-edit')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('details-tab-1')));
+    await tester.pumpAndSettle();
+    final disabledDownload = tester.widget<InkWell>(
+      find.descendant(of: find.byKey(const Key('invoice-details-download')),
+        matching: find.byType(InkWell)).first);
+    expect(disabledDownload.onTap, isNull);
+    expect(find.byKey(const Key('invoice-details-preview')), findsOneWidget);
+    await _open(tester, _invoice(status: InvoiceStatus.paid,
+      lifecycleStatus: 'approved', items: _items));
+    expect(find.byKey(const Key('invoice-details-edit')), findsNothing);
+    expect(find.byKey(const Key('invoice-details-approve')), findsNothing);
+    expect(find.byKey(const Key('invoice-details-mark-paid')), findsNothing);
     expect(find.byType(AddInvoiceScreen), findsNothing);
-    expect(find.textContaining('cannot be edited'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -227,40 +255,54 @@ void main() {
     expect(after.payments.single.method, 'Manual record');
   });
 
+  testWidgets('Approved invoice shows Send only under Details',
+      (tester) async {
+    await _open(tester, _invoice(status: InvoiceStatus.pending,
+      lifecycleStatus: 'approved', items: _items));
+    expect(find.byKey(const Key('invoice-details-send')), findsOneWidget);
+    expect(find.byKey(const Key('invoice-details-edit')), findsNothing);
+    expect(find.byKey(const Key('invoice-details-approve')), findsNothing);
+    await tester.tap(find.byKey(const Key('details-tab-1')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('invoice-details-send')), findsNothing);
+    expect(find.byKey(const Key('invoice-details-download')), findsOneWidget);
+    expect(find.byKey(const Key('invoice-details-preview')), findsOneWidget);
+  });
+
   for (final size in [
     const Size(320, 568), const Size(390, 844),
     const Size(768, 1024), const Size(1024, 768),
   ]) {
-    testWidgets('Four-tab details and action controls adapt at $size',
+    testWidgets('Invoice tab-specific actions adapt at $size',
         (tester) async {
       tester.view.physicalSize = size;
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-      await _open(tester, _invoice(items: _items));
-      await tester.ensureVisible(find.byKey(const Key('details-tab-3')));
-      await tester.tap(find.byKey(const Key('details-tab-3')));
+      await _open(tester, _invoice(status: InvoiceStatus.draft,
+        items: _items));
+      expect(find.byKey(const Key('invoice-details-edit')), findsOneWidget);
+      expect(find.byKey(const Key('invoice-details-send')), findsNothing);
+      await tester.tap(find.byKey(const Key('details-tab-1')));
       await tester.pumpAndSettle();
       await _reach(tester, 'invoice-details-preview');
       final download = tester.getRect(
         find.byKey(const Key('invoice-details-download')));
-      final send = tester.getRect(
-        find.byKey(const Key('invoice-details-send')));
       final preview = tester.getRect(
         find.byKey(const Key('invoice-details-preview')));
-      final edit = tester.getRect(
-        find.byKey(const Key('invoice-details-edit')));
-      // Both action rows must use the same two equal-width columns.
-      expect(download.top, closeTo(send.top, 1), reason: '$size');
-      expect(preview.top, closeTo(edit.top, 1), reason: '$size');
-      expect(preview.top, greaterThan(download.bottom), reason: '$size');
-      expect(download.width, closeTo(send.width, 1), reason: '$size');
-      expect(preview.width, closeTo(edit.width, 1), reason: '$size');
-      expect(preview.left, closeTo(download.left, 1), reason: '$size');
-      expect(edit.right, closeTo(send.right, 1), reason: '$size');
-      expect(preview.height, closeTo(edit.height, 1), reason: '$size');
-      // The longer Preview Invoice label may wrap on narrow phones.
-      expect(preview.height, greaterThanOrEqualTo(download.height), reason: '$size');
+      expect(download.top, closeTo(preview.top, 1), reason: '$size');
+      expect(download.width, closeTo(preview.width, 1), reason: '$size');
+      expect(tester.takeException(), isNull, reason: '$size');
+      await tester.ensureVisible(find.byKey(const Key('details-tab-2')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('details-tab-2')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('invoice-details-actions')), findsNothing);
+      await tester.ensureVisible(find.byKey(const Key('details-tab-3')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('details-tab-3')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('invoice-details-actions')), findsNothing);
       expect(tester.takeException(), isNull, reason: '$size');
     });
   }
