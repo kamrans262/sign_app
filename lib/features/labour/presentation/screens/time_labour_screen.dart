@@ -14,7 +14,6 @@ import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import '../../../jobs/domain/job_model.dart';
 import '../../data/demo_labour_repository.dart';
 import '../../data/remote_labour_repository.dart';
-import '../widgets/m15_live_timer_panel.dart';
 import '../widgets/m15_labour_summary.dart';
 import '../../../auth/data/mobile_auth_repository.dart';
 import '../../../../core/services/active_company_session.dart';
@@ -378,17 +377,16 @@ class _TimeLabourScreenState extends State<TimeLabourScreen> {
                         trailing: const Icon(Icons.keyboard_arrow_down_rounded,
                           color: AppColors.secondaryText),
                       ),
-                      if (_repository is RemoteLabourRepository) ...[
+                      // Original approved Labour / Time Sheet screens support
+                      // manual entries only. Do not show the M15 live timer.
+                      // Keep the job-level financial summary and saved history.
+                      if (_repository is RemoteLabourRepository &&
+                          _jobId != null) ...[
                         const SizedBox(height: 15),
-                        M15LiveTimerPanel(
-                          repository:_repository,
-                          job:_selectedJob,
-                          onUpdated:_load,
+                        M15LabourSummary(
+                          jobId: _jobId!,
+                          refreshKey: _all.length,
                         ),
-                        if (_jobId != null) ...[
-                          const SizedBox(height:15),
-                          M15LabourSummary(jobId:_jobId!,refreshKey:_all.length),
-                        ],
                       ],
                       const SizedBox(height: 15),
                       Sign2DigitalListSortControl(
