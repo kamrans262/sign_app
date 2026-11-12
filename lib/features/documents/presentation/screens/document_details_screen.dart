@@ -841,7 +841,11 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
               title: const Text('Send for Signature'),
               onTap: () {
                 Navigator.pop(sheet);
-                _sendAddendumForSignature();
+                // A second modal cannot open until More begins closing.
+                // Match the existing approval action's post-frame handoff.
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) _sendAddendumForSignature();
+                });
               },
             ),
           if (widget.onDownloadAttachment != null &&
