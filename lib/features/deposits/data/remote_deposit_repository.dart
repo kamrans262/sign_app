@@ -87,7 +87,7 @@ class RemoteDepositRepository extends DepositRepository {
       referenceNumber:(r['reference_number']??'').toString(),
       notes:(r['notes']??'').toString(),photos:photos,history:history,
       receivedBy:r['received_by']==null?null:'User #${r['received_by']}',
-      receivedAt:_timestamp(r['received_at']),
+      receivedAt:Sign2DigitalServerTimestamp.tryParse(r['received_at']),
       refundedAt:Sign2DigitalServerTimestamp.tryParse(r['refunded_at']),
       demoOnly:false,
     );
@@ -154,7 +154,7 @@ class RemoteDepositRepository extends DepositRepository {
         DepositHistoryEvent(
           id:_map(raw)['id'].toString(),
           title:_map(raw)['type'].toString().replaceAll('_',' '),
-          occurredAt:Sign2DigitalServerTimestamp.tryParse(_map(raw)['created_at']),
+          occurredAt:_timestamp(_map(raw)['created_at']),
           description:_map(raw)['actor_user_id']==null?null:
               'User #${_map(raw)['actor_user_id']}',
         ),
