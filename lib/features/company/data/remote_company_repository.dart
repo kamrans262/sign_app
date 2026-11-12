@@ -19,39 +19,65 @@ Map<String, dynamic> _data(Map<String, dynamic> r) {
   return v;
 }
 
+class CompanyRole {
+  const CompanyRole({required this.id, required this.name,
+    required this.permissions, required this.assignedMembers});
+
+  final int id;
+  final String name;
+  final List<String> permissions;
+  final int assignedMembers;
+
+  factory CompanyRole.fromJson(Map<String, dynamic> m) => CompanyRole(
+    id: _asInt(m['id']),
+    name: (m['name'] ?? '').toString(),
+    permissions: _asPermissions(m['permissions']),
+    assignedMembers: _asInt(m['assigned_members']),
+  );
+}
+
 class CompanyMember {
   const CompanyMember({required this.id, required this.name, required this.email,
-    required this.role, required this.status, required this.permissions});
+    required this.role, required this.status, required this.permissions,
+    this.roleName = '', this.companyRoleId});
   final int id;
-  final String name, email, role, status;
+  final String name, email, role, status, roleName;
+  final int? companyRoleId;
   final List<String> permissions;
   factory CompanyMember.fromJson(Map<String, dynamic> m) => CompanyMember(
     id: _asInt(m['id']), name: (m['name'] ?? '').toString(),
     email: (m['email'] ?? '').toString(), role: (m['role'] ?? 'member').toString(),
-    status: (m['status'] ?? '').toString(), permissions: _asPermissions(m['permissions']));
+    status: (m['status'] ?? '').toString(),
+    roleName: (m['role_name'] ?? m['role'] ?? '').toString(),
+    companyRoleId: _asInt(m['company_role_id']) > 0 ? _asInt(m['company_role_id']) : null,
+    permissions: _asPermissions(m['permissions']));
 }
 
 class CompanyInvite {
   const CompanyInvite({required this.id, required this.email, required this.role,
-    required this.status});
+    required this.status, this.roleName = '', this.companyRoleId});
   final int id;
-  final String email, role, status;
+  final String email, role, status, roleName;
+  final int? companyRoleId;
   factory CompanyInvite.fromJson(Map<String, dynamic> m) => CompanyInvite(
     id: _asInt(m['id']), email: (m['email'] ?? '').toString(),
     role: (m['role'] ?? 'member').toString(),
+    roleName: (m['role_name'] ?? m['role'] ?? 'member').toString(),
+    companyRoleId: _asInt(m['company_role_id']) > 0 ? _asInt(m['company_role_id']) : null,
     status: (m['status'] ?? 'pending').toString());
 }
 
 class PendingCompanyInvitation {
   const PendingCompanyInvitation({required this.id, required this.companyName,
-    required this.role, required this.expiresAt});
+    required this.role, required this.expiresAt, this.roleName = ''});
   final int id;
-  final String companyName, role, expiresAt;
+  final String companyName, role, roleName, expiresAt;
   factory PendingCompanyInvitation.fromJson(Map<String, dynamic> data) =>
       PendingCompanyInvitation(
         id: _asInt(data['id']),
         companyName: (data['company_name'] ?? '').toString(),
         role: (data['role'] ?? 'member').toString(),
+        roleName: (data['role_name'] ?? data['role'] ?? 'member').toString(),
         expiresAt: (data['expires_at'] ?? '').toString(),
       );
 }
@@ -170,6 +196,36 @@ class RemoteCompanyRepository implements CompanyRepository {
     return selected;
   }
 
+  Future<List<CompanyRole>> roles(String id) async {
+    final raw = _data(await _api.get('/api/v1/companies/$id/roles'))['roles'];
+    if (raw is! List || raw.any((entry) => entry is! Map<String, dynamic>)) {
+      throw const SignApiException('Unable to load company roles.');
+    }
+    return raw.cast<Map<String, dynamic>>().map(CompanyRole.fromJson).toList();
+  }
+
+  Future<CompanyRole> createRole(String id, String name, List<String> permissions) async {
+    final data = _data(await _api.post('/api/v1/companies/$id/roles',
+      data: {'name': name.trim(), 'permissions': permissions}));
+    if (data['role'] is! Map<String, dynamic>) {
+      throw const SignApiException('Invalid role creation response.');
+    }
+    return CompanyRole.fromJson(data['role'] as Map<String, dynamic>);
+  }
+
+  Future<CompanyRole> updateRole(String id, int roleId, String name,
+      List<String> permissions) async {
+    final data = _data(await _api.request('PUT', '/api/v1/companies/$id/roles/$roleId',
+      data: {'name': name.trim(), 'permissions': permissions}));
+    if (data['role'] is! Map<String, dynamic>) {
+      throw const SignApiException('Invalid role update response.');
+    }
+    return CompanyRole.fromJson(data['role'] as Map<String, dynamic>);
+  }
+
+  Future<void> deleteRole(String id, int roleId) async =>
+      _api.delete('/api/v1/companies/$id/roles/$roleId').then((_) {});
+
   Future<List<CompanyMember>> members(String id) async {
     final raw = _data(await _api.get('/api/v1/companies/$id/members'))['members'];
     if (raw is! List) throw const SignApiException('Unable to load company team.');
@@ -183,16 +239,21 @@ class RemoteCompanyRepository implements CompanyRepository {
   }
 
   Future<void> invite(String id, String email, {String role = 'member',
-    List<String> permissions = const []}) async {
+    List<String> permissions = const [], int? companyRoleId}) async {
     await _api.post('/api/v1/companies/$id/invitations', data: {
-      'email': email, 'role': role, 'permissions': permissions,
+      'email': email, 'role': role,
+      if (companyRoleId == null) 'permissions': permissions,
+      if (companyRoleId != null) 'company_role_id': companyRoleId,
     });
   }
 
   Future<void> updateMember(String id, int user, String role,
-      {List<String> permissions = const []}) async {
+      {List<String> permissions = const [], int? companyRoleId}) async {
     await _api.request('PATCH', '/api/v1/companies/$id/members/$user',
-      data: {'role': role, 'permissions': permissions});
+      data: {'role': role,
+        if (companyRoleId == null) 'permissions': permissions,
+        if (companyRoleId != null) 'company_role_id': companyRoleId,
+      });
   }
 
   Future<void> removeMember(String id, int user) async =>
