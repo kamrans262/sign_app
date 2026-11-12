@@ -88,12 +88,15 @@ String? get _guestSigningToken {
 }
 
 class Sign2DigitalApp extends StatelessWidget {
-  const Sign2DigitalApp({super.key, this.initiallySignedIn});
+  const Sign2DigitalApp({super.key, this.initiallySignedIn,
+      this.restoreSession});
 
   /// A non-null value indicates native mobile startup already completed
   /// the guarded session restore while the OS splash was still visible.
   /// Desktop/web keep their existing standalone Flutter splash.
   final bool? initiallySignedIn;
+  /// Overrides desktop/web session restoration in tests; mobile uses main().
+  final Future<bool> Function()? restoreSession;
 
   @override
   Widget build(BuildContext context) {
@@ -117,7 +120,7 @@ class Sign2DigitalApp extends StatelessWidget {
       home: _guestSigningToken != null
           ? PublicCustomerSigningScreen(token: _guestSigningToken!)
           : initiallySignedIn == null
-              ? const _AppEntry()
+              ? _AppEntry(restoreSession: restoreSession)
               : initiallySignedIn!
                   ? const CompanyEntryGate()
                   : const MobileAuthGateway(),
@@ -126,7 +129,9 @@ class Sign2DigitalApp extends StatelessWidget {
 }
 
 class _AppEntry extends StatefulWidget {
-  const _AppEntry();
+  const _AppEntry({this.restoreSession});
+
+  final Future<bool> Function()? restoreSession;
 
   @override
   State<_AppEntry> createState() => _AppEntryState();
@@ -152,7 +157,8 @@ class _AppEntryState extends State<_AppEntry> {
     if (!mounted || _navigated) return;
     var signedIn = false;
     try {
-      signedIn = await MobileAuthRepository.shared.restoreRememberedSession();
+      signedIn = await (widget.restoreSession?.call() ??
+          MobileAuthRepository.shared.restoreRememberedSession());
     } catch (_) {
       // Network or secure-storage errors must not bypass authentication.
       signedIn = false;
