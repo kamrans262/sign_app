@@ -14,6 +14,7 @@ import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import '../../../jobs/domain/job_model.dart';
 import '../../data/demo_labour_repository.dart';
 import '../../data/remote_labour_repository.dart';
+import '../widgets/m15_live_timer_panel.dart';
 import '../widgets/m15_labour_summary.dart';
 import '../../../auth/data/mobile_auth_repository.dart';
 import '../../../../core/services/active_company_session.dart';
@@ -142,7 +143,14 @@ class _TimeLabourScreenState extends State<TimeLabourScreen> {
 
   List<LabourEntry> get _visible {
     final result = _all.where((item) =>
-      item.kind == _kind &&
+      // Manually recorded labour belongs in the Labour list even when an
+      // older client saved the entry with the time_sheet kind. The Time
+      // Sheet tab keeps its dedicated view, including timer-recorded time.
+      (_tab == 0
+          ? item.kind == LabourEntryKind.labour ||
+              (item.kind == LabourEntryKind.timeSheet &&
+                  item.source == 'manual' && !item.isDemo)
+          : item.kind == LabourEntryKind.timeSheet) &&
       (_jobId == null || item.jobId == _jobId) &&
       item.matches(_search.text)).toList();
     result.sort((a,b) {
@@ -249,15 +257,57 @@ class _TimeLabourScreenState extends State<TimeLabourScreen> {
     }
   }
 
-  Future<void> _create() async {
+  Future<void> _openLiveTimer() async {
+    if (_repository is! RemoteLabourRepository) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Live time tracking requires a connected company.'),
+      ));
+      return;
+    }
+    // The timer is job-specific. Reuse the original Job filter rather than
+    // creating another job selector or a permanent panel on the list screen.
+    if (_selectedJob == null) {
+      await _chooseJob();
+      if (!mounted) return;
+    }
+    if (_selectedJob == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Select a job before starting live tracking.'),
+      ));
+      return;
+    }
+    final selected = _selectedJob!;
+    await Sign2DigitalSelectionSheet.showCustom<void>(
+      context: context,
+      title: 'Live Time Tracking',
+      icon: Icons.timer_outlined,
+      subtitle: 'Start, pause, resume or stop time for this job',
+      builder: (sheet) => SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+        child: M15LiveTimerPanel(
+          repository: _repository as RemoteLabourRepository,
+          job: selected,
+          onUpdated: () {
+            if (mounted) {
+              setState(() => _tab = 1);
+              _load();
+            }
+          },
+        ),
+      ),
+    );
+    if (mounted) await _load();
+  }
+
+  Future<void> _createManualEntry() async {
     if (widget.onCreateEntry != null) {
-      widget.onCreateEntry!(_kind);
+      widget.onCreateEntry!(LabourEntryKind.labour);
       return;
     }
     final entry = await Sign2DigitalNavigation.push<LabourEntry>(context,
       MaterialPageRoute<LabourEntry>(
         builder: (_) => AddLabourEntryScreen(
-          kind: _kind,
+          kind: LabourEntryKind.labour,
           jobs: _jobs,
           initialJob: _selectedJob,
           selectedNavigationIndex: widget.selectedNavigationIndex,
@@ -268,7 +318,9 @@ class _TimeLabourScreenState extends State<TimeLabourScreen> {
     try {
       await _repository.save(entry);
       if (!mounted) return;
-      setState(() { _jobId = entry.jobId; });
+      // A newly saved manual labour entry must be visible in Labour, even
+      // when Add was originally opened from the Time Sheet tab.
+      setState(() { _jobId = entry.jobId; _tab = 0; });
       await _load();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -289,6 +341,27 @@ class _TimeLabourScreenState extends State<TimeLabourScreen> {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('Could not save the time entry.')));
       }
+    }
+  }
+
+  Future<void> _create() async {
+    final choice = await Sign2DigitalSelectionSheet.show(
+      context,
+      title: 'Add Time & Labour',
+      icon: Icons.access_time_rounded,
+      subtitle: 'Choose how to record working hours',
+      options: const ['Manual Labour Entry', 'Live Time Tracking'],
+      iconForOption: (option) => option == 'Live Time Tracking'
+          ? Icons.timer_outlined : Icons.edit_note_rounded,
+      keyForOption: (option) => option == 'Live Time Tracking'
+          ? const Key('labour-create-timer')
+          : const Key('labour-create-manual'),
+    );
+    if (!mounted || choice == null) return;
+    if (choice == 'Live Time Tracking') {
+      await _openLiveTimer();
+    } else {
+      await _createManualEntry();
     }
   }
 
@@ -377,10 +450,10 @@ class _TimeLabourScreenState extends State<TimeLabourScreen> {
                         trailing: const Icon(Icons.keyboard_arrow_down_rounded,
                           color: AppColors.secondaryText),
                       ),
-                      // Original approved Labour / Time Sheet screens support
-                      // manual entries only. Do not show the M15 live timer.
-                      // Keep the job-level financial summary and saved history.
-                      if (_repository is RemoteLabourRepository &&
+                      // Show the job cost summary on Time Sheet only;
+                      // keep the original Labour tab dedicated to entries.
+                      if (_tab == 1 &&
+                          _repository is RemoteLabourRepository &&
                           _jobId != null) ...[
                         const SizedBox(height: 15),
                         M15LabourSummary(
