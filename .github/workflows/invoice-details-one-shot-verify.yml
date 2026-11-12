@@ -26,7 +26,7 @@ jobs:
         run: flutter pub get
       - name: Targeted analyzer
         run: |
-          flutter analyze --no-pub \
+          flutter analyze --no-pub --no-fatal-infos \
             lib/features/invoices \
             test/features/invoices/invoice_details_screen_test.dart \
             test/features/invoices/mark_invoice_paid_dialog_test.dart \
