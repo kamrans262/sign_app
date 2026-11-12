@@ -234,7 +234,9 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
       ),
     );
     if (!context.mounted || selected == null ||
-        selected == job.progressPercentage.round()) return;
+        selected == job.progressPercentage.round()) {
+      return;
+    }
     final saved = await update(job, selected);
     if (context.mounted && saved) {
       // Refresh the same screen from the authoritative API; the Jobs tab is
