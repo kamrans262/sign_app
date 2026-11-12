@@ -1,4 +1,5 @@
 // Sign2Digital Create Account regression tests.
+import 'package:flutter/foundation.dart' show debugDefaultTargetPlatformOverride, kIsWeb, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -18,6 +19,25 @@ void useSize(WidgetTester tester, Size size) {
 }
 
 void main() {
+  testWidgets('Android registration hides Apple; iOS registration keeps it',
+      (tester) async {
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+    useSize(tester, const Size(430, 932));
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    await tester.pumpWidget(const MaterialApp(home: CreateAccountScreen()));
+    expect(find.text('Continue with Google'), findsOneWidget);
+    expect(find.text('Continue with Apple'), kIsWeb ? findsOneWidget : findsNothing);
+    expect(find.byKey(const Key('create-account-button')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    await tester.pumpWidget(const MaterialApp(home: CreateAccountScreen()));
+    await tester.pump();
+    expect(find.text('Continue with Apple'), findsOneWidget);
+    expect(find.text('Continue with Google'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('all five inputs and buttons render without exceptions', (
     tester,
   ) async {
