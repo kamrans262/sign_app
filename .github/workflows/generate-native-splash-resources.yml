@@ -1,0 +1,57 @@
+name: Sign2Digital Generate Native Splash Resources
+on:
+  push:
+    branches: [fix/m20-android-live-reminder-integration-2026-11-06]
+    paths:
+      - '.github/workflows/generate-native-splash-resources.yml'
+      - 'pubspec.yaml'
+      - 'android/app/src/main/res/values/styles.xml'
+      - 'android/app/src/main/res/values-night/styles.xml'
+      - 'android/app/src/main/res/drawable-v21/launch_background.xml'
+  workflow_dispatch:
+
+# Commit checked-in Android resources so a clean Flutter checkout cannot
+# accidentally show the Android 12 system's default app-icon splash.
+permissions:
+  contents: write
+concurrency:
+  group: sign2digital-native-splash-generation
+  cancel-in-progress: true
+
+jobs:
+  generate-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Generate native splash from the same logo on every Android version
+        run: dart run flutter_native_splash:create
+      - name: Check generated light and dark Android 12 splash assets
+        run: |
+          test -f android/app/src/main/res/values-v31/styles.xml
+          test -f android/app/src/main/res/values-night-v31/styles.xml
+          grep -q 'windowSplashScreenAnimatedIcon' android/app/src/main/res/values-v31/styles.xml
+          grep -q 'windowSplashScreenAnimatedIcon' android/app/src/main/res/values-night-v31/styles.xml
+          grep -q 'windowSplashScreenBackground' android/app/src/main/res/values-v31/styles.xml
+          grep -q 'windowSplashScreenBackground' android/app/src/main/res/values-night-v31/styles.xml
+          test -f android/app/src/main/res/drawable-mdpi/android12splash.png
+          test -f android/app/src/main/res/drawable-night-mdpi/android12splash.png
+          if grep -i 'sign_app_icon' android/app/src/main/res/values-v31/styles.xml android/app/src/main/res/values-night-v31/styles.xml; then exit 1; fi
+      - name: Commit generated launch resources to current branch (no deploy)
+        run: |
+          git add -A android/app/src/main/res
+          if git diff --cached --quiet; then
+            echo 'Native Android splash resources are already current.'
+          else
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git commit -m 'Android native splash: check in generated logo for light/dark Android 12+'
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
