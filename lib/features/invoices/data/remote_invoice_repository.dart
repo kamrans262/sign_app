@@ -1,3 +1,4 @@
+import '../../../core/utils/sign2digital_server_timestamp.dart';
 import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 
@@ -93,7 +94,7 @@ class RemoteInvoiceRepository extends InvoiceRepository {
         if(row['source_addenda_ids'] is List)
           for(final raw in row['source_addenda_ids'] as List)_int(raw),
       ],
-      sentAt:row['sent_at']==null?null:_date(row['sent_at']),
+      sentAt:Sign2DigitalServerTimestamp.tryParse(row['sent_at']),
       items:items,payments:payments,history:history,photos:photos,
       payment:QuotePaymentDetails(iban:(row['iban']??'').toString()),
     );
@@ -279,7 +280,8 @@ class RemoteInvoiceRepository extends InvoiceRepository {
         InvoicePaymentRecord(
           id:_map(raw)['id'].toString(),
           amountMinor:_int(_map(raw)['amount_minor']),
-          paidAt:_date(_map(raw)['paid_at']),
+          paidAt:Sign2DigitalServerTimestamp.tryParse(_map(raw)['paid_at']) ??
+            throw const SignApiException('Invalid invoice payment timestamp'),
           method:(_map(raw)['method']??'').toString(),
           referenceNumber:_map(raw)['reference_number']?.toString(),
           status:(_map(raw)['status']??'').toString(),
@@ -290,7 +292,8 @@ class RemoteInvoiceRepository extends InvoiceRepository {
         InvoiceHistoryEvent(
           id:_map(raw)['id'].toString(),
           title:(_map(raw)['type']??'').toString().replaceAll('_',' '),
-          occurredAt:_date(_map(raw)['created_at']),
+          occurredAt:Sign2DigitalServerTimestamp.tryParse(_map(raw)['created_at']) ??
+            throw const SignApiException('Invalid invoice history timestamp'),
           description:_map(raw)['actor_user_id']==null?null:
             'User #${_map(raw)['actor_user_id']}',
         ),
