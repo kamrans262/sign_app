@@ -43,7 +43,11 @@ class Sign2DigitalOutlinedButton extends StatelessWidget {
           constraints: const BoxConstraints(minHeight: 52),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            // Shrink-wrap height in flexible bottom sheets. A default Center
+            // expands to its parent's maximum height and stretches the entire
+            // outlined button, displacing adjacent fixed-height actions.
             child: Center(
+              heightFactor: 1,
               child: Row(
                 // Use the available width as a firm constraint so the label
                 // can wrap beside the brand icon at accessibility text sizes.
