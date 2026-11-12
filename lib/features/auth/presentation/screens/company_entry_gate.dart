@@ -121,7 +121,7 @@ class _CompanyEntryGateState extends State<CompanyEntryGate> {
                       style: const TextStyle(fontFamily: 'Inter', fontSize: 16,
                         fontWeight: FontWeight.w600, color: AppColors.dark)),
                     const SizedBox(height: 4),
-                    Text('Role: ${invite.role}',
+                    Text('Role: ${invite.roleName}',
                       style: const TextStyle(fontFamily: 'Inter', fontSize: 13,
                         color: AppColors.secondaryText)),
                     const SizedBox(height: 10),
