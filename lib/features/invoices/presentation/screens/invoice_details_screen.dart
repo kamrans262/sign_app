@@ -7,6 +7,7 @@ import 'package:printing/printing.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
+import '../../../../core/widgets/sign2digital_confirmation_dialog.dart';
 import '../../../../core/widgets/sign2digital_information_table.dart';
 import '../../../../core/widgets/sign2digital_outlined_button.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
@@ -309,21 +310,14 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
 
   Future<void> _approve() async {
     if(_busy||_record.demoOnly||_record.lifecycleStatus!='draft')return;
-    final confirmed=await showDialog<bool>(
-      context:context,
-      builder:(dialog)=>AlertDialog(
-        title:const Text('Approve Invoice?'),
-        content:Text('Approve and lock invoice ${_record.number}? '
-          'This confirms the reviewed invoice; no payment will be charged '
-          'and no customer email will be sent.'),
-        actions:[
-          TextButton(onPressed:()=>Navigator.of(dialog).pop(false),
-            child:const Text('Cancel')),
-          TextButton(key:const Key('invoice-approve-confirm'),
-            onPressed:()=>Navigator.of(dialog).pop(true),
-            child:const Text('Approve Invoice')),
-        ],
-      ),
+    final confirmed = await Sign2DigitalConfirmationDialog.show(
+      context,
+      title: 'Approve Invoice?',
+      message: 'Approve and lock invoice ${_record.number}? '
+        'No payment will be charged and no customer email will be sent.',
+      confirmLabel: 'Approve Invoice',
+      confirmKey: const Key('invoice-approve-confirm'),
+      icon: Icons.fact_check_outlined,
     );
     if(confirmed!=true||!mounted)return;
     setState(()=>_busy=true);
