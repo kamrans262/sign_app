@@ -25,23 +25,23 @@ class CompanyTeamScreen extends StatefulWidget {
     final parts = key.split('.');
     if (parts.length != 2) return key;
     final area = switch (parts[0]) {
-      'clients' => 'Clients',
-      'jobs' => 'Jobs',
-      'documents' => 'Documents',
-      'quotes' => 'Quotes',
-      'invoices' => 'Invoices',
-      'reports' => 'Reports',
-      'expenses' => 'Expenses',
+      'clients' => 'Client',
+      'jobs' => 'Job',
+      'documents' => 'Document',
+      'quotes' => 'Quote',
+      'invoices' => 'Invoice',
+      'reports' => 'Report',
+      'expenses' => 'Expense',
       'labour' => 'Time & Labour',
       'equipment' => 'Equipment',
       _ => parts[0],
     };
     final action = switch (parts[1]) {
-      'read' => 'View',
-      'write' => 'Manage',
+      'read' => 'Read',
+      'write' => 'Write',
       _ => parts[1],
     };
-    return '$action $area';
+    return '$area - $action';
   }
 
   const CompanyTeamScreen({
@@ -102,7 +102,11 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
 
   String _roleLabel(String value) {
     final id = _customRoleId(value);
-    if (id != null) return _findRole(id)?.name ?? 'Custom Role';
+    if (id != null) {
+      final name = _findRole(id)?.name ?? 'Custom Role';
+      return name.isEmpty ? 'Custom Role'
+          : '${name[0].toUpperCase()}${name.substring(1)}';
+    }
     return value == 'admin' ? 'Admin' : 'Member';
   }
 
@@ -185,7 +189,7 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
     final selected = Set<String>.from(original);
     final result = await Sign2DigitalSelectionSheet.showCustom<List<String>>(
       context: context,
-      title: 'Team permissions',
+      title: 'Team Permissions',
       icon: Icons.shield_outlined,
       subtitle: 'Choose access for this team member',
       builder: (sheetContext) => StatefulBuilder(builder: (context, update) =>
