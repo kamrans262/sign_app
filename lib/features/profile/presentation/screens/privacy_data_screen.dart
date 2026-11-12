@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/services/sign_api_client.dart';
@@ -65,7 +66,7 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
     final password = TextEditingController();
     final approved = await showDialog<String>(
       context: context,
-      builder: (dialog) => AlertDialog(
+      builder: (dialog) => Sign2DigitalApprovedConfirmation(
         title: const Text('Deactivate Account?'),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
           const Text('Deactivation disables sign-in and revokes active sessions. '
@@ -134,7 +135,7 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
     final approved = await showDialog<String>(
       context: context,
       builder: (dialog) => StatefulBuilder(
-        builder: (context, refresh) => AlertDialog(
+        builder: (context, refresh) => Sign2DigitalApprovedConfirmation(
           title: const Text('Permanently Delete Account?'),
           content: SingleChildScrollView(child: Column(
             mainAxisSize: MainAxisSize.min,
