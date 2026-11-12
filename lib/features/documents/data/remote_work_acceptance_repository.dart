@@ -90,6 +90,15 @@ class RemoteWorkAcceptanceRepository implements DocumentRepository {
       _map(response['data']);
   static int _id(Object? data) =>
       data is int? data:int.tryParse('$data')??0;
+  // A persisted Laravel datetime is a UTC instant, not a calendar date.
+  static DateTime _timestamp(Object? raw) {
+    final value = Sign2DigitalServerTimestamp.tryParse(raw);
+    if (value == null) {
+      throw const SignApiException('Invalid server timestamp.');
+    }
+    return value;
+  }
+
   static DateTime _date(Object? data) {
     final d=DateTime.tryParse((data??'').toString());
     if(d==null)throw const SignApiException('Invalid acceptance timestamp.');
@@ -130,7 +139,7 @@ class RemoteWorkAcceptanceRepository implements DocumentRepository {
       timestamp:_date(row['completion_date']),
       status:status,version:_id(row['revision']),demoOnly:false,
       verifiedSignedPdfAvailable:_signed(status),
-      jobId:job.toString(),createdAt:Sign2DigitalServerTimestamp.tryParse(row['created_at']),
+      jobId:job.toString(),createdAt:_timestamp(row['created_at']),
       updatedAt:Sign2DigitalServerTimestamp.tryParse(row['updated_at']),
       reportKind:ReportKind.workAcceptance,
       reportManagedDocumentId:row['managed_document_id']==null
@@ -267,8 +276,7 @@ class RemoteWorkAcceptanceRepository implements DocumentRepository {
         events.add(WorkAcceptanceEvent(
           id:'${item['id']}-${stage.name}',
           documentId:id,stage:stage,
-          occurredAt:Sign2DigitalServerTimestamp.tryParse(item['created_at']) ??
-             throw const SignApiException('Invalid acceptance event timestamp'),
+          occurredAt:Sign2DigitalServerTimestamp.tryParse(item['created_at']),
           actorName:item['actor_id']==null?'Customer':'Sign2Digital User',
         ));
       }
