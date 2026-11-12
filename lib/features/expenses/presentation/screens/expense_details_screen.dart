@@ -236,7 +236,7 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
       return Sign2DigitalOutlinedContainer(
         child: InkWell(
           key: const Key('expense-add-receipt'),
-          onTap: _busy ? null : _edit,
+          onTap: _busy || !ActiveCompanySession.canWrite('expenses') ? null : _edit,
           child: const SizedBox(
             height: 145,
             child: Center(child: Column(
@@ -427,7 +427,8 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
     }
   }
 
-  Widget _actions() => LayoutBuilder(
+  Widget _actions() => !ActiveCompanySession.canWrite('expenses')
+      ? const SizedBox.shrink() : LayoutBuilder(
     builder: (context, constraints) {
       final edit = Sign2DigitalOutlinedButton(
         key: const Key('expense-edit'),
