@@ -1,3 +1,4 @@
+import '../../../core/utils/sign2digital_server_timestamp.dart';
 import 'dart:typed_data';
 import 'dart:io';
 import 'package:crypto/crypto.dart';
@@ -107,8 +108,8 @@ class RemoteSiteReportRepository implements DocumentRepository {
       status: status,
       jobId: job.toString(),
       createdBy: (raw['prepared_by'] ?? '').toString(),
-      createdAt: _date(raw['created_at']),
-      updatedAt: DateTime.tryParse((raw['updated_at'] ?? '').toString()),
+      createdAt: Sign2DigitalServerTimestamp.tryParse(raw['created_at']),
+      updatedAt: Sign2DigitalServerTimestamp.tryParse(raw['updated_at']),
       version: _id(raw['revision']),
       demoOnly: false,
       reportKind: kind,
