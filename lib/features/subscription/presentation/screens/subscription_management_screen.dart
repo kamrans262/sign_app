@@ -1,5 +1,6 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -265,7 +266,7 @@ class _SubscriptionManagementScreenState
     if (_cancelling || !_canCancelSubscription) return;
     final approved = await showDialog<bool>(
       context: context,
-      builder: (dialog) => AlertDialog(
+      builder: (dialog) => Sign2DigitalApprovedConfirmation(
         title: const Text('Cancel Subscription?'),
         content: const Text(
           'Cancellation will be requested for the end of your billing '
