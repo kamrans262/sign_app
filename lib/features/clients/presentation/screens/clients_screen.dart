@@ -39,6 +39,8 @@ import '../../data/client_repository.dart';
 import '../../data/demo_client_repository.dart';
 import '../../data/remote_client_repository.dart';
 import '../../../auth/data/mobile_auth_repository.dart';
+import '../../../company/data/remote_company_repository.dart';
+import '../../../company/domain/company_profile.dart';
 import '../../../../core/services/active_company_session.dart';
 import '../../../../core/services/sign_api_client.dart';
 import '../../../../core/navigation/sign2digital_navigation.dart';
@@ -70,7 +72,7 @@ class ClientsScreen extends StatefulWidget {
   State<ClientsScreen> createState() => _ClientsScreenState();
 }
 
-class _ClientsScreenState extends State<ClientsScreen> {
+class _ClientsScreenState extends State<ClientsScreen> with WidgetsBindingObserver {
   late int _selectedIndex;
   DocumentCategory? _documentsCategory;
   int _homeRevision = 0;
@@ -163,6 +165,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _selectedIndex = widget.initialTab;
     _selectedCompanyId = ActiveCompanySession.companyId?.toString();
     ActiveCompanySession.access.addListener(_onCompanyAccessChanged);
@@ -190,6 +193,19 @@ class _ClientsScreenState extends State<ClientsScreen> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed || !_usesRemoteJobs ||
+        !MobileAuthRepository.shared.isSignedIn) return;
+    // Reload verified grants when returning to the app. Server middleware
+    // independently enforces updated/revoked access for every API request.
+    RemoteCompanyRepository.shared.list().catchError((Object _) {
+      // Preserve the last verified display during temporary network failure;
+      // the server remains the authority for actions and company data.
+      return <CompanyProfile>[];
+    });
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     final navigator = Navigator.of(context);
@@ -212,6 +228,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     ActiveCompanySession.access.removeListener(_onCompanyAccessChanged);
     if (_dashboardNavigator != null && _dashboardRoute != null) {
       Sign2DigitalNavigation.detachDashboard(
