@@ -1,5 +1,6 @@
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_ai_voice_button.dart';
@@ -252,7 +253,7 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
     if (!mounted) return;
     final approved = await showDialog<bool>(
       context: context,
-      builder: (dialog) => AlertDialog(
+      builder: (dialog) => Sign2DigitalApprovedConfirmation(
         title: const Text('Use extracted reminder details?'),
         content: const Text('Fill only empty fields or missing selections. '
           'Existing entries stay unchanged. Please review before saving.'),
