@@ -61,12 +61,34 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(DepositsScreen), findsOneWidget);
     expect(find.byType(Sign2DigitalDashboardHeader), findsWidgets);
-    expect(find.text('Search documents'), findsOneWidget);
+    expect(find.text('Search deposits'), findsOneWidget);
     expect(find.text('All'), findsOneWidget);
     expect(find.text('Pending'), findsOneWidget);
     expect(find.text('Refunded'), findsOneWidget);
     expect(tester.widget<Sign2DigitalBottomNavigationBar>(
       find.byType(Sign2DigitalBottomNavigationBar).last).selectedIndex, 4);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Deposits list has readable light theme on dark iOS',
+      (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final stub = _StubRepository([]);
+    await tester.pumpWidget(MaterialApp(
+      theme: ThemeData.dark(),
+      home: DepositsScreen(repository: stub),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text('Search deposits'), findsOneWidget);
+    expect(
+      Theme.of(tester.element(find.byKey(const Key('deposits-sort'))))
+          .brightness,
+      Brightness.light,
+    );
+    expect(find.byKey(const Key('deposits-create')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
