@@ -338,6 +338,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
       await Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
         builder: (_) => DepositsScreen(
           jobId: int.tryParse(job.id) != null ? job.id : null,
+          initialJob: job,
           onNavigationSelected: (index) => _selectTab(context, index),
         ),
       ));
@@ -347,6 +348,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
       await Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
         builder: (_) => InvoicesScreen(
           jobId: int.tryParse(job.id) != null ? job.id : null,
+          initialJob: job,
           onNavigationSelected: (index) => _selectTab(context, index),
         ),
       ));
