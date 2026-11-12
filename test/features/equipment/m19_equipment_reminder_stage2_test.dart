@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/widgets/sign2digital_primary_button.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -172,11 +173,11 @@ void main(){
     await tester.pumpAndSettle();
     expect(find.text('Send Equipment Return Reminder?'),findsOneWidget);
     final confirm=find.byKey(const Key('equipment-reminder-confirm-send'));
-    expect(tester.widget<TextButton>(confirm).onPressed,isNull);
+    expect(tester.widget<Sign2DigitalPrimaryButton>(confirm).enabled,isFalse);
     expect(posted,0);
     await tester.tap(find.byKey(const Key('equipment-reminder-consent')));
     await tester.pumpAndSettle();
-    expect(tester.widget<TextButton>(confirm).onPressed,isNotNull);
+    expect(tester.widget<Sign2DigitalPrimaryButton>(confirm).enabled,isTrue);
     await tester.tap(confirm);
     await tester.pumpAndSettle();
     expect(posted,1);
@@ -205,8 +206,8 @@ void main(){
     await tester.tap(find.byKey(const Key('equipment-reminder-policy')));
     await tester.pumpAndSettle();
     expect(saves,0);
-    expect(tester.widget<TextButton>(
-      find.byKey(const Key('equipment-reminder-policy-save'))).onPressed,isNull);
+    expect(tester.widget<Sign2DigitalPrimaryButton>(
+      find.byKey(const Key('equipment-reminder-policy-save'))).enabled,isFalse);
     await tester.tap(find.byKey(const Key('equipment-reminder-policy-confirm')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('equipment-reminder-policy-save')));
