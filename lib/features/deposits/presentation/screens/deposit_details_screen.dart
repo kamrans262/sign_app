@@ -1,4 +1,5 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
+import '../../../../core/services/active_company_session.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -256,7 +257,8 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
         Sign2DigitalOutlinedContainer(
         child: InkWell(
           key: const Key('deposit-receipts-empty'),
-          onTap: _busy || _record.status!=DepositStatus.pending ? null : _edit,
+          onTap: _busy || !ActiveCompanySession.canWrite('invoices') ||
+            _record.status!=DepositStatus.pending ? null : _edit,
           child: const SizedBox(height: 145,
             child: Center(child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -326,6 +328,7 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
       key: const Key('deposit-receipt-bottom-actions'),
       mainAxisSize: MainAxisSize.min,
       children: [
+        if (ActiveCompanySession.canWrite('invoices'))
         Sign2DigitalPrimaryButton(
           key: const Key('deposit-receipts-edit'),
           label: 'Add or remove receipt',
@@ -550,7 +553,8 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
     }
   }
 
-  Widget _actions() => Column(
+  Widget _actions() => !ActiveCompanySession.canWrite('invoices')
+      ? const SizedBox.shrink() : Column(
     key: const Key('deposit-detail-actions'),
     children: [
       Row(children: [
