@@ -5,6 +5,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../../clients/presentation/screens/clients_screen.dart';
+import '../../../subscription/services/m23_billing_deep_links.dart';
 import '../../../company/data/remote_company_repository.dart';
 import '../../../company/presentation/screens/create_company_screen.dart';
 
@@ -57,6 +58,11 @@ class _CompanyEntryGateState extends State<CompanyEntryGate> {
           ),
           (_) => false,
         );
+        // A cold-start Checkout return waits until server-verified company
+        // selection. Never infer company ownership from the browser URL.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          M23BillingDeepLinks.presentIfReady();
+        });
         return;
       }
       setState(() => _loading = false);
