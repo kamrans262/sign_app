@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/sign2digital_ai_voice_button.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
@@ -819,44 +820,51 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
     children: [
       Sign2DigitalDocumentItemsTable(
         key: const Key('invoice-items-table'),
-        // Visual-only Figma examples until genuine items are added.
-        // They are never included in totals or saved invoice records.
-        items: _items.isEmpty
-            ? [
-                Sign2DigitalDocumentTableLine(
-                  description: 'Electric Installation', quantity: '1',
-                  unitPrice: _money(9800), total: _money(9800)),
-                const Sign2DigitalDocumentTableLine(
-                  description: 'Material', quantity: '1',
-                  unitPrice: '—', total: '—'),
-                Sign2DigitalDocumentTableLine(
-                  description: 'Labour', quantity: '1',
-                  unitPrice: _money(9800), total: _money(9800)),
-              ]
-            : [
-                for (final item in _items)
-                  Sign2DigitalDocumentTableLine(
-                    description: item.description,
-                    quantity: item.quantity.toString(),
-                    unitPrice: _money(item.unitPriceMinor),
-                    total: _money(item.totalMinor),
-                  ),
-              ],
+        // A new invoice is genuinely empty. Never display sample items.
+        // Preserve explicit existing or imported line items when supplied.
+        items: [
+          for (final item in _items)
+            Sign2DigitalDocumentTableLine(
+              description: item.description,
+              quantity: item.quantity.toString(),
+              unitPrice: _money(item.unitPriceMinor),
+              total: _money(item.totalMinor),
+            ),
+        ],
         onItemTap: _items.isEmpty ? null : (index) => _editItem(index),
       ),
-      Align(alignment: Alignment.centerRight,
-        child: TextButton.icon(
-          key: const Key('invoice-add-item'),
-          onPressed: _repository is RemoteInvoiceRepository
-              ? _chooseInvoiceItemAction : () => _editItem(),
-          icon: const Icon(Icons.add),
-          label: const Text('Add item'),
-        )),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          if (_repository is RemoteInvoiceRepository)
+            Flexible(child: TextButton(
+              key: const Key('invoice-item-options'),
+              onPressed: _chooseInvoiceItemAction,
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.primary,
+              ),
+              child: const Text('Import / Type',
+                style: TextStyle(fontFamily: 'Inter',
+                  color: AppColors.primary, fontSize: 14)),
+            )),
+          Flexible(child: TextButton.icon(
+            key: const Key('invoice-add-item'),
+            onPressed: () => _editItem(),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.primary,
+            ),
+            icon: const Icon(Icons.add, color: AppColors.primary),
+            label: const Text('Add item',
+              style: TextStyle(fontFamily: 'Inter', fontSize: 14,
+                fontWeight: FontWeight.w600, color: AppColors.primary)),
+          )),
+        ],
+      ),
       if (_items.isEmpty)
-        const Text('Example items only — add your actual invoice items.',
-          key: Key('invoice-example-items-notice'),
+        const Text('No invoice items added yet.',
+          key: Key('invoice-no-items'),
           style: TextStyle(fontFamily: 'Inter', fontSize: 12,
-            color: AppColors.placeholder)),
+            color: AppColors.secondaryText)),
       if (_items.any((item) => item.totalMinor == null))
         const Text('Unpriced items must be completed before creating.',
           key: Key('invoice-unpriced-notice'),
@@ -895,7 +903,9 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
   );
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) => Theme(
+    data: AppTheme.light,
+    child: Scaffold(
     backgroundColor: AppColors.white,
     body: SafeArea(bottom: false, child: Column(children: [
       Sign2DigitalHeader(title: 'Invoices', onBack: _cancel),
@@ -988,5 +998,5 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
     bottomNavigationBar: Sign2DigitalBottomNavigationBar(
       selectedIndex: widget.selectedNavigationIndex,
       onSelected: _navigate),
-  );
+  ));
 }
