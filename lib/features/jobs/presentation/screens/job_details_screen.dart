@@ -77,7 +77,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
   JobDetailsModel? _freshDetails;
   int _financialLoadSerial = 0;
 
-  JobModel get job => widget.job;
+  JobModel get job => _freshDetails?.job ?? widget.job;
   JobDetailsModel? get details => _freshDetails ?? widget.details;
   ValueChanged<JobSection>? get onSectionTap => widget.onSectionTap;
   ValueChanged<int>? get onTabSelected => widget.onTabSelected;
@@ -236,7 +236,11 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
     if (!context.mounted || selected == null ||
         selected == job.progressPercentage.round()) return;
     final saved = await update(job, selected);
-    if (context.mounted && saved) Navigator.of(context).pop();
+    if (context.mounted && saved) {
+      // Refresh the same screen from the authoritative API; the Jobs tab is
+      // independently refreshed by the parent dashboard handler.
+      await _refreshFinancials();
+    }
   }
 
 
