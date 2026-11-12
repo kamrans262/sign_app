@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/navigation/sign2digital_navigation.dart';
+import '../../../../core/services/active_company_session.dart';
 import '../../../auth/data/remote_account_repository.dart';
 import '../../../deposits/data/remote_deposit_repository.dart';
 import '../../../documents/data/remote_general_document_repository.dart';
@@ -49,7 +50,9 @@ class MoreScreen extends StatelessWidget {
     ));
 
   @override
-  Widget build(BuildContext context) => Center(
+  Widget build(BuildContext context) => ValueListenableBuilder<CompanyAccess?>(
+    valueListenable: ActiveCompanySession.access,
+    builder: (context, _, __) => Center(
     child: ConstrainedBox(
       constraints: BoxConstraints(maxWidth:
             MediaQuery.orientationOf(context) == Orientation.landscape
@@ -74,6 +77,7 @@ class MoreScreen extends StatelessWidget {
               onProfileTap: () => _openProfile(context),
             ))),
           const SizedBox(height: 15),
+          if (ActiveCompanySession.canRead('documents')) ...[
           _tile(context,
             key: const Key('open-ai-documents'),
             title: 'AI Documents',
@@ -86,6 +90,8 @@ class MoreScreen extends StatelessWidget {
               onProfileTap: () => _openProfile(context),
             ))),
           const SizedBox(height: 15),
+          ],
+          if (ActiveCompanySession.canRead('reports')) ...[
           _tile(context,
             key: const Key('open-reports'),
             title: 'Reports',
@@ -97,6 +103,8 @@ class MoreScreen extends StatelessWidget {
               onProfileTap: () => _openProfile(context),
             ))),
           const SizedBox(height: 15),
+          ],
+          if (ActiveCompanySession.canRead('labour')) ...[
           _tile(context,
             key: const Key('open-time-labour'),
             title: 'Time & Labour',
@@ -108,6 +116,8 @@ class MoreScreen extends StatelessWidget {
               onProfileTap: () => _openProfile(context),
             ))),
           const SizedBox(height: 15),
+          ],
+          if (ActiveCompanySession.canRead('invoices')) ...[
           _tile(context,
             key: const Key('open-invoices'),
             title: 'Invoices',
@@ -119,6 +129,7 @@ class MoreScreen extends StatelessWidget {
               onProfileTap: () => _openProfile(context),
             ))),
           const SizedBox(height: 15),
+          ],
           _tile(context,
             key: const Key('open-reminders'),
             title: 'Reminders',
@@ -130,6 +141,7 @@ class MoreScreen extends StatelessWidget {
               onProfileTap: () => _openProfile(context),
             ))),
           const SizedBox(height: 15),
+          if (ActiveCompanySession.canRead('equipment')) ...[
           _tile(context,
             key: const Key('open-equipment'),
             title: 'Equipment',
@@ -141,6 +153,8 @@ class MoreScreen extends StatelessWidget {
               onProfileTap: () => _openProfile(context),
             ))),
           const SizedBox(height: 15),
+          ],
+          if (ActiveCompanySession.canRead('invoices')) ...[
           _tile(context,
             key: const Key('open-deposits'),
             title: 'Deposits',
@@ -152,6 +166,8 @@ class MoreScreen extends StatelessWidget {
               onProfileTap: () => _openProfile(context),
             ))),
           const SizedBox(height: 15),
+          ],
+          if (ActiveCompanySession.canRead('expenses')) ...[
           _tile(context,
             key: const Key('open-expenses'),
             title: 'Expenses',
@@ -163,6 +179,8 @@ class MoreScreen extends StatelessWidget {
               onProfileTap: () => _openProfile(context),
             ))),
           const SizedBox(height: 15),
+          ],
+          if (ActiveCompanySession.isOwner) ...[
           _tile(context,
             key: const Key('open-subscription'),
             title: 'Subscription',
@@ -173,10 +191,11 @@ class MoreScreen extends StatelessWidget {
               onNotificationTap: () => onNotReady?.call('Notifications'),
               onProfileTap: () => _openProfile(context),
             ))),
+          ],
         ],
       ),
     ),
-  );
+  ));
 
   Widget _tile(BuildContext context, {required Key key,
     required String title, required IconData icon, required VoidCallback onTap}) =>
