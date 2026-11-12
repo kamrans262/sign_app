@@ -222,10 +222,14 @@ void main() {
       (tester) async {
     await _open(tester, _invoice(status: InvoiceStatus.draft,
       items: _items));
+    await _reach(tester, 'invoice-details-edit');
     expect(find.byKey(const Key('invoice-details-send')), findsNothing);
     expect(find.byKey(const Key('invoice-details-edit')), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const Key('details-tab-1')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('details-tab-1')));
     await tester.pumpAndSettle();
+    await _reach(tester, 'invoice-details-download');
     final disabledDownload = tester.widget<InkWell>(
       find.descendant(of: find.byKey(const Key('invoice-details-download')),
         matching: find.byType(InkWell)).first);
@@ -259,9 +263,12 @@ void main() {
       (tester) async {
     await _open(tester, _invoice(status: InvoiceStatus.pending,
       lifecycleStatus: 'approved', items: _items));
+    await _reach(tester, 'invoice-details-send');
     expect(find.byKey(const Key('invoice-details-send')), findsOneWidget);
     expect(find.byKey(const Key('invoice-details-edit')), findsNothing);
     expect(find.byKey(const Key('invoice-details-approve')), findsNothing);
+    await tester.ensureVisible(find.byKey(const Key('details-tab-1')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('details-tab-1')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('invoice-details-send')), findsNothing);
@@ -281,8 +288,11 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
       await _open(tester, _invoice(status: InvoiceStatus.draft,
         items: _items));
+      await _reach(tester, 'invoice-details-edit');
       expect(find.byKey(const Key('invoice-details-edit')), findsOneWidget);
       expect(find.byKey(const Key('invoice-details-send')), findsNothing);
+      await tester.ensureVisible(find.byKey(const Key('details-tab-1')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('details-tab-1')));
       await tester.pumpAndSettle();
       await _reach(tester, 'invoice-details-preview');
