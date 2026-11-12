@@ -1,5 +1,6 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import '../../../documents/data/document_activity_session.dart';
@@ -335,7 +336,7 @@ class _SendQuoteScreenState extends State<SendQuoteScreen> {
     if (!mounted || choice == null) { return; }
     if (_messageEdited) {
       final replace = await showDialog<bool>(context: context, builder: (ctx) =>
-        AlertDialog(title: const Text('Replace your message?'),
+        Sign2DigitalApprovedConfirmation(title: const Text('Replace your message?'),
           content: const Text('Your current message has been edited. Replacing it will discard those changes.'),
           actions: [TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Keep')),
             TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Replace'))]));
