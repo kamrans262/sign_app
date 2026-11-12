@@ -104,6 +104,50 @@ class MobileAuthRepository {
     }
   }
 
+  /// Complete Google login through our own token-issuing API. A Google
+  /// credential never becomes the application's bearer session.
+  Future<EmailOtpVerification> signInWithGoogle(String googleIdToken,
+      {required bool rememberMe}) async {
+    if (googleIdToken.isEmpty) {
+      throw const SignApiException('Google sign-in did not return a token.');
+    }
+    await M20PushCoordinator.shared.revokeBeforeLogout();
+    await _tokenStorage.delete();
+    _sessionToken = null;
+    ActiveCompanySession.clear();
+
+    final response = await _api.post('/api/v1/auth/google',
+      authenticated: false, data: {
+        'id_token': googleIdToken,
+        'device_name': 'Sign2Digital Google Mobile',
+      });
+    final data = _data(response);
+    if (data['purpose'] != 'login') {
+      throw const SignApiException('Unexpected Google authentication response.');
+    }
+    if (data['requires_two_factor'] == true) {
+      final ticket = data['two_factor_ticket'];
+      if (ticket is! String || ticket.length != 64) {
+        throw const SignApiException('Invalid authenticator challenge.');
+      }
+      return EmailOtpVerification(
+        purpose: 'login', twoFactorTicket: ticket);
+    }
+    final bearer = data['access_token'];
+    if (bearer is! String || bearer.isEmpty) {
+      throw const SignApiException('Missing authentication token.');
+    }
+    _sessionToken = bearer;
+    if (rememberMe) {
+      try {
+        await _tokenStorage.write(bearer);
+      } catch (_) {
+        // Secure storage may be unavailable; keep a memory-only session.
+      }
+    }
+    return EmailOtpVerification(purpose: 'login', accessToken: bearer);
+  }
+
   Future<EmailOtpChallenge> beginLogin(String email, String password) async {
     final response = await _api.post(
       '/api/v1/auth/login',
