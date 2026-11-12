@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/services/active_company_session.dart';
+import '../../../../core/widgets/sign2digital_header.dart';
+import '../../../quotes/presentation/widgets/sign2digital_quote_shadow_panel.dart';
+import '../../../company/presentation/screens/company_invitations_screen.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
@@ -27,6 +30,7 @@ class _CompanyEntryGateState extends State<CompanyEntryGate> {
 
   bool _loading = true;
   String? _error;
+  List<PendingCompanyInvitation> _pendingInvitations = const [];
 
   @override
   void initState() {
@@ -65,7 +69,14 @@ class _CompanyEntryGateState extends State<CompanyEntryGate> {
         });
         return;
       }
-      setState(() => _loading = false);
+      // Do not send an invited new teammate to owner-only company creation.
+      // Laravel returns pending invitations only for the verified account email.
+      final pending = await _repository.pendingInvitations();
+      if (!mounted) return;
+      setState(() {
+        _pendingInvitations = pending;
+        _loading = false;
+      });
     } catch (_) {
       if (!mounted) return;
       // Network errors must not be treated as 'no company' or bypassed.
@@ -76,8 +87,64 @@ class _CompanyEntryGateState extends State<CompanyEntryGate> {
     }
   }
 
+  Future<void> _acceptInvitation() async {
+    final joined = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(builder: (_) =>
+        CompanyInvitationsScreen(repository: _repository)),
+    );
+    if (mounted && joined == true) await _checkCompanies();
+  }
+
+  Widget _invitationEntry() => Scaffold(
+    backgroundColor: AppColors.white,
+    body: SafeArea(child: Column(children: [
+      const Sign2DigitalHeader(title: 'Company Invitations'),
+      Expanded(child: Center(child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 720),
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 25),
+          children: [
+            Sign2DigitalQuoteShadowPanel(
+              padding: const EdgeInsets.all(20),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text('You have been invited',
+                    style: TextStyle(fontFamily: 'Inter', fontSize: 18,
+                      fontWeight: FontWeight.w600, color: AppColors.dark)),
+                  const SizedBox(height: 10),
+                  const Text('Join your existing company using the invitation code sent to your verified email. You do not need to create a company.',
+                    style: TextStyle(fontFamily: 'Inter', fontSize: 14,
+                      color: AppColors.dark)),
+                  const SizedBox(height: 15),
+                  for (final invite in _pendingInvitations) ...[
+                    Text(invite.companyName,
+                      style: const TextStyle(fontFamily: 'Inter', fontSize: 16,
+                        fontWeight: FontWeight.w600, color: AppColors.dark)),
+                    const SizedBox(height: 4),
+                    Text('Role: ${invite.role}',
+                      style: const TextStyle(fontFamily: 'Inter', fontSize: 13,
+                        color: AppColors.secondaryText)),
+                    const SizedBox(height: 10),
+                  ],
+                  Sign2DigitalPrimaryButton(
+                    key: const Key('join-invited-company'),
+                    label: 'Accept Invitation',
+                    onPressed: _acceptInvitation,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ))),
+    ])),
+  );
+
   @override
   Widget build(BuildContext context) {
+    if (!_loading && _error == null && _pendingInvitations.isNotEmpty) {
+      return _invitationEntry();
+    }
     if (!_loading && _error == null) {
       return CreateCompanyScreen(
         key: const Key('required-company-setup'),
