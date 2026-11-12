@@ -1,3 +1,4 @@
+import '../../../core/utils/sign2digital_server_timestamp.dart';
 import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 
@@ -59,7 +60,7 @@ class RemoteSignedDocumentRepository {
       final raw=Map<String,dynamic>.from(value);
       final id=raw['id'] is num ? (raw['id'] as num).toInt()
           : int.tryParse(raw['id'].toString()) ?? 0;
-      final date=DateTime.tryParse((raw['signed_at'] ?? '').toString());
+      final date=Sign2DigitalServerTimestamp.tryParse(raw['signed_at']);
       final sha=(raw['signed_pdf_sha256'] ?? '').toString();
       final ref=(raw['document_id'] ?? '').toString();
       if(id<=0 || date==null || sha.length!=64 || ref.isEmpty) {
