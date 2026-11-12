@@ -51,6 +51,11 @@ Future<void> _open(WidgetTester tester, InvoiceRecord invoice, {
 
 Future<void> _reach(WidgetTester tester, String key) async {
   final finder = find.byKey(Key(key));
+  if (finder.evaluate().isNotEmpty) {
+    await tester.ensureVisible(finder);
+    await tester.pumpAndSettle();
+    return;
+  }
   await tester.scrollUntilVisible(finder, 125,
     scrollable: find.descendant(
       of: find.byKey(const Key('invoice-details-scroll')),
