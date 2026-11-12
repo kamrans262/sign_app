@@ -43,7 +43,8 @@ void main() {
       tokenProvider: () async => 'test-token',
       httpClient: MockClient((request) async {
         final list = request.url.path.endsWith('/invitations')
-            ? 'invitations' : 'members';
+            ? 'invitations' : request.url.path.endsWith('/roles')
+              ? 'roles' : 'members';
         return http.Response(jsonEncode({'data': {list: []}}), 200);
       }),
     );
