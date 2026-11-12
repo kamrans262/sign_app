@@ -305,6 +305,25 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('Create from a Job prefills its title and linked client',
+      (tester) async {
+    await _launch(tester, AddInvoiceScreen(
+      repository: _Invoices(),
+      depositRepository: _Deposits(),
+      jobs: [LabourDemoJobs.riverside],
+      initialJob: LabourDemoJobs.riverside,
+    ));
+    await _scroll(tester, 'invoice-create-job');
+    expect(find.text('Riverside Villa'), findsWidgets);
+    await _scroll(tester, 'invoice-create-client');
+    final client = tester.widget<TextFormField>(
+      find.descendant(
+        of: find.byKey(const Key('invoice-create-client')),
+        matching: find.byType(TextFormField)));
+    expect(client.controller?.text, LabourDemoJobs.riverside.clientName);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('Incomplete prices cannot create a draft',
       (tester) async {
     final repo = _Invoices();
