@@ -8,6 +8,7 @@ import 'package:http/testing.dart';
 import 'package:sign2digital/core/services/active_company_session.dart';
 import 'package:sign2digital/core/services/sign_api_client.dart';
 import 'package:sign2digital/core/widgets/sign2digital_input_field.dart';
+import 'package:sign2digital/features/quotes/presentation/widgets/sign2digital_quote_shadow_panel.dart';
 import 'package:sign2digital/features/auth/presentation/screens/company_entry_gate.dart';
 import 'package:sign2digital/features/clients/presentation/screens/clients_screen.dart';
 import 'package:sign2digital/features/company/data/remote_company_repository.dart';
@@ -249,9 +250,21 @@ void main() {
     expect(find.byType(CreateCompanyScreen), findsNothing);
     expect(find.byKey(const Key('join-invited-company')), findsOneWidget);
     expect(find.text('Alpine Construction AG'), findsOneWidget);
+    // The invitation card belongs at the vertical midpoint below its header.
+    final pendingViewport = tester.getCenter(
+      find.byKey(const Key('pending-invitation-scroll')));
+    final pendingCard = tester.getCenter(
+      find.byType(Sign2DigitalQuoteShadowPanel));
+    expect((pendingViewport.dy - pendingCard.dy).abs(), lessThan(20));
     await tester.tap(find.byKey(const Key('join-invited-company')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 350));
+    // The code-entry card is also centered until the keyboard requires scroll.
+    final codeViewport = tester.getCenter(
+      find.byKey(const Key('company-invitation-code-scroll')));
+    final codeCard = tester.getCenter(
+      find.byType(Sign2DigitalQuoteShadowPanel));
+    expect((codeViewport.dy - codeCard.dy).abs(), lessThan(20));
     await tester.enterText(find.byKey(const Key('company-invitation-code')), code);
     await tester.tap(find.byKey(const Key('accept-company-invitation')));
     await tester.pump();
