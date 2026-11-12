@@ -471,6 +471,49 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
     }
   }
 
+  Future<void> _showAddendumSigningLink(
+    AddendumDraft draft,
+    DocumentRecord source,
+    AddendumSignatureRequest response,
+  ) async {
+    final link = response.secureUrl.toString();
+    await showSign2DigitalBottomSheet<void>(
+      context: context,
+      builder: (sheet) => SafeArea(child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          const Text('Addendum Signature Request',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600,
+              color: AppColors.dark)),
+          const SizedBox(height: 10),
+          Text('Addendum: ${draft.number}'),
+          Text('Original document: ${source.number}'),
+          Text('Status: ${response.confirmedSentAt == null ? 'Link ready (not emailed)' : response.status}',
+            key: const Key('addendum-signature-request-status')),
+          const SizedBox(height: 10),
+          const Text('The customer must sign the separate addendum. '
+            'The original signed document remains unchanged.'),
+          const SizedBox(height: 10),
+          SelectableText(link),
+          TextButton.icon(
+            key: const Key('addendum-copy-secure-link'),
+            onPressed: () async {
+              await Clipboard.setData(ClipboardData(text: link));
+              if (!sheet.mounted) return;
+              ScaffoldMessenger.of(sheet).showSnackBar(
+                const SnackBar(content: Text('Secure link copied. '
+                  'Copying does not confirm delivery.')),
+              );
+            },
+            icon: const Icon(Icons.copy_outlined),
+            label: const Text('Copy secure link'),
+          ),
+        ]),
+      )),
+    );
+  }
+
   Future<void> _sendAddendumForSignature() async {
     final record = _record;
     if (record == null || _requestingAddendum) return;
@@ -494,57 +537,58 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
       _message('The original reference is missing or has changed.');
       return;
     }
+    final source = sources.single;
+    // Reopening an existing service-confirmed link must never create a second
+    // request. The backend intentionally rejects multiple active links.
+    final existing = AddendumSignatureRequestSession.forAddendum(draft.id);
+    if (existing != null && existing.valid &&
+        existing.originalDocumentId == source.id) {
+      await _showAddendumSigningLink(draft, source, existing);
+      return;
+    }
+
     setState(() => _requestingAddendum = true);
+    AddendumSignatureRequest? response;
+    AddendumDraft? current;
     try {
-      final response = await service(draft, sources.single);
-      if (!mounted) return;
-      if (response == null) {
-        _message('Signing request was not confirmed by the service.');
-        return;
+      // The document status is refreshed after approval, but the previous
+      // local draft may still say "draft". Always use Laravel's current
+      // revision/status when requesting a real customer signing link.
+      current = draft.serverId != null && MobileAuthRepository.shared.isSignedIn
+          ? await RemoteAddendumRepository.shared.get(draft.serverId!)
+          : draft;
+      if (current.linkedDocumentId != source.id ||
+          current.validationIssues.isNotEmpty) {
+        throw const FormatException('The signed original has changed.');
       }
-      AddendumSignatureRequestSession.remember(draft, sources.single, response);
-      if (!mounted) return;
-      final link = response.secureUrl.toString();
-      await showSign2DigitalBottomSheet<void>(
-        context: context,
-        builder: (sheet) => SafeArea(child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            const Text('Addendum Signature Request',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 10),
-            Text('Addendum: ${draft.number}'),
-            Text('Original document: ${sources.single.number}'),
-            Text('Status: ${response.status}',
-              key: const Key('addendum-signature-request-status')),
-            const SizedBox(height: 10),
-            const Text('The customer must sign the separate addendum. '
-              'The original signed document remains unchanged.'),
-            const SizedBox(height: 10),
-            SelectableText(link),
-            TextButton.icon(
-              key: const Key('addendum-copy-secure-link'),
-              onPressed: () async {
-                await Clipboard.setData(ClipboardData(text: link));
-                if (!sheet.mounted) return;
-                ScaffoldMessenger.of(sheet).showSnackBar(
-                  const SnackBar(content: Text('Secure link copied. '
-                    'Copying does not confirm delivery.')),
-                );
-              },
-              icon: const Icon(Icons.copy_outlined),
-              label: const Text('Copy secure link'),
-            ),
-          ]),
-        )),
-      );
-    } catch (_) {
+      response = await service(current, source);
+      if (response == null || !response.valid) {
+        throw const FormatException(
+            'The service did not return a valid signing link.');
+      }
+      // The request is server-confirmed before this receipt is remembered.
+      AddendumSignatureRequestSession.remember(current, source, response);
+    } on SignApiException catch (error) {
       if (mounted) {
-        _message('Could not confirm the addendum signing request.');
+        _message(error.statusCode == 409
+            ? 'An active signing request already exists. Use its saved link '
+              'or revoke it before issuing another request.'
+            : 'Could not create signing request: ${error.message}');
       }
+      return;
+    } catch (error) {
+      if (mounted) _message('Could not create the signing request. '
+          'Check the addendum status and try again.');
+      return;
     } finally {
       if (mounted) setState(() => _requestingAddendum = false);
+    }
+    if (!mounted || response == null || current == null) return;
+    try {
+      await _showAddendumSigningLink(current, source, response);
+    } catch (_) {
+      if (mounted) _message('The signing link was created successfully, '
+          'but its preview could not be opened.');
     }
   }
 
