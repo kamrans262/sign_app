@@ -225,7 +225,9 @@ class _ClientsScreenState extends State<ClientsScreen> {
     if (_selectedIndex == index &&
         (index != 3 || category == null || category == _documentsCategory)) {
       // Tapping Jobs again is also an explicit refresh of live progress.
-      if (index == 1 && _usesRemoteJobs) _loadJobs();
+      if (index == 1 && _usesRemoteJobs) {
+        _loadJobs();
+      }
       return;
     }
     FocusManager.instance.primaryFocus?.unfocus();
@@ -240,7 +242,9 @@ class _ClientsScreenState extends State<ClientsScreen> {
     });
     // Module activity can change progress independently of job edits.
     // Always get fresh server percentages when re-entering the Jobs tab.
-    if (index == 1 && _usesRemoteJobs) _loadJobs();
+    if (index == 1 && _usesRemoteJobs) {
+      _loadJobs();
+    }
   }
 
   void _notifyHome(String message) {
