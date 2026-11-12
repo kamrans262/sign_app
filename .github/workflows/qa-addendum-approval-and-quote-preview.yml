@@ -7,6 +7,10 @@ on:
       - '.github/workflows/qa-addendum-approval-and-quote-preview.yml'
       - 'lib/features/documents/presentation/screens/create_addendum_screen.dart'
       - 'lib/features/documents/presentation/screens/document_details_screen.dart'
+      - 'lib/features/documents/domain/addendum_signature_request.dart'
+      - 'lib/features/documents/data/remote_addendum_repository.dart'
+      - 'test/features/documents/m10_remote_addendum_repository_test.dart'
+      - 'test/features/documents/phase5_addendum_flow_test.dart'
       - 'lib/features/quotes/presentation/screens/quote_preview_screen.dart'
       - 'test/features/documents/addendum_approval_flow_test.dart'
       - 'test/features/documents/create_addendum_screen_test.dart'
@@ -34,7 +38,7 @@ jobs:
       - run: flutter pub get
       - name: Analyze only affected screens and tests
         run: |
-          flutter analyze --no-pub --no-fatal-infos lib/features/documents/presentation/screens/create_addendum_screen.dart lib/features/documents/presentation/screens/document_details_screen.dart lib/features/quotes/presentation/screens/quote_preview_screen.dart test/features/documents/addendum_approval_flow_test.dart test/features/documents/create_addendum_screen_test.dart test/features/documents/m10_addendum_responsive_test.dart test/features/quotes/quote_preview_screen_test.dart
+          flutter analyze --no-pub --no-fatal-infos lib/features/documents/presentation/screens/create_addendum_screen.dart lib/features/documents/presentation/screens/document_details_screen.dart lib/features/quotes/presentation/screens/quote_preview_screen.dart test/features/documents/addendum_approval_flow_test.dart test/features/documents/create_addendum_screen_test.dart test/features/documents/m10_addendum_responsive_test.dart test/features/quotes/quote_preview_screen_test.dart lib/features/documents/domain/addendum_signature_request.dart lib/features/documents/data/remote_addendum_repository.dart test/features/documents/m10_remote_addendum_repository_test.dart test/features/documents/phase5_addendum_flow_test.dart
       - name: Test addendum approval, edit identity, positions and quote actions
         run: |
           flutter test --no-pub --concurrency=2 --timeout=2m --reporter=expanded test/features/documents/addendum_approval_flow_test.dart test/features/documents/create_addendum_screen_test.dart test/features/documents/m10_addendum_responsive_test.dart test/features/documents/m10_remote_addendum_repository_test.dart test/features/documents/phase5_addendum_flow_test.dart test/features/quotes/quote_preview_screen_test.dart
