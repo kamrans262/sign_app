@@ -8,6 +8,8 @@ import 'package:sign2digital/features/deposits/presentation/screens/deposit_deta
 import 'package:sign2digital/features/deposits/presentation/screens/add_deposit_screen.dart';
 import 'package:sign2digital/features/deposits/presentation/screens/deposits_screen.dart';
 import 'package:sign2digital/features/jobs/data/local_job_photo_source.dart';
+import 'package:sign2digital/core/widgets/sign2digital_modal_surface.dart';
+import 'package:sign2digital/core/widgets/sign2digital_primary_button.dart';
 
 DepositRecord _record({
   DepositStatus status = DepositStatus.received,
@@ -125,9 +127,13 @@ void main() {
     await tester.tap(find.byKey(const Key('details-tab-1')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('deposit-receipts-empty')), findsOneWidget);
+    expect(find.byKey(const Key('deposit-detail-actions')), findsNothing);
+    expect(find.byKey(const Key('deposit-receipts-edit')), findsOneWidget);
     await tester.tap(find.byKey(const Key('details-tab-2')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('deposit-history-empty')), findsOneWidget);
+    expect(find.byKey(const Key('deposit-detail-actions')), findsNothing);
+    expect(find.byKey(const Key('deposit-receipts-edit')), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -150,6 +156,12 @@ void main() {
       });
     await tester.tap(find.byKey(const Key('details-tab-1')));
     await tester.pumpAndSettle();
+    final photoEdit = find.byKey(const Key('deposit-receipts-edit'));
+    expect(find.byType(Sign2DigitalPrimaryButton), findsOneWidget);
+    expect(tester.getSize(photoEdit).width, closeTo(760, 1));
+    expect(tester.getTopLeft(photoEdit).dy,
+      lessThan(tester.getTopLeft(find.byKey(const Key('deposit-receipt-share-0'))).dy));
+    expect(find.byKey(const Key('deposit-detail-actions')), findsNothing);
     await tester.tap(find.byKey(const Key('deposit-receipt-0')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('deposit-receipt-close')), findsOneWidget);
@@ -174,7 +186,9 @@ void main() {
     await _reach(tester, 'deposit-detail-delete');
     await tester.tap(find.byKey(const Key('deposit-detail-delete')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Cancel').last);
+    expect(find.byType(Sign2DigitalModalSurface), findsOneWidget);
+    expect(find.byType(AlertDialog), findsNothing);
+    await tester.tap(find.byKey(const Key('deposit-confirm-cancel')));
     await tester.pumpAndSettle();
     expect(repo.deletes, 0);
     await tester.tap(find.byKey(const Key('deposit-detail-delete')));
@@ -195,7 +209,9 @@ void main() {
     expect(find.text('Mark Received'),findsOneWidget);
     await tester.tap(find.byKey(const Key('deposit-detail-refund')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Cancel').last);
+    expect(find.byType(Sign2DigitalModalSurface), findsOneWidget);
+    expect(find.byType(AlertDialog), findsNothing);
+    await tester.tap(find.byKey(const Key('deposit-confirm-cancel')));
     await tester.pumpAndSettle();
     expect(repo.receives,0);
     await tester.tap(find.byKey(const Key('deposit-detail-refund')));
@@ -306,9 +322,17 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('details-tab-2')));
       await tester.pumpAndSettle();
+      expect(find.byKey(const Key('deposit-detail-edit')), findsNothing);
+      expect(find.byKey(const Key('deposit-detail-delete')), findsNothing);
+      expect(find.byKey(const Key('deposit-detail-refund')), findsNothing);
+      await tester.tap(find.byKey(const Key('details-tab-0')));
+      await tester.pumpAndSettle();
       await _reach(tester, 'deposit-detail-edit');
       expect(find.byKey(const Key('deposit-detail-delete')), findsOneWidget);
       expect(find.byKey(const Key('deposit-detail-refund')), findsOneWidget);
+      final expected = (size.width <= 720 ? size.width : 720.0) - 40;
+      expect(tester.getSize(find.byKey(const Key('deposit-detail-edit'))).width,
+        closeTo(expected, 1), reason: '$size');
       expect(tester.takeException(), isNull, reason: '$size');
     });
   }
