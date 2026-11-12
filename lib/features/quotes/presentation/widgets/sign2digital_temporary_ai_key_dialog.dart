@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_theme.dart';
+
 /// Reusable temporary-key prompt for development-time direct OpenAI calls.
 /// A key never leaves this dialog except as the caller's in-memory return value.
 abstract final class Sign2DigitalTemporaryAiKeyDialog {
@@ -15,7 +17,11 @@ abstract final class Sign2DigitalTemporaryAiKeyDialog {
     String? error;
     return showDialog<String>(
       context: context,
-      builder: (dialogContext) => StatefulBuilder(
+      // The approved popup stays white even when iOS/system theme is dark.
+      // Apply matching light input and icon colors inside that surface.
+      builder: (dialogContext) => Theme(
+        data: AppTheme.light,
+        child: StatefulBuilder(
         builder: (context, update) => AlertDialog(
           title: Text(title),
           content: ConstrainedBox(
@@ -70,6 +76,7 @@ abstract final class Sign2DigitalTemporaryAiKeyDialog {
               child: const Text('Generate with AI'),
             ),
           ],
+        ),
         ),
       ),
     );
