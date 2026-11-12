@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
@@ -136,7 +137,7 @@ class _AddPhotosScreenState extends State<AddPhotosScreen> {
       final discard = await showDialog<bool>(
         context: context,
         barrierColor: const Color(0x80000000),
-        builder: (dialogContext) => AlertDialog(
+        builder: (dialogContext) => Sign2DigitalApprovedConfirmation(
           backgroundColor: AppColors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
