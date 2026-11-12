@@ -1,4 +1,5 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
+import '../../../../core/services/active_company_session.dart';
 import '../../../../core/widgets/sign2digital_subscription_gate.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
@@ -535,6 +536,10 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
             onPressed: _preview)),
         ],
       ));
+    }
+
+    if (!ActiveCompanySession.canWrite('invoices')) {
+      return const SizedBox.shrink();
     }
 
     // The Details tab controls the workflow. Payments and History have no
