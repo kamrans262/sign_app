@@ -32,7 +32,14 @@ class Sign2DigitalSelectionSheet {
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
     clipBehavior: Clip.antiAlias,
-    builder: (sheet) => SafeArea(
+    // The modal Material sits above this builder. Re-establish both the
+    // approved light Theme and a matching DefaultTextStyle for custom content,
+    // otherwise plain labels can render white on white in iOS dark mode.
+    builder: (sheet) => Theme(
+      data: AppTheme.light,
+      child: Material(
+        type: MaterialType.transparency,
+        child: SafeArea(
       top: false,
       child: ConstrainedBox(
         constraints: BoxConstraints(
@@ -113,6 +120,8 @@ class Sign2DigitalSelectionSheet {
             ),
           ],
         ),
+      ),
+    ),
       ),
     ),
     ),
