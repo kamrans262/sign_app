@@ -179,8 +179,9 @@ void main() {
         findsOneWidget);
     expect(find.byKey(const Key('labour-form-end'), skipOffstage: false),
         findsOneWidget);
-    expect(find.byKey(const Key('labour-form-save'), skipOffstage: false),
-        findsOneWidget);
+    // The original long manual form scrolls; Save is built when reached.
+    await _scrollToEntryField(tester, 'labour-form-save');
+    expect(find.byKey(const Key('labour-form-save')), findsOneWidget);
     expect(repository.timerRequests, 0);
     expect(tester.takeException(), isNull);
   });
