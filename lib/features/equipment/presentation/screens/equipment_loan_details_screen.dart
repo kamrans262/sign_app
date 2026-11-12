@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
@@ -82,7 +83,7 @@ class _EquipmentLoanDetailsScreenState
       firstDate:tomorrow,lastDate:DateTime(2100));
     if(date==null||!mounted)return;
     final confirm=await showDialog<bool>(
-      context:context,builder:(dialog)=>AlertDialog(
+      context:context,builder:(dialog)=>Sign2DigitalApprovedConfirmation(
         title:const Text('Extend Return Date?'),
         content:Text('Change expected return from '+
           _date(_record.expectedReturnDate)+' to '+_date(date)+'?'),
@@ -118,7 +119,7 @@ class _EquipmentLoanDetailsScreenState
       lastDate:now);
     if(day==null||!mounted)return;
     final confirm=await showDialog<bool>(
-      context:context,builder:(dialog)=>AlertDialog(
+      context:context,builder:(dialog)=>Sign2DigitalApprovedConfirmation(
         title:const Text('Mark Equipment Returned?'),
         content:Text('Confirm that '+_record.equipmentName+
           ' was returned by '+_record.borrowerName+
