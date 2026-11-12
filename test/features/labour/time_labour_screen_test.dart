@@ -46,8 +46,8 @@ class _SwitchingLabourStub extends LabourRepository {
       throw UnsupportedError('Read-only test fixture.');
 }
 
-/// Backend-connected widget fixture. Any timer request is a regression:
-/// only the approved manual Labour/Time Sheet entry screens are available.
+/// Backend-connected fixture: the timer API must not be contacted unless
+/// the user explicitly chooses Live Time Tracking from the plus menu.
 class _ManualOnlyRemoteLabourRepository extends RemoteLabourRepository {
   int timerRequests = 0;
 
@@ -64,8 +64,19 @@ class _ManualOnlyRemoteLabourRepository extends RemoteLabourRepository {
   @override
   Future<LabourTimerSnapshot> timerCurrent() async {
     timerRequests++;
-    throw StateError('Live timer must not be accessed by manual entry UI.');
+    return LabourTimerSnapshot(
+      status: 'stopped', elapsedSeconds: 0, version: 1,
+      serverNow: DateTime.now().toUtc(),
+    );
   }
+
+  @override
+  Future<Map<String, dynamic>> summary(String jobId) async => {
+    'approved_minutes': 0, 'pending_minutes': 241,
+    'approved_labour_cost_minor': 0,
+    'approved_purchase_minor': 20000,
+    'overall_actual_cost_minor': 20000,
+  };
 }
 
 LabourEntry record(String id, {LabourEntryKind kind=LabourEntryKind.labour,
@@ -144,7 +155,7 @@ void main() {
     expect(tester.takeException(),isNull);
   });
 
-  testWidgets('backend-connected Time & Labour restores original manual UI only',
+  testWidgets('connected Labour lists all saved hours and opens manual form from plus',
       (tester) async {
     ActiveCompanySession.set(7);
     addTearDown(ActiveCompanySession.clear);
@@ -160,6 +171,11 @@ void main() {
     expect(find.byKey(const Key('labour-job-filter')), findsOneWidget);
     expect(find.byKey(const Key('labour-sort')), findsOneWidget);
     expect(find.byKey(const Key('labour-card-server-manual-1')), findsOneWidget);
+    // A server time_sheet (including previously timer-recorded hours) must
+    // not disappear just because the Labour tab is selected.
+    expect(find.byKey(const Key('labour-card-server-timesheet-1')),
+        findsOneWidget);
+    expect(find.byKey(const Key('m15-labour-summary')), findsNothing);
     expect(find.byKey(const Key('m15-live-timer-panel')), findsNothing);
     expect(find.text('Work Timer'), findsNothing);
     expect(repository.timerRequests, 0);
@@ -171,8 +187,14 @@ void main() {
     expect(find.byKey(const Key('m15-live-timer-panel')), findsNothing);
     expect(repository.timerRequests, 0);
 
-    // Plus continues to open the original manual form, not a timer screen.
+    // Plus shows the two explicit approved choices; no timer is requested
+    // unless the user chooses it.
     await tester.tap(find.byKey(const Key('labour-create')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('labour-create-manual')), findsOneWidget);
+    expect(find.byKey(const Key('labour-create-timer')), findsOneWidget);
+    expect(repository.timerRequests, 0);
+    await tester.tap(find.byKey(const Key('labour-create-manual')));
     await tester.pumpAndSettle();
     expect(find.byType(AddLabourEntryScreen), findsOneWidget);
     expect(find.byKey(const Key('labour-form-start'), skipOffstage: false),
@@ -183,6 +205,42 @@ void main() {
     await _scrollToEntryField(tester, 'labour-form-save');
     expect(find.byKey(const Key('labour-form-save')), findsOneWidget);
     expect(repository.timerRequests, 0);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('live timer is accessible only from plus after choosing a job',
+      (tester) async {
+    ActiveCompanySession.set(7);
+    addTearDown(ActiveCompanySession.clear);
+    final repository = _ManualOnlyRemoteLabourRepository();
+    await tester.pumpWidget(MaterialApp(
+      home: TimeLabourScreen(repository: repository),
+    ));
+    await tester.pumpAndSettle();
+    expect(repository.timerRequests, 0);
+    expect(find.byKey(const Key('m15-live-timer-panel')), findsNothing);
+
+    await tester.tap(find.byKey(const Key('labour-job-filter')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(Key(
+        'labour-job-option-${LabourDemoJobs.riverside.id}')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('m15-labour-summary')), findsNothing);
+    await tester.tap(find.byKey(const Key('details-tab-1')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('m15-labour-summary')), findsOneWidget);
+    // Explicitly assert the black text is readable on the white card.
+    final approvedText = tester.widget<Text>(
+        find.text('Approved time: 0h 0m'));
+    expect(approvedText.style?.color, isNotNull);
+
+    await tester.tap(find.byKey(const Key('labour-create')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('labour-create-timer')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('m15-live-timer-panel')), findsOneWidget);
+    expect(find.text('Work Timer'), findsOneWidget);
+    expect(repository.timerRequests, greaterThanOrEqualTo(1));
     expect(tester.takeException(), isNull);
   });
 
@@ -281,6 +339,8 @@ void main() {
     await tester.tap(find.byKey(const Key('details-tab-1')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('labour-create')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('labour-create-manual')));
     await tester.pumpAndSettle();
     expect(find.byType(AddLabourEntryScreen), findsOneWidget);
     expect(find.text('Create with AI Voice'), findsOneWidget);
