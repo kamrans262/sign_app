@@ -1,0 +1,64 @@
+name: Sign2Digital document card times
+on:
+  push:
+    branches: [fix/m20-android-live-reminder-integration-2026-11-06]
+    paths:
+      - '.github/workflows/qa-document-card-timestamps.yml'
+      - 'lib/core/utils/sign2digital_server_timestamp.dart'
+      - 'lib/features/documents/data/remote_document_repository.dart'
+      - 'lib/features/documents/data/remote_site_report_repository.dart'
+      - 'lib/features/documents/data/remote_work_acceptance_repository.dart'
+      - 'lib/features/documents/data/remote_general_document_repository.dart'
+      - 'lib/features/documents/data/remote_signed_document_repository.dart'
+      - 'lib/features/documents/presentation/screens/reports_screen.dart'
+      - 'lib/features/quotes/data/remote_signature_request_repository.dart'
+      - 'lib/features/quotes/presentation/widgets/sign2digital_quote_summary_card.dart'
+      - 'lib/features/invoices/data/remote_invoice_repository.dart'
+      - 'lib/features/deposits/data/remote_deposit_repository.dart'
+      - 'lib/features/expenses/data/remote_expense_repository.dart'
+      - 'test/core/sign2digital_server_timestamp_test.dart'
+      - 'test/features/documents/document_card_local_time_test.dart'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  card-timestamps:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Analyze only affected timestamp files
+        run: |
+          flutter analyze --no-pub --no-fatal-infos --no-fatal-warnings \
+            lib/core/utils/sign2digital_server_timestamp.dart \
+            lib/features/documents/data/remote_document_repository.dart \
+            lib/features/documents/data/remote_site_report_repository.dart \
+            lib/features/documents/data/remote_work_acceptance_repository.dart \
+            lib/features/documents/data/remote_general_document_repository.dart \
+            lib/features/documents/data/remote_signed_document_repository.dart \
+            lib/features/documents/presentation/screens/reports_screen.dart \
+            lib/features/quotes/data/remote_signature_request_repository.dart \
+            lib/features/quotes/presentation/widgets/sign2digital_quote_summary_card.dart \
+            lib/features/invoices/data/remote_invoice_repository.dart \
+            lib/features/deposits/data/remote_deposit_repository.dart \
+            lib/features/expenses/data/remote_expense_repository.dart \
+            test/core/sign2digital_server_timestamp_test.dart \
+            test/features/documents/document_card_local_time_test.dart
+      - name: Timestamp and existing module regressions
+        run: |
+          timeout --signal=TERM --kill-after=10s 320s flutter test --no-pub \
+            --reporter expanded --timeout 60s \
+            test/core/sign2digital_server_timestamp_test.dart \
+            test/features/documents/document_card_local_time_test.dart \
+            test/features/documents/m9_remote_document_repository_test.dart \
+            test/features/documents/m12_remote_site_report_repository_test.dart \
+            test/features/documents/m13_remote_work_acceptance_repository_test.dart \
+            test/features/documents/m18_remote_general_document_repository_test.dart \
+            test/features/documents/m8_signed_document_repository_test.dart \
+            test/features/documents/document_report_badge_alignment_test.dart \
+            test/features/quotes/m8_remote_signature_request_test.dart
