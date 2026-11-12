@@ -6,6 +6,7 @@ import 'package:sign2digital/features/jobs/domain/job_details_model.dart';
 import 'package:sign2digital/features/jobs/domain/job_model.dart';
 import 'package:sign2digital/features/jobs/widgets/m14_verified_job_expenses.dart';
 import 'package:sign2digital/features/jobs/presentation/screens/job_details_screen.dart';
+import 'package:sign2digital/features/jobs/presentation/widgets/sign2digital_remaining_balance_card.dart';
 
 // The existing Home dashboard has unrelated ongoing asynchronous widgets.
  // Use bounded frames, as the M4 client tests do, instead of pumpAndSettle.
@@ -26,6 +27,23 @@ void main() {
     expect(JobDetailsModel.formatChf(24500), 'CHF 24,500');
     expect(JobDetailsModel.formatChf(-4500), '-CHF 4,500');
     expect(JobDetailsModel.formatChf(0), 'CHF 0');
+  });
+
+  testWidgets('job balance unavailable without accepted quote, never fakes zero',
+      (tester) async {
+    await tester.pumpWidget(const MaterialApp(
+      home: Scaffold(body: Center(
+        child: Sign2DigitalRemainingBalanceCard(
+          balanceChf: 0,
+          showAmount: false,
+          emptyLabel: 'No accepted quotation',
+        ),
+      )),
+    ));
+    expect(find.text('Remaining balance'), findsOneWidget);
+    expect(find.text('No accepted quotation'), findsOneWidget);
+    expect(find.text('CHF 0'), findsNothing);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('M14 totals are used even when authenticated job details loaded',
