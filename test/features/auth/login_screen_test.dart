@@ -1,4 +1,5 @@
 // Sign2Digital Login UI Package — UI-only widget and responsive regression tests.
+import 'package:flutter/foundation.dart' show debugDefaultTargetPlatformOverride, kIsWeb, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sign2digital/core/theme/app_colors.dart';
@@ -17,6 +18,23 @@ Widget _screen({
 }
 
 void main() {
+  testWidgets('Android hides Apple sign-in; iOS retains it', (tester) async {
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    await tester.pumpWidget(_screen());
+    expect(find.text('Continue with Google'), findsOneWidget);
+    expect(find.text('Continue with Apple'), kIsWeb ? findsOneWidget : findsNothing);
+    expect(find.text('Log In'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    await tester.pumpWidget(_screen());
+    await tester.pump();
+    expect(find.text('Continue with Apple'), findsOneWidget);
+    expect(find.text('Continue with Google'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('renders the exact core login text and editable inputs',
       (tester) async {
     await tester.pumpWidget(_screen());
