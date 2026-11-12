@@ -587,9 +587,14 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
       final status = await RemoteAddendumRepository.shared
           .activeSignatureRequestStatus(current.serverId!);
       if (!mounted) return null;
-      if (status == 'sent' || status == 'viewed') {
-        _message('The customer has already been emailed this addendum. '
-          'Do not send another signing request.');
+      if (status == 'sent') {
+        _message('An email signing request is already active. '
+          'Do not send a duplicate request.');
+        return null;
+      }
+      if (status == 'viewed') {
+        _message('The customer has already opened an active signing link. '
+          'It cannot be silently replaced; revoke it before issuing a new one.');
         return null;
       }
       if (status != 'ready') {
