@@ -109,6 +109,9 @@ void main() {
     await tester.tap(find.byKey(const Key('details-tab-1')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('labour-detail-photo-0')), findsOneWidget);
+    expect(find.byKey(const Key('labour-detail-actions')), findsNothing);
+    expect(find.byKey(const Key('labour-detail-edit')), findsNothing);
+    expect(find.byKey(const Key('labour-detail-delete')), findsNothing);
     await tester.tap(find.byKey(const Key('labour-detail-photo-0')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('labour-photo-full-preview')), findsOneWidget);
@@ -116,8 +119,15 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('details-tab-2')));
     await tester.pumpAndSettle();
+    expect(find.byKey(const Key('labour-detail-actions')), findsNothing);
+    expect(find.byKey(const Key('labour-detail-edit')), findsNothing);
+    expect(find.byKey(const Key('labour-detail-delete')), findsNothing);
     expect(find.text('Labour entry created'), findsOneWidget);
     expect(find.textContaining('Alex Martin'), findsWidgets);
+    await tester.tap(find.byKey(const Key('details-tab-0')));
+    await tester.pumpAndSettle();
+    await _reveal(tester, 'labour-detail-edit');
+    expect(find.byKey(const Key('labour-detail-actions')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
