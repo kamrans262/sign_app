@@ -159,7 +159,8 @@ void main() {
     await tester.pumpAndSettle();
     final photoEdit = find.byKey(const Key('deposit-receipts-edit'));
     expect(find.byType(Sign2DigitalPrimaryButton), findsOneWidget);
-    expect(tester.getSize(photoEdit).width, closeTo(660, 1));
+    expect(tester.getSize(photoEdit).width,
+      closeTo(tester.getSize(find.byKey(const Key('deposit-receipts-grid'))).width - 22, 1));
     expect(find.text('Add or remove receipt'), findsOneWidget);
     expect(tester.getTopLeft(photoEdit).dy,
       greaterThan(tester.getBottomLeft(find.byKey(const Key('deposit-receipt-0'))).dy));
