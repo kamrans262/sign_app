@@ -22,6 +22,7 @@ class Sign2DigitalInvoicePdfBuilder {
       // Keep the PDF usable if the bundled font cannot be read.
     }
     final pdf = pw.Document(
+      version: PdfVersion.pdf_1_4,
       theme: inter == null
           ? null
           : pw.ThemeData.withFont(base: inter, bold: inter),
@@ -37,6 +38,7 @@ class Sign2DigitalInvoicePdfBuilder {
     final blue = PdfColor.fromHex('#166282');
     final dark = PdfColor.fromHex('#122536');
     final grey = PdfColor.fromHex('#8A9AA8');
+    final rule = PdfColor.fromHex('#E4EAF0');
     pw.TextStyle style(double size, {bool bold = false, PdfColor? color}) =>
         pw.TextStyle(fontSize: size, color: color ?? dark,
           fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal);
@@ -61,30 +63,81 @@ class Sign2DigitalInvoicePdfBuilder {
           color: PdfColor.fromHex('#EEF2F5'),
           child: pw.Text('LOCAL DEMONSTRATION INVOICE - NOT A VERIFIED DELIVERY',
             style: style(9, bold: true))),
-        pw.SizedBox(height: 16),
-        pw.Row(
-          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-          children: [
-            if (logo != null) pw.Image(logo, width: 130, height: 44),
-            pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.end,
-              children: [
-                pw.Text('Invoice', style: style(22, bold: true)),
-                pw.Text(invoice.number, style: style(11, color: grey)),
-              ]),
-          ]),
-        pw.SizedBox(height: 28),
-        pw.Text('Bill To: ${invoice.clientName}', style: style(12, bold: true)),
-        for (final text in [invoice.billingAddress, invoice.clientEmail,
-          invoice.clientPhone]) if (text.trim().isNotEmpty)
-            pw.Text(text, style: style(10, color: grey)),
-        pw.SizedBox(height: 8),
-        pw.Text('Project: ${invoice.project}', style: style(11)),
-        pw.Text('Issue date: ${date(invoice.date)}', style: style(11)),
-        pw.Text('Due date: ${date(invoice.dueDate)}', style: style(11)),
-        pw.Text('Status: ${invoice.status.label}', style: style(11)),
-        if (invoice.iban.trim().isNotEmpty)
-          pw.Text('IBAN: ${invoice.iban}', style: style(11)),
-        pw.SizedBox(height: 20),
+        pw.Container(
+          padding: const pw.EdgeInsets.all(20),
+          decoration: pw.BoxDecoration(
+            border: pw.Border.all(color: rule, width: .7),
+            borderRadius: pw.BorderRadius.circular(10),
+          ),
+          child: pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+            children: [
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  if (logo != null)
+                    pw.Image(logo, width: 132, height: 43, fit: pw.BoxFit.contain)
+                  else
+                    pw.Text('Sign2Digital', style: style(18, bold: true)),
+                  pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.end,
+                    children: [
+                      pw.Text('Invoice', style: style(18, bold: true)),
+                      pw.SizedBox(height: 6),
+                      pw.Text(invoice.number, style: style(12, color: grey)),
+                    ]),
+                ],
+              ),
+              pw.SizedBox(height: 20),
+              pw.Row(crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Expanded(child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text('Bill To:', style: style(14, bold: true)),
+                      pw.SizedBox(height: 8),
+                      for (final text in [
+                        invoice.clientName, invoice.billingAddress,
+                        invoice.clientEmail, invoice.clientPhone,
+                      ]) if (text.trim().isNotEmpty)
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.only(bottom: 5),
+                          child: pw.Text(text, style: style(11, color: grey))),
+                    ],
+                  )),
+                  pw.SizedBox(width: 12),
+                  pw.SizedBox(width: 156, child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+                    children: [
+                      for (final entry in <(String, String)>[
+                        ('Date:', date(invoice.date)),
+                        ('Due Date:', date(invoice.dueDate)),
+                      ]) ...[
+                        pw.Row(children: [
+                          pw.SizedBox(width: 72, child: pw.Text(entry.$1,
+                            textAlign: pw.TextAlign.right,
+                            style: style(11, bold: true))),
+                          pw.SizedBox(width: 6),
+                          pw.Expanded(child: pw.Text(entry.$2,
+                            textAlign: pw.TextAlign.right,
+                            style: style(11, color: grey))),
+                        ]),
+                        pw.SizedBox(height: 8),
+                      ],
+                    ],
+                  )),
+                ],
+              ),
+              pw.SizedBox(height: 10),
+              pw.Text('Project: ${invoice.project}', style: style(11)),
+              pw.Text('Status: ${invoice.status.label}', style: style(11)),
+              if (invoice.iban.trim().isNotEmpty)
+                pw.Text('IBAN: ${invoice.iban}', style: style(11)),
+              pw.SizedBox(height: 6),
+            ],
+          ),
+        ),
+        pw.SizedBox(height: 12),
         pw.TableHelper.fromTextArray(
           headers: const ['Description', 'Qty', 'Unit Price', 'Total'],
           data: invoice.items.isEmpty
@@ -94,9 +147,12 @@ class Sign2DigitalInvoicePdfBuilder {
                   money(item.unitPriceMinor), money(item.totalMinor),
                 ]).toList(),
           headerDecoration: pw.BoxDecoration(color: blue),
-          headerStyle: style(10, color: PdfColors.white, bold: true),
+          headerStyle: style(11, color: PdfColors.white, bold: true),
           cellStyle: style(10),
-          cellPadding: const pw.EdgeInsets.all(7),
+          cellPadding: const pw.EdgeInsets.all(9),
+          border: pw.TableBorder(
+            horizontalInside: pw.BorderSide(color: rule, width: .6),
+            verticalInside: pw.BorderSide(color: rule, width: .6)),
           columnWidths: {
             0: const pw.FlexColumnWidth(4),
             1: const pw.FlexColumnWidth(1),
@@ -104,7 +160,7 @@ class Sign2DigitalInvoicePdfBuilder {
             3: const pw.FlexColumnWidth(2.2),
           },
         ),
-        pw.SizedBox(height: 14),
+        pw.SizedBox(height: 12),
         for (final entry in <(String, String)>[
           ('Subtotal', money(invoice.subtotalMinor)),
           ('VAT (${(invoice.vatBasisPoints / 100).toStringAsFixed(2)}%)',
@@ -115,15 +171,26 @@ class Sign2DigitalInvoicePdfBuilder {
             money(invoice.payments.isEmpty ? null : invoice.receivedMinor)),
           ('Amount due', money(invoice.amountDueMinor)),
         ]) pw.Container(
-          padding: const pw.EdgeInsets.symmetric(vertical: 5),
-          child: pw.Row(mainAxisAlignment: pw.MainAxisAlignment.end,
+          color: entry.$1 == 'Total' ? blue : PdfColors.white,
+          padding: const pw.EdgeInsets.symmetric(
+            vertical: 7, horizontal: 9),
+          child: pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.end,
             children: [
-              pw.SizedBox(width: 180,
-                child: pw.Text(entry.$1, style: style(10, color: grey))),
+              pw.SizedBox(width: 170,
+                child: pw.Text(entry.$1,
+                  textAlign: pw.TextAlign.right,
+                  style: style(entry.$1 == 'Total' ? 12 : 10,
+                    color: entry.$1 == 'Total' ? PdfColors.white : grey,
+                    bold: entry.$1 == 'Total'))),
               pw.SizedBox(width: 110,
-                child: pw.Text(entry.$2, textAlign: pw.TextAlign.right,
-                  style: style(10, bold: entry.$1 == 'Total'))),
-            ]),
+                child: pw.Text(entry.$2,
+                  textAlign: pw.TextAlign.right,
+                  style: style(entry.$1 == 'Total' ? 12 : 10,
+                    color: entry.$1 == 'Total' ? PdfColors.white : dark,
+                    bold: entry.$1 == 'Total'))),
+            ],
+          ),
         ),
         pw.SizedBox(height: 20),
         pw.Container(
