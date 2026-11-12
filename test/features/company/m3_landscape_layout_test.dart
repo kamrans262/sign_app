@@ -12,6 +12,7 @@ import 'package:sign2digital/features/company/data/remote_company_repository.dar
 import 'package:sign2digital/features/company/presentation/screens/company_invitations_screen.dart';
 import 'package:sign2digital/features/company/presentation/screens/company_team_screen.dart';
 import 'package:sign2digital/features/company/presentation/screens/create_company_screen.dart';
+import 'package:sign2digital/features/quotes/presentation/widgets/sign2digital_quote_shadow_panel.dart';
 import 'package:sign2digital/features/profile/presentation/screens/profile_sections_screen.dart';
 
 void setViewport(WidgetTester tester, Size size) {
@@ -67,6 +68,11 @@ void main() {
       const MaterialApp(home: CompanyInvitationsScreen()));
     expect(find.byKey(const Key('company-invitation-code')), findsOneWidget);
     expect(tester.getSize(find.byType(ListView)).width, greaterThan(900));
+    final viewport = tester.getCenter(
+      find.byKey(const Key('company-invitation-code-scroll')));
+    final card = tester.getCenter(
+      find.byType(Sign2DigitalQuoteShadowPanel));
+    expect((viewport.dy - card.dy).abs(), lessThan(20));
     expect(tester.takeException(), isNull);
   });
 
