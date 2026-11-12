@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_ai_voice_button.dart';
@@ -211,7 +212,7 @@ class _CreateEquipmentLoanScreenState extends State<CreateEquipmentLoanScreen> {
               as RemoteEquipmentLoanRepository).prepareVoice(path);
             if(!mounted)return;
             final apply=await showDialog<bool>(context:context,
-              builder:(dialog)=>AlertDialog(
+              builder:(dialog)=>Sign2DigitalApprovedConfirmation(
                 title:const Text('Use Suggested Loan Details?'),
                 content:const Text('Only missing fields will be filled. '
                   'Review the borrower, item and dates before saving.'),
