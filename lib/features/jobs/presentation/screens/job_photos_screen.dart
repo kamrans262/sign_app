@@ -1,4 +1,5 @@
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
+import '../../../../core/services/active_company_session.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -253,7 +254,7 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
         builder: (_) => JobPhotoGalleryDialog(
           photos: List<JobPhotoModel>.unmodifiable(group),
           initialPhotoId: photo.id,
-          onDelete: _deletePhoto,
+          onDelete: ActiveCompanySession.canWrite('jobs') ? _deletePhoto : null,
         ),
       );
     } finally {
@@ -504,7 +505,7 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
                         const SizedBox(height: 20),
                         _photoGrid(constraints.maxWidth),
                         const SizedBox(height: 30),
-                        Row(
+                        if (ActiveCompanySession.canWrite('jobs')) Row(
                           children: [
                             Expanded(
                               child: _photoAction(
@@ -526,7 +527,7 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
                             ),
                           ],
                         ),
-                        if (_pending.isNotEmpty) ...[
+                        if (ActiveCompanySession.canWrite('jobs') && _pending.isNotEmpty) ...[
                           const SizedBox(height: 20),
                           _pendingPreviews(),
                           const SizedBox(height: 10),
@@ -540,6 +541,7 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
                           ),
                         ],
                         const SizedBox(height: 20),
+                        if (ActiveCompanySession.canWrite('jobs'))
                         Sign2DigitalPrimaryButton(
                           key: const Key('job-photos-add-button'),
                           label: '＋ Add Photos',
