@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../domain/job_photo_model.dart';
 import 'sign2digital_job_photo_card.dart';
 
@@ -47,7 +48,9 @@ class _JobPhotoGalleryDialogState extends State<JobPhotoGalleryDialog> {
     final photos = widget.photos;
     if (photos.isEmpty) return const SizedBox.shrink();
     final current = photos[_index];
-    return Dialog(
+    return Theme(
+      data: AppTheme.light,
+      child: Dialog(
       backgroundColor: AppColors.white,
       surfaceTintColor: Colors.transparent,
       insetPadding: const EdgeInsets.all(20),
@@ -137,6 +140,7 @@ class _JobPhotoGalleryDialogState extends State<JobPhotoGalleryDialog> {
           ]),
         )),
       ),
+    ),
     );
   }
 }
