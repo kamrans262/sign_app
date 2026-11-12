@@ -355,6 +355,9 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
   }
 
 
+  bool get _canDeliver => const ['approved', 'sent']
+      .contains(_record.lifecycleStatus);
+
   Future<bool> _confirmLiveSend() async {
     if (_record.clientEmail.trim().isEmpty) {
       _notice('Add a customer email address before sending the invoice.');
@@ -384,6 +387,10 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
 
   Future<void> _pdf({required bool share}) async {
     if (_busy) { return; }
+    if (!_canDeliver) {
+      _notice('Approve the invoice before sending or downloading its PDF.');
+      return;
+    }
     if (!_record.demoOnly && share && !await _confirmLiveSend())return;
     setState(() => _busy = true);
     try {
@@ -504,66 +511,70 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
     }
   }
 
-  Widget _actions() => Column(
-    key: const Key('invoice-details-actions'),
-    children: [
-      IntrinsicHeight(child:Row(
-        crossAxisAlignment:CrossAxisAlignment.stretch,
+  Widget _actions() {
+    // Only the Items tab exposes document output, and only after approval
+    // can the customer-facing issued PDF be downloaded.
+    if (_tab == 1) {
+      return Row(
+        key: const Key('invoice-details-actions'),
         children: [
-        Expanded(child: Sign2DigitalOutlinedButton(
-          key: const Key('invoice-details-download'),
-          label: 'Download', primaryOutline: true,
-          enabled: !_busy && (_record.demoOnly ||
-             const ['approved','sent'].contains(_record.lifecycleStatus)),
-          onPressed: () => _pdf(share: false))),
-        const SizedBox(width: 10),
-        Expanded(child: Sign2DigitalOutlinedButton(
-          key: const Key('invoice-details-send'),
-          label: 'Send', primaryOutline: true,
-          enabled: !_busy && (_record.demoOnly ||
-             const ['approved','sent'].contains(_record.lifecycleStatus)),
-          onPressed: () => _pdf(share: true))),
-      ])),
-      const SizedBox(height: 15),
-      IntrinsicHeight(
-        child: Row(
-          key: const Key('invoice-details-second-action-row'),
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(child: Sign2DigitalOutlinedButton(
-              key: const Key('invoice-details-preview'),
-              label: 'Preview Invoice', primaryOutline: true,
-              enabled: !_busy, onPressed: _preview)),
-            const SizedBox(width: 10),
-            Expanded(child: Sign2DigitalPrimaryButton(
-              key: const Key('invoice-details-edit'),
-              label: 'Edit', height: 52, enabled: !_busy,
-              onPressed: _edit)),
+          Expanded(child: Sign2DigitalOutlinedButton(
+            key: const Key('invoice-details-download'),
+            label: 'Download',
+            primaryOutline: true,
+            enabled: !_busy && _canDeliver,
+            onPressed: () => _pdf(share: false))),
+          const SizedBox(width: 10),
+          Expanded(child: Sign2DigitalOutlinedButton(
+            key: const Key('invoice-details-preview'),
+            label: 'Preview Invoice',
+            primaryOutline: true,
+            enabled: !_busy,
+            onPressed: _preview)),
+        ],
+      );
+    }
+
+    // The Details tab controls the workflow. Payments and History have no
+    // actions: they display recorded transactions and events only.
+    return Column(
+      key: const Key('invoice-details-actions'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (_record.lifecycleStatus == 'draft') ...[
+          Sign2DigitalPrimaryButton(
+            key: const Key('invoice-details-edit'),
+            label: 'Edit',
+            enabled: !_busy,
+            onPressed: _edit),
+          if (!_record.demoOnly) ...[
+            const SizedBox(height: 15),
+            Sign2DigitalPrimaryButton(
+              key: const Key('invoice-details-approve'),
+              label: 'Approve Invoice',
+              enabled: !_busy,
+              onPressed: _approve),
           ],
-        ),
-      ),
-      if (!_record.demoOnly && _record.lifecycleStatus=='draft') ...[
-        const SizedBox(height:15),
-        FractionallySizedBox(
-          widthFactor:.5,
-          child:Sign2DigitalPrimaryButton(
-            key:const Key('invoice-details-approve'),
-            label:'Approve Invoice',
-            enabled:!_busy,onPressed:_approve),
-        ),
+        ],
+        if (_canDeliver) ...[
+          Sign2DigitalOutlinedButton(
+            key: const Key('invoice-details-send'),
+            label: 'Send',
+            primaryOutline: true,
+            enabled: !_busy,
+            onPressed: () => _pdf(share: true)),
+          if (_record.status.canMarkPaid) ...[
+            const SizedBox(height: 15),
+            Sign2DigitalPrimaryButton(
+              key: const Key('invoice-details-mark-paid'),
+              label: 'Mark as Paid',
+              enabled: !_busy,
+              onPressed: _markPaid),
+          ],
+        ],
       ],
-      if (_record.status.canMarkPaid) ...[
-        const SizedBox(height: 15),
-        FractionallySizedBox(
-          widthFactor: .5,
-          child: Sign2DigitalPrimaryButton(
-            key: const Key('invoice-details-mark-paid'),
-            label: 'Mark as Paid',
-            enabled: !_busy, onPressed: _markPaid),
-        ),
-      ],
-    ],
-  );
+    );
+  }
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -600,8 +611,10 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
             else if (_tab == 1) _items()
             else if (_tab == 2) _payments()
             else _history(),
-            const SizedBox(height: 25),
-            _actions(),
+            if (_tab < 2) ...[
+              const SizedBox(height: 25),
+              _actions(),
+            ],
           ],
         ),
       ))),
