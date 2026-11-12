@@ -152,8 +152,13 @@ class RemoteAddendumRepository {
     return approved;
   }
 
+  /// Send the frozen approved Addendum by email. The signing receipt is valid
+  /// when Laravel confirms SMTP transport acceptance, even without a raw URL.
+  /// Explicit reissue rotates only a previous unsent and unviewed link.
   Future<AddendumSignatureRequest?> requestSignature(
-      AddendumDraft draft, DocumentRecord source) async {
+      AddendumDraft draft, DocumentRecord source, {
+      bool replaceReadyLink = false,
+  }) async {
     if (draft.serverId == null || draft.quoteServerId == null ||
         draft.linkedDocumentId != source.id ||
         !['approved', 'sent'].contains(draft.serverStatus) ||
@@ -174,28 +179,61 @@ class RemoteAddendumRepository {
       data: {
         'signer_name': quote.clientName,
         'signer_email': quote.clientEmail,
-        'delivery': 'link',
+        'delivery': 'email',
+        if (replaceReadyLink) 'replace_ready_link': true,
       },
     );
     _check(company);
     final result = _payload(response);
     final request = result['request'];
-    final url = Uri.tryParse((result['secure_link'] ?? '').toString());
     if (request is! Map<String, dynamic> || _int(request['id']) <= 0 ||
         _int(request['addendum_id']) != draft.serverId ||
-        url == null || url.scheme != 'https' || url.host.isEmpty) {
+        (request['request_id'] ?? '').toString().trim().isEmpty) {
       throw const SignApiException('Server did not confirm the signing request.');
     }
+    final sentAt = DateTime.tryParse((request['sent_at'] ?? '').toString());
     final expires = DateTime.tryParse((request['expires_at'] ?? '').toString());
-    if (expires == null) {
-      throw const SignApiException('Signing link expiry is invalid.');
+    // Email delivery deliberately returns NO raw capability URL: the token
+    // has already been sent to the verified original-quote customer.
+    if (result['transport_accepted'] != true ||
+        request['status'] != 'sent' || sentAt == null ||
+        result['secure_link'] != null || expires == null ||
+        !expires.isAfter(DateTime.now())) {
+      throw const SignApiException(
+          'Server did not confirm email acceptance for this addendum.');
     }
     return AddendumSignatureRequest(
-      requestId: (request['request_id'] ?? '').toString(),
+      requestId: request['request_id'].toString(),
       addendumId: draft.id, originalDocumentId: source.id,
-      secureUrl: url, expiresAt: expires,
-      confirmedSentAt: DateTime.tryParse((request['sent_at'] ?? '').toString()),
+      secureUrl: null, expiresAt: expires,
+      confirmedSentAt: sentAt,
     );
+  }
+
+  /// Authoritative server state used only when a new request is rejected as
+  /// already active. No raw signing tokens or private URLs are returned.
+  Future<String?> activeSignatureRequestStatus(int addendumId) async {
+    final company = _company();
+    final response = await _api.get(
+      '/api/v1/addenda/$addendumId/signature-requests',
+      companyScoped: true,
+    );
+    _check(company);
+    final rows = _payload(response)['requests'];
+    if (rows is! List) {
+      throw const SignApiException('Invalid signing request history.');
+    }
+    for (final raw in rows) {
+      if (raw is! Map<String, dynamic> ||
+          _int(raw['addendum_id']) != addendumId) continue;
+      final status = (raw['status'] ?? '').toString();
+      final expiry = DateTime.tryParse((raw['expires_at'] ?? '').toString());
+      if (expiry != null && expiry.isAfter(DateTime.now()) &&
+          ['ready', 'sent', 'viewed'].contains(status)) {
+        return status;
+      }
+    }
+    return null;
   }
 
   Future<AddendumVoiceSuggestion> prepareVoice(String audioPath) async {
