@@ -11,6 +11,7 @@ import '../../../../core/widgets/sign2digital_input_field.dart';
 import '../../../../core/widgets/sign2digital_outlined_button.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../../../core/widgets/sign2digital_selection_field.dart';
+import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import '../../../expenses/presentation/widgets/sign2digital_expense_upload_tile.dart';
 import '../../../jobs/data/local_job_photo_source.dart';
 import '../../../jobs/domain/job_model.dart';
@@ -62,6 +63,7 @@ class _AddDepositScreenState extends State<AddDepositScreen> {
   final _notes = TextEditingController();
   final _photos = <LocalJobPhotoSelection>[];
   JobModel? _job;
+  bool _customMethodSelected = false;
   DateTime? _date;
   bool _saving = false;
   bool _photoBusy = false;
@@ -89,6 +91,7 @@ class _AddDepositScreenState extends State<AddDepositScreen> {
       _amount.text = original.amount.toStringAsFixed(2);
       _date = original.date;
       _method.text = original.paymentMethod;
+      _customMethodSelected = _isCustomMethod(_method.text);
       _reference.text = original.referenceNumber;
       _notes.text = original.notes;
       _photos.addAll(original.photos);
@@ -117,6 +120,48 @@ class _AddDepositScreenState extends State<AddDepositScreen> {
   void _notice(String message) {
     if (!mounted) { return; }
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  static bool _isCustomMethod(String value) {
+    final method = value.trim().toLowerCase().replaceAll('_', ' ');
+    return method.isNotEmpty &&
+        !const ['cash', 'bank transfer', 'other'].contains(method);
+  }
+
+  String? get _methodChoice {
+    if (_customMethodSelected) return 'Custom';
+    final method = _method.text.trim();
+    if (method.isEmpty) return null;
+    if (method.toLowerCase().replaceAll('_', ' ') == 'bank transfer') {
+      return 'Bank transfer';
+    }
+    if (method.toLowerCase() == 'cash') return 'Cash';
+    if (method.toLowerCase() == 'other') return 'Other';
+    return method;
+  }
+
+  Future<void> _selectPaymentMethod() async {
+    if (_saving) return;
+    final selection = await Sign2DigitalSelectionSheet.show(
+      context,
+      title: 'Payment Method',
+      subtitle: 'Choose how the deposit was received',
+      icon: Icons.account_balance_outlined,
+      options: const ['Bank transfer', 'Cash', 'Card', 'Cheque', 'Other', 'Custom'],
+      selected: _methodChoice,
+      keyForOption: (value) => Key(
+        'deposit-payment-option-${value.toLowerCase().replaceAll(' ', '-')}'),
+    );
+    if (selection == null || !mounted) return;
+    setState(() {
+      if (selection == 'Custom') {
+        if (!_customMethodSelected) _method.clear();
+        _customMethodSelected = true;
+      } else {
+        _customMethodSelected = _isCustomMethod(selection);
+        _method.text = selection;
+      }
+    });
   }
 
   Future<void> _selectJob() async {
@@ -298,6 +343,7 @@ class _AddDepositScreenState extends State<AddDepositScreen> {
       }
       if (suggestion.paymentMethod != null) {
         _method.text = suggestion.paymentMethod!;
+        _customMethodSelected = _isCustomMethod(_method.text);
       }
       if (suggestion.referenceNumber != null) {
         _reference.text = suggestion.referenceNumber!;
@@ -467,15 +513,28 @@ class _AddDepositScreenState extends State<AddDepositScreen> {
                       onTap: _pickDate,
                     ),
                     const SizedBox(height: 20),
-                    Sign2DigitalInputField(
+                    Sign2DigitalSelectionField(
                       key: const Key('deposit-form-method'),
                       label: 'Payment Method',
-                      hintText: 'e.g, Bank transfer',
+                      hintText: 'Select payment method',
                       iconAsset: 'assets/icons/description.svg',
-                      leadingIcon: Icons.account_balance_outlined,
-                      controller: _method,
-                      textCapitalization: TextCapitalization.sentences,
+                      value: _methodChoice,
+                      onTap: _selectPaymentMethod,
+                      trailing: const Icon(Icons.keyboard_arrow_down_rounded,
+                        color: AppColors.secondaryText),
                     ),
+                    if (_customMethodSelected) ...[
+                      const SizedBox(height: 15),
+                      Sign2DigitalInputField(
+                        key: const Key('deposit-form-custom-method'),
+                        label: 'Custom Payment Method',
+                        hintText: 'Enter payment method',
+                        iconAsset: 'assets/icons/description.svg',
+                        leadingIcon: Icons.edit_outlined,
+                        controller: _method,
+                        textCapitalization: TextCapitalization.words,
+                      ),
+                    ],
                     const SizedBox(height: 20),
                     Sign2DigitalInputField(
                       key: const Key('deposit-form-reference'),
