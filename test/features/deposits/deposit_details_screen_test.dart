@@ -158,7 +158,7 @@ void main() {
     await tester.pumpAndSettle();
     final photoEdit = find.byKey(const Key('deposit-receipts-edit'));
     expect(find.byType(Sign2DigitalPrimaryButton), findsOneWidget);
-    expect(tester.getSize(photoEdit).width, closeTo(760, 1));
+    expect(tester.getSize(photoEdit).width, closeTo(680, 1));
     expect(tester.getTopLeft(photoEdit).dy,
       lessThan(tester.getTopLeft(find.byKey(const Key('deposit-receipt-share-0'))).dy));
     expect(find.byKey(const Key('deposit-detail-actions')), findsNothing);
