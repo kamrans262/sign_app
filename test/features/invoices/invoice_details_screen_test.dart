@@ -210,8 +210,8 @@ void main() {
 
   testWidgets('Edit opens populated form; paid invoices stay protected',
       (tester) async {
-    final pending = _invoice(items: _items);
-    await _open(tester, pending);
+    final draft = _invoice(status: InvoiceStatus.draft, items: _items);
+    await _open(tester, draft);
     await _reach(tester, 'invoice-details-edit');
     await tester.tap(find.byKey(const Key('invoice-details-edit')));
     await tester.pumpAndSettle();
