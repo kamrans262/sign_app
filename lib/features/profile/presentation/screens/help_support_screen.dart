@@ -1,3 +1,4 @@
+import '../../../../core/widgets/sign2digital_form_dialog.dart';
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -347,7 +348,7 @@ class _TicketDetailState extends State<SupportTicketDetailsScreen> {
           filename: 'Sign2Digital_Support_${attachment.id}.pdf');
       } else {
         await showDialog<void>(context: context, builder: (dialog) =>
-          AlertDialog(
+          Sign2DigitalFormDialog(
             content: Image.memory(bytes, fit: BoxFit.contain,
               errorBuilder: (context, error, stackTrace) =>
                 const Text('Could not display this attachment.')),
