@@ -266,6 +266,9 @@ class _ClientsScreenState extends State<ClientsScreen> with WidgetsBindingObserv
       'expenses' => 'expenses',
       'deposits' => 'invoices',
       'labour' => 'labour',
+      'equipment' => 'equipment',
+      'reports' => 'reports',
+      'ai_documents' => 'documents',
       _ => null,
     };
     if ((requiredModule != null &&
@@ -298,6 +301,12 @@ class _ClientsScreenState extends State<ClientsScreen> with WidgetsBindingObserv
         await _openHomeRoute(TimeLabourScreen(
           selectedNavigationIndex: _selectedIndex,
           onNavigationSelected: _selectDashboardTab));
+      case 'equipment':
+      case 'reports':
+      case 'ai_documents':
+      case 'reminders':
+        // These live under More; do not invent a record-specific deep link.
+        _selectDashboardTab(4);
       case 'settings':
         await _openHomeRoute(ProfileSettingsScreen(
           onNotificationTap: _openNotifications,
