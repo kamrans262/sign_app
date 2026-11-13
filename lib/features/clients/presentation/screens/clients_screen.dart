@@ -264,12 +264,16 @@ class _ClientsScreenState extends State<ClientsScreen> with WidgetsBindingObserv
       'documents' => 'documents',
       'invoices' => 'invoices',
       'expenses' => 'expenses',
-      'deposits' => 'deposits',
+      'deposits' => 'invoices',
       'labour' => 'labour',
       _ => null,
     };
-    if (requiredModule != null &&
-        !ActiveCompanySession.canRead(requiredModule)) {
+    if ((requiredModule != null &&
+          !ActiveCompanySession.canRead(requiredModule)) ||
+        (destination == 'deposits' &&
+          !ActiveCompanySession.canRead('jobs')) ||
+        (destination == 'quotes' &&
+          !ActiveCompanySession.canRead('documents'))) {
       _notifyHome('Your company role does not allow access to this module.');
       return;
     }
