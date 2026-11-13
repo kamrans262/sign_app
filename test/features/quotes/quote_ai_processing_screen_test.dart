@@ -141,7 +141,7 @@ void main() {
     expect(service.inputs.last.jobId, 'job-4');
     service.controller.add(const QuotePreparationSnapshot(
       stage: QuotePreparationStage.completed,
-      items: [QuotePreparedWorkItem(title:'Replace the sink')],
+      items: [QuotePreparedWorkItem(title:'Replace the sink', description:'')],
     ));
     await tester.pump();
     expect(find.byKey(const Key('quote-processing-review')), findsOneWidget);
