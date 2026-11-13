@@ -1,4 +1,8 @@
+import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/services.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
 import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
 
@@ -11,15 +15,20 @@ import '../../../../core/widgets/sign2digital_information_table.dart';
 import '../../../../core/widgets/sign2digital_outlined_button.dart';
 import '../../../../core/widgets/sign2digital_outlined_container.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
-import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
+import '../../../clients/data/remote_client_repository.dart';
+import '../../../company/data/remote_company_repository.dart';
 import '../../../quotes/presentation/widgets/sign2digital_quote_summary_card.dart';
 import '../../../quotes/presentation/widgets/sign2digital_signature_action_card.dart';
 import '../../data/remote_general_document_repository.dart';
+import '../../data/remote_document_repository.dart';
 import '../../domain/document_record.dart';
 import '../../domain/general_document_draft.dart';
 import 'general_document_editor_screen.dart';
+import 'document_details_screen.dart';
 import 'general_document_issued_actions.dart';
+
+typedef GeneralPdfPreviewBuilder = Widget Function(Uint8List bytes);
 
 /// General AI documents use the same approved details composition as other
 /// Documents. Only genuine server-issued PDF bytes can be exported/shared.
@@ -28,6 +37,7 @@ class GeneralDocumentDetailsScreen extends StatefulWidget {
     super.key, required this.documentId, this.repository,
     this.initialDocument, this.summary, this.initialTab = 0,
     this.jobName, this.clientName,
+    this.clientRepository, this.companyRepository, this.pdfPreviewBuilder,
   });
 
   final int documentId;
@@ -36,6 +46,10 @@ class GeneralDocumentDetailsScreen extends StatefulWidget {
   final DocumentRecord? summary;
   final int initialTab;
   final String? jobName, clientName;
+  final RemoteClientRepository? clientRepository;
+  final RemoteCompanyRepository? companyRepository;
+  /// Inject a PDF viewer in widget tests; production uses approved PdfPreview.
+  final GeneralPdfPreviewBuilder? pdfPreviewBuilder;
 
   @override
   State<GeneralDocumentDetailsScreen> createState() =>
@@ -48,8 +62,13 @@ class _GeneralDocumentDetailsScreenState
   GeneralDocumentDraft? _document;
   List<Map<String, dynamic>>? _events;
   bool _loading = true, _busy = false, _historyLoading = false;
-  String? _error, _historyError;
+  String? _error, _historyError, _relatedError;
   int _tab = 0, _action = 0;
+  String _companyName = '', _clientEmail = '', _linkedClientName = '';
+  bool _relatedLoading = false;
+  List<DocumentRecord>? _relatedDocuments;
+  Future<({Uint8List bytes,bool official})>? _pdfPreviewFuture;
+  final ScrollController _scroll = ScrollController();
 
   static const _tabs = ['Details', 'Preview', 'Related', 'History'];
   static const _types = <String, String>{
@@ -70,6 +89,9 @@ class _GeneralDocumentDetailsScreenState
         initial.blocks.isNotEmpty) {
       _document = initial;
       _loading = false;
+      _loadContext(initial);
+      if (_tab == 1) _preparePdf(initial);
+      if (_tab == 2) _loadRelated();
       if (_tab == 3) _loadHistory();
     } else {
       _reload();
@@ -93,7 +115,12 @@ class _GeneralDocumentDetailsScreenState
         _document = document;
         _loading = false;
         _events = null;
+        _pdfPreviewFuture = null;
+        _relatedDocuments = null;
       });
+      _loadContext(document);
+      if (_tab == 1) _preparePdf(document);
+      if (_tab == 2) _loadRelated();
       if (_tab == 3) _loadHistory();
     } catch (_) {
       if (mounted) setState(() {
@@ -119,7 +146,150 @@ class _GeneralDocumentDetailsScreenState
 
   void _setTab(int index) {
     setState(() => _tab = index);
+    if (index == 1 && _document != null) _preparePdf(_document!);
+    if (index == 2 && _relatedDocuments == null && !_relatedLoading) {
+      _loadRelated();
+    }
     if (index == 3 && _events == null && !_historyLoading) _loadHistory();
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  /// Company details and client email come from the selected, verified tenant.
+  /// Never infer an email from a displayed client name or a different company.
+  Future<void> _loadContext(GeneralDocumentDraft d) async {
+    final company = ActiveCompanySession.companyId;
+    if (company == null || company <= 0 || company != d.companyId) return;
+    try {
+      final profile = await (widget.companyRepository ??
+          RemoteCompanyRepository.shared).byId(company.toString());
+      if (mounted && ActiveCompanySession.companyId == company &&
+          _document?.id == d.id && profile?.id == company.toString()) {
+        setState(() => _companyName = profile!.companyName.trim());
+      }
+    } catch (_) {
+      // A missing company profile must not prevent document review.
+    }
+    if (d.clientId == null || d.clientId! <= 0) return;
+    try {
+      final client = await (widget.clientRepository ??
+          RemoteClientRepository.shared).getClient(d.clientId!);
+      if (!mounted || ActiveCompanySession.companyId != company ||
+          _document?.id != d.id || client.id != d.clientId.toString()) return;
+      setState(() {
+        _clientEmail = client.email.trim();
+        _linkedClientName = client.fullName.trim().isNotEmpty
+            ? client.fullName.trim() : client.companyName.trim();
+      });
+    } catch (_) {
+      // The recipient field stays editable and blank if no email is available.
+    }
+  }
+
+  void _preparePdf(GeneralDocumentDraft d) {
+    _pdfPreviewFuture ??= _loadPreviewPdf(d);
+  }
+
+  /// A frozen, checksum-verified server PDF takes precedence. An unissued
+  /// document gets a visibly watermarked, non-exportable PDF draft preview.
+  Future<({Uint8List bytes,bool official})> _loadPreviewPdf(
+      GeneralDocumentDraft d) async {
+    if (d.status == 'approved' && d.id != null) {
+      final metadata = await _repository.issuedMetadata(d.id!);
+      if (metadata != null) {
+        return (bytes: await _repository.issuedPdf(d.id!), official: true);
+      }
+    }
+    return (bytes: await _draftPdf(d), official: false);
+  }
+
+  Future<Uint8List> _draftPdf(GeneralDocumentDraft d) async {
+    pw.Font font;
+    try {
+      font = pw.Font.ttf(await rootBundle.load('assets/fonts/Inter-Variable.ttf'));
+    } catch (_) {
+      font = pw.Font.helvetica();
+    }
+    final document = pw.Document();
+    document.addPage(pw.MultiPage(
+      pageFormat: PdfPageFormat.a4,
+      margin: const pw.EdgeInsets.all(42),
+      theme: pw.ThemeData.withFont(base: font, bold: font),
+      build: (_) => [
+        pw.Text(d.status == 'approved'
+          ? 'UNISSUED PREVIEW - NOT AN OFFICIAL PDF'
+          : 'DRAFT PREVIEW - NOT AN OFFICIAL PDF',
+          style: pw.TextStyle(font: font, fontSize: 10,
+            color: PdfColor.fromHex('166282'))),
+        pw.SizedBox(height: 24),
+        pw.Text(d.title, style: pw.TextStyle(font: font, fontSize: 21)),
+        pw.SizedBox(height: 8),
+        pw.Text(d.number, style: pw.TextStyle(font: font, fontSize: 11)),
+        pw.SizedBox(height: 18),
+        pw.Divider(color: PdfColors.grey400),
+        pw.SizedBox(height: 18),
+        for (var i = 0; i < d.blocks.length; i++) ...[
+          pw.Text(
+            (d.blocks[i].type == 'bullet' ? '• ' :
+              d.blocks[i].type == 'numbered' ? '${i+1}. ' : '') +
+              d.blocks[i].text,
+            style: pw.TextStyle(
+              font: font,
+              fontSize: d.blocks[i].type == 'heading' ? 16 : 11,
+              fontWeight: d.blocks[i].bold ||
+                d.blocks[i].type == 'heading'
+                ? pw.FontWeight.bold : pw.FontWeight.normal,
+              fontStyle: d.blocks[i].italic
+                ? pw.FontStyle.italic : pw.FontStyle.normal)),
+          pw.SizedBox(height: 12),
+        ],
+      ],
+    ));
+    return document.save();
+  }
+
+  /// Link only by authoritative job IDs or saved general-document client IDs.
+  Future<void> _loadRelated() async {
+    final d = _document;
+    if (d == null || _relatedLoading) return;
+    final company = ActiveCompanySession.companyId;
+    if (company == null || company != d.companyId ||
+        (d.jobId == null && d.clientId == null)) {
+      if (mounted) setState(() => _relatedDocuments = const []);
+      return;
+    }
+    setState(() { _relatedLoading = true; _relatedError = null; });
+    try {
+      final result = <DocumentRecord>[];
+      if (d.jobId != null) {
+        final documents = await RemoteDocumentRepository.shared.listDocuments();
+        result.addAll(documents.where((row) =>
+          row.id != 'general-${d.id}' &&
+          row.jobId == d.jobId.toString()));
+      }
+      if (d.clientId != null) {
+        final general = await _repository.list();
+        for (final row in general) {
+          if (row.id == d.id || row.clientId != d.clientId) continue;
+          if (!result.any((item) => item.id == 'general-${row.id}')) {
+            result.add(row.toDocumentRecord());
+          }
+        }
+      }
+      if (mounted && ActiveCompanySession.companyId == company &&
+          _document?.id == d.id) {
+        setState(() { _relatedDocuments = result; _relatedLoading = false; });
+      }
+    } catch (_) {
+      if (mounted) setState(() {
+        _relatedError = 'Unable to load related documents.';
+        _relatedLoading = false;
+      });
+    }
   }
 
   String _date(DateTime? value) {
@@ -143,6 +313,7 @@ class _GeneralDocumentDetailsScreenState
     if (widget.clientName?.trim().isNotEmpty ?? false) return widget.clientName!;
     final summary = widget.summary?.customer ?? '';
     if (summary.isNotEmpty) return summary;
+    if (_linkedClientName.isNotEmpty) return _linkedClientName;
     return d.clientId == null ? 'Not linked' : 'Client #' + d.clientId.toString();
   }
 
@@ -170,7 +341,9 @@ class _GeneralDocumentDetailsScreenState
       final changed = await _repository.transition(d!.id!, action,
         lockVersion: d.lockVersion);
       if (mounted) {
-        setState(() { _document = changed; _events = null; });
+        setState(() {
+          _document = changed; _events = null; _pdfPreviewFuture = null;
+        });
         _notice(action == 'approve'
             ? 'Document approved and locked.'
             : 'Document marked reviewed.');
@@ -180,35 +353,6 @@ class _GeneralDocumentDetailsScreenState
     } finally {
       if (mounted) setState(() => _busy = false);
     }
-  }
-
-  Future<void> _officialActions() async {
-    final d = _document;
-    if (d?.id == null || d!.status != 'approved' ||
-        !ActiveCompanySession.canWrite('documents')) {
-      _notice('Official document actions require an approved document.');
-      return;
-    }
-    await showSign2DigitalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      builder: (sheet) => SafeArea(child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-        child: SizedBox(
-          height: MediaQuery.sizeOf(sheet).height * 0.72,
-          child: SingleChildScrollView(
-            child: GeneralDocumentIssuedActions(
-              documentId: d.id!,
-              documentNumber: d.number,
-              repository: _repository,
-              suggestedSignerName: _client(d) == 'Not linked'
-                  ? '' : _client(d),
-            ),
-          ),
-        ),
-      )),
-    );
-    if (mounted) await _reload();
   }
 
   Future<void> _pdf({required bool share}) async {
@@ -235,20 +379,21 @@ class _GeneralDocumentDetailsScreenState
         );
       }
     } catch (_) {
-      _notice('Official PDF is unavailable. Issue it under Document Actions.');
+      _notice('Official PDF unavailable. Issue it at the bottom of Details.');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
   }
 
   void _more() {
-    if (_document?.status == 'approved' &&
-        ActiveCompanySession.canWrite('documents')) {
-      _officialActions();
-    } else {
-      _setTab(0);
-      _notice('Available document actions are at the bottom of Details.');
-    }
+    _setTab(0);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _scroll.hasClients) {
+        _scroll.animateTo(_scroll.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOut);
+      }
+    });
   }
 
   Widget _topActions() => Row(
@@ -303,16 +448,25 @@ class _GeneralDocumentDetailsScreenState
       if (d.status == 'reviewed')
         (key: 'general-document-action-approve', label: 'Approve Document',
          onTap: () => _transition('approve'), primary: true),
-      if (d.status == 'approved')
-        (key: 'general-document-action-issue', label: 'Document Actions',
-         onTap: _officialActions, primary: true),
     ];
-    if (actions.isEmpty) return const SizedBox.shrink();
+    if (actions.isEmpty && d.status != 'approved') {
+      return const SizedBox.shrink();
+    }
     return Column(
       key: const Key('general-document-bottom-actions'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: 24),
+        if (d.status == 'approved')
+          GeneralDocumentIssuedActions(
+            key: ValueKey('general-document-issued-${d.id}'),
+            documentId: d.id!,
+            documentNumber: d.number,
+            repository: _repository,
+            compactDetails: true,
+            suggestedSignerName: _client(d) == 'Not linked' ? '' : _client(d),
+            suggestedSignerEmail: _clientEmail,
+          ),
         for (var i = 0; i < actions.length; i += 2) ...[
           if (i > 0) const SizedBox(height: 12),
           if (i + 1 < actions.length)
@@ -343,7 +497,8 @@ class _GeneralDocumentDetailsScreenState
           Sign2DigitalInformationRow('Document Number:', d.number),
           Sign2DigitalInformationRow('Job', _job(d)),
           Sign2DigitalInformationRow('Client:', _client(d)),
-          const Sign2DigitalInformationRow('Created By:', 'Not available'),
+          Sign2DigitalInformationRow('Created By:',
+            _companyName.isEmpty ? 'Not available' : _companyName),
           Sign2DigitalInformationRow('Created Date:', _date(d.createdAt)),
           Sign2DigitalInformationRow('Last Update:', 'Not available'),
           Sign2DigitalInformationRow('Version:', 'v' + d.revision.toString()),
@@ -354,56 +509,93 @@ class _GeneralDocumentDetailsScreenState
     ],
   );
 
-  Widget _preview(GeneralDocumentDraft d) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      const Text('Document Content', style: TextStyle(
-        fontFamily: 'Inter', fontSize: 18, fontWeight: FontWeight.w600,
-        color: AppColors.dark)),
-      const SizedBox(height: 12),
-      Sign2DigitalOutlinedContainer(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+  Widget _preview(GeneralDocumentDraft d) {
+    _preparePdf(d);
+    return FutureBuilder<({Uint8List bytes,bool official})>(
+      future: _pdfPreviewFuture,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return const Text(
+            'Unable to load this PDF preview. Verify the document or retry.',
+            key: Key('general-document-preview-error'),
+            style: TextStyle(fontFamily: 'Inter', color: AppColors.secondaryText));
+        }
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final data = snapshot.data!;
+        return Column(crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            for (var i = 0; i < d.blocks.length; i++)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 14),
-                child: Text(
-                  (d.blocks[i].type == 'bullet' ? '• ' :
-                      d.blocks[i].type == 'numbered'
-                          ? (i + 1).toString() + '. ' : '') + d.blocks[i].text,
-                  key: Key('general-document-text-preview-$i'),
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: d.blocks[i].type == 'heading' ? 18 : 14,
-                    height: 1.5, color: AppColors.dark,
-                    fontWeight: d.blocks[i].bold ||
-                        d.blocks[i].type == 'heading'
-                        ? FontWeight.w600 : FontWeight.w400,
-                    fontStyle: d.blocks[i].italic
-                        ? FontStyle.italic : FontStyle.normal,
-                  ),
-                ),
-              ),
+            if (!data.official) const Padding(
+              padding: EdgeInsets.only(bottom: 12),
+              child: Text('DRAFT / UNISSUED PDF PREVIEW — not an official document.',
+                key: Key('general-document-unissued-label'),
+                style: TextStyle(fontFamily:'Inter',fontSize:12,
+                  color:AppColors.primary)),
+            ),
+            SizedBox(height: 480,
+              child: widget.pdfPreviewBuilder?.call(data.bytes) ?? PdfPreview(
+                key: const Key('general-document-pdf-preview'),
+                build: (_) async => data.bytes,
+                allowPrinting: false,
+                allowSharing: false,
+                useActions: false,
+                canChangeOrientation: false,
+                canChangePageFormat: false,
+              )),
           ],
-        ),
-      ),
-      const SizedBox(height: 12),
-      const Text('Preview of saved document content. Official PDFs are '
-        'generated and verified separately after approval.',
-        style: TextStyle(fontFamily: 'Inter', fontSize: 12,
-          color: AppColors.secondaryText)),
-    ],
-  );
+        );
+      },
+    );
+  }
 
-  Widget _related(GeneralDocumentDraft d) =>
+  Widget _related(GeneralDocumentDraft d) {
+    final linked = _relatedDocuments ?? const <DocumentRecord>[];
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children:[
       Sign2DigitalInformationTable(
-        heading: 'Related Items',
-        rows: [
-          Sign2DigitalInformationRow('Job', _job(d)),
+        heading:'Related Items',
+        rows:[
+          Sign2DigitalInformationRow('Job:', _job(d)),
           Sign2DigitalInformationRow('Client:', _client(d)),
-        ],
-      );
+        ]),
+      const SizedBox(height:20),
+      if (_relatedLoading)const Center(child:CircularProgressIndicator()),
+      if (_relatedError!=null) TextButton(
+        key:const Key('general-document-related-retry'),
+        onPressed:_loadRelated,child:Text(_relatedError!+' Retry')),
+      if (!_relatedLoading && _relatedError==null && linked.isEmpty)
+        const Text('No related documents are available.',
+          key:Key('general-document-related-empty'),
+          style:TextStyle(fontFamily:'Inter',fontSize:14,
+            color:AppColors.secondaryText)),
+      for(var i=0;i<linked.length;i++)...[
+        Sign2DigitalQuoteSummaryCard(
+          quoteNumber:linked[i].number,
+          titleOverride:linked[i].title,
+          projectName:linked[i].project,
+          customerName:linked[i].customer,
+          status:linked[i].status,
+          documentDate:linked[i].timestamp,
+          listStyle:true,
+          onTap:() {
+            final doc=linked[i];
+            if(doc.id.startsWith('general-')) {
+              final id=int.tryParse(doc.id.substring(8));
+              if(id==null)return;
+              Sign2DigitalNavigation.push<void>(context,MaterialPageRoute(
+                builder:(_)=>GeneralDocumentDetailsScreen(
+                  documentId:id,summary:doc,repository:_repository)));
+            }else{
+              Sign2DigitalNavigation.push<void>(context,MaterialPageRoute(
+                builder:(_)=>DocumentDetailsScreen(
+                  documentId:doc.id,document:doc)));
+            }
+          },
+        ),
+        if(i+1<linked.length)const SizedBox(height:20),
+      ],
+    ]);
+  }
 
   Widget _history() {
     if (_historyLoading) {
@@ -438,6 +630,7 @@ class _GeneralDocumentDetailsScreenState
   }
 
   Widget _body(GeneralDocumentDraft d) => SingleChildScrollView(
+    controller: _scroll,
     key: const Key('general-document-details-scroll'),
     padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
     child: Center(child: ConstrainedBox(
