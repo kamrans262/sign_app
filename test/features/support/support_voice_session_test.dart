@@ -109,8 +109,8 @@ void main() {
       (tester) async {
     // Widget tests run in FakeAsync. Real filesystem operations must run
     // outside FakeAsync or the recording callback can stall indefinitely.
-    final dir = await tester.runAsync(
-      () => Directory.systemTemp.createTemp('s2d-support-voice'));
+    final dir = (await tester.runAsync(
+      () => Directory.systemTemp.createTemp('s2d-support-voice')))!;
     addTearDown(() async {
       if (await dir.exists()) await dir.delete(recursive: true);
     });
