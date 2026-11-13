@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sign2digital/core/widgets/sign2digital_input_field.dart';
 import 'package:sign2digital/features/quotes/domain/quote_review_models.dart';
 import 'package:sign2digital/features/quotes/presentation/screens/send_quote_screen.dart';
 import 'package:sign2digital/features/quotes/presentation/screens/quote_preview_screen.dart';
@@ -36,6 +37,13 @@ Future<void> tapOnScreen(WidgetTester tester, Finder target) async {
   await tester.pumpAndSettle();
 }
 
+Finder recipientField(String label) => find.descendant(
+  of: find.byWidgetPredicate(
+    (widget) => widget is Sign2DigitalInputField && widget.label == label,
+  ),
+  matching: find.byType(TextField),
+);
+
 void main() {
   setUp(QuoteSendSessionStore.clear);
 
@@ -64,7 +72,7 @@ void main() {
     )));
     await tester.pump();
     await tapOnScreen(tester, find.text('Edit'));
-    await tester.enterText(find.byWidgetPredicate((w) => w is TextField && w.decoration?.labelText == 'Email'), 'changed@domain.test');
+    await tester.enterText(recipientField('Email'), 'changed@domain.test');
     await tapOnScreen(tester, find.text('Save'));
     expect(find.text('changed@domain.test'), findsOneWidget);
     expect(quote.clientEmail, 'example@domain.test');
@@ -79,10 +87,7 @@ void main() {
     await tester.pump();
     await tapOnScreen(tester, find.text('Edit'));
     await tester.enterText(
-      find.byWidgetPredicate(
-        (widget) => widget is TextField &&
-            widget.decoration?.labelText == 'Email',
-      ),
+      recipientField('Email'),
       'invalid-address',
     );
     await tapOnScreen(tester, find.text('Save'));
