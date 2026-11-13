@@ -10,7 +10,6 @@ import '../../data/support_ai_prompt_catalog.dart';
 import '../../data/support_assistant_repository.dart';
 import '../../data/support_chat_session.dart';
 import '../../data/support_voice_transcription.dart';
-import 'getting_started_preview.dart';
 
 class SupportAssistantSheet extends StatefulWidget {
   const SupportAssistantSheet({
@@ -44,7 +43,6 @@ class _SupportAssistantSheetState extends State<SupportAssistantSheet>
   late final int _revision;
   VoiceRecorderService? _recorder;
   bool _sending = false;
-  bool _preview = false;
   bool _recording = false;
   bool _microphoneBusy = false;
   bool _transcribing = false;
@@ -97,9 +95,7 @@ class _SupportAssistantSheetState extends State<SupportAssistantSheet>
     }
   });
 
-  // The sample prompt, help links and privacy reminder follow the reply in
-  // the same ListView. Scrolling to its absolute bottom can hide the actual
-  // assistant answer; keep the most recent answer in view instead.
+  // Keep the latest assistant answer visible after a message or reopening.
   void _showLatestAnswer() => WidgetsBinding.instance.addPostFrameCallback((_) {
     if (!mounted) return;
     final answer = _latestAnswerKey.currentContext;
@@ -409,27 +405,6 @@ class _SupportAssistantSheetState extends State<SupportAssistantSheet>
               style: const TextStyle(fontFamily: 'Inter',
                 fontSize: 13, color: Color(0xFFB42318))),
           const SizedBox(height: 10),
-          OutlinedButton.icon(
-            key: const Key('support-preview-guide'),
-            onPressed: () => setState(() => _preview = true),
-            icon: const Icon(Icons.checklist_rounded, size: 20),
-            label: const Text('Preview Getting Started'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.primary,
-              side: const BorderSide(color: AppColors.primary))),
-          TextButton.icon(
-            key: const Key('support-help-center'),
-            onPressed: () => _go('support'),
-            icon: const Icon(Icons.help_outline_rounded, size: 18),
-            label: const Text('Help Center & Support Tickets'),
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.primary)),
-          const Text('Never share passwords, OTPs, or payment details. '
-            'AI Support cannot change your records.',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontFamily: 'Inter', fontSize: 11,
-              color: AppColors.secondaryText)),
-          const SizedBox(height: 12),
         ],
       )),
       Padding(padding: const EdgeInsets.fromLTRB(20, 6, 20, 16),
@@ -509,17 +484,12 @@ class _SupportAssistantSheetState extends State<SupportAssistantSheet>
         child: Column(children: [
           Padding(padding: const EdgeInsets.fromLTRB(20, 5, 16, 10),
             child: Row(children: [
-              if (_preview) IconButton(
-                key: const Key('support-guide-back'),
-                onPressed: () => setState(() => _preview = false),
-                icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                  size: 19, color: AppColors.primary))
-              else const Icon(Icons.support_agent_outlined,
+              const Icon(Icons.support_agent_outlined,
                 size: 24, color: AppColors.primary),
               const SizedBox(width: 10),
-              Expanded(child: Text(
-                _preview ? 'Getting Started' : 'AI Support',
-                style: const TextStyle(fontFamily: 'Inter', fontSize: 20,
+              const Expanded(child: Text(
+                'AI Support',
+                style: TextStyle(fontFamily: 'Inter', fontSize: 20,
                   fontWeight: FontWeight.w700, color: AppColors.dark))),
               IconButton(
                 key: const Key('support-close'),
@@ -529,11 +499,7 @@ class _SupportAssistantSheetState extends State<SupportAssistantSheet>
                   color: AppColors.secondaryText)),
             ])),
           const Divider(height: 1, color: AppColors.lightBorder),
-          Expanded(child: _preview
-            ? GettingStartedPreview(repository: widget.repository,
-                authenticated: widget.authenticated,
-                onDestination: _go)
-            : _chat()),
+          Expanded(child: _chat()),
         ]),
       ),
     );

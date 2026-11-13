@@ -62,7 +62,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Getting Started is manually previewed, not automatic',
+  testWidgets('Onboarding stays inactive and footer actions are not shown',
       (tester) async {
     final fake = _AssistantFake();
     await tester.pumpWidget(MaterialApp(
@@ -70,20 +70,14 @@ void main() {
         repository: fake, screen: 'home'))));
     await tester.pump();
     expect(fake.progressReads, 0);
-    final button = find.byKey(const Key('support-preview-guide'));
-    await tester.scrollUntilVisible(button, 150,
-      scrollable: find.descendant(
-        of: find.byKey(const Key('support-chat')),
-        matching: find.byType(Scrollable)).first,
-      maxScrolls: 15);
-    await tester.tap(button);
-    await tester.pumpAndSettle();
-    expect(fake.progressReads, 1);
-    expect(find.byKey(const Key('support-guide-preview')), findsOneWidget);
-    expect(find.text('1 of 4 completed'), findsOneWidget);
-    await tester.tap(find.byKey(const Key('support-guide-back')));
-    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('support-preview-guide')), findsNothing);
+    expect(find.byKey(const Key('support-help-center')), findsNothing);
+    expect(find.byKey(const Key('support-guide-preview')), findsNothing);
+    expect(find.text('Preview Getting Started'), findsNothing);
+    expect(find.text('Help Center & Support Tickets'), findsNothing);
+    expect(find.textContaining('Never share passwords'), findsNothing);
     expect(find.text('AI Support'), findsOneWidget);
+    expect(find.byKey(const Key('support-voice')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }
