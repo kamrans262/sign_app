@@ -1,3 +1,4 @@
+import '../../../../core/widgets/sign2digital_form_dialog.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
@@ -22,7 +23,7 @@ abstract final class Sign2DigitalTemporaryAiKeyDialog {
       builder: (dialogContext) => Theme(
         data: AppTheme.light,
         child: StatefulBuilder(
-        builder: (context, update) => AlertDialog(
+        builder: (context, update) => Sign2DigitalFormDialog(
           title: Text(title),
           content: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 400),
