@@ -11,9 +11,10 @@ class AssistantTurn {
 }
 
 class AssistantAnswer {
-  const AssistantAnswer({required this.answer, this.screen});
+  const AssistantAnswer({required this.answer, this.screen, this.samplePrompt});
   final String answer;
   final String? screen;
+  final String? samplePrompt;
 }
 
 class GettingStartedProgress {
