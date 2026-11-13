@@ -1,3 +1,4 @@
+import '../../../../core/widgets/sign2digital_form_dialog.dart';
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
@@ -244,7 +245,7 @@ class _SendQuoteScreenState extends State<SendQuoteScreen> {
     final formKey = GlobalKey<FormState>();
     final result = await showDialog<QuoteSendDraft>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => Sign2DigitalFormDialog(
         title: const Text('Edit Recipient'),
         content: SingleChildScrollView(
           child: Form(
