@@ -32,11 +32,39 @@ abstract final class AppTheme {
     ),
   );
 
+  // Shared picker styling used by every date/time popup in the app.
+  static const DatePickerThemeData _datePickerTheme = DatePickerThemeData(
+    backgroundColor: AppColors.white,
+    headerBackgroundColor: AppColors.primary,
+    headerForegroundColor: AppColors.white,
+    dividerColor: AppColors.lightBorder,
+    todayBorder: BorderSide(color: AppColors.primary),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.all(Radius.circular(20)),
+    ),
+  );
+  static const TimePickerThemeData _timePickerTheme = TimePickerThemeData(
+    backgroundColor: AppColors.white,
+    dialBackgroundColor: Color(0xFFE3ECF0),
+    dialHandColor: AppColors.primary,
+    dialTextColor: AppColors.dark,
+    hourMinuteColor: Color(0xFFE3ECF0),
+    hourMinuteTextColor: AppColors.dark,
+    dayPeriodColor: Color(0xFFE3ECF0),
+    dayPeriodTextColor: AppColors.dark,
+    entryModeIconColor: AppColors.primary,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.all(Radius.circular(20)),
+    ),
+  );
+
   static ThemeData get light {
     return ThemeData(
       useMaterial3: true,
       fontFamily: 'Inter',
       dialogTheme: _dialogTheme,
+      datePickerTheme: _datePickerTheme,
+      timePickerTheme: _timePickerTheme,
       // Default Flutter bottom sheets use the same chrome as Switch Company.
       bottomSheetTheme: const BottomSheetThemeData(
         backgroundColor: AppColors.white,
@@ -76,6 +104,8 @@ abstract final class AppTheme {
     fontFamily: 'Inter',
     brightness: Brightness.dark,
     dialogTheme: _dialogTheme,
+      datePickerTheme: _datePickerTheme,
+      timePickerTheme: _timePickerTheme,
     bottomSheetTheme: const BottomSheetThemeData(
       backgroundColor: AppColors.white,
       modalBackgroundColor: AppColors.white,
