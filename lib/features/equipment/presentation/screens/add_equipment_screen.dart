@@ -105,10 +105,11 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
         context: context,
         builder: (dialog) => Sign2DigitalFormDialog(
           title: Text('Enter $title'),
-          content: TextField(
+          content: Sign2DigitalInputField(
             key: const Key('equipment-custom-value'),
+            label: title, hintText: 'Enter $title',
+            iconAsset: '', leadingIcon: Icons.edit_outlined,
             controller: input, maxLength: 100,
-            decoration: InputDecoration(hintText: title),
             autofocus: true),
           actions: [
             TextButton(onPressed: () => Navigator.pop(dialog),
@@ -299,10 +300,11 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
           content: Column(mainAxisSize: MainAxisSize.min, children: [
             const Text('Enter a temporary OpenAI API key to process your '
               'recording. Audio is transmitted to OpenAI; API charges may apply.'),
-            TextField(
+            Sign2DigitalInputField(
               key: const Key('equipment-ai-key'),
-              controller: controller, obscureText: true,
-              decoration: const InputDecoration(labelText: 'OpenAI API key')),
+              label: 'OpenAI API key', hintText: 'Enter API key',
+              iconAsset: '', leadingIcon: Icons.key_outlined,
+              controller: controller, obscureText: true),
           ]),
           actions: [
             TextButton(onPressed: () => Navigator.pop(dialog),
