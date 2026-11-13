@@ -1,3 +1,4 @@
+import '../../../../core/widgets/sign2digital_form_dialog.dart';
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
@@ -102,7 +103,7 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
     try {
       final value = await showDialog<String>(
         context: context,
-        builder: (dialog) => AlertDialog(
+        builder: (dialog) => Sign2DigitalFormDialog(
           title: Text('Enter $title'),
           content: TextField(
             key: const Key('equipment-custom-value'),
@@ -293,7 +294,7 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
     try {
       return await showDialog<String>(
         context: parent,
-        builder: (dialog) => AlertDialog(
+        builder: (dialog) => Sign2DigitalFormDialog(
           title: const Text('Connect Equipment AI'),
           content: Column(mainAxisSize: MainAxisSize.min, children: [
             const Text('Enter a temporary OpenAI API key to process your '
