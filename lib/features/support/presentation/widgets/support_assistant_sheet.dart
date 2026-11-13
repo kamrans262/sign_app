@@ -39,6 +39,7 @@ class _SupportAssistantSheetState extends State<SupportAssistantSheet>
     with WidgetsBindingObserver {
   final _controller = TextEditingController();
   final _scroll = ScrollController();
+  final _latestAnswerKey = GlobalKey();
   late final List<AssistantTurn> _turns;
   late final int _revision;
   VoiceRecorderService? _recorder;
@@ -65,6 +66,7 @@ class _SupportAssistantSheetState extends State<SupportAssistantSheet>
       role: t.role, content: t.content,
       screen: t.screen, samplePrompt: t.samplePrompt,
     )).toList();
+    if (_turns.isNotEmpty) _showLatestAnswer();
   }
 
   @override
@@ -93,6 +95,16 @@ class _SupportAssistantSheetState extends State<SupportAssistantSheet>
     if (mounted && _scroll.hasClients) {
       _scroll.jumpTo(_scroll.position.maxScrollExtent);
     }
+  });
+
+  // The sample prompt, help links and privacy reminder follow the reply in
+  // the same ListView. Scrolling to its absolute bottom can hide the actual
+  // assistant answer; keep the most recent answer in view instead.
+  void _showLatestAnswer() => WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (!mounted) return;
+    final answer = _latestAnswerKey.currentContext;
+    if (answer == null) return;
+    Scrollable.ensureVisible(answer, alignment: 0.15);
   });
 
   Future<void> _ask([String? suggested]) async {
@@ -137,7 +149,11 @@ class _SupportAssistantSheetState extends State<SupportAssistantSheet>
     } finally {
       if (mounted) {
         setState(() => _sending = false);
-        _bottom();
+        if (_error != null) {
+          _bottom();
+        } else {
+          _showLatestAnswer();
+        }
       }
     }
   }
@@ -244,7 +260,8 @@ class _SupportAssistantSheetState extends State<SupportAssistantSheet>
     }
   }
 
-  Widget _bubble(String text, bool mine) => Align(
+  Widget _bubble(String text, bool mine, {Key? key}) => Align(
+    key: key,
     alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
     child: Container(
       constraints: const BoxConstraints(maxWidth: 350),
@@ -355,7 +372,9 @@ class _SupportAssistantSheetState extends State<SupportAssistantSheet>
               ),
           ],
           for (final turn in _turns) ...[
-            _bubble(turn.content, turn.role == 'user'),
+            _bubble(turn.content, turn.role == 'user',
+              key: turn.role == 'assistant' && identical(turn, _turns.last)
+                ? _latestAnswerKey : null),
             if (turn.role == 'assistant' && turn.samplePrompt != null)
               _promptCard(turn.samplePrompt!),
             if (turn.role == 'assistant' && turn.screen != null)
