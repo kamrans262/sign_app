@@ -26,6 +26,7 @@ import '../../../jobs/services/voice_job_extraction_service.dart';
 import '../../../jobs/services/voice_recorder_service.dart';
 import '../../domain/document_record.dart';
 import 'document_details_screen.dart';
+import 'general_document_details_screen.dart';
 
 enum AiDocumentSection {
   projectDetails('Project details'),
@@ -415,8 +416,9 @@ class _GenerateAiDocumentScreenState extends State<GenerateAiDocumentScreen> {
       await Sign2DigitalNavigation.push<void>(context,
         MaterialPageRoute<void>(
           builder: (_) => liveGeneral
-              ? GeneralDocumentEditorScreen(
-                  documentId:int.parse(generated.id.substring(8)))
+              ? GeneralDocumentDetailsScreen(
+                  documentId:int.parse(generated.id.substring(8)),
+                  summary:generated)
               : DocumentDetailsScreen(
                   documentId:generated.id,document:generated),
         ),

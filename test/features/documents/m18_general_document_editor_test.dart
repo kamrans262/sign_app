@@ -8,6 +8,7 @@ import 'package:sign2digital/core/services/active_company_session.dart';
 import 'package:sign2digital/core/services/sign_api_client.dart';
 import 'package:sign2digital/features/documents/data/remote_general_document_repository.dart';
 import 'package:sign2digital/features/documents/presentation/screens/general_document_editor_screen.dart';
+import 'package:sign2digital/features/documents/presentation/screens/general_document_details_screen.dart';
 
 void main(){
   setUp(()=>ActiveCompanySession.set(7));
@@ -73,16 +74,15 @@ void main(){
     await tester.tap(find.byKey(const Key('general-document-save')));
     await tester.pumpAndSettle();
     expect(saves,1);
-    expect(find.text('Document Preview'),findsOneWidget);
-    expect(find.text('A real business message.'),findsOneWidget);
-    expect(find.byKey(const Key('general-document-preview-edit')),
-      findsOneWidget);
-    expect(find.byKey(const Key('document-detail-actions')),findsNothing);
-    await tester.tap(find.byKey(const Key('general-document-preview-edit')));
+    expect(find.byType(GeneralDocumentDetailsScreen),findsOneWidget);
+    expect(find.text('Documents'),findsOneWidget);
+    expect(find.byKey(const Key('general-document-top-actions')),findsOneWidget);
+    expect(find.byKey(const Key('general-document-action-edit')),findsOneWidget);
+    expect(find.byKey(const Key('general-document-action-review')),findsOneWidget);
+    await tester.tap(find.byKey(const Key('general-document-top-action-0')));
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(find.text('Mark Reviewed'), 160,
-      scrollable: find.byType(Scrollable).first);
-    expect(find.text('Mark Reviewed'),findsOneWidget);
+    expect(find.text('A real business message.'),findsOneWidget);
+    expect(find.byKey(const Key('general-document-bottom-actions')),findsNothing);
     client.dispose();
   });
 

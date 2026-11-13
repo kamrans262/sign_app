@@ -12,6 +12,7 @@ import '../../data/remote_general_document_repository.dart';
 import '../../../auth/data/mobile_auth_repository.dart';
 import '../../domain/document_record.dart';
 import 'document_details_screen.dart';
+import 'general_document_details_screen.dart';
 import 'generate_ai_document_screen.dart';
 import 'general_document_editor_screen.dart';
 
@@ -148,7 +149,9 @@ class _AiDocumentsScreenState extends State<AiDocumentsScreen> {
     await Sign2DigitalNavigation.push<void>(context,
       MaterialPageRoute<void>(
         builder: (_) => id!=null
-          ? GeneralDocumentEditorScreen(documentId:id)
+          ? GeneralDocumentDetailsScreen(documentId:id,summary:record,
+              repository:widget.repository is RemoteGeneralDocumentRepository
+                  ?widget.repository as RemoteGeneralDocumentRepository:null)
           : DocumentDetailsScreen(documentId:record.id,document:record),
       ),
     );

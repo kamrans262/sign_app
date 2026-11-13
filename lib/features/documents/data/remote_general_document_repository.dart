@@ -114,6 +114,26 @@ class RemoteGeneralDocumentRepository extends DocumentRepository {
 
 
 
+  /// The M18 backend records the real per-company document event log.
+  /// Never invent history entries from client-side navigation or timestamps.
+  Future<List<Map<String,dynamic>>> history(int id) async {
+    final company=_company();
+    if(id<1)throw const SignApiException('Invalid document identifier.');
+    final response=_data(await _api.get('/api/v1/general-documents/$id',
+      companyScoped:true));
+    _check(company);
+    final document=_parse(response['document'],company);
+    final raw=response['history'];
+    if(document.id!=id||raw is! List){
+      throw const SignApiException('Invalid document history.');
+    }
+    return List<Map<String,dynamic>>.unmodifiable([
+      for(final item in raw)
+        if(item is Map&&_int(item['id'])>0)
+          Map<String,dynamic>.unmodifiable(Map<String,dynamic>.from(item)),
+    ]);
+  }
+
   /// Authenticated dictation: byte stream goes only to Laravel, never to a
   /// mobile-stored OpenAI key. Transcription is not an approved document.
   Future<String> transcribe(Uint8List bytes,String filename) async {

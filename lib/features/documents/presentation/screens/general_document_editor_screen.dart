@@ -23,12 +23,15 @@ import '../../../jobs/services/voice_recorder_service.dart';
 import '../../../jobs/services/voice_job_extraction_service.dart';
 import '../../data/remote_general_document_repository.dart';
 import 'general_document_issued_actions.dart';
+import 'general_document_details_screen.dart';
 import '../../domain/general_document_draft.dart';
 
 /// M18 authoring inside the established Sign2Digital document UI system.
 class GeneralDocumentEditorScreen extends StatefulWidget {
-  const GeneralDocumentEditorScreen({super.key,this.documentId,this.repository});
+  const GeneralDocumentEditorScreen({super.key,this.documentId,this.repository,
+    this.openForEditing=false});
   final int? documentId;
+  final bool openForEditing;
   final RemoteGeneralDocumentRepository? repository;
   @override
   State<GeneralDocumentEditorScreen> createState()=>_GeneralDocumentEditorScreenState();
@@ -117,7 +120,8 @@ class _GeneralDocumentEditorScreenState extends State<GeneralDocumentEditorScree
       final data=await _repository.detail(id);
       if(!mounted)return;
       setState((){
-        _fill(data);_error=null;_loading=false;_preview=true;
+        _fill(data);_error=null;_loading=false;
+        _preview=!widget.openForEditing;
       });
       await _loadFiles();
     }catch(_){
@@ -200,13 +204,12 @@ class _GeneralDocumentEditorScreenState extends State<GeneralDocumentEditorScree
   Future<void> _save() async{
     if(_busy||!_editable)return;
     setState(()=>_busy=true);
+    GeneralDocumentDraft? saved;
     try{
       final result=await _repository.save(_current(),createRequestKey:_createKey);
       if(!mounted)return;
-      setState((){
-        _fill(result);_error=null;_preview=true;
-      });
-      _notice('General document draft saved.');
+      setState((){ _fill(result);_error=null;_preview=false; });
+      saved=result;
       await _loadFiles();
     }catch(_){
       if(mounted)setState(()=>_error=
@@ -214,6 +217,22 @@ class _GeneralDocumentEditorScreenState extends State<GeneralDocumentEditorScree
     }finally{
       if(mounted)setState(()=>_busy=false);
     }
+    if(!mounted||saved?.id==null)return;
+    if(widget.openForEditing){
+      Navigator.of(context).pop();
+      return;
+    }
+    // Saving a new AI document must open the approved Details layout, never
+    // return to the old standalone preview or a generic file detail screen.
+    final created=saved!;
+    final job=_jobs.where((j)=>j.id=='$_jobId')
+      .map((j)=>j.title).firstOrNull;
+    final client=_clients.where((c)=>c.id=='$_clientId')
+      .map((c)=>c.fullName.isNotEmpty?c.fullName:c.companyName).firstOrNull;
+    await Navigator.of(context).pushReplacement<void,void>(
+      MaterialPageRoute<void>(builder:(_)=>GeneralDocumentDetailsScreen(
+        documentId:created.id!,repository:_repository,
+        initialDocument:created,jobName:job,clientName:client)));
   }
   Future<void> _suggest() async{
     if(_busy||!_editable)return;

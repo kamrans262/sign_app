@@ -9,7 +9,7 @@ import '../../../../core/widgets/sign2digital_search_field.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import 'document_details_screen.dart';
-import 'general_document_editor_screen.dart';
+import 'general_document_details_screen.dart';
 import 'create_addendum_screen.dart';
 import '../../../quotes/presentation/widgets/sign2digital_quote_summary_card.dart';
 import '../../../quotes/data/signed_quote_file_store.dart';
@@ -268,8 +268,9 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
         .firstMatch(selected.id);
     if (general != null) {
       await Sign2DigitalNavigation.push<void>(context, MaterialPageRoute<void>(
-        builder: (_) => GeneralDocumentEditorScreen(
-          documentId: int.parse(general.group(1)!)),
+        builder: (_) => GeneralDocumentDetailsScreen(
+          documentId: int.parse(general.group(1)!),
+          summary: selected),
       ));
       if (mounted) await _load();
       return;
