@@ -1,3 +1,4 @@
+import '../../../support/presentation/widgets/support_ai_prompt_hint.dart';
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -595,7 +596,9 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           _aiVoiceButton(),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 6),
+                          const SupportAiPromptHint(module: 'jobs'),
+                          const SizedBox(height: 15),
                           Sign2DigitalInputField(
                             key: const Key('job-title-input'),
                             label: 'Job Title',
