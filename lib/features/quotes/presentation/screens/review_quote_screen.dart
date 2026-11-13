@@ -1,3 +1,4 @@
+import '../../../../core/widgets/sign2digital_form_dialog.dart';
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import '../../../../core/widgets/sign2digital_subscription_gate.dart';
 import 'package:flutter/material.dart';
@@ -80,7 +81,7 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
     final saved = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
-        builder: (context, updateDialog) => AlertDialog(
+        builder: (context, updateDialog) => Sign2DigitalFormDialog(
           title: const Text('Edit Quote Details'),
           content: SingleChildScrollView(child: Column(
             mainAxisSize: MainAxisSize.min,
