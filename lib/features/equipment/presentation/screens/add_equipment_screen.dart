@@ -1,3 +1,4 @@
+import '../../../support/presentation/widgets/support_ai_prompt_hint.dart';
 import '../../../../core/widgets/sign2digital_form_dialog.dart';
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
@@ -444,7 +445,9 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
           children: [
             Sign2DigitalAiVoiceButton(
               key: const Key('equipment-ai-voice'), onPressed: _voice),
-            const SizedBox(height: 20),
+            const SizedBox(height: 6),
+            const SupportAiPromptHint(module: 'equipment'),
+            const SizedBox(height: 15),
             Sign2DigitalSelectionField(
               key: const Key('equipment-form-name'), label: 'Name (ID)',
               iconAsset: 'assets/icons/description.svg',
