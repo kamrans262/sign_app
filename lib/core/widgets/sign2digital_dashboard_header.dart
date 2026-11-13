@@ -2,20 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../assets/dashboard_assets.dart';
-import '../services/profile_photo_session.dart';
 import '../theme/app_colors.dart';
-import '../theme/dashboard_colors.dart';
+import '../../features/support/presentation/support_assistant_launcher.dart';
 
 class Sign2DigitalDashboardHeader extends StatelessWidget {
   const Sign2DigitalDashboardHeader({
     super.key,
     this.onNotificationTap,
     this.onProfileTap,
+    this.onSupportTap,
     this.profileImage,
   });
 
   final VoidCallback? onNotificationTap;
+  // Retained only to avoid breaking older caller constructors. The profile
+  // avatar is intentionally replaced with AI Support in all dashboard headers.
   final VoidCallback? onProfileTap;
+  final VoidCallback? onSupportTap;
   final ImageProvider<Object>? profileImage;
 
   @override
@@ -69,21 +72,24 @@ class Sign2DigitalDashboardHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          Semantics(
-            button: true,
-            label: 'Profile',
-            child: InkWell(
-              onTap: onProfileTap,
-              customBorder: const CircleBorder(),
-              child: ValueListenableBuilder(
-                valueListenable: ProfilePhotoSession.bytes,
-                builder: (context, photoBytes, child) => CircleAvatar(
-                  radius: 24,
-                  backgroundColor: DashboardColors.paleBlue,
-                  backgroundImage: profileImage ??
-                      (photoBytes == null
-                          ? const AssetImage(DashboardAssets.demoAvatar)
-                          : MemoryImage(photoBytes)),
+          SizedBox(
+            width: 48,
+            height: 48,
+            child: Material(
+              color: AppColors.white,
+              shape: const CircleBorder(
+                side: BorderSide(color: AppColors.lightBorder),
+              ),
+              elevation: 1,
+              shadowColor: const Color(0x05000000),
+              child: InkWell(
+                key: const Key('dashboard-support-button'),
+                customBorder: const CircleBorder(),
+                onTap: onSupportTap ?? () =>
+                    SupportAssistantLauncher.show(context, screen: 'home'),
+                child: const Center(
+                  child: Icon(Icons.support_agent_outlined,
+                    size: 24, color: AppColors.primary),
                 ),
               ),
             ),
