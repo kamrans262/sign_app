@@ -542,6 +542,8 @@ class _AddLabourEntryScreenState extends State<AddLabourEntryScreen> {
           Sign2DigitalHeader(
             logoAsset: 'assets/header_logo.png',
             onBack: _cancel,
+            trailing: widget.initialEntry == null ?
+                const SupportAiPromptHint(module: 'labour') : null,
           ),
           Expanded(
             child: ListView(
@@ -550,9 +552,7 @@ class _AddLabourEntryScreenState extends State<AddLabourEntryScreen> {
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 25),
                   children: [
                     Sign2DigitalAiVoiceButton(onPressed: _voice),
-                    const SizedBox(height: 6),
-                    const SupportAiPromptHint(module: 'labour'),
-                    const SizedBox(height: 15),
+                    const SizedBox(height: 20),
                     Sign2DigitalSelectionField(
                       key: const Key('labour-form-job'),
                       label: 'Job / Project',

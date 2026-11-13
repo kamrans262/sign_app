@@ -329,6 +329,7 @@ class _CreateQuoteScreenState extends State<CreateQuoteScreen> {
             Sign2DigitalHeader(
               title: 'Create Quote',
               onBack: () => Navigator.of(context).maybePop(),
+              trailing: const SupportAiPromptHint(module: 'quotes'),
             ),
             Expanded(
               child: SingleChildScrollView(
@@ -351,9 +352,7 @@ class _CreateQuoteScreenState extends State<CreateQuoteScreen> {
                           selected: _method == QuoteInputMethod.voice,
                           onTap: () => _select(QuoteInputMethod.voice),
                         ),
-                        const SizedBox(height: 6),
-                        const SupportAiPromptHint(module: 'quotes'),
-                        const SizedBox(height: 15),
+                        const SizedBox(height: 20),
                         Sign2DigitalQuoteInputMethodCard(
                           key: const Key('quote-method-text'),
                           label: 'Text',

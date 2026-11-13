@@ -487,15 +487,15 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       backgroundColor: AppColors.white,
       resizeToAvoidBottomInset: true,
       body: SafeArea(bottom: false,child: Column(children: [
-        Sign2DigitalHeader(title: 'Expenses', onBack: _cancel),
+        Sign2DigitalHeader(title: 'Expenses', onBack: _cancel,
+          trailing: widget.initialExpense == null ?
+              const SupportAiPromptHint(module: 'expenses') : null),
         Expanded(child: SingleChildScrollView(
             key: const Key('create-expense-scroll'),
             padding: const EdgeInsets.fromLTRB(20,0,20,30),
             child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               Sign2DigitalAiVoiceButton(onPressed: _voice),
-              const SizedBox(height: 6),
-              const SupportAiPromptHint(module: 'expenses'),
-              const SizedBox(height: 15),
+              const SizedBox(height: 20),
               Sign2DigitalSelectionField(
                 key: const Key('expense-add-job'), label: 'Job',
                 iconAsset: 'assets/icons/description.svg',

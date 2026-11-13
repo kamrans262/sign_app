@@ -435,7 +435,9 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
     resizeToAvoidBottomInset: true,
     body: SafeArea(child: Column(children: [
       Sign2DigitalHeader(title: 'Equipment',
-        onBack: () => Navigator.of(context).maybePop()),
+        onBack: () => Navigator.of(context).maybePop(),
+        trailing: widget.initialEquipment == null ?
+            const SupportAiPromptHint(module: 'equipment') : null),
       Expanded(child: Center(child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 720),
         child: ListView(
@@ -445,9 +447,7 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
           children: [
             Sign2DigitalAiVoiceButton(
               key: const Key('equipment-ai-voice'), onPressed: _voice),
-            const SizedBox(height: 6),
-            const SupportAiPromptHint(module: 'equipment'),
-            const SizedBox(height: 15),
+            const SizedBox(height: 20),
             Sign2DigitalSelectionField(
               key: const Key('equipment-form-name'), label: 'Name (ID)',
               iconAsset: 'assets/icons/description.svg',

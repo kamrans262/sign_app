@@ -471,6 +471,7 @@ class _GenerateAiDocumentScreenState extends State<GenerateAiDocumentScreen> {
       Sign2DigitalHeader(
         title: 'AI Document',
         onBack: () => Navigator.of(context).maybePop(),
+        trailing: const SupportAiPromptHint(module: 'ai_documents'),
       ),
       Expanded(child: Center(child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 720),
@@ -482,9 +483,7 @@ class _GenerateAiDocumentScreenState extends State<GenerateAiDocumentScreen> {
               key: const Key('generate-ai-voice'),
               onPressed: _voice,
             ),
-            const SizedBox(height: 6),
-            const SupportAiPromptHint(module: 'ai_documents'),
-            const SizedBox(height: 15),
+            const SizedBox(height: 20),
             Sign2DigitalSelectionField(
               key: const Key('generate-ai-date'),
               label: 'Document Date',

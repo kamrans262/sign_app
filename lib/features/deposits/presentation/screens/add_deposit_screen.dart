@@ -460,6 +460,8 @@ class _AddDepositScreenState extends State<AddDepositScreen> {
           Sign2DigitalHeader(
             title: 'Deposits',
             onBack: _cancel,
+            trailing: widget.initialDeposit == null ?
+                const SupportAiPromptHint(module: 'deposits') : null,
           ),
           Expanded(
             child: Center(
@@ -471,9 +473,7 @@ class _AddDepositScreenState extends State<AddDepositScreen> {
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 25),
                   children: [
                     Sign2DigitalAiVoiceButton(onPressed: _voice),
-                    const SizedBox(height: 6),
-                    const SupportAiPromptHint(module: 'deposits'),
-                    const SizedBox(height: 15),
+                    const SizedBox(height: 20),
                     Sign2DigitalSelectionField(
                       key: const Key('deposit-form-job'),
                       label: 'Job / Project',

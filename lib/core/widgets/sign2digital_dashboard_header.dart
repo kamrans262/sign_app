@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import '../assets/dashboard_assets.dart';
 import '../theme/app_colors.dart';
+import 'sign2digital_support_icon_button.dart';
 import '../../features/support/presentation/support_assistant_launcher.dart';
 
 class Sign2DigitalDashboardHeader extends StatelessWidget {
@@ -72,27 +73,10 @@ class Sign2DigitalDashboardHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          SizedBox(
-            width: 48,
-            height: 48,
-            child: Material(
-              color: AppColors.white,
-              shape: const CircleBorder(
-                side: BorderSide(color: AppColors.lightBorder),
-              ),
-              elevation: 1,
-              shadowColor: const Color(0x05000000),
-              child: InkWell(
-                key: const Key('dashboard-support-button'),
-                customBorder: const CircleBorder(),
-                onTap: onSupportTap ?? () =>
-                    SupportAssistantLauncher.show(context, screen: 'home'),
-                child: const Center(
-                  child: Icon(Icons.support_agent_outlined,
-                    size: 24, color: AppColors.primary),
-                ),
-              ),
-            ),
+          Sign2DigitalSupportIconButton(
+            buttonKey: const Key('dashboard-support-button'),
+            onPressed: onSupportTap ?? () =>
+                SupportAssistantLauncher.show(context, screen: 'home'),
           ),
         ],
       ),

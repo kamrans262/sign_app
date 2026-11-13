@@ -898,7 +898,9 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
     child: Scaffold(
     backgroundColor: AppColors.white,
     body: SafeArea(bottom: false, child: Column(children: [
-      Sign2DigitalHeader(title: 'Invoices', onBack: _cancel),
+      Sign2DigitalHeader(title: 'Invoices', onBack: _cancel,
+        trailing: widget.initialInvoice == null ?
+            const SupportAiPromptHint(module: 'invoices') : null),
       Expanded(child: Center(child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 720),
         child: ListView(
@@ -907,9 +909,7 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
           children: [
             Sign2DigitalAiVoiceButton(onPressed: _voice),
-            const SizedBox(height: 6),
-            const SupportAiPromptHint(module: 'invoices'),
-            const SizedBox(height: 15),
+            const SizedBox(height: 20),
             Sign2DigitalSelectionField(
               key: const Key('invoice-create-job'),
               label: 'Job / Project',

@@ -578,6 +578,8 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
             Sign2DigitalHeader(
               title: widget.initialJob == null ? 'Create Job' : 'Edit Job',
               onBack: () => Navigator.of(context).maybePop(),
+              trailing: widget.initialJob == null ?
+                  const SupportAiPromptHint(module: 'jobs') : null,
             ),
             Expanded(
               child: Center(
@@ -596,9 +598,7 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           _aiVoiceButton(),
-                          const SizedBox(height: 6),
-                          const SupportAiPromptHint(module: 'jobs'),
-                          const SizedBox(height: 15),
+                          const SizedBox(height: 20),
                           Sign2DigitalInputField(
                             key: const Key('job-title-input'),
                             label: 'Job Title',
