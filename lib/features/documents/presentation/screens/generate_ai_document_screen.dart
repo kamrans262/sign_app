@@ -1,3 +1,4 @@
+import '../../../support/presentation/widgets/support_ai_prompt_hint.dart';
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'dart:io';
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
@@ -481,7 +482,9 @@ class _GenerateAiDocumentScreenState extends State<GenerateAiDocumentScreen> {
               key: const Key('generate-ai-voice'),
               onPressed: _voice,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 6),
+            const SupportAiPromptHint(module: 'ai_documents'),
+            const SizedBox(height: 15),
             Sign2DigitalSelectionField(
               key: const Key('generate-ai-date'),
               label: 'Document Date',
