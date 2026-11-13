@@ -1,3 +1,4 @@
+import '../../support/data/support_chat_session.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../../core/services/sign_api_client.dart';
@@ -94,6 +95,7 @@ class MobileAuthRepository {
       _sessionToken = null;
       ProfilePhotoSession.setPhoto(null);
       ActiveCompanySession.clear();
+      SupportChatSession.clear();
       // Only permanently discard a token if the backend explicitly rejects it.
       // A network outage must not delete a still-valid remembered session.
       if (error is SignApiException &&
@@ -115,6 +117,7 @@ class MobileAuthRepository {
     await _tokenStorage.delete();
     _sessionToken = null;
     ActiveCompanySession.clear();
+      SupportChatSession.clear();
 
     final response = await _api.post('/api/v1/auth/google',
       authenticated: false, data: {
@@ -210,6 +213,7 @@ class MobileAuthRepository {
     // bearer or company context, even when OTP verification later fails.
     _sessionToken = null;
     ActiveCompanySession.clear();
+      SupportChatSession.clear();
     final response = await _api.post(
       '/api/v1/auth/otp/verify',
       authenticated: false,
@@ -314,6 +318,7 @@ class MobileAuthRepository {
     } finally {
       _sessionToken = null;
       ActiveCompanySession.clear();
+      SupportChatSession.clear();
       ProfilePhotoSession.setPhoto(null);
       await _tokenStorage.delete();
     }
