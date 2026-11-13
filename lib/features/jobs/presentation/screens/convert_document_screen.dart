@@ -1,3 +1,4 @@
+import '../../../../core/widgets/sign2digital_form_dialog.dart';
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import '../../../../core/widgets/sign2digital_subscription_gate.dart';
 import '../../../auth/data/mobile_auth_repository.dart';
@@ -103,7 +104,7 @@ class _ConvertDocumentScreenState extends State<ConvertDocumentScreen> {
     setState(() => _reviewOpened = true);
     await showDialog<void>(
         context: context,
-        builder: (dialog) => AlertDialog(
+        builder: (dialog) => Sign2DigitalFormDialog(
           title: const Text('Review document draft'),
           content: SizedBox(
             width: 620,
