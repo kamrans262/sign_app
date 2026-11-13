@@ -1,0 +1,31 @@
+name: Quote AI Short Prompt Flutter QA
+on:
+  push:
+    branches:
+      - fix/m20-android-live-reminder-integration-2026-11-06
+    paths:
+      - '.github/workflows/qa-quote-short-prompts.yml'
+      - 'lib/features/quotes/domain/**'
+      - 'lib/features/quotes/services/**'
+      - 'lib/features/quotes/presentation/screens/quote_ai_processing_screen.dart'
+      - 'test/features/quotes/quote_ai_processing_screen_test.dart'
+      - 'test/features/quotes/quote_short_prompt_test.dart'
+      - 'test/features/quotes/openai_quote_preparation_service_test.dart'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quote-short-prompts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Focused quote AI tests only
+        run: flutter test --no-pub --reporter=expanded test/features/quotes/quote_short_prompt_test.dart test/features/quotes/openai_quote_preparation_service_test.dart test/features/quotes/quote_ai_processing_screen_test.dart
