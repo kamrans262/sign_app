@@ -86,7 +86,7 @@ void main() {
     expect(const AppSettings(theme: 'Dark').themeMode, ThemeMode.dark);
   });
 
-  testWidgets('Matches shared header, five dropdown fields and More tab',
+  testWidgets('Matches shared header, settings dropdowns and More tab',
       (tester) async {
     await tester.pumpWidget(MaterialApp(home: AppSettingsScreen(
       repository: _Store(), cache: _Cache(),
@@ -95,20 +95,13 @@ void main() {
 
     expect(find.byType(Sign2DigitalHeader), findsOneWidget);
     expect(find.text('Settings'), findsOneWidget);
-    await tester.tap(find.byKey(const Key('app-settings-theme')));
-    await tester.pumpAndSettle();
-    expect(find.byIcon(Icons.light_mode_outlined), findsOneWidget);
-    expect(find.byIcon(Icons.dark_mode_outlined), findsOneWidget);
-    expect(find.byIcon(Icons.brightness_auto_outlined), findsOneWidget);
-    await tester.tap(find.byKey(const Key('selection-sheet-close')));
-    await tester.pumpAndSettle();
-    expect(find.text('Theme'), findsOneWidget);
-    expect(find.text('Light'), findsOneWidget);
+    expect(find.byKey(const Key('app-settings-theme')), findsNothing);
+    expect(find.byKey(const Key('app-settings-job-view')), findsNothing);
     expect(find.text('Default Settings'), findsOneWidget);
     await _findCard(tester, 'document-type');
     expect(find.text('Default Document Type'), findsOneWidget);
     await _findCard(tester, 'currency');
-    expect(find.text('CHF (swiss franc)'), findsOneWidget);
+    expect(find.text('CHF (Swiss franc)'), findsOneWidget);
     await _findCard(tester, 'units');
     expect(find.text('Metric (m, kg)'), findsOneWidget);
     await _findCard(tester, 'clear-cache');
@@ -118,34 +111,19 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Theme changes immediately and survives reopening',
+  testWidgets('Currency defaults are selectable and saved',
       (tester) async {
     final store = _Store();
     await tester.pumpWidget(MaterialApp(
-      home: Scaffold(body: Builder(builder: (context) =>
-        ElevatedButton(
-          onPressed: () => Navigator.of(context).push<void>(
-            MaterialPageRoute<void>(builder: (_) => AppSettingsScreen(
-              repository: store, cache: _Cache(),
-            ))),
-          child: const Text('Open Settings'),
-        ),
-      )),
+      home: AppSettingsScreen(repository: store, cache: _Cache()),
     ));
-    await tester.tap(find.text('Open Settings'));
     await tester.pumpAndSettle();
-    await _option(tester, 'theme', 'Dark');
-    expect(store.saved.theme, 'Dark');
-    expect(AppSettingsSession.current.value.themeMode, ThemeMode.dark);
+    await _option(tester, 'currency', 'EUR (Euro)');
+    expect(store.saved.currencyCode, 'EUR');
+    expect(AppSettingsSession.current.value.currencyCode, 'EUR');
     expect(store.writes, 1);
-    await tester.tap(find.byIcon(Icons.arrow_back_ios_new_rounded));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Open Settings'));
-    await tester.pumpAndSettle();
-    expect(find.text('Dark'), findsOneWidget);
-    await _option(tester, 'theme', 'System Default');
-    expect(store.saved.themeMode, ThemeMode.system);
-    expect(store.writes, 2);
+    expect(find.byKey(const Key('app-settings-theme')), findsNothing);
+    expect(find.byKey(const Key('app-settings-job-view')), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -160,12 +138,8 @@ void main() {
     await _option(tester, 'units', 'Imperial (ft, lb)');
     expect(store.saved.documentType, 'Invoice');
     expect(store.saved.units, 'Imperial (ft, lb)');
-    expect(store.saved.currency, 'CHF (swiss franc)');
-    await _findCard(tester, 'job-view');
-    await tester.tap(find.byKey(const Key('app-settings-job-view')));
-    await tester.pumpAndSettle();
-    expect(find.text('List'), findsWidgets);
-    expect(find.text('Grid'), findsNothing);
+    expect(store.saved.currencyCode, 'CHF');
+    expect(find.byKey(const Key('app-settings-job-view')), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -221,9 +195,9 @@ void main() {
       home: AppSettingsScreen(repository: store, cache: _Cache()),
     ));
     await tester.pumpAndSettle();
-    await _option(tester, 'theme', 'Dark');
-    expect(store.saved.theme, 'Light');
-    expect(find.text('Light'), findsOneWidget);
+    await _option(tester, 'currency', 'GBP (British pound)');
+    expect(store.saved.currencyCode, 'CHF');
+    expect(find.text('CHF (Swiss franc)'), findsOneWidget);
     expect(store.writes, 0);
     expect(tester.takeException(), isNull);
   });
@@ -239,7 +213,7 @@ void main() {
     store.failLoad = false;
     await tester.tap(find.byKey(const Key('app-settings-retry')));
     await tester.pumpAndSettle();
-    expect(find.text('Light'), findsOneWidget);
+    expect(find.text('Default Settings'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

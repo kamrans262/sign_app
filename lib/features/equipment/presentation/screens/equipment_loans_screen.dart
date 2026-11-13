@@ -167,15 +167,9 @@ class _EquipmentLoansScreenState extends State<EquipmentLoansScreen> {
                   padding:const EdgeInsets.fromLTRB(20,0,20,12),
                   sliver:SliverToBoxAdapter(child:Column(
                     crossAxisAlignment:CrossAxisAlignment.stretch,children:[
-                      Row(children:[
-                        const Expanded(child:Text('Equipment Loans',
-                          style:TextStyle(fontFamily:'Inter',fontSize:22,
-                            fontWeight:FontWeight.w600,color:AppColors.dark))),
-                        TextButton(
-                          key:const Key('equipment-loans-back-to-assets'),
-                          onPressed:()=>Navigator.of(context).maybePop(),
-                          child:const Text('Equipment')),
-                      ]),
+                      const Text('Equipment Loans',
+                        style: TextStyle(fontFamily:'Inter',fontSize:22,
+                          fontWeight:FontWeight.w600,color:AppColors.dark)),
                       const SizedBox(height:18),
                       Sign2DigitalSearchField(
                         controller:_search,hintText:'Search Equipment Loans',

@@ -33,12 +33,14 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
     fontFamily: 'Inter', fontSize: 18, fontWeight: FontWeight.w600,
     height: 1, letterSpacing: -0.3, color: AppColors.dark,
   );
-  static const _themes = ['Light', 'Dark', 'System Default'];
-  // Jobs currently supplies List only; unsupported Grid is not advertised.
-  static const _jobViews = ['List'];
   static const _documentTypes = ['Quote', 'Invoice', 'Report', 'Addendum'];
-  // Financial records currently use CHF. Do not suggest currency conversion.
-  static const _currencies = ['CHF (swiss franc)'];
+  // These four codes are supported by the quote-saving API.
+  static const _currencies = [
+    'CHF (Swiss franc)',
+    'EUR (Euro)',
+    'GBP (British pound)',
+    'USD (US dollar)',
+  ];
   static const _units = ['Metric (m, kg)', 'Imperial (ft, lb)'];
 
   AppSettings _settings = const AppSettings();
@@ -126,12 +128,6 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
       selected: current,
       icon: icon,
       iconForOption: (value) => switch (label) {
-        'Theme' => switch (value) {
-          'Light' => Icons.light_mode_outlined,
-          'Dark' => Icons.dark_mode_outlined,
-          _ => Icons.brightness_auto_outlined,
-        },
-        'Default Job View' => Icons.view_list_rounded,
         'Default Document Type' => switch (value) {
           'Quote' => Icons.request_quote_outlined,
           'Invoice' => Icons.receipt_long_outlined,
@@ -260,21 +256,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                 onPressed: _load,
                 child: Text('$_error Tap to retry.'))
             else ...[
-              _field(
-                key: const Key('app-settings-theme'),
-                title: 'Theme', value: _settings.theme,
-                icon: Icons.contrast_rounded, options: _themes,
-                update: (v) => _settings.copyWith(theme: v),
-              ),
-              const SizedBox(height: 20),
               const Text('Default Settings', style: _heading),
-              const SizedBox(height: 20),
-              _field(
-                key: const Key('app-settings-job-view'),
-                title: 'Default Job View', value: _settings.jobView,
-                icon: Icons.view_list_rounded, options: _jobViews,
-                update: (v) => _settings.copyWith(jobView: v),
-              ),
               const SizedBox(height: 20),
               _field(
                 key: const Key('app-settings-document-type'),
@@ -291,6 +273,15 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                 icon: Icons.currency_exchange_rounded,
                 options: _currencies,
                 update: (v) => _settings.copyWith(currency: v),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Your choice is saved as the default for new quotations. '
+                'Existing prices are never converted. Invoices, deposits '
+                'and expenses remain CHF until multi-currency accounting '
+                'is enabled on the server.',
+                style: TextStyle(fontFamily: 'Inter', fontSize: 12,
+                  color: AppColors.secondaryText),
               ),
               const SizedBox(height: 20),
               _field(

@@ -2,6 +2,7 @@ import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../../../profile/data/app_settings_repository.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -178,6 +179,11 @@ class _QuoteAiProcessingScreenState extends State<QuoteAiProcessingScreen> {
     _reviewDraft ??= _showingDemo
         ? (widget.demoReviewDraft?.copy() ?? QuoteReviewDraft.figmaDemo())
         : QuoteReviewDraft.fromExtraction(_snapshot, widget.input);
+    // A selected default applies only to new quotes, unless the source
+    // explicitly specified its currency. Do not convert existing amounts.
+    if (!_showingDemo && _snapshot.currency == null) {
+      _reviewDraft!.currency = AppSettingsSession.current.value.currencyCode;
+    }
     if (!mounted) {
       return;
     }

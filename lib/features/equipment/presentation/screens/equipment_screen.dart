@@ -8,6 +8,7 @@ import '../../../auth/data/mobile_auth_repository.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
 import '../../../../core/widgets/sign2digital_dashboard_header.dart';
+import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../../../core/widgets/sign2digital_list_sort_control.dart';
 import '../../../../core/widgets/sign2digital_entry_list_card.dart';
 import '../../../../core/widgets/sign2digital_search_field.dart';
@@ -242,16 +243,15 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
                         onTrailingTap: () =>
                           FocusManager.instance.primaryFocus?.unfocus()),
                       const SizedBox(height: 12),
-                      Align(alignment:Alignment.centerRight,
-                        child:TextButton.icon(
-                          key:const Key('equipment-open-loans'),
-                          onPressed:()=>Sign2DigitalNavigation.push(context,
-                            MaterialPageRoute<void>(
-                              builder:(_)=>const EquipmentLoansScreen())),
-                          icon:const Icon(Icons.swap_horiz,
-                            color:AppColors.primary),
-                          label:const Text('Equipment Loans'))),
-                      const SizedBox(height: 8),
+                      Sign2DigitalPrimaryButton(
+                        key: const Key('equipment-open-loans'),
+                        label: 'Equipment Loans',
+                        height: 48,
+                        onPressed: () => Sign2DigitalNavigation.push(context,
+                          MaterialPageRoute<void>(
+                            builder: (_) => const EquipmentLoansScreen())),
+                      ),
+                      const SizedBox(height: 20),
                       Stack(children: [
                         const Positioned(left: 0, right: 0, bottom: 0,
                           child: Divider(height: 1, thickness: 1,

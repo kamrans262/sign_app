@@ -11,7 +11,7 @@ class AppSettings {
     this.theme = 'Light',
     this.jobView = 'List',
     this.documentType = 'Quote',
-    this.currency = 'CHF (swiss franc)',
+    this.currency = 'CHF (Swiss franc)',
     this.units = 'Metric (m, kg)',
     this.offlineMode = false,
   });
@@ -20,6 +20,10 @@ class AppSettings {
   final String jobView;
   final String documentType;
   final String currency;
+  /// ISO code for new quotations; never use this to relabel saved CHF records.
+  String get currencyCode => switch (currency.toUpperCase().split(' ').first) {
+    'EUR' => 'EUR', 'GBP' => 'GBP', 'USD' => 'USD', _ => 'CHF',
+  };
   final String units;
   /// Preference only: offline access requires a separate cache/sync service.
   final bool offlineMode;
@@ -63,7 +67,8 @@ class AppSettings {
       theme: read('theme', defaults.theme),
       jobView: read('jobView', defaults.jobView),
       documentType: read('documentType', defaults.documentType),
-      currency: read('currency', defaults.currency),
+      currency: read('currency', defaults.currency)
+          .replaceFirst('CHF (swiss franc)', 'CHF (Swiss franc)'),
       units: read('units', defaults.units),
       offlineMode: json['offlineMode'] is bool
           ? json['offlineMode'] as bool : defaults.offlineMode,

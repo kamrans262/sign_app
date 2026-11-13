@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/sign2digital_input_field.dart';
+import '../../../../core/widgets/sign2digital_selection_field.dart';
 import '../../../../core/widgets/sign2digital_ai_voice_button.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
@@ -308,74 +311,112 @@ class _CreateEquipmentLoanScreenState extends State<CreateEquipmentLoanScreen> {
   }
 
   @override
-  Widget build(BuildContext context)=>Scaffold(
-    backgroundColor:AppColors.white,
-    body:SafeArea(child:Column(children:[
-      Sign2DigitalHeader(title:'Equipment Loan',
-        onBack:()=>Navigator.of(context).maybePop()),
-      Expanded(child:Center(child:ConstrainedBox(
-        constraints:const BoxConstraints(maxWidth:720),
-        child:ListView(key:const Key('equipment-loan-form-scroll'),
-          padding:const EdgeInsets.fromLTRB(20,12,20,32),children:[
-          Sign2DigitalAiVoiceButton(
-            key:const Key('equipment-loan-ai-voice'),onPressed:_voice),
-          const SizedBox(height:20),
-          if(_loading)const LinearProgressIndicator(),
-          if(_error!=null)Padding(
-            padding:const EdgeInsets.symmetric(vertical:8),
-            child:Text(_error!,key:const Key('equipment-loan-form-error'),
-              style:const TextStyle(color:Color(0xFFB42318),fontSize:13))),
-          const Text('Equipment',style:TextStyle(
-            fontFamily:'Inter',fontWeight:FontWeight.w600,
-            fontSize:14,color:AppColors.dark)),
-          const SizedBox(height:8),
-          OutlinedButton(
-            key:const Key('equipment-loan-pick-asset'),
-            onPressed:_loading?null:_assetPicker,
-            child:Text(_selectedAsset==null?'Select Equipment':
-              _selectedAsset!.name+' · '+_selectedAsset!.id)),
-          const SizedBox(height:16),
-          const Text('Borrower',style:TextStyle(
-            fontFamily:'Inter',fontWeight:FontWeight.w600,
-            fontSize:14,color:AppColors.dark)),
-          const SizedBox(height:8),
-          OutlinedButton(
-            key:const Key('equipment-loan-pick-borrower-type'),
-            onPressed:_borrowerPicker,
-            child:Text(_borrowerType=='client'?'Existing Client':'Other Person')),
-          const SizedBox(height:14),
-          TextField(
-            key:const Key('equipment-loan-borrower-name'),
-            controller:_borrower,
-            decoration:const InputDecoration(labelText:'Borrower Full Name')),
-          const SizedBox(height:12),
-          TextField(
-            key:const Key('equipment-loan-borrower-email'),
-            controller:_email,keyboardType:TextInputType.emailAddress,
-            decoration:const InputDecoration(labelText:'Borrower Email (optional)')),
-          const SizedBox(height:18),
-          TextButton.icon(
-            key:const Key('equipment-loan-date'),
-            onPressed:()=>_pickDate(false),
-            icon:const Icon(Icons.calendar_today_outlined),
-            label:Text('Loan Date: '+_displayDate(_loanDate))),
-          TextButton.icon(
-            key:const Key('equipment-loan-return-date'),
-            onPressed:()=>_pickDate(true),
-            icon:const Icon(Icons.calendar_today_outlined),
-            label:Text('Expected Return: '+_displayDate(_returnDate))),
-          const SizedBox(height:12),
-          TextField(
-            key:const Key('equipment-loan-notes'),
-            controller:_notes,maxLines:4,
-            decoration:const InputDecoration(labelText:'Notes (optional)')),
-          const SizedBox(height:24),
-          Sign2DigitalPrimaryButton(
-            key:const Key('equipment-loan-save'),
-            label:'Create Equipment Loan',loading:_saving,
-            enabled:!_saving&&!_loading,onPressed:_save),
-        ])),
-      )),
-    ])),
+  Widget build(BuildContext context) => Theme(
+    data: AppTheme.light,
+    child: Scaffold(
+      backgroundColor: AppColors.white,
+      resizeToAvoidBottomInset: true,
+      body: SafeArea(child: Column(children: [
+        Sign2DigitalHeader(
+          title: 'Equipment Loan',
+          onBack: () => Navigator.of(context).maybePop()),
+        Expanded(child: Center(child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 720),
+          child: ListView(
+            key: const Key('equipment-loan-form-scroll'),
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+            children: [
+              Sign2DigitalAiVoiceButton(
+                key: const Key('equipment-loan-ai-voice'), onPressed: _voice),
+              const SizedBox(height: 20),
+              if (_loading) const LinearProgressIndicator(
+                color: AppColors.primary),
+              if (_error != null) ...[
+                Text(_error!, key: const Key('equipment-loan-form-error'),
+                  style: const TextStyle(
+                    fontFamily: 'Inter', color: Color(0xFFB42318),
+                    fontSize: 13)),
+                const SizedBox(height: 15),
+              ],
+              Sign2DigitalSelectionField(
+                key: const Key('equipment-loan-pick-asset'),
+                label: 'Equipment',
+                iconAsset: 'assets/icons/description.svg',
+                leadingIcon: Icons.handyman_outlined,
+                hintText: 'Select Equipment',
+                value: _selectedAsset == null ? null :
+                  '${_selectedAsset!.name} · ${_selectedAsset!.id}',
+                trailing: const Icon(Icons.keyboard_arrow_down_rounded,
+                  color: AppColors.secondaryText),
+                onTap: _assetPicker),
+              const SizedBox(height: 20),
+              Sign2DigitalSelectionField(
+                key: const Key('equipment-loan-pick-borrower-type'),
+                label: 'Borrower',
+                iconAsset: 'assets/icons/description.svg',
+                leadingIcon: Icons.person_outline_rounded,
+                hintText: 'Select Borrower Type',
+                value: _borrowerType == 'client'
+                  ? 'Existing Client' : 'Other Person',
+                trailing: const Icon(Icons.keyboard_arrow_down_rounded,
+                  color: AppColors.secondaryText),
+                onTap: _borrowerPicker),
+              const SizedBox(height: 20),
+              Sign2DigitalInputField(
+                inputKey: const Key('equipment-loan-borrower-name'),
+                label: 'Borrower Full Name',
+                hintText: 'Enter borrower full name',
+                iconAsset: 'assets/icons/description.svg',
+                leadingIcon: Icons.person_outline_rounded,
+                textCapitalization: TextCapitalization.words,
+                controller: _borrower),
+              const SizedBox(height: 20),
+              Sign2DigitalInputField(
+                inputKey: const Key('equipment-loan-borrower-email'),
+                label: 'Borrower Email (optional)',
+                hintText: 'Enter borrower email',
+                iconAsset: 'assets/icons/description.svg',
+                leadingIcon: Icons.email_outlined,
+                keyboardType: TextInputType.emailAddress,
+                controller: _email),
+              const SizedBox(height: 20),
+              Sign2DigitalSelectionField(
+                key: const Key('equipment-loan-date'),
+                label: 'Loan Date',
+                iconAsset: 'assets/icons/calendar-outlined.svg',
+                hintText: _displayDate(_loanDate),
+                value: _displayDate(_loanDate),
+                onTap: () => _pickDate(false)),
+              const SizedBox(height: 20),
+              Sign2DigitalSelectionField(
+                key: const Key('equipment-loan-return-date'),
+                label: 'Expected Return Date',
+                iconAsset: 'assets/icons/calendar-outlined.svg',
+                hintText: _displayDate(_returnDate),
+                value: _displayDate(_returnDate),
+                onTap: () => _pickDate(true)),
+              const SizedBox(height: 20),
+              Sign2DigitalInputField(
+                inputKey: const Key('equipment-loan-notes'),
+                label: 'Notes (optional)',
+                hintText: 'Enter loan notes',
+                iconAsset: 'assets/icons/description.svg',
+                leadingIcon: Icons.subject_rounded,
+                controller: _notes,
+                minLines: 3, maxLines: 5),
+              const SizedBox(height: 25),
+              Sign2DigitalPrimaryButton(
+                key: const Key('equipment-loan-save'),
+                label: 'Create Equipment Loan',
+                loading: _saving,
+                enabled: !_saving && !_loading,
+                onPressed: _save),
+            ],
+          ),
+        ))),
+      ])),
+    ),
   );
+
 }

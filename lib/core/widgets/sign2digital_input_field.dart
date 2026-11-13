@@ -33,6 +33,7 @@ class Sign2DigitalInputField extends StatelessWidget {
     this.maxLength,
     this.leadingIcon,
     this.leadingIconSize = 20,
+    this.inputKey,
     super.key,
   });
 
@@ -59,6 +60,8 @@ class Sign2DigitalInputField extends StatelessWidget {
   final int? maxLength;
   final IconData? leadingIcon;
   final double leadingIconSize;
+  /// Optional key on the editable TextFormField (distinct from this surface).
+  final Key? inputKey;
 
   @override
   Widget build(BuildContext context) {
@@ -97,6 +100,7 @@ class Sign2DigitalInputField extends StatelessWidget {
                     ],
                     Expanded(
                       child: TextFormField(
+                        key: inputKey,
                         controller: controller,
                         initialValue: initialValue,
                         autofocus: autofocus,
