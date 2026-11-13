@@ -130,6 +130,22 @@ void main() {
     client.close();
   });
 
+  test('vague short prompt returns a clarification instead of an extraction error', () async {
+    final client = MockClient((_) async => aiResponse({
+      'items': [],
+      'clarification_question': 'Which bathroom repairs do you need?',
+      'location': null, 'notes': null, 'currency': null,
+    }));
+    final snapshots = await OpenAiQuotePreparationService(
+      temporaryApiKey: 'development-test-key', client: client)
+        .prepare(source(QuoteInputMethod.text, text: 'Bathroom quote')).toList();
+    expect(snapshots.last.stage, QuotePreparationStage.needsClarification);
+    expect(snapshots.last.items, isEmpty);
+    expect(snapshots.last.clarificationQuestion,
+      'Which bathroom repairs do you need?');
+    client.close();
+  });
+
   test('rejects absent text rather than manufacturing a quote', () async {
     final client = MockClient((_) async => throw StateError('Should not call API'));
     final service = OpenAiQuotePreparationService(

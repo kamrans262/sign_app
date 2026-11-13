@@ -13,8 +13,12 @@ import 'package:sign2digital/features/quotes/presentation/widgets/sign2digital_q
 
 class _FakeService implements QuotePreparationService {
   final controller = StreamController<QuotePreparationSnapshot>.broadcast();
+  final inputs = <QuoteDraftInput>[];
   @override
-  Stream<QuotePreparationSnapshot> prepare(QuoteDraftInput input) => controller.stream;
+  Stream<QuotePreparationSnapshot> prepare(QuoteDraftInput input) {
+    inputs.add(input);
+    return controller.stream;
+  }
   Future<void> dispose() => controller.close();
 }
 
@@ -101,6 +105,46 @@ void main() {
     await tester.pump();
     expect(find.text('7'), findsOneWidget);
     expect(find.textContaining('Quote extraction failed'), findsOneWidget);
+  });
+
+  testWidgets('short vague prompt asks clarification and preserves original source',
+      (tester) async {
+    final service = _FakeService();
+    addTearDown(service.dispose);
+    await tester.pumpWidget(MaterialApp(home: QuoteAiProcessingScreen(
+      input: QuoteDraftInput(
+        method: QuoteInputMethod.text,
+        description: 'Bathroom quote',
+        clientId: 'client-7',
+        jobId: 'job-4',
+        createdAt: DateTime(2026, 11, 14),
+      ),
+      service: service,
+    )));
+    expect(service.inputs.length, 1);
+    service.controller.add(const QuotePreparationSnapshot(
+      stage: QuotePreparationStage.needsClarification,
+      clarificationQuestion: 'What work is needed in the bathroom?',
+    ));
+    await tester.pump();
+    expect(find.text('More Details Needed'), findsOneWidget);
+    expect(find.text('What work is needed in the bathroom?'), findsOneWidget);
+    expect(find.byKey(const Key('quote-processing-review')), findsNothing);
+    await tester.enterText(find.byKey(const Key('quote-clarification-input')),
+        'Replace the sink and tiles.');
+    await tester.tap(find.byKey(const Key('quote-clarification-submit')));
+    await tester.pump();
+    expect(service.inputs.length, 2);
+    expect(service.inputs.last.description, 'Bathroom quote');
+    expect(service.inputs.last.clarification, 'Replace the sink and tiles.');
+    expect(service.inputs.last.clientId, 'client-7');
+    expect(service.inputs.last.jobId, 'job-4');
+    service.controller.add(const QuotePreparationSnapshot(
+      stage: QuotePreparationStage.completed,
+      items: [QuotePreparedWorkItem(title:'Replace the sink')],
+    ));
+    await tester.pump();
+    expect(find.byKey(const Key('quote-processing-review')), findsOneWidget);
   });
 
   testWidgets('long text wraps in phone portrait, landscape and tablet', (tester) async {

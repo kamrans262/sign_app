@@ -30,7 +30,11 @@ class RemoteQuotePreparationService implements QuotePreparationService {
         throw const SignApiException('Enter your quote instructions.');
       }
       response=await _api.post('/api/v1/quotes/prepare/text',
-          companyScoped:true,data:{'text':description});
+          companyScoped:true,data:{
+            'text':description,
+            if (input.clarification?.trim().isNotEmpty ?? false)
+              'clarification':input.clarification!.trim(),
+          });
     } else {
       final path=input.method == QuoteInputMethod.voice
           ? input.audioPath : input.photoPath;
@@ -54,6 +58,8 @@ class RemoteQuotePreparationService implements QuotePreparationService {
         filename:selected.path.split(Platform.pathSeparator).last,
         bytes:await selected.readAsBytes(),
         companyScoped:true,maxBytes:max,
+        fields: input.clarification?.trim().isNotEmpty ?? false
+            ? {'clarification':input.clarification!.trim()} : null,
       );
     }
     if (ActiveCompanySession.companyId != company) {
@@ -65,6 +71,18 @@ class RemoteQuotePreparationService implements QuotePreparationService {
       throw const SignApiException('Invalid AI extraction response.');
     }
     final snapshot=data['snapshot'] as Map<String,dynamic>;
+    if (snapshot['stage'] == 'needs_clarification' &&
+        snapshot['items'] is List &&
+        (snapshot['items'] as List).isEmpty) {
+      final question=snapshot['clarification_question'];
+      yield QuotePreparationSnapshot(
+        stage: QuotePreparationStage.needsClarification,
+        clarificationQuestion: question is String && question.trim().isNotEmpty
+            ? question.trim() : 'What work should be included in the quotation?',
+        message: 'Please add the work details to continue.',
+      );
+      return;
+    }
     if (snapshot['stage'] != 'completed' || snapshot['items'] is! List) {
       throw const SignApiException('AI extraction was not completed.');
     }

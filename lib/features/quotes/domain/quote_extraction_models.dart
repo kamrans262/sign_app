@@ -7,6 +7,7 @@ enum QuotePreparationStage {
   preparing,
   extracting,
   partial,
+  needsClarification,
   completed,
   failed,
   unavailable,
@@ -54,6 +55,7 @@ class QuotePreparationSnapshot {
     this.fields = const [],
     this.items = const [],
     this.currency,
+    this.clarificationQuestion,
     this.message,
     this.isDemo = false,
   });
@@ -63,6 +65,7 @@ class QuotePreparationSnapshot {
   final List<QuoteExtractedField> fields;
   final List<QuotePreparedWorkItem> items;
   final String? currency;
+  final String? clarificationQuestion;
   final String? message;
   final bool isDemo;
 

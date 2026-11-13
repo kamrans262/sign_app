@@ -94,7 +94,7 @@ class OpenAiQuotePreparationService implements QuotePreparationService {
             throw StateError('Photo must be between 1 byte and 15 MB.');
           }
           imageContent = [
-            {'type': 'text', 'text': 'Extract quote work items from these handwritten notes or measurements. Unreadable details must be null.'},
+            {'type': 'text', 'text': 'Extract quote work items from these handwritten notes or measurements. Unreadable details must be null.${input.clarification?.trim().isNotEmpty ?? false ? ' Additional user work details: ${input.clarification!.trim()}' : ''}'},
             {'type': 'image_url', 'image_url': {'url': 'data:$mime;base64,${base64Encode(photoBytes)}', 'detail': 'high'}},
           ];
           break;
@@ -107,6 +107,8 @@ class OpenAiQuotePreparationService implements QuotePreparationService {
           'text': jsonEncode({
             'source': input.method == QuoteInputMethod.text ? 'typed description' : 'voice transcript',
             'text': input.method == QuoteInputMethod.text ? input.description!.trim() : transcription,
+            if (input.clarification?.trim().isNotEmpty ?? false)
+              'clarification': input.clarification!.trim(),
           }),
         },
       ];
@@ -125,7 +127,9 @@ class OpenAiQuotePreparationService implements QuotePreparationService {
               'role': 'system',
               'content': '''You are extracting a draft construction/service quotation from user-supplied source material, not estimating costs.
 Return ONLY one JSON object with these keys:
-items: array of objects {title, description, quantity, dimensions}; location: string|null; notes: string|null; currency: string|null.
+items: array of objects {title, description, quantity, dimensions}; location: string|null; notes: string|null; currency: string|null; clarification_question: string|null.
+Short but clear work tasks are valid even without quantities, dimensions, or materials; use null for missing fields.
+If the input only describes a topic (like "Bathroom quotation") and contains no clear work task, return items: [] and ask one specific follow-up question in clarification_question. Otherwise return clarification_question: null.
 Use a separate item for each distinct described task. A task title must describe work actually present in the input.
 The description and dimensions must be supported by the input; use null if absent or unclear.
 Quantity must be a positive integer explicitly supported by the input; otherwise null.
@@ -185,7 +189,13 @@ Maximum 25 distinct items. Return an empty items array when no genuine task can 
         ));
       }
       if (items.isEmpty) {
-        throw StateError('No clear work items were found. Add more details and retry.');
+        final question = _stringOrNull(extracted['clarification_question']);
+        yield QuotePreparationSnapshot(
+          stage: QuotePreparationStage.needsClarification,
+          clarificationQuestion: question ?? 'What work should be included in the quotation?',
+          message: 'Please add the work details to continue.',
+        );
+        return;
       }
       final location = _stringOrNull(extracted['location']);
       final notes = _stringOrNull(extracted['notes']);

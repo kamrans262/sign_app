@@ -54,6 +54,8 @@ class _QuoteAiProcessingScreenState extends State<QuoteAiProcessingScreen> {
   bool _showingDemo = false;
   int _generation = 0;
   QuoteReviewDraft? _reviewDraft;
+  QuoteDraftInput? _currentInput;
+  final TextEditingController _clarification = TextEditingController();
 
   @override
   void initState() {
@@ -63,6 +65,7 @@ class _QuoteAiProcessingScreenState extends State<QuoteAiProcessingScreen> {
             ? const QuotePreparationSnapshot(stage: QuotePreparationStage.preparing)
             : QuotePreparationSnapshot.unavailable);
     _showingDemo = _snapshot.isDemo;
+    _currentInput = widget.input;
     if (widget.service != null && widget.input != null) {
       _runService();
     }
@@ -70,7 +73,7 @@ class _QuoteAiProcessingScreenState extends State<QuoteAiProcessingScreen> {
 
   void _runService() {
     final service = widget.service;
-    final input = widget.input;
+    final input = _currentInput;
     if (service == null || input == null) {
       return;
     }
@@ -146,6 +149,37 @@ class _QuoteAiProcessingScreenState extends State<QuoteAiProcessingScreen> {
     }
   }
 
+  void _submitClarification() {
+    final input = _currentInput;
+    final work = _clarification.text.trim();
+    if (input == null || widget.service == null || work.isEmpty) return;
+    final previous = input.clarification?.trim() ?? '';
+    final appended = previous.isEmpty ? work : '$previous\n$work';
+    if (appended.length > 4000) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Please shorten the additional details to 4,000 characters.')));
+      return;
+    }
+    _currentInput = QuoteDraftInput(
+      method: input.method,
+      createdAt: input.createdAt,
+      companyId: input.companyId,
+      clientId: input.clientId,
+      jobId: input.jobId,
+      clientName: input.clientName,
+      clientEmail: input.clientEmail,
+      clientPhone: input.clientPhone,
+      clientAddress: input.clientAddress,
+      sourceNoteId: input.sourceNoteId,
+      description: input.description,
+      audioPath: input.audioPath,
+      photoPath: input.photoPath,
+      clarification: appended,
+    );
+    _clarification.clear();
+    _runService();
+  }
+
   void _previewExample() {
     _generation++;
     _subscription?.cancel();
@@ -178,7 +212,7 @@ class _QuoteAiProcessingScreenState extends State<QuoteAiProcessingScreen> {
     }
     _reviewDraft ??= _showingDemo
         ? (widget.demoReviewDraft?.copy() ?? QuoteReviewDraft.figmaDemo())
-        : QuoteReviewDraft.fromExtraction(_snapshot, widget.input);
+        : QuoteReviewDraft.fromExtraction(_snapshot, _currentInput);
     // A selected default applies only to new quotes, unless the source
     // explicitly specified its currency. Do not convert existing amounts.
     if (!_showingDemo && _snapshot.currency == null) {
@@ -198,6 +232,7 @@ class _QuoteAiProcessingScreenState extends State<QuoteAiProcessingScreen> {
   void dispose() {
     _generation++;
     _subscription?.cancel();
+    _clarification.dispose();
     super.dispose();
   }
 
@@ -245,6 +280,8 @@ class _QuoteAiProcessingScreenState extends State<QuoteAiProcessingScreen> {
                   const SizedBox(height: 25),
                   Text(_snapshot.stage == QuotePreparationStage.failed
                         ? 'Could Not Prepare Quote'
+                        : _snapshot.stage == QuotePreparationStage.needsClarification
+                            ? 'More Details Needed'
                         : completed
                             ? 'Quote Draft Ready'
                             : 'Preparing Your Quote...',
@@ -256,6 +293,8 @@ class _QuoteAiProcessingScreenState extends State<QuoteAiProcessingScreen> {
                         ? 'Quote extraction is not available yet. You can preview the design with clearly marked sample information.'
                         : !_showingDemo && _snapshot.stage == QuotePreparationStage.failed
                             ? 'We could not complete quote extraction. Your source input has not been turned into a quote.'
+                            : _snapshot.stage == QuotePreparationStage.needsClarification
+                                ? 'Your original instructions are saved. Add a little more detail to continue.'
                             : completed
                                 ? 'AI extracted ${_snapshot.items.length} work items. Confirm the details and enter missing prices in Review Quote.'
                                 : 'Our AI is analysing your input and extracting the key details. This only takes a few seconds',
@@ -314,6 +353,47 @@ class _QuoteAiProcessingScreenState extends State<QuoteAiProcessingScreen> {
                         child: const Text('Preview Figma example'),
                       ),
                     const SizedBox(height: 25),
+                  ],
+                  if (_snapshot.stage == QuotePreparationStage.needsClarification) ...[
+                    _StatusMessage(
+                      key: const Key('quote-clarification-question'),
+                      text: _snapshot.clarificationQuestion ??
+                          'What work should be included in the quotation?',
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      key: const Key('quote-clarification-input'),
+                      controller: _clarification,
+                      minLines: 3,
+                      maxLines: 5,
+                      maxLength: 4000,
+                      keyboardType: TextInputType.multiline,
+                      decoration: InputDecoration(
+                        labelText: 'Additional Work Details',
+                        hintText: 'e.g. Replace the bathroom sink and repair the tiles',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(color: AppColors.primary),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(color: AppColors.primary),
+                        ),
+                      ),
+                      style: const TextStyle(
+                        fontFamily: 'Inter', fontSize: 14, color: AppColors.dark,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    FilledButton(
+                      key: const Key('quote-clarification-submit'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        minimumSize: const Size.fromHeight(48),
+                      ),
+                      onPressed: _submitClarification,
+                      child: const Text('Continue Quote'),
+                    ),
                   ],
                   if (completed) ...[
                     const Padding(

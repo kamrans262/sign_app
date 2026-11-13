@@ -15,6 +15,7 @@ class QuoteDraftInput {
     this.clientAddress,
     this.sourceNoteId,
     this.description,
+    this.clarification,
     this.audioPath,
     this.photoPath,
   });
@@ -31,6 +32,8 @@ class QuoteDraftInput {
   final String? clientAddress;
   final String? sourceNoteId;
   final String? description;
+  /// Added follow-up work details; original text/audio/photo remains intact.
+  final String? clarification;
   final String? audioPath;
   final String? photoPath;
 }
