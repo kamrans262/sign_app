@@ -64,7 +64,7 @@ class _GeneralDocumentDetailsScreenState
   void initState() {
     super.initState();
     _repository = widget.repository ?? RemoteGeneralDocumentRepository.shared;
-    _tab = widget.initialTab.clamp(0, 3);
+    _tab = widget.initialTab.clamp(0, 3).toInt();
     final initial = widget.initialDocument;
     if (initial != null && initial.id == widget.documentId &&
         initial.blocks.isNotEmpty) {
