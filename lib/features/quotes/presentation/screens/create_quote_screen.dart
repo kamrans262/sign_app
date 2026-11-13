@@ -1,3 +1,4 @@
+import '../../../support/presentation/widgets/support_ai_prompt_hint.dart';
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'dart:typed_data';
 
@@ -350,7 +351,9 @@ class _CreateQuoteScreenState extends State<CreateQuoteScreen> {
                           selected: _method == QuoteInputMethod.voice,
                           onTap: () => _select(QuoteInputMethod.voice),
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 6),
+                        const SupportAiPromptHint(module: 'quotes'),
+                        const SizedBox(height: 15),
                         Sign2DigitalQuoteInputMethodCard(
                           key: const Key('quote-method-text'),
                           label: 'Text',
