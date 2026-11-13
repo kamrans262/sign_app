@@ -1,5 +1,6 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import '../../../../core/services/active_company_session.dart';
+import '../../../company/data/remote_company_repository.dart';
 import '../../../../core/widgets/sign2digital_subscription_gate.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -144,6 +145,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
   bool _loading = false;
   int _tab = 0;
   int _action = 0;
+  String _createdByCompany = '';
   Future<Uint8List?>? _pdfFuture;
   List<DocumentHistoryEvent> _extraHistory = const [];
   bool _requestingAddendum = false;
@@ -155,12 +157,27 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
     super.initState();
     _tab = widget.initialTab.clamp(0, 3).toInt();
     _record = widget.document?.id == widget.documentId ? widget.document : null;
+    _loadCompanyName();
     // Hydrate quote list snapshots for action/status correctness. Keep all
     // other document screens' existing initialization behavior unchanged.
     if (widget.loadDocument != null &&
         (_record == null ||
          (_record!.id.startsWith('quote-') && _record!.quote == null))) {
       _load();
+    }
+  }
+
+  Future<void> _loadCompanyName() async {
+    final companyId = ActiveCompanySession.companyId;
+    if (companyId == null || companyId < 1) return;
+    try {
+      final company = await RemoteCompanyRepository.shared
+          .byId(companyId.toString());
+      if (!mounted || ActiveCompanySession.companyId != companyId ||
+          company?.id != companyId.toString()) return;
+      setState(() => _createdByCompany = company!.companyName.trim());
+    } catch (_) {
+      // Preserve recorded author information if the company lookup fails.
     }
   }
 
@@ -1127,7 +1144,8 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
       }, record.number),
       ('Job', record.project),
       ('Client:', record.customer),
-      ('Created By:', record.createdBy ?? 'Not available'),
+      ('Created By:', _createdByCompany.isNotEmpty
+        ? _createdByCompany : (record.createdBy ?? 'Not available')),
       ('Created Date:', _date(record.createdAt ?? record.quote?.date)),
       ('Last Update:', _date(record.updatedAt ?? record.timestamp)),
       if (!record.demoOnly) ('Version:', 'v${record.version}'),
