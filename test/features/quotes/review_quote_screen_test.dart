@@ -84,7 +84,13 @@ void main() {
     )));
     await tester.tap(find.byKey(const Key('quote-edit-details')));
     await tester.pumpAndSettle();
-    await tester.enterText(find.byKey(const Key('quote-edit-client')), 'Anne Example');
+    await tester.enterText(
+      find.descendant(
+        of: find.byKey(const Key('quote-edit-client')),
+        matching: find.byType(TextField),
+      ),
+      'Anne Example',
+    );
     FocusManager.instance.primaryFocus?.unfocus();
     await tester.tap(find.byKey(const Key('quote-details-apply')));
     await tester.pumpAndSettle();
