@@ -34,7 +34,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          count=$(grep -RohE 'AlertDialog[[:space:]]*\(' lib/features --include='*.dart' | wc -l)
+          count=$(( $( (grep -RohE 'AlertDialog[[:space:]]*\(' lib/features --include='*.dart' || true) | wc -l) ))
           echo "Unconverted feature AlertDialog sites: $count"
           test "$count" -eq 0
       - name: Analyze approved popup style
