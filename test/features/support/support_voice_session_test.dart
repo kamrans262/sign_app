@@ -87,15 +87,33 @@ void main() {
       SupportAssistantSheet(key: const ValueKey('chat-second'),
         screen: 'jobs', repository: fake))));
     await tester.pumpAndSettle();
+    // A freshly opened ListView may not build off-screen transcript bubbles.
+    // First verify in-memory persistence, then scroll to the restored response.
+    expect(SupportChatSession.snapshot().map((turn) => turn.content),
+      contains('Open Jobs, select the job and choose Quotes.'));
+    final chatScroll = find.descendant(
+      of: find.byKey(const Key('support-chat')),
+      matching: find.byType(Scrollable)).first;
+    await tester.scrollUntilVisible(
+      find.textContaining('Open Jobs, select the job'), 120,
+      scrollable: chatScroll, maxScrolls: 15);
     expect(find.textContaining('Open Jobs, select the job'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('support-open-jobs')), 120,
+      scrollable: chatScroll, maxScrolls: 15);
     expect(find.byKey(const Key('support-open-jobs')), findsOneWidget);
     expect(fake.questions, hasLength(1));
   });
 
   testWidgets('Voice microphone transcribes and asks AI without typing',
       (tester) async {
-    final dir = await Directory.systemTemp.createTemp('s2d-support-voice');
-    addTearDown(() async => dir.delete(recursive: true));
+    // Widget tests run in FakeAsync. Real filesystem operations must run
+    // outside FakeAsync or the recording callback can stall indefinitely.
+    final dir = await tester.runAsync(
+      () => Directory.systemTemp.createTemp('s2d-support-voice'));
+    addTearDown(() async {
+      if (await dir.exists()) await dir.delete(recursive: true);
+    });
     final recorder = _FakeRecorder('${dir.path}/support.m4a');
     final transcriber = _FakeTranscriber();
     final support = _FakeSupport();
@@ -110,13 +128,20 @@ void main() {
     expect(recorder.started, isTrue);
     expect(find.textContaining('Recording...'), findsOneWidget);
 
-    await tester.tap(find.byKey(const Key('support-voice')));
+    await tester.runAsync(() async {
+      await tester.tap(find.byKey(const Key('support-voice')));
+      // Allow the fake recorder's file write, transcription and final cleanup
+      // to finish on the real event loop (no timers or native microphone).
+      for (var attempt = 0; attempt < 40 && !recorder.disposed; attempt++) {
+        await Future<void>.delayed(const Duration(milliseconds: 25));
+      }
+    });
     await tester.pumpAndSettle();
     expect(transcriber.calls, 1);
     expect(support.questions,
       ['How do I create a quote for an existing job?']);
     expect(find.textContaining('Open Jobs, select the job'), findsOneWidget);
-    expect(await File(recorder.path).exists(), isFalse);
+    expect(await tester.runAsync(() => File(recorder.path).exists()), isFalse);
     expect(recorder.disposed, isTrue);
     expect(tester.takeException(), isNull);
   });
