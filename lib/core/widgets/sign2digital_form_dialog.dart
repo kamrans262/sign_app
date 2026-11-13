@@ -67,6 +67,19 @@ class Sign2DigitalFormDialog extends StatelessWidget {
   );
 
   Widget _action(Widget widget, {required bool primary}) {
+    if (widget is FilledButton && widget.child is Text) {
+      final child = widget.child! as Text;
+      final label = child.data ?? child.textSpan?.toPlainText();
+      if (label != null) {
+        return Sign2DigitalPrimaryButton(
+          key: widget.key,
+          label: label,
+          compactLabel: true,
+          enabled: widget.onPressed != null,
+          onPressed: widget.onPressed ?? () {},
+        );
+      }
+    }
     if (widget is TextButton && widget.child is Text) {
       final child = widget.child! as Text;
       final label = child.data ?? child.textSpan?.toPlainText();
