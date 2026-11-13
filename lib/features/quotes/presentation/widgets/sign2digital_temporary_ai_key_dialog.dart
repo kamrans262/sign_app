@@ -43,7 +43,7 @@ abstract final class Sign2DigitalTemporaryAiKeyDialog {
                     onChanged: (value) => draft = value,
                     decoration: InputDecoration(
                       labelText: 'OpenAI API key',
-                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.key_outlined),
                       errorText: error,
                       suffixIcon: IconButton(
                         tooltip: visible ? 'Hide API key' : 'Show API key',
