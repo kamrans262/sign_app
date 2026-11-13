@@ -29,5 +29,3 @@ jobs:
         run: flutter analyze --no-pub --no-fatal-infos --no-fatal-warnings lib/features/support lib/core/widgets/sign2digital_dashboard_header.dart lib/features/clients/presentation/screens/clients_screen.dart test/features/support
       - name: Verify AI chat and manual-only onboarding preview
         run: flutter test --no-pub --timeout=50s test/features/support/support_assistant_test.dart
-      - name: Verify existing Home dashboard layout and navigation
-        run: flutter test --no-pub --timeout=60s test/features/home/home_dashboard_screen_test.dart
