@@ -15,11 +15,14 @@ import '../../data/remote_general_document_repository.dart';
 class GeneralDocumentIssuedActions extends StatefulWidget {
   const GeneralDocumentIssuedActions({super.key,required this.documentId,
     required this.documentNumber,required this.repository,
-    this.suggestedSignerName='',this.suggestedSignerEmail=''});
+    this.suggestedSignerName='',this.suggestedSignerEmail='',
+    this.compactDetails=false});
   final int documentId;
   final String documentNumber;
   final RemoteGeneralDocumentRepository repository;
   final String suggestedSignerName,suggestedSignerEmail;
+  /// Direct actions on Details only; omits redundant Download/Share/history.
+  final bool compactDetails;
 
   @override
   State<GeneralDocumentIssuedActions> createState()=>
@@ -305,6 +308,51 @@ class _GeneralDocumentIssuedActionsState
   @override
   Widget build(BuildContext context){
     final meta=_metadata;
+    if(widget.compactDetails){
+      final actions=<({String key,String label,VoidCallback handler,bool primary})>[
+        if(!_loading&&meta==null)(
+          key:'general-document-issue',label:'Issue Official PDF',
+          handler:_issue,primary:true),
+        if(meta!=null)...[
+          (key:'general-document-send',label:'Send Document',
+            handler:_send,primary:false),
+          (key:'general-document-sign',label:'Request Signature',
+            handler:_signature,primary:false),
+          (key:'general-document-copy-link',label:'Create Customer Link',
+            handler:_link,primary:true),
+        ],
+      ];
+      Widget action(int index){
+        final item=actions[index];
+        return item.primary
+          ? Sign2DigitalPrimaryButton(key:Key(item.key),label:item.label,
+              enabled:!_busy,onPressed:item.handler)
+          : Sign2DigitalOutlinedButton(key:Key(item.key),label:item.label,
+              enabled:!_busy,onPressed:item.handler);
+      }
+      return Column(
+        key:const Key('general-document-issuance-actions'),
+        crossAxisAlignment:CrossAxisAlignment.stretch,
+        children:[
+          if(_loading)const LinearProgressIndicator(),
+          if(_error!=null)Padding(
+            padding:const EdgeInsets.only(bottom:10),
+            child:Text(_error!,key:const Key('general-document-issue-error'),
+              style:const TextStyle(fontFamily:'Inter',fontSize:12,
+                color:Color(0xFFB42318)))),
+          for(var i=0;i<actions.length;i+=2)...[
+            if(i>0)const SizedBox(height:12),
+            if(i+1<actions.length)
+              Row(children:[
+                Expanded(child:action(i)),
+                const SizedBox(width:10),
+                Expanded(child:action(i+1)),
+              ])
+            else action(i),
+          ],
+        ],
+      );
+    }
     return Column(
       key:const Key('general-document-issuance-actions'),
       crossAxisAlignment:CrossAxisAlignment.stretch,children:[
