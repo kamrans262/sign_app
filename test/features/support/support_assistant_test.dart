@@ -38,7 +38,7 @@ void main() {
     final sendIcon = tester.widget<Icon>(
       find.descendant(of: find.byKey(const Key('support-send')),
           matching: find.byIcon(Icons.send_rounded)));
-    expect(sendIcon.color, isNull);
+    expect(sendIcon.color, AppColors.white);
     await tester.tap(find.byKey(const Key('support-question-0')));
     await tester.pumpAndSettle();
     expect(fake.questions, 1);
