@@ -29,6 +29,12 @@ import '../../../documents/presentation/screens/documents_screen.dart';
 import '../../../quotes/domain/quote_tracking_home_session.dart';
 import '../../../quotes/presentation/screens/signature_request_screen.dart';
 import '../../../profile/presentation/screens/profile_settings_screen.dart';
+import '../../../profile/presentation/screens/help_support_screen.dart';
+import '../../../company/presentation/screens/create_company_screen.dart';
+import '../../../company/presentation/screens/company_team_screen.dart';
+import '../../../deposits/presentation/screens/deposits_screen.dart';
+import '../../../labour/presentation/screens/time_labour_screen.dart';
+import '../../../support/presentation/support_assistant_launcher.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -235,6 +241,92 @@ class _ClientsScreenState extends State<ClientsScreen> with WidgetsBindingObserv
         _dashboardNavigator!, _dashboardRoute!);
     }
     super.dispose();
+  }
+
+  Future<void> _openSupportAssistant() async {
+    final screen = switch (_selectedIndex) {
+      1 => 'jobs',
+      2 => 'clients',
+      3 => 'documents',
+      4 => 'settings',
+      _ => 'home',
+    };
+    await SupportAssistantLauncher.show(context, screen: screen,
+      onNavigate: (destination) => _openSupportDestination(destination));
+  }
+
+  Future<void> _openSupportDestination(String destination) async {
+    if (!mounted) return;
+    final requiredModule = switch (destination) {
+      'clients' => 'clients',
+      'jobs' => 'jobs',
+      'quotes' => 'quotes',
+      'documents' => 'documents',
+      'invoices' => 'invoices',
+      'expenses' => 'expenses',
+      'deposits' => 'deposits',
+      'labour' => 'labour',
+      _ => null,
+    };
+    if (requiredModule != null &&
+        !ActiveCompanySession.canRead(requiredModule)) {
+      _notifyHome('Your company role does not allow access to this module.');
+      return;
+    }
+    switch (destination) {
+      case 'clients':
+        _selectDashboardTab(2);
+      case 'jobs':
+        _selectDashboardTab(1);
+      case 'quotes':
+        _onHomeAction(HomeAction.quotes);
+      case 'documents':
+        _selectDashboardTab(3);
+      case 'invoices':
+        _onHomeAction(HomeAction.invoices);
+      case 'expenses':
+        _onHomeAction(HomeAction.expenses);
+      case 'deposits':
+        await _openHomeRoute(DepositsScreen(
+          selectedNavigationIndex: _selectedIndex,
+          onNavigationSelected: _selectDashboardTab));
+      case 'labour':
+        await _openHomeRoute(TimeLabourScreen(
+          selectedNavigationIndex: _selectedIndex,
+          onNavigationSelected: _selectDashboardTab));
+      case 'settings':
+        await _openHomeRoute(ProfileSettingsScreen(
+          onNotificationTap: _openNotifications,
+          onNavigationSelected: _selectDashboardTab));
+      case 'support':
+        await _openHomeRoute(const HelpSupportScreen());
+      case 'companies':
+        if (ActiveCompanySession.companyId != null &&
+            !ActiveCompanySession.isOwner) return;
+        await _openHomeRoute(const CreateCompanyScreen());
+      case 'team':
+        final id = ActiveCompanySession.companyId;
+        if (id == null || !ActiveCompanySession.isOwner) {
+          _notifyHome('Only the company owner can manage team invitations.');
+          return;
+        }
+        try {
+          final companies = await RemoteCompanyRepository.shared.list();
+          if (!mounted || id != ActiveCompanySession.companyId) return;
+          final selected = companies.where((c) => c.id == '$id');
+          if (selected.isEmpty) {
+            _notifyHome('Unable to open the selected company team.');
+            return;
+          }
+          await _openHomeRoute(CompanyTeamScreen(
+            companyId: '$id', companyName: selected.first.companyName,
+            role: ActiveCompanySession.role));
+        } catch (_) {
+          _notifyHome('Unable to load company team. Please retry.');
+        }
+      default:
+        _notifyHome('This destination is not available.');
+    }
   }
 
   void _openNotifications() {
@@ -588,16 +680,7 @@ class _ClientsScreenState extends State<ClientsScreen> with WidgetsBindingObserv
           children: [
             Sign2DigitalDashboardHeader(
               onNotificationTap: _openNotifications,
-              onProfileTap: () => Sign2DigitalNavigation.push<void>(context,
-                MaterialPageRoute<void>(
-                  builder: (_) => ProfileSettingsScreen(
-                    onNotificationTap: _openNotifications,
-                    onNavigationSelected: (index) {
-                      if (mounted) setState(() => _selectedIndex = index);
-                    },
-                  ),
-                ),
-              ),
+              onSupportTap: _openSupportAssistant,
             ),
             Expanded(
               child: IndexedStack(
