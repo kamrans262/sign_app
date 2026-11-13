@@ -1,3 +1,4 @@
+import '../../../../core/widgets/sign2digital_form_dialog.dart';
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import '../../../../core/services/active_company_session.dart';
 import 'dart:io';
@@ -131,7 +132,7 @@ class _JobNotesScreenState extends State<JobNotesScreen> {
     showDialog<void>(
       context: context,
       barrierColor: const Color(0x80000000),
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => Sign2DigitalFormDialog(
         backgroundColor: AppColors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(note.title),
