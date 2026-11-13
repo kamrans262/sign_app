@@ -88,35 +88,6 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
         '${value.hour < 12 ? 'AM' : 'PM'}';
   }
 
-  Future<void> _selectTitle() async {
-    if (_busy) return;
-    final suggestion = await Sign2DigitalSelectionSheet.showCustom<String>(
-      title: 'Reminder Title',
-      icon: Icons.notifications_active_outlined,
-      subtitle: 'Choose a suggested reminder title',
-      context: context,
-      builder: (sheet) => SafeArea(child: Column(
-        mainAxisSize: MainAxisSize.min, children: [
-          for (final value in [
-            'Client Meeting', 'Send Invoice', 'Follow Up',
-            'Site Inspection', 'Review Document',
-          ])
-            ListTile(
-              key: Key('reminder-title-template-${value.replaceAll(' ', '-')}'),
-              selected: _title.text == value,
-              trailing: _title.text == value
-                  ? const Icon(Icons.check_circle_rounded,
-                      color: AppColors.primary) : null,
-              title: Text(value),
-              onTap: () => Navigator.pop(sheet, value)),
-        ],
-      )),
-    );
-    if (mounted && suggestion != null) {
-      setState(() { _title.text = suggestion; _error = null; });
-    }
-  }
-
   Future<void> _selectType() async {
     if (_busy) return;
     final choice = await Sign2DigitalSelectionSheet.showCustom<ReminderType>(
@@ -156,12 +127,14 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
     try {
       options = await _references.listForType(_type!);
     } catch (_) {
-      _notice('Unable to load related items. Try again.');
+      _notice('Unable to load ${_type!.label.toLowerCase()} records. '
+        'Check your connection and access permissions, then retry.');
       return;
     }
     if (!mounted) return;
     if (options.isEmpty) {
-      _notice('No related ${_type!.label.toLowerCase()} records are available.');
+      _notice('No saved ${_type!.label.toLowerCase()} records found '
+        'in this company.');
       return;
     }
     final result = await Sign2DigitalSelectionSheet.showCustom<ReminderRelatedItem>(
@@ -392,12 +365,7 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
               iconAsset: 'assets/icons/description.svg',
               controller: _title,
               textCapitalization: TextCapitalization.sentences,
-              maxLength: 160,
-              trailing: IconButton(
-                key: const Key('reminder-title-suggestions'),
-                icon: const Icon(Icons.keyboard_arrow_down_rounded,
-                  color: AppColors.secondaryText),
-                onPressed: _selectTitle)),
+              maxLength: 160),
             const SizedBox(height: 20),
             Sign2DigitalSelectionField(
               key: const Key('reminder-type'), label: 'Type',
@@ -413,7 +381,14 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
               label: 'Related Items',
               iconAsset: 'assets/icons/description.svg',
               leadingIcon: Icons.account_tree_outlined,
-              hintText: 'e.g. Select invoice, job, client or document',
+              hintText: _type == null
+                  ? 'Select a reminder type first'
+                  : _type == ReminderType.job ? 'Select an existing job'
+                  : _type == ReminderType.invoice ? 'Select an existing invoice'
+                  : _type == ReminderType.client ? 'Select an existing client'
+                  : _type == ReminderType.document ? 'Select an existing document'
+                  : _type == ReminderType.equipment ? 'Select an equipment loan'
+                  : 'No related item required',
               value: _related?.title,
               onTap: _selectRelated),
             const SizedBox(height: 20),

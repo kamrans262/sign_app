@@ -217,6 +217,7 @@ void main() {
     expect(find.textContaining('Enter a title'), findsOneWidget);
 
     await _reach(tester, 'reminder-title', up: true);
+    expect(find.byKey(const Key('reminder-title-suggestions')), findsNothing);
     await tester.enterText(find.byType(TextFormField).first, 'Send invoice');
     await tester.tap(find.byKey(const Key('reminder-type')));
     await tester.pumpAndSettle();
