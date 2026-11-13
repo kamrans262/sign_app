@@ -1,3 +1,4 @@
+import '../../../../core/widgets/sign2digital_form_dialog.dart';
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:sign2digital/features/quotes/presentation/screens/create_quote_screen.dart';
 import 'package:flutter/material.dart';
@@ -191,7 +192,7 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
         case 4:
           if (!mounted) return;
           await showDialog<void>(context: context, builder: (dialog) =>
-              AlertDialog(title: Text(record.title),
+              Sign2DigitalFormDialog(title: Text(record.title),
                 content: SingleChildScrollView(child: Text(record.description)),
                 actions: [TextButton(
                   onPressed: () => Navigator.of(dialog).pop(),
