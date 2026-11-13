@@ -132,6 +132,8 @@ void main() {
     expect(find.byKey(const Key('quote-processing-review')), findsNothing);
     await tester.enterText(find.byKey(const Key('quote-clarification-input')),
         'Replace the sink and tiles.');
+    await tester.ensureVisible(find.byKey(const Key('quote-clarification-submit')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('quote-clarification-submit')));
     await tester.pump();
     expect(service.inputs.length, 2);
