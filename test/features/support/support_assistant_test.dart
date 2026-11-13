@@ -35,10 +35,9 @@ void main() {
     expect(find.byKey(const Key('support-question-0')), findsOneWidget);
     expect(find.byKey(const Key('support-guide-preview')), findsNothing);
     expect(find.text('Getting Started'), findsNothing);
-    final sendIcon = tester.widget<Icon>(
-      find.descendant(of: find.byKey(const Key('support-send')),
-          matching: find.byIcon(Icons.send_rounded)));
-    expect(sendIcon.color, AppColors.white);
+    final send = tester.widget<IconButton>(
+      find.byKey(const Key('support-send')));
+    expect(send.style?.backgroundColor?.resolve({}), AppColors.primary);
     await tester.tap(find.byKey(const Key('support-question-0')));
     await tester.pumpAndSettle();
     expect(fake.questions, 1);
@@ -57,7 +56,11 @@ void main() {
     await tester.pump();
     expect(fake.progressReads, 0);
     final button = find.byKey(const Key('support-preview-guide'));
-    await tester.ensureVisible(button);
+    await tester.scrollUntilVisible(button, 150,
+      scrollable: find.descendant(
+        of: find.byKey(const Key('support-chat')),
+        matching: find.byType(Scrollable)).first,
+      maxScrolls: 15);
     await tester.tap(button);
     await tester.pumpAndSettle();
     expect(fake.progressReads, 1);
