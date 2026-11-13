@@ -46,8 +46,8 @@ abstract final class SupportChatSession {
     _checkCompany();
     if (_revision != revision) return false;
     _messages.add(turn);
-    // Keep memory usage bounded; server chat history remains max six turns.
-    if (_messages.length > 60) _messages.removeRange(0, _messages.length - 60);
+    // Keep every message for the app session; only the six most recent turns
+    // are sent to Laravel as model context. No chat is persisted to disk.
     return true;
   }
 
