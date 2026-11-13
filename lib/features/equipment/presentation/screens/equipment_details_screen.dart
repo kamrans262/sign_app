@@ -1,3 +1,4 @@
+import '../../../../core/widgets/sign2digital_input_field.dart';
 import '../../../../core/widgets/sign2digital_form_dialog.dart';
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import '../../../../core/services/active_company_session.dart';
@@ -232,18 +233,22 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
             content: SingleChildScrollView(child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                TextField(
+                Sign2DigitalInputField(
                   key: const Key('equipment-usage-hours'),
+                  label: 'Hours used', hintText: 'Enter hours',
+                  iconAsset: '', leadingIcon: Icons.timer_outlined,
                   controller: hours,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(labelText: 'Hours used')),
-                TextField(
-                  key: const Key('equipment-usage-job'), controller: job,
-                  decoration: const InputDecoration(labelText: 'Job (optional)')),
-                TextField(
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true)),
+                Sign2DigitalInputField(
+                  key: const Key('equipment-usage-job'),
+                  label: 'Job (optional)', hintText: 'Job name',
+                  iconAsset: '', leadingIcon: Icons.work_outline,
+                  controller: job),
+                Sign2DigitalInputField(
                   key: const Key('equipment-usage-notes'),
-                  controller: notes,
-                  decoration: const InputDecoration(labelText: 'Notes (optional)')),
+                  label: 'Notes (optional)', hintText: 'Add notes',
+                  iconAsset: '', leadingIcon: Icons.notes_outlined,
+                  controller: notes),
                 TextButton.icon(
                   key: const Key('equipment-usage-date'),
                   icon: const Icon(Icons.calendar_today_outlined),
@@ -306,11 +311,11 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
           title: const Text('Schedule Maintenance'),
           content: SingleChildScrollView(child: Column(
             mainAxisSize: MainAxisSize.min, children: [
-              TextField(
+              Sign2DigitalInputField(
                 key: const Key('equipment-maintenance-description'),
-                controller: description, minLines: 2, maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Maintenance details')),
+                label: 'Maintenance details', hintText: 'Describe maintenance',
+                iconAsset: '', leadingIcon: Icons.handyman_outlined,
+                controller: description, minLines: 2, maxLines: 3),
               TextButton.icon(
                 key: const Key('equipment-maintenance-date'),
                 icon: const Icon(Icons.calendar_today_outlined),
