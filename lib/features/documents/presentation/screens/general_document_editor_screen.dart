@@ -277,6 +277,7 @@ class _GeneralDocumentEditorScreenState extends State<GeneralDocumentEditorScree
         lockVersion:record.lockVersion);
       if(mounted)setState((){
         _fill(updated);_error=null;
+        if(action=='approve')_preview=true;
       });
       _notice(action=='approve'?'Document approved and locked.':
         'Document marked reviewed.');
@@ -530,7 +531,9 @@ class _GeneralDocumentEditorScreenState extends State<GeneralDocumentEditorScree
         Sign2DigitalHeader(
           title:_preview&&_saved!=null?'Document Preview':'AI Document Editor',
           onBack:()=>Navigator.of(context).maybePop()),
-        Expanded(child:_preview&&_saved!=null
+        Expanded(child:_loading&&widget.documentId!=null&&_saved==null
+          ?const Center(child:CircularProgressIndicator())
+          :_preview&&_saved!=null
           ?_readOnlyPreview(_saved!)
           :Center(child:ConstrainedBox(
           constraints:const BoxConstraints(maxWidth:720),
@@ -631,18 +634,9 @@ class _GeneralDocumentEditorScreenState extends State<GeneralDocumentEditorScree
                   'signatures may require additional legal formalities.',
                   style:TextStyle(fontFamily:'Inter',fontSize:12,
                     color:AppColors.placeholder))),
-              GeneralDocumentIssuedActions(
-                key:ValueKey('general-issuance-'+_saved!.id.toString()),
-                documentId:_saved!.id!,
-                documentNumber:_saved!.number,
-                repository:_repository,
-                suggestedSignerName:_clients
-                  .where((c)=>c.id=='$_clientId')
-                  .map((c)=>c.fullName.isNotEmpty?c.fullName:c.companyName)
-                  .firstOrNull??'',
-                suggestedSignerEmail:_clients
-                  .where((c)=>c.id=='$_clientId')
-                  .map((c)=>c.email).firstOrNull??''),
+              Sign2DigitalPrimaryButton(
+                key:const Key('general-document-issue-options'),
+                label:'Document Actions',onPressed:_openOfficialActions),
             ],
           ]),
         ))),
