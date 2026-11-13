@@ -262,7 +262,6 @@ class _SupportAssistantSheetState extends State<SupportAssistantSheet>
   );
 
   Widget _promptCard(String prompt, {String? title}) => Container(
-    key: const Key('support-ai-sample-card'),
     margin: const EdgeInsets.only(bottom: 12),
     padding: const EdgeInsets.all(14),
     decoration: BoxDecoration(
