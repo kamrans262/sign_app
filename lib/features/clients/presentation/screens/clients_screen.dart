@@ -33,6 +33,12 @@ import '../../../profile/presentation/screens/help_support_screen.dart';
 import '../../../company/presentation/screens/create_company_screen.dart';
 import '../../../company/presentation/screens/company_team_screen.dart';
 import '../../../deposits/presentation/screens/deposits_screen.dart';
+import '../../../documents/data/remote_general_document_repository.dart';
+import '../../../documents/data/remote_site_report_repository.dart';
+import '../../../documents/presentation/screens/ai_documents_screen.dart';
+import '../../../documents/presentation/screens/reports_screen.dart';
+import '../../../equipment/data/remote_equipment_repository.dart';
+import '../../../equipment/presentation/screens/equipment_screen.dart';
 import '../../../labour/presentation/screens/time_labour_screen.dart';
 import '../../../support/presentation/support_assistant_launcher.dart';
 
@@ -302,11 +308,24 @@ class _ClientsScreenState extends State<ClientsScreen> with WidgetsBindingObserv
           selectedNavigationIndex: _selectedIndex,
           onNavigationSelected: _selectDashboardTab));
       case 'equipment':
+        await _openHomeRoute(EquipmentScreen(
+          repository: RemoteEquipmentRepository.shared,
+          onNavigationSelected: _selectDashboardTab,
+          onNotificationTap: _openNotifications));
       case 'reports':
+        await _openHomeRoute(ReportsScreen(
+          repository: RemoteSiteReportRepository.shared,
+          onNavigationSelected: _selectDashboardTab,
+          onNotificationTap: _openNotifications));
       case 'ai_documents':
+        await _openHomeRoute(AiDocumentsScreen(
+          repository: RemoteGeneralDocumentRepository.shared,
+          onNavigationSelected: _selectDashboardTab,
+          onNotificationTap: _openNotifications));
       case 'reminders':
-        // These live under More; do not invent a record-specific deep link.
-        _selectDashboardTab(4);
+        await _openHomeRoute(RemindersScreen(
+          onNavigationSelected: _selectDashboardTab,
+          onNotificationTap: _openNotifications));
       case 'settings':
         await _openHomeRoute(ProfileSettingsScreen(
           onNotificationTap: _openNotifications,
