@@ -1,3 +1,4 @@
+import '../../../../core/widgets/sign2digital_input_field.dart';
 import '../../../../core/widgets/sign2digital_form_dialog.dart';
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import '../../../../core/widgets/sign2digital_subscription_gate.dart';
@@ -112,22 +113,22 @@ class _ConvertDocumentScreenState extends State<ConvertDocumentScreen> {
               child: Column(mainAxisSize: MainAxisSize.min, children: [
                 const Text('Review every detail. Nothing is sent or signed.'),
                 const SizedBox(height: 14),
-                TextFormField(
+                Sign2DigitalInputField(
                   key: const Key('note-document-title'),
+                  label: 'Title', hintText: 'Document title',
+                  iconAsset: '', leadingIcon: Icons.title_outlined,
                   initialValue: editedTitle,
                   onChanged: (value) => editedTitle = value,
                   maxLength: 255,
-                  decoration: const InputDecoration(
-                    labelText: 'Title', border: OutlineInputBorder()),
                 ),
                 const SizedBox(height: 10),
-                TextFormField(
+                Sign2DigitalInputField(
                   key: const Key('note-document-content'),
+                  label: 'Document text', hintText: 'Review and edit document',
+                  iconAsset: '', leadingIcon: Icons.description_outlined,
                   initialValue: editedContent,
                   onChanged: (value) => editedContent = value,
                   minLines: 5, maxLines: 12, maxLength: 20000,
-                  decoration: const InputDecoration(
-                    labelText: 'Document text', border: OutlineInputBorder()),
                 ),
               ]),
             ),
