@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sign2digital/core/theme/app_colors.dart';
+import 'package:sign2digital/core/widgets/sign2digital_dashboard_header.dart';
 import 'package:sign2digital/features/support/data/support_assistant_repository.dart';
 import 'package:sign2digital/features/support/presentation/widgets/support_assistant_sheet.dart';
 
@@ -24,6 +25,20 @@ class _AssistantFake implements SupportAssistantRepository {
 }
 
 void main() {
+  testWidgets('Dashboard header replaces profile avatar with primary support icon',
+      (tester) async {
+    var opened = 0;
+    await tester.pumpWidget(MaterialApp(home: Scaffold(
+      body: Sign2DigitalDashboardHeader(onSupportTap: () => opened++))));
+    await tester.pump();
+    expect(find.byKey(const Key('dashboard-support-button')), findsOneWidget);
+    expect(find.byIcon(Icons.support_agent_outlined), findsOneWidget);
+    expect(find.byType(CircleAvatar), findsNothing);
+    await tester.tap(find.byKey(const Key('dashboard-support-button')));
+    expect(opened, 1);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('AI Support uses primary teal, prompts, and a working link',
       (tester) async {
     final fake = _AssistantFake();
