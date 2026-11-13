@@ -26,6 +26,7 @@ import '../../domain/document_record.dart';
 import '../../domain/general_document_draft.dart';
 import 'general_document_editor_screen.dart';
 import 'document_details_screen.dart';
+import '../widgets/sign2digital_document_history.dart';
 import 'general_document_issued_actions.dart';
 
 typedef GeneralPdfPreviewBuilder = Widget Function(Uint8List bytes);
@@ -603,35 +604,104 @@ class _GeneralDocumentDetailsScreenState
     ]);
   }
 
+  DocumentHistoryType _historyType(String kind) => switch (kind) {
+    'created' => DocumentHistoryType.created,
+    'revised' || 'updated' || 'edited' || 'reviewed' =>
+      DocumentHistoryType.edited,
+    'approved' || 'issued' || 'pdf_issued' => DocumentHistoryType.approved,
+    'archived' => DocumentHistoryType.archived,
+    'sent' || 'email_sent' || 'document_sent' => DocumentHistoryType.sent,
+    'signed' || 'signature_completed' => DocumentHistoryType.signed,
+    'viewed' || 'opened' || 'link_created' || 'customer_link_created' =>
+      DocumentHistoryType.viewed,
+    'downloaded' || 'pdf_downloaded' => DocumentHistoryType.downloaded,
+    'attachment_added' => DocumentHistoryType.attachmentAdded,
+    _ => DocumentHistoryType.versionChanged,
+  };
+
+  String _historyTitle(String kind) => switch (kind) {
+    'created' => 'Document Created',
+    'revised' || 'updated' || 'edited' => 'Document Updated',
+    'reviewed' => 'Document Reviewed',
+    'approved' => 'Document Approved',
+    'archived' => 'Document Archived',
+    'issued' || 'pdf_issued' => 'Official PDF Issued',
+    'sent' || 'email_sent' || 'document_sent' => 'Document Sent',
+    'signed' || 'signature_completed' => 'Document Signed',
+    'viewed' || 'opened' => 'Document Viewed',
+    'downloaded' || 'pdf_downloaded' => 'Document Downloaded',
+    'link_created' || 'customer_link_created' => 'Customer Link Created',
+    'attachment_added' => 'Attachment Added',
+    _ => kind.split('_').where((p) => p.isNotEmpty)
+      .map((p) => p[0].toUpperCase() + p.substring(1)).join(' '),
+  };
+
+  IconData _historyIcon(String kind) => switch (kind) {
+    'created' => Icons.description_outlined,
+    'revised' || 'updated' || 'edited' => Icons.edit_outlined,
+    'reviewed' => Icons.fact_check_outlined,
+    'approved' => Icons.check_circle_outline,
+    'archived' => Icons.archive_outlined,
+    'issued' || 'pdf_issued' => Icons.picture_as_pdf_outlined,
+    'sent' || 'email_sent' || 'document_sent' => Icons.mail_outline,
+    'signed' || 'signature_completed' => Icons.draw_outlined,
+    'viewed' || 'opened' => Icons.visibility_outlined,
+    'downloaded' || 'pdf_downloaded' => Icons.download_outlined,
+    'link_created' || 'customer_link_created' => Icons.link_outlined,
+    'attachment_added' => Icons.attach_file_outlined,
+    _ => Icons.history_outlined,
+  };
+
   Widget _history() {
-    if (_historyLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
+    if (_historyLoading) return const Center(
+      child: CircularProgressIndicator());
     if (_historyError != null) {
       return TextButton(
         key: const Key('general-document-history-retry'),
         onPressed: _loadHistory, child: Text(_historyError! + ' Retry'));
     }
-    final events = _events ?? [];
-    if (events.isEmpty) {
+    final document = _document;
+    final raw = _events ?? const <Map<String,dynamic>>[];
+    if (document == null || raw.isEmpty) {
       return const Text('No document history available.',
         style: TextStyle(fontFamily: 'Inter',
           color: AppColors.secondaryText));
     }
-    return Sign2DigitalOutlinedContainer(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      child: Column(children: [
-        for (final event in events) ListTile(
-          contentPadding: EdgeInsets.zero,
-          title: Text((event['type'] ?? 'Document activity').toString()
-              .replaceAll('_', ' '),
-            style: const TextStyle(fontFamily: 'Inter',
-              fontSize: 14, color: AppColors.dark)),
-          subtitle: Text((event['created_at'] ?? '').toString(),
-            style: const TextStyle(fontFamily: 'Inter',
-              fontSize: 12, color: AppColors.secondaryText)),
-        ),
-      ]),
+    // Render only actual persisted Laravel audit entries; do not invent events.
+    final verified = <DocumentHistoryEvent>[];
+    final codes = <String, String>{};
+    final documentId = 'general-${document.id}';
+    for (final row in raw) {
+      final id = int.tryParse('${row['id']}');
+      final occurred = DateTime.tryParse('${row['created_at']}');
+      final kind = '${row['type'] ?? ''}'.trim().toLowerCase();
+      if (id == null || id <= 0 || occurred == null || kind.isEmpty) continue;
+      final eventId = '$documentId-$id';
+      verified.add(DocumentHistoryEvent(
+        id: eventId, documentId: documentId,
+        type: _historyType(kind), occurredAt: occurred,
+        displayTitle: _historyTitle(kind),
+      ));
+      codes[eventId] = kind;
+    }
+    if (verified.isEmpty) {
+      return const Text('No document history available.',
+        style: TextStyle(fontFamily: 'Inter',
+          color: AppColors.secondaryText));
+    }
+    final base = document.toDocumentRecord();
+    final historyRecord = DocumentRecord(
+      id: base.id, category: base.category, number: base.number,
+      title: base.title, project: base.project, customer: base.customer,
+      timestamp: base.timestamp, status: base.status,
+      version: base.version, jobId: base.jobId,
+      history: verified,
+    );
+    return Sign2DigitalDocumentHistory(
+      document: historyRecord,
+      onOpenDocument: _setTab,
+      canPreview: true,
+      iconForEvent: (event) => _historyIcon(codes[event.id] ?? ''),
     );
   }
 

@@ -9,6 +9,8 @@ import 'package:sign2digital/features/clients/domain/client_profile.dart';
 import 'package:sign2digital/features/clients/presentation/widgets/sign2digital_details_tabs.dart';
 import 'package:sign2digital/features/documents/data/remote_general_document_repository.dart';
 import 'package:sign2digital/features/documents/domain/general_document_draft.dart';
+import 'package:sign2digital/features/documents/presentation/widgets/sign2digital_document_history.dart';
+import 'package:sign2digital/core/theme/app_theme.dart';
 import 'package:sign2digital/features/documents/presentation/screens/general_document_details_screen.dart';
 import 'package:sign2digital/features/quotes/presentation/widgets/sign2digital_quote_summary_card.dart';
 import 'package:sign2digital/features/quotes/presentation/widgets/sign2digital_signature_action_card.dart';
@@ -19,6 +21,15 @@ class _HistoryRepository extends RemoteGeneralDocumentRepository {
   @override
   Future<List<Map<String,dynamic>>> history(int id) async => [
     {'id':11,'type':'created','created_at':'2026-11-12 12:00:00'},
+  ];
+}
+
+class _DetailedHistoryRepository extends _HistoryRepository {
+  @override
+  Future<List<Map<String,dynamic>>> history(int id) async => [
+    {'id':11,'type':'created','created_at':'2026-11-12 12:00:00'},
+    {'id':12,'type':'reviewed','created_at':'2026-11-13 09:00:00'},
+    {'id':13,'type':'pdf_issued','created_at':'2026-11-14 10:30:00'},
   ];
 }
 
@@ -101,7 +112,11 @@ void main() {
         expect(find.byKey(const Key('general-document-unissued-label')),
           findsOneWidget);
       }
-      if(index==3) expect(find.text('created'),findsOneWidget);
+      if(index==3){
+        expect(find.byType(Sign2DigitalDocumentHistory),findsOneWidget);
+        expect(find.text('Document Created'),findsOneWidget);
+        expect(find.byIcon(Icons.description_outlined),findsWidgets);
+      }
     }
     await tester.tap(find.byKey(const Key('details-tab-0')));
     await tester.pumpAndSettle();
@@ -168,4 +183,31 @@ void main() {
       closeTo(tester.getSize(find.byKey(
         const Key('general-document-bottom-actions'))).width,1));
   });
+  testWidgets('AI document history uses shared events and relevant icons',
+      (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      theme: AppTheme.light,
+      home: GeneralDocumentDetailsScreen(
+        documentId: 41, initialDocument: draft,
+        repository: _DetailedHistoryRepository(), initialTab: 3,
+      ),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.byType(Sign2DigitalDocumentHistory), findsOneWidget);
+    expect(find.text('Document Created'), findsOneWidget);
+    expect(find.text('Document Reviewed'), findsOneWidget);
+    expect(find.text('Official PDF Issued'), findsOneWidget);
+    expect(find.byIcon(Icons.description_outlined), findsWidgets);
+    expect(find.byIcon(Icons.fact_check_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.picture_as_pdf_outlined), findsOneWidget);
+    expect(find.byKey(const Key('general-document-bottom-actions')),
+      findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  test('Floating plus buttons are circular in light and dark themes', () {
+    expect(AppTheme.light.floatingActionButtonTheme.shape, isA<CircleBorder>());
+    expect(AppTheme.dark.floatingActionButtonTheme.shape, isA<CircleBorder>());
+  });
+
 }

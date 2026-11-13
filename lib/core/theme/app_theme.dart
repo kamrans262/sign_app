@@ -62,6 +62,9 @@ abstract final class AppTheme {
     return ThemeData(
       useMaterial3: true,
       fontFamily: 'Inter',
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+        shape: CircleBorder(),
+      ),
       dialogTheme: _dialogTheme,
       datePickerTheme: _datePickerTheme,
       timePickerTheme: _timePickerTheme,
@@ -103,6 +106,9 @@ abstract final class AppTheme {
     useMaterial3: true,
     fontFamily: 'Inter',
     brightness: Brightness.dark,
+    floatingActionButtonTheme: const FloatingActionButtonThemeData(
+      shape: CircleBorder(),
+    ),
     dialogTheme: _dialogTheme,
       datePickerTheme: _datePickerTheme,
       timePickerTheme: _timePickerTheme,

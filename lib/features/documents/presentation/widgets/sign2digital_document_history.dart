@@ -76,6 +76,7 @@ class Sign2DigitalDocumentHistory extends StatefulWidget {
     this.onOpenDocument,
     this.canPreview = false,
     this.additionalEvents = const [],
+    this.iconForEvent,
   });
 
   final DocumentRecord document;
@@ -86,6 +87,8 @@ class Sign2DigitalDocumentHistory extends StatefulWidget {
   /// preview (1) tab, without constructing an unrelated document screen.
   final ValueChanged<int>? onOpenDocument;
   final bool canPreview;
+  /// Optional event-specific icon while retaining the approved history layout.
+  final IconData? Function(DocumentHistoryEvent)? iconForEvent;
 
   @override
   State<Sign2DigitalDocumentHistory> createState() =>
@@ -170,7 +173,8 @@ class _Sign2DigitalDocumentHistoryState
             decoration: const BoxDecoration(
               color: Color(0xFFE3ECF0), shape: BoxShape.circle,
             ),
-            child: Icon(_icon(event.type), color: AppColors.primary, size: 18),
+            child: Icon(widget.iconForEvent?.call(event) ?? _icon(event.type),
+              color: AppColors.primary, size: 18),
           ),
           const SizedBox(width: 12),
           Expanded(

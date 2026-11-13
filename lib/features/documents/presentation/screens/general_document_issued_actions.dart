@@ -335,6 +335,7 @@ class _GeneralDocumentIssuedActionsState
           ? Sign2DigitalPrimaryButton(key:Key(item.key),label:item.label,
               enabled:!_busy,onPressed:item.handler)
           : Sign2DigitalOutlinedButton(key:Key(item.key),label:item.label,
+              primaryOutline:true,
               enabled:!_busy,onPressed:item.handler);
       }
       return Column(

@@ -119,6 +119,7 @@ class DocumentHistoryEvent {
     this.actorEmail,
     this.description,
     this.signatureReference,
+    this.displayTitle,
   });
 
   final String id;
@@ -129,8 +130,10 @@ class DocumentHistoryEvent {
   final String? actorEmail;
   final String? description;
   final String? signatureReference;
+  /// Optional verified event action title; defaults remain unchanged.
+  final String? displayTitle;
 
-  String get title => switch (type) {
+  String get title => displayTitle ?? (switch (type) {
     DocumentHistoryType.created => 'Document Created',
     DocumentHistoryType.edited => 'Document Edited',
     DocumentHistoryType.downloaded => 'Document Downloaded',
@@ -142,7 +145,7 @@ class DocumentHistoryEvent {
     DocumentHistoryType.emailOpened => 'E-mail Opened',
     DocumentHistoryType.viewed => 'Viewed by Customers',
     DocumentHistoryType.signed => 'Document Signed',
-  };
+  });
 }
 
 class DocumentPermissionDeniedException implements Exception {
