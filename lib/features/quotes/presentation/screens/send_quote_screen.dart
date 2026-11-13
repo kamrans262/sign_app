@@ -1,3 +1,4 @@
+import '../../../../core/widgets/sign2digital_input_field.dart';
 import '../../../../core/widgets/sign2digital_form_dialog.dart';
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
@@ -253,20 +254,18 @@ class _SendQuoteScreenState extends State<SendQuoteScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                TextFormField(
+                Sign2DigitalInputField(
+                  label: 'Name', hintText: 'Enter name',
+                  iconAsset: '', leadingIcon: Icons.person_outline,
                   initialValue: editing.name,
-                  decoration: const InputDecoration(
-                    labelText: 'Name', border: OutlineInputBorder(),
-                  ),
                   onChanged: (value) => editing.name = value,
                 ),
                 const SizedBox(height: 12),
-                TextFormField(
+                Sign2DigitalInputField(
+                  label: 'Email', hintText: 'Enter email',
+                  iconAsset: '', leadingIcon: Icons.email_outlined,
                   initialValue: editing.email,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    labelText: 'Email', border: OutlineInputBorder(),
-                  ),
                   validator: (value) => RegExp(
                     r'^[^\s@]+@[^\s@]+\.[^\s@]+$',
                   ).hasMatch((value ?? '').trim())
@@ -275,20 +274,18 @@ class _SendQuoteScreenState extends State<SendQuoteScreen> {
                   onChanged: (value) => editing.email = value,
                 ),
                 const SizedBox(height: 12),
-                TextFormField(
+                Sign2DigitalInputField(
+                  label: 'Phone', hintText: 'Enter phone',
+                  iconAsset: '', leadingIcon: Icons.phone_outlined,
                   initialValue: editing.phone,
                   keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(
-                    labelText: 'Phone', border: OutlineInputBorder(),
-                  ),
                   onChanged: (value) => editing.phone = value,
                 ),
                 const SizedBox(height: 12),
-                TextFormField(
+                Sign2DigitalInputField(
+                  label: 'Address', hintText: 'Enter address',
+                  iconAsset: '', leadingIcon: Icons.location_on_outlined,
                   initialValue: editing.address,
-                  decoration: const InputDecoration(
-                    labelText: 'Address', border: OutlineInputBorder(),
-                  ),
                   onChanged: (value) => editing.address = value,
                 ),
               ],
