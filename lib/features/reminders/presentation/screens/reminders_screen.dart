@@ -214,7 +214,9 @@ class _RemindersScreenState extends State<RemindersScreen> {
               slivers: [
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                  sliver: SliverToBoxAdapter(child: Column(children: [
+                  sliver: SliverToBoxAdapter(child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
                     Sign2DigitalSearchField(
                       controller: _search,
                       hintText: 'Search Reminders',

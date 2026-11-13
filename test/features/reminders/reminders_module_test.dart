@@ -181,6 +181,23 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('Reminders tabs align left like approved Jobs tabs',
+      (tester) async {
+    await tester.pumpWidget(const MaterialApp(
+      home: RemindersScreen()));
+    await tester.pumpAndSettle();
+    final tabs = find.byKey(const Key('details-tab-0'));
+    final search = find.byKey(const Key('clients-search-input'));
+    expect(tabs, findsOneWidget);
+    expect(search, findsOneWidget);
+    // Both use the same 20 px screen edge; selected-tab text has its own
+    // 15 px internal padding just like our other module tabs.
+    final tabLeft = tester.getTopLeft(tabs).dx;
+    final searchLeft = tester.getTopLeft(search).dx;
+    expect((tabLeft - searchLeft).abs(), lessThan(20));
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('More section provides the Reminders route', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: MoreScreen()));
     await tester.scrollUntilVisible(
