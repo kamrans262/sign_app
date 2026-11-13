@@ -466,6 +466,12 @@ class _GeneralDocumentDetailsScreenState
             compactDetails: true,
             suggestedSignerName: _client(d) == 'Not linked' ? '' : _client(d),
             suggestedSignerEmail: _clientEmail,
+            onChanged: () {
+              if (mounted) setState(() {
+                _pdfPreviewFuture = null;
+                _events = null;
+              });
+            },
           ),
         for (var i = 0; i < actions.length; i += 2) ...[
           if (i > 0) const SizedBox(height: 12),

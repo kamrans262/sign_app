@@ -16,13 +16,15 @@ class GeneralDocumentIssuedActions extends StatefulWidget {
   const GeneralDocumentIssuedActions({super.key,required this.documentId,
     required this.documentNumber,required this.repository,
     this.suggestedSignerName='',this.suggestedSignerEmail='',
-    this.compactDetails=false});
+    this.compactDetails=false,this.onChanged});
   final int documentId;
   final String documentNumber;
   final RemoteGeneralDocumentRepository repository;
   final String suggestedSignerName,suggestedSignerEmail;
   /// Direct actions on Details only; omits redundant Download/Share/history.
   final bool compactDetails;
+  /// Notify the parent to invalidate any cached PDF / activity after a write.
+  final VoidCallback? onChanged;
 
   @override
   State<GeneralDocumentIssuedActions> createState()=>
@@ -92,6 +94,7 @@ class _GeneralDocumentIssuedActionsState
     try{
       await widget.repository.issue(widget.documentId);
       await _refresh();
+      widget.onChanged?.call();
       _notice('Official PDF issued and verified.');
     }catch(error){
       if(mounted && !await Sign2DigitalSubscriptionGate.handle(
@@ -140,6 +143,7 @@ class _GeneralDocumentIssuedActionsState
       final link=await widget.repository.customerLink(widget.documentId);
       await Clipboard.setData(ClipboardData(text:link));
       await _refresh();
+      widget.onChanged?.call();
       _notice('Private 7-day customer link copied; not emailed.');
     }catch(_){
       if(mounted)setState(()=>_error='Unable to create private customer link.');
@@ -217,6 +221,7 @@ class _GeneralDocumentIssuedActionsState
       await widget.repository.send(widget.documentId,
         recipientEmail:entry['email']??'',mode:entry['mode']??'pdf');
       await _refresh();
+      widget.onChanged?.call();
       _notice('Email submitted to configured transport. Inbox delivery '
         'is not confirmed.');
     }catch(_){
@@ -258,9 +263,11 @@ class _GeneralDocumentIssuedActionsState
           signatureLink:link,
           signatureRequestId:(request['id'] as num).toInt());
         await _refresh();
+        widget.onChanged?.call();
         _notice('Signing invitation submitted to mail transport. '
           'Recipient delivery is not confirmed.');
       }else{
+        widget.onChanged?.call();
         _notice('Private signing link copied. No email was sent.');
       }
     }catch(_){
