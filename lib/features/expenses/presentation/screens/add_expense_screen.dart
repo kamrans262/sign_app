@@ -1,3 +1,4 @@
+import '../../../support/presentation/widgets/support_ai_prompt_hint.dart';
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
@@ -492,7 +493,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             padding: const EdgeInsets.fromLTRB(20,0,20,30),
             child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               Sign2DigitalAiVoiceButton(onPressed: _voice),
-              const SizedBox(height: 20),
+              const SizedBox(height: 6),
+              const SupportAiPromptHint(module: 'expenses'),
+              const SizedBox(height: 15),
               Sign2DigitalSelectionField(
                 key: const Key('expense-add-job'), label: 'Job',
                 iconAsset: 'assets/icons/description.svg',
