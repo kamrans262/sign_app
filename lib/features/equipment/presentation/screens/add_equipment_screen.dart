@@ -110,6 +110,7 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
             key: const Key('equipment-custom-value'),
             label: title, hintText: 'Enter $title',
             iconAsset: '', leadingIcon: Icons.edit_outlined,
+            textCapitalization: TextCapitalization.words,
             controller: input, maxLength: 100,
             autofocus: true),
           actions: [
@@ -128,30 +129,34 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
 
   Future<void> _chooseName() async {
     if (_saving) return;
-    final options = {...?widget.availableNames, ?_name};
+    final options = <String>{
+      for (final name in widget.availableNames ?? const <String>[])
+        if (name.trim().isNotEmpty && name != 'Other') name,
+      if (_name != null && _name != 'Other') _name!,
+      'Other',
+    };
     final chosen = await Sign2DigitalSelectionSheet.showCustom<String>(
       context: context,
       title: 'Select Equipment Name',
       icon: Icons.handyman_outlined,
-      subtitle: 'Choose a name or enter a custom one',
+      subtitle: 'Choose an equipment name or select Other',
       builder: (sheet) => SafeArea(child: Column(
         mainAxisSize: MainAxisSize.min, children: [
           for (final name in options)
-            ListTile(title: Text(name), selected: _name == name,
+            ListTile(
+              key: name == 'Other'
+                  ? const Key('equipment-custom-name')
+                  : Key('equipment-name-${name.toLowerCase()}'),
+              title: Text(name), selected: _name == name,
               trailing: _name == name
                   ? const Icon(Icons.check_circle_rounded,
                       color: AppColors.primary) : null,
               onTap: () => Navigator.pop(sheet, name)),
-          ListTile(
-            key: const Key('equipment-custom-name'),
-            leading: const Icon(Icons.edit_outlined),
-            title: const Text('Enter equipment name'),
-            onTap: () => Navigator.pop(sheet, '__custom__')),
         ])),
     );
     if (!mounted || chosen == null) return;
-    final resolved = chosen == '__custom__'
-        ? await _customValue('equipment name') : chosen;
+    final resolved = chosen == 'Other'
+        ? await _customValue('Equipment Name') : chosen;
     if (resolved != null && mounted) setState(() { _name = resolved; _error = null; });
   }
 
@@ -179,7 +184,7 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
     );
     if (chosen == null || !mounted) return;
     final result = chosen == 'Other'
-        ? await _customValue('category') : chosen;
+        ? await _customValue('Category') : chosen;
     if (result != null && mounted) setState(() { _category = result; _error = null; });
   }
 

@@ -90,6 +90,43 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('Equipment custom name and category use Other and titled fields',
+      (tester) async {
+    await tester.pumpWidget(const MaterialApp(
+      home: AddEquipmentScreen(availableNames: ['Mini Excavator'])));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('equipment-form-name')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('equipment-custom-value')), findsNothing);
+    expect(find.text('Other'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('equipment-custom-name')));
+    await tester.pumpAndSettle();
+    expect(find.text('Enter Equipment Name'), findsOneWidget);
+    expect(find.text('Equipment Name'), findsOneWidget);
+    await tester.enterText(find.descendant(
+      of: find.byKey(const Key('equipment-custom-value')),
+      matching: find.byType(TextFormField)), 'Hydraulic Lift');
+    await tester.tap(find.text('Use'));
+    await tester.pumpAndSettle();
+    expect(find.text('Hydraulic Lift'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('equipment-form-category')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('equipment-custom-value')), findsNothing);
+    await tester.tap(find.byKey(const Key('equipment-category-other')));
+    await tester.pumpAndSettle();
+    expect(find.text('Enter Category'), findsOneWidget);
+    expect(find.text('Category'), findsWidgets);
+    await tester.enterText(find.descendant(
+      of: find.byKey(const Key('equipment-custom-value')),
+      matching: find.byType(TextFormField)), 'Specialty Lifting');
+    await tester.tap(find.text('Use'));
+    await tester.pumpAndSettle();
+    expect(find.text('Specialty Lifting'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('Equipment Details shows saved fields and four tabs',
       (tester) async {
     const repository = DemoEquipmentRepository();
