@@ -1,3 +1,4 @@
+import '../../../../core/widgets/sign2digital_form_dialog.dart';
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import '../../../../core/services/active_company_session.dart';
 import 'package:flutter/material.dart';
@@ -226,7 +227,7 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
       result = await showDialog<EquipmentUsage>(
         context: context,
         builder: (dialog) => StatefulBuilder(
-          builder: (context, refresh) => AlertDialog(
+          builder: (context, refresh) => Sign2DigitalFormDialog(
             title: const Text('Log Equipment Usage'),
             content: SingleChildScrollView(child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -301,7 +302,7 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
     final result = await showDialog<EquipmentMaintenance>(
       context: context,
       builder: (dialog) => StatefulBuilder(
-        builder: (context, refresh) => AlertDialog(
+        builder: (context, refresh) => Sign2DigitalFormDialog(
           title: const Text('Schedule Maintenance'),
           content: SingleChildScrollView(child: Column(
             mainAxisSize: MainAxisSize.min, children: [
