@@ -12,6 +12,7 @@ import '../../../../core/widgets/sign2digital_outlined_button.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import '../../../clients/presentation/widgets/sign2digital_status_badge.dart';
+import '../../../quotes/presentation/widgets/sign2digital_signature_action_card.dart';
 import '../../../documents/presentation/widgets/sign2digital_document_history.dart';
 import '../../domain/equipment_record.dart';
 import '../../data/remote_equipment_loan_repository.dart';
@@ -358,50 +359,88 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
     }
   }
 
-  Widget _actions() => Column(children: [
-    if (ActiveCompanySession.canWrite('equipment')) ...[
-    Row(children: [
-      Expanded(child: Sign2DigitalOutlinedButton(
-        key: const Key('equipment-details-edit'), label: 'Edit',
-        primaryOutline: true, enabled: !_busy, onPressed: _edit)),
-      const SizedBox(width: 10),
-      Expanded(child: Sign2DigitalOutlinedButton(
-        key: const Key('equipment-details-log-usage'),
-        label: 'Log Usage', primaryOutline: true,
-        enabled: !_busy, onPressed: _logUsage)),
-    ]),
-    const SizedBox(height: 15),
-    ],
-    if(_record.serverId!=null)
-      Sign2DigitalOutlinedButton(
-        key:const Key('equipment-details-loan-history'),
-        label:_record.currentLoanId==null?'Loan History':'Current Equipment Loan',
-        enabled:!_busy,onPressed:() async {
-          if(_record.currentLoanId==null){
-            await Sign2DigitalNavigation.push<void>(context,
-              MaterialPageRoute(builder:(_)=>const EquipmentLoansScreen()));
-            return;
-          }
-          try{
-            final repository=RemoteEquipmentLoanRepository.shared;
-            final loan=await repository.detail(_record.currentLoanId!);
-            if(!mounted)return;
-            await Sign2DigitalNavigation.push<void>(context,
-              MaterialPageRoute(builder:(_)=>EquipmentLoanDetailsScreen(
-                loan:loan,repository:repository)));
-          }catch(_){
-            _notice('Unable to load loan history for equipment.');
-          }
-        }),
-    if(_record.serverId!=null && ActiveCompanySession.canWrite('equipment'))
-      const SizedBox(height:15),
-    if (ActiveCompanySession.canWrite('equipment')) FractionallySizedBox(
-      widthFactor: .6,
-      child: Sign2DigitalPrimaryButton(
-        key: const Key('equipment-details-schedule'),
-        label: 'Schedule maintenance', enabled: !_busy,
-        onPressed: _schedule)),
-  ]);
+
+  Future<void> _loanHistory() async {
+    if (_busy || _record.serverId == null) return;
+    if (_record.currentLoanId == null) {
+      await Sign2DigitalNavigation.push<void>(context,
+        MaterialPageRoute(builder: (_) => const EquipmentLoansScreen()));
+      return;
+    }
+    try {
+      final repository = RemoteEquipmentLoanRepository.shared;
+      final loan = await repository.detail(_record.currentLoanId!);
+      if (!mounted) return;
+      await Sign2DigitalNavigation.push<void>(context,
+        MaterialPageRoute(builder: (_) => EquipmentLoanDetailsScreen(
+          loan: loan, repository: repository)));
+    } catch (_) {
+      _notice('Unable to load loan history for equipment.');
+    }
+  }
+
+  // Use precisely the four-across action card style from Documents.
+  // Editing privileges still govern actions, and loan history requires
+  // a saved server equipment record.
+  Widget _actions() {
+    final canWrite = ActiveCompanySession.canWrite('equipment');
+    final actions = <({
+      String key, String label, IconData icon, VoidCallback onTap
+    })>[
+      if (canWrite) (
+        key: 'equipment-details-edit',
+        label: 'Edit',
+        icon: Icons.edit_outlined,
+        onTap: _edit,
+      ),
+      if (canWrite) (
+        key: 'equipment-details-log-usage',
+        label: 'Log Usage',
+        icon: Icons.timer_outlined,
+        onTap: _logUsage,
+      ),
+      if (_record.serverId != null) (
+        key: 'equipment-details-loan-history',
+        label: _record.currentLoanId == null
+            ? 'Loan History' : 'Current Loan',
+        icon: Icons.swap_horiz_outlined,
+        onTap: _loanHistory,
+      ),
+      if (canWrite) (
+        key: 'equipment-details-schedule',
+        label: 'Schedule Maintenance',
+        icon: Icons.handyman_outlined,
+        onTap: _schedule,
+      ),
+    ];
+    if (actions.isEmpty) return const SizedBox.shrink();
+    return IgnorePointer(
+      ignoring: _busy,
+      child: Opacity(
+        opacity: _busy ? 0.5 : 1,
+        child: SizedBox(
+          height: 90,
+          child: Row(
+            key: const Key('equipment-detail-actions'),
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (var i = 0; i < actions.length; i++) ...[
+                if (i > 0) const SizedBox(width: 10),
+                Expanded(child: Sign2DigitalSignatureActionCard(
+                  key: Key(actions[i].key),
+                  label: actions[i].label,
+                  icon: actions[i].icon,
+                  documentStyling: true,
+                  height: 74,
+                  onTap: actions[i].onTap,
+                )),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -416,6 +455,8 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
           children: [
             _summary(),
+            const SizedBox(height: 20),
+            _actions(),
             const SizedBox(height: 20),
             Stack(children: [
               const Positioned(left: 0, right: 0, bottom: 0,
@@ -432,8 +473,6 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
             else if (_tab == 1) _usage()
             else if (_tab == 2) _maintenance()
             else _history(),
-            const SizedBox(height: 25),
-            _actions(),
           ],
         ),
       ))),

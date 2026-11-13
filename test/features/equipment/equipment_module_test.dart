@@ -7,6 +7,7 @@ import 'package:sign2digital/features/equipment/services/equipment_voice_extract
 import 'package:sign2digital/features/equipment/presentation/screens/equipment_screen.dart';
 import 'package:sign2digital/features/equipment/presentation/screens/add_equipment_screen.dart';
 import 'package:sign2digital/features/equipment/presentation/screens/equipment_details_screen.dart';
+import 'package:sign2digital/features/quotes/presentation/widgets/sign2digital_signature_action_card.dart';
 
 void main() {
   setUp(DemoEquipmentRepository.resetForTests);
@@ -150,6 +151,45 @@ void main() {
     await tester.tap(find.byKey(const Key('details-tab-3')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('equipment-history-empty')), findsOneWidget);
+  });
+
+  testWidgets('Equipment detail uses four document-style action cards above tabs',
+      (tester) async {
+    final saved = EquipmentRecord(
+      id: 'EX-100', name: 'Drill', category: 'Construction',
+      brand: 'Bosch', model: '2004',
+      purchaseDate: DateTime(2026, 11, 14),
+      status: EquipmentStatus.inUse,
+      serverId: 10, demoOnly: false,
+    );
+    await tester.pumpWidget(MaterialApp(
+      home: EquipmentDetailsScreen(
+        equipment: saved, repository: const DemoEquipmentRepository()),
+    ));
+    await tester.pumpAndSettle();
+    final row = find.byKey(const Key('equipment-detail-actions'));
+    expect(row, findsOneWidget);
+    final cards = find.descendant(
+      of: row, matching: find.byType(Sign2DigitalSignatureActionCard));
+    expect(cards, findsNWidgets(4));
+    for (final key in [
+      'equipment-details-edit',
+      'equipment-details-log-usage',
+      'equipment-details-loan-history',
+      'equipment-details-schedule',
+    ]) {
+      final card = tester.widget<Sign2DigitalSignatureActionCard>(
+        find.byKey(Key(key)));
+      expect(card.documentStyling, isTrue);
+      expect(card.selected, isFalse);
+    }
+    expect(tester.getTopLeft(row).dy,
+      greaterThan(tester.getBottomLeft(
+        find.byKey(const Key('equipment-detail-summary'))).dy));
+    expect(tester.getBottomLeft(row).dy,
+      lessThan(tester.getTopLeft(
+        find.byKey(const Key('details-tab-0'))).dy));
+    expect(tester.takeException(), isNull);
   });
 
   for (final size in [
