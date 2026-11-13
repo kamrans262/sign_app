@@ -1,3 +1,4 @@
+import '../../../../core/widgets/sign2digital_form_dialog.dart';
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'dart:typed_data';
 
@@ -157,7 +158,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     var draftTitle = _title ?? '';
     final entered = await showDialog<String>(
       context: context,
-      builder: (dialog) => AlertDialog(
+      builder: (dialog) => Sign2DigitalFormDialog(
         title: const Text('Job Title'),
         content: Sign2DigitalInputField(
           key: const Key('profile-title-custom-input'),
