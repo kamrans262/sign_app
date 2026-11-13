@@ -9,6 +9,7 @@ import '../../../../core/widgets/sign2digital_search_field.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import 'document_details_screen.dart';
+import 'general_document_editor_screen.dart';
 import 'create_addendum_screen.dart';
 import '../../../quotes/presentation/widgets/sign2digital_quote_summary_card.dart';
 import '../../../quotes/data/signed_quote_file_store.dart';
@@ -262,6 +263,246 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
         return;
       }
       if (!mounted) return;
+    }
+    final general = RegExp(r'^general-([1-9][0-9]*)
+        ActiveCompanySession.canWrite('documents') &&
+        AddendumDraftSession.load(selected.addendumDraftId!)
+                ?.isCreatedLocally != true) {
+      await Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
+        builder: (_) => CreateAddendumScreen(
+          draftId: selected.addendumDraftId,
+          repository: _repository,
+          requestAddendumSignature: widget.requestAddendumSignature,
+        ),
+      ));
+    } else {
+      await Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
+        builder: (_) => DocumentDetailsScreen(
+          documentId: selected.id,
+          document: selected,
+          loadDocument: live ? RemoteDocumentRepository.shared.details : null,
+          requestAddendumSignature: widget.requestAddendumSignature ??
+              (live ? RemoteAddendumRepository.shared.requestSignature : null),
+          onApproveAddendum: live ? (record) async {
+            final id = int.parse(record.id.substring('addendum-'.length));
+            final saved = await RemoteAddendumRepository.shared.get(id);
+            await RemoteAddendumRepository.shared.approve(saved);
+            return RemoteDocumentRepository.shared.details(record.id);
+          } : null,
+          onAddVersion: live ? RemoteDocumentRepository.shared.addVersion : null,
+          onAddAttachment: live ? RemoteDocumentRepository.shared.addAttachment : null,
+          onDownloadAttachment: live
+              ? RemoteDocumentRepository.shared.downloadAttachment : null,
+          loadSignedPdf: (selectedRecord) async {
+            if (live && RegExp(r'^(quote|signed|managed|addendum)-[1-9][0-9]*$')
+                .hasMatch(selectedRecord.id)) {
+              return RemoteDocumentRepository.shared.downloadPdf(selectedRecord);
+            }
+            final files = await SignedQuoteFileStore.shared.list();
+            final exact = files.where(
+              (file) => file.documentId == selectedRecord.id,
+            ).toList();
+            if (exact.length == 1) {
+              return SignedQuoteFileStore.shared.read(exact.single);
+            }
+            final quote = selectedRecord.quote;
+            if (quote == null || quote.jobId == null ||
+                !selectedRecord.verifiedSignedPdfAvailable) {
+              return null;
+            }
+            final linked = files.where((file) =>
+                file.quoteId == quote.id && file.jobId == quote.jobId).toList()
+              ..sort((a, b) => b.signedAt.compareTo(a.signedAt));
+            if (linked.isEmpty) return null;
+            return SignedQuoteFileStore.shared.read(linked.first);
+          },
+        ),
+      ));
+    }
+    if (mounted) await _load();
+  }
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  /// Display a signed quote only when its separate, server-verified artifact
+  /// is present in the same company-scoped catalogue (also used by Jobs).
+  bool _hasVerifiedSignedQuote(DocumentRecord quote) =>
+      !quote.demoOnly &&
+      RegExp(r'^quote-[1-9][0-9]*$').hasMatch(quote.id) &&
+      _documents.any((item) =>
+          RegExp(r'^signed-[1-9][0-9]*$').hasMatch(item.id) &&
+          item.category == DocumentCategory.quotes &&
+          item.status.toLowerCase() == 'signed' &&
+          item.verifiedSignedPdfAvailable &&
+          item.number == quote.number &&
+          item.jobId == quote.jobId);
+
+  @override
+  Widget build(BuildContext context) {
+    final visible = browseDocuments(
+      _documents,
+      mainTab: _category,
+      type: _advancedType,
+      order: _sort,
+      query: _search.text,
+    ).where((record) {
+      final jobId = widget.jobId;
+      if (jobId == null) return true;
+      if (record.jobId == jobId || record.quote?.jobId == jobId) return true;
+      if (record.id.startsWith('m8-signed-') && record.project == jobId) {
+        return true;
+      }
+      final draftId = record.addendumDraftId;
+      return draftId != null &&
+          AddendumDraftSession.load(draftId)?.linkedJobId == jobId;
+    }).toList();
+
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth:
+            MediaQuery.sizeOf(context).width >= 900 ? double.infinity : 720),
+        child: CustomScrollView(
+          key: const Key('documents-scroll'),
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              sliver: SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Sign2DigitalSearchField(
+                      controller: _search,
+                      hintText: 'Search documents',
+                      onChanged: (_) => setState(() {}),
+                      onTrailingTap: _openDocumentFilters,
+                    ),
+                    if (widget.repository == null &&
+                        MobileAuthRepository.shared.isSignedIn &&
+                        ActiveCompanySession.canWrite('documents')) ...[
+                      const SizedBox(height: 15),
+                      Sign2DigitalPrimaryButton(
+                        key: const Key('documents-upload-pdf'),
+                        label: 'Upload PDF',
+                        height: 48,
+                        leading: const Icon(
+                          Icons.upload_file_outlined,
+                          size: 20, color: AppColors.white,
+                        ),
+                        onPressed: _uploadPdf,
+                      ),
+                    ],
+                    const SizedBox(height: 20),
+                    Stack(
+                      children: [
+                        const Positioned(
+                          left: 0, right: 0, bottom: 0,
+                          child: Divider(height: 1, thickness: 1,
+                            color: AppColors.lightBorder),
+                        ),
+                        Sign2DigitalDetailsTabs(
+                          labels: _tabs,
+                          selectedIndex: _category == null
+                              ? 0 : _category!.index + 1,
+                          onSelected: _selectCategory,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (_loading)
+              const SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: CircularProgressIndicator(
+                    key: Key('documents-loading'),
+                  ),
+                ),
+              )
+            else if (_error != null)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: TextButton(
+                    key: const Key('documents-retry'),
+                    onPressed: _load,
+                    child: Text('$_error. Tap to retry.'),
+                  ),
+                ),
+              )
+            else if (visible.isEmpty)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text(
+                      _search.text.trim().isNotEmpty
+                          ? 'No documents match your search'
+                          : _category == null &&
+                              _advancedType == DocumentBrowseType.all
+                              ? 'No documents yet'
+                              : 'No documents in this category',
+                      key: const Key('documents-empty'),
+                      style: const TextStyle(
+                        fontFamily: 'Inter', fontSize: 14,
+                        color: AppColors.secondaryText,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              )
+            else
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                sliver: SliverList.builder(
+                  itemCount: visible.length,
+                  itemBuilder: (context, index) {
+                    final record = visible[index];
+                    return Padding(
+                      key: ValueKey(record.id),
+                      padding: EdgeInsets.only(
+                        bottom: index == visible.length - 1 ? 0 : 20,
+                      ),
+                      child: Sign2DigitalQuoteSummaryCard(
+                        key: Key('document-card-${record.id}'),
+                        quoteNumber: record.number,
+                        titleOverride: record.title,
+                        projectName: record.project,
+                        customerName: record.customer,
+                        documentDate: record.timestamp,
+                        status: _hasVerifiedSignedQuote(record)
+                            ? 'Signed' : record.status,
+                        subtitleGap: 5,
+                        listStyle: true,
+                        onTap: () => _openDocument(record),
+                      ),
+                    );
+                  },
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+)
+        .firstMatch(selected.id);
+    if(general!=null){
+      await Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
+        builder:(_)=>GeneralDocumentEditorScreen(
+          documentId:int.parse(general.group(1)!)),
+      ));
+      if(mounted)await _load();
+      return;
     }
     if (selected.addendumDraftId != null &&
         ActiveCompanySession.canWrite('documents') &&

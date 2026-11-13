@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../clients/presentation/widgets/sign2digital_status_badge.dart';
 import '../../../../core/widgets/sign2digital_subscription_gate.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
 import '../../../../core/widgets/sign2digital_ai_voice_button.dart';
@@ -45,7 +47,7 @@ class _GeneralDocumentEditorScreenState extends State<GeneralDocumentEditorScree
   List<Map<String,dynamic>> _files=const [];
   String _type='letter',_locale='en',_source='manual';
   int? _clientId,_jobId;
-  bool _busy=false,_loading=false;
+  bool _busy=false,_loading=false,_preview=false;
   String? _error;
   static const _types={
     'letter':'Business Letter','statement':'Statement',
@@ -115,7 +117,7 @@ class _GeneralDocumentEditorScreenState extends State<GeneralDocumentEditorScree
       final data=await _repository.detail(id);
       if(!mounted)return;
       setState((){
-        _fill(data);_error=null;_loading=false;
+        _fill(data);_error=null;_loading=false;_preview=true;
       });
       await _loadFiles();
     }catch(_){
@@ -202,7 +204,7 @@ class _GeneralDocumentEditorScreenState extends State<GeneralDocumentEditorScree
       final result=await _repository.save(_current(),createRequestKey:_createKey);
       if(!mounted)return;
       setState((){
-        _fill(result);_error=null;
+        _fill(result);_error=null;_preview=true;
       });
       _notice('General document draft saved.');
       await _loadFiles();
@@ -354,7 +356,8 @@ class _GeneralDocumentEditorScreenState extends State<GeneralDocumentEditorScree
       _label(label),const SizedBox(height:8),
       Sign2DigitalOutlinedContainer(
         padding:const EdgeInsets.all(16),
-        child:TextField(key:fieldKey,controller:controller,enabled:_editable&&!_busy,
+        child:TextField(key:fieldKey,controller:controller,
+          readOnly:!_editable||_busy,cursorColor:AppColors.primary,
           minLines:lines,maxLines:lines==1?1:6,
           decoration:const InputDecoration(
             border:InputBorder.none,isCollapsed:true),
@@ -369,6 +372,11 @@ class _GeneralDocumentEditorScreenState extends State<GeneralDocumentEditorScree
         Expanded(child:DropdownButton<String>(
           key:Key('general-document-kind-$index'),isExpanded:true,
           value:_kinds[index],
+          style:const TextStyle(fontFamily:'Inter',fontSize:14,
+            color:AppColors.dark),
+          disabledHint:Text(_styles[_kinds[index]]??'Paragraph',
+            style:const TextStyle(fontFamily:'Inter',fontSize:14,
+              color:AppColors.dark)),
           onChanged:_editable&&!_busy?(v){
             if(v!=null)setState(()=>_kinds[index]=v);
           }:null,
@@ -395,15 +403,120 @@ class _GeneralDocumentEditorScreenState extends State<GeneralDocumentEditorScree
         padding:const EdgeInsets.all(16),
         child:TextField(controller:_paragraphs[index],
           key:Key('general-document-text-$index'),
-          enabled:_editable&&!_busy,minLines:3,maxLines:6,
+          readOnly:!_editable||_busy,minLines:3,maxLines:6,
+          cursorColor:AppColors.primary,
           style:TextStyle(fontFamily:'Inter',fontSize:14,
+            color:AppColors.dark,
             fontWeight:_bold[index]?FontWeight.w600:FontWeight.w400,
             fontStyle:_italic[index]?FontStyle.italic:FontStyle.normal),
           decoration:const InputDecoration(
-            hintText:'Document paragraph...',border:InputBorder.none,
-            isCollapsed:true))),
+            hintText:'Enter document content',
+            hintStyle:TextStyle(fontFamily:'Inter',fontSize:14,
+              color:AppColors.secondaryText),
+            border:InputBorder.none,isCollapsed:true))),
       const SizedBox(height:12),
     ]);
+
+
+  Future<void> _openOfficialActions() async {
+    final record=_saved;
+    if(record?.id==null||record!.status!='approved')return;
+    await showSign2DigitalBottomSheet<void>(
+      context:context,isScrollControlled:true,
+      builder:(sheet)=>SafeArea(child:Padding(
+        padding:const EdgeInsets.fromLTRB(20,12,20,20),
+        child:SizedBox(
+          height:MediaQuery.sizeOf(sheet).height*0.72,
+          child:SingleChildScrollView(
+            child:GeneralDocumentIssuedActions(
+              documentId:record.id!,
+              documentNumber:record.number,
+              repository:_repository,
+              suggestedSignerName:record.clientName,
+            ),
+          ),
+        ),
+      )),
+    );
+  }
+
+  Widget _readOnlyPreview(GeneralDocumentDraft document) =>
+    SingleChildScrollView(
+      key:const Key('general-document-preview-scroll'),
+      padding:const EdgeInsets.fromLTRB(20,0,20,24),
+      child:Center(child:ConstrainedBox(
+        constraints:const BoxConstraints(maxWidth:720),
+        child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+          Sign2DigitalOutlinedContainer(
+            padding:const EdgeInsets.all(20),
+            child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+              Text(document.title,style:const TextStyle(
+                fontFamily:'Inter',fontSize:20,fontWeight:FontWeight.w700,
+                color:AppColors.dark)),
+              const SizedBox(height:12),
+              Row(children:[
+                Expanded(child:Text(_types[document.type]??'Document',
+                  style:const TextStyle(fontFamily:'Inter',fontSize:14,
+                    color:AppColors.secondaryText))),
+                Sign2DigitalStatusBadge(status:document.status),
+              ]),
+              const SizedBox(height:8),
+              Text(document.number,style:const TextStyle(
+                fontFamily:'Inter',fontSize:12,color:AppColors.secondaryText)),
+              if(document.jobTitle.isNotEmpty)...[
+                const SizedBox(height:8),
+                Text(document.jobTitle,style:const TextStyle(
+                  fontFamily:'Inter',fontSize:14,color:AppColors.dark)),
+              ],
+              if(document.clientName.isNotEmpty)...[
+                const SizedBox(height:6),
+                Text(document.clientName,style:const TextStyle(
+                  fontFamily:'Inter',fontSize:14,color:AppColors.dark)),
+              ],
+            ]),
+          ),
+          const SizedBox(height:20),
+          _label('Document Content'),
+          const SizedBox(height:12),
+          Sign2DigitalOutlinedContainer(
+            padding:const EdgeInsets.all(20),
+            child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+              for(var i=0;i<document.blocks.length;i++)Padding(
+                padding:const EdgeInsets.only(bottom:14),
+                child:Text(
+                  (document.blocks[i].type=='bullet'?'• ':
+                    document.blocks[i].type=='numbered'
+                      ?(i+1).toString()+'. ':'')+document.blocks[i].text,
+                  key:Key('general-document-preview-block-$i'),
+                  style:TextStyle(fontFamily:'Inter',height:1.5,
+                    fontSize:document.blocks[i].type=='heading'?18:14,
+                    color:AppColors.dark,
+                    fontWeight:document.blocks[i].bold||
+                      document.blocks[i].type=='heading'
+                        ?FontWeight.w600:FontWeight.w400,
+                    fontStyle:document.blocks[i].italic
+                      ?FontStyle.italic:FontStyle.normal),
+                ),
+              ),
+            ]),
+          ),
+          const SizedBox(height:12),
+          const Text('Text preview only. Official PDF actions are available '
+            'after approval and verified issuance.',
+            style:TextStyle(fontFamily:'Inter',fontSize:12,
+              color:AppColors.secondaryText)),
+          const SizedBox(height:25),
+          if(document.editable)Sign2DigitalPrimaryButton(
+            key:const Key('general-document-preview-edit'),
+            label:'Edit Document',
+            onPressed:()=>setState(()=>_preview=false),
+          )else if(document.status=='approved')Sign2DigitalPrimaryButton(
+            key:const Key('general-document-preview-actions'),
+            label:'Document Actions',onPressed:_openOfficialActions,
+          ),
+        ]),
+      )),
+    );
 
   @override
   Widget build(BuildContext context){
@@ -411,11 +524,15 @@ class _GeneralDocumentEditorScreenState extends State<GeneralDocumentEditorScree
       .map((c)=>c.fullName.isEmpty?c.companyName:c.fullName).firstOrNull;
     final job=_jobs.where((j)=>j.id=='$_jobId')
       .map((j)=>j.title).firstOrNull;
-    return Scaffold(backgroundColor:AppColors.white,
+    return Theme(data:AppTheme.light,
+      child:Scaffold(backgroundColor:AppColors.white,
       body:SafeArea(child:Column(children:[
-        Sign2DigitalHeader(title:'AI Document Editor',
+        Sign2DigitalHeader(
+          title:_preview&&_saved!=null?'Document Preview':'AI Document Editor',
           onBack:()=>Navigator.of(context).maybePop()),
-        Expanded(child:Center(child:ConstrainedBox(
+        Expanded(child:_preview&&_saved!=null
+          ?_readOnlyPreview(_saved!)
+          :Center(child:ConstrainedBox(
           constraints:const BoxConstraints(maxWidth:720),
           child:ListView(key:const Key('general-document-scroll'),
             padding:const EdgeInsets.fromLTRB(20,0,20,20),children:[
@@ -471,7 +588,8 @@ class _GeneralDocumentEditorScreenState extends State<GeneralDocumentEditorScree
                 _paragraphs.add(TextEditingController());
                 _kinds.add('paragraph');_bold.add(false);_italic.add(false);
               }),
-              icon:const Icon(Icons.add),label:const Text('Add Paragraph')),
+              icon:const Icon(Icons.add),label:const Text('Add Paragraph'),
+              style:TextButton.styleFrom(foregroundColor:AppColors.primary)),
             const SizedBox(height:20),
             _field('AI Instructions (optional)',_instructions,lines:3,
               fieldKey:const Key('general-document-instructions')),
@@ -528,6 +646,6 @@ class _GeneralDocumentEditorScreenState extends State<GeneralDocumentEditorScree
             ],
           ]),
         ))),
-      ])));
+      ]))));
   }
 }

@@ -73,7 +73,13 @@ void main(){
     await tester.tap(find.byKey(const Key('general-document-save')));
     await tester.pumpAndSettle();
     expect(saves,1);
-    // The review action is below Save Draft and may be lazily built.
+    expect(find.text('Document Preview'),findsOneWidget);
+    expect(find.text('A real business message.'),findsOneWidget);
+    expect(find.byKey(const Key('general-document-preview-edit')),
+      findsOneWidget);
+    expect(find.byKey(const Key('document-detail-actions')),findsNothing);
+    await tester.tap(find.byKey(const Key('general-document-preview-edit')));
+    await tester.pumpAndSettle();
     await tester.scrollUntilVisible(find.text('Mark Reviewed'), 160,
       scrollable: find.byType(Scrollable).first);
     expect(find.text('Mark Reviewed'),findsOneWidget);
@@ -113,4 +119,34 @@ void main(){
     ).controller!.text, 'Manual text stays here.');
     client.dispose();
   });
+  testWidgets('Saved approved content is readable with one action entry',
+      (tester) async {
+    final client=api((request) async {
+      final doc={...savedDocument(),
+        'status':'approved','title':'Power of Attorney','type':'power_of_attorney'};
+      return http.Response(jsonEncode({'data':{
+        'document':doc,
+        'content':{'revision':1,'source':'manual','blocks':[
+          {'type':'paragraph','text':'Read this approved document.',
+           'bold':false,'italic':false},
+        ]},
+        'attachments':[],'revisions':[],'history':[],
+      }}),200);
+    });
+    await tester.pumpWidget(MaterialApp(home:
+      GeneralDocumentEditorScreen(documentId:41,
+        repository:RemoteGeneralDocumentRepository(api:client))));
+    await tester.pumpAndSettle();
+    expect(find.text('Document Preview'),findsOneWidget);
+    expect(find.text('Power of Attorney'),findsWidgets);
+    expect(find.text('Read this approved document.'),findsOneWidget);
+    expect(find.byKey(const Key('general-document-preview-actions')),
+      findsOneWidget);
+    expect(find.byKey(const Key('document-detail-actions')),findsNothing);
+    final shown=tester.widget<Text>(find.text('Read this approved document.'));
+    expect(shown.style?.color,const Color(0xFF122536));
+    client.dispose();
+  });
+
+
 }
