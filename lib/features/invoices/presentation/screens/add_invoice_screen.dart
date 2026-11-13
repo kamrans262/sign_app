@@ -1,3 +1,4 @@
+import '../../../support/presentation/widgets/support_ai_prompt_hint.dart';
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
@@ -906,7 +907,9 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
           children: [
             Sign2DigitalAiVoiceButton(onPressed: _voice),
-            const SizedBox(height: 20),
+            const SizedBox(height: 6),
+            const SupportAiPromptHint(module: 'invoices'),
+            const SizedBox(height: 15),
             Sign2DigitalSelectionField(
               key: const Key('invoice-create-job'),
               label: 'Job / Project',
