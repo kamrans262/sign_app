@@ -108,7 +108,8 @@ class Sign2DigitalApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
-      themeMode: settings.themeMode,
+      // Only the approved Sign2Digital light UI is offered in Settings.
+      themeMode: ThemeMode.light,
       // Sign2Digital keyboard dismissal for all routes.
       builder: (context, child) => GestureDetector(
         behavior: HitTestBehavior.translucent,
