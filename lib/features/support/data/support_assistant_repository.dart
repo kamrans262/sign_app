@@ -3,10 +3,11 @@ import '../../../core/services/sign_api_client.dart';
 import '../../auth/data/mobile_auth_repository.dart';
 
 class AssistantTurn {
-  const AssistantTurn({required this.role, required this.content, this.screen});
+  const AssistantTurn({required this.role, required this.content, this.screen, this.samplePrompt});
   final String role;
   final String content;
   final String? screen;
+  final String? samplePrompt;
 }
 
 class AssistantAnswer {
@@ -86,13 +87,17 @@ class RemoteSupportAssistantRepository implements SupportAssistantRepository {
     }
     const links = {
       'companies', 'clients', 'jobs', 'quotes', 'documents',
-      'invoices', 'expenses', 'deposits', 'labour', 'team',
+      'invoices', 'expenses', 'deposits', 'labour', 'equipment',
+      'reports', 'reminders', 'ai_documents', 'team',
       'settings', 'support',
     };
     final route = result['screen'];
+    final sample = result['sample_prompt'];
     return AssistantAnswer(
       answer: answer.trim(),
       screen: route is String && links.contains(route) ? route : null,
+      samplePrompt: sample is String && sample.trim().length <= 600
+          ? sample.trim() : null,
     );
   }
 
