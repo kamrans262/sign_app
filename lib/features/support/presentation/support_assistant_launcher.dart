@@ -15,6 +15,7 @@ abstract final class SupportAssistantLauncher {
     required String screen,
     ValueChanged<String>? onNavigate,
     SupportAssistantRepository? repository,
+    String? sampleModule,
   }) async {
     final result = await showSign2DigitalBottomSheet<String>(
       context: context,
@@ -22,6 +23,7 @@ abstract final class SupportAssistantLauncher {
       useSafeArea: true,
       builder: (sheetContext) => SupportAssistantSheet(
         screen: screen,
+        sampleModule: sampleModule,
         repository: repository ?? RemoteSupportAssistantRepository.shared,
         authenticated: MobileAuthRepository.shared.isSignedIn),
     );
@@ -36,6 +38,8 @@ abstract final class SupportAssistantLauncher {
         Sign2DigitalNavigation.selectDashboardTab(context, 2)) return;
     if ((result == 'quotes' || result == 'documents') &&
         Sign2DigitalNavigation.selectDashboardTab(context, 3)) return;
+    if (const {'equipment', 'reports', 'reminders', 'ai_documents'}.contains(result) &&
+        Sign2DigitalNavigation.selectDashboardTab(context, 4)) return;
     if (result == 'support') {
       await Sign2DigitalNavigation.open<void>(
           context, const HelpSupportScreen());
