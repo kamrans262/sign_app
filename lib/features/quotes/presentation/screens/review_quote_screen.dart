@@ -1,3 +1,4 @@
+import '../../../../core/widgets/sign2digital_input_field.dart';
 import '../../../../core/widgets/sign2digital_form_dialog.dart';
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import '../../../../core/widgets/sign2digital_subscription_gate.dart';
@@ -86,30 +87,59 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
           content: SingleChildScrollView(child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextFormField(
-                key: const Key('quote-edit-client'), initialValue: client,
-                onChanged: (value) => client = value,
-                decoration: const InputDecoration(labelText: 'Client'),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Sign2DigitalInputField(
+                  key: const Key('quote-edit-client'), label: 'Client',
+                  hintText: 'Enter client',
+                  iconAsset: '', leadingIcon: Icons.person_outline,
+                  initialValue: client, onChanged: (value) => client = value,
+                ),
               ),
-              TextFormField(
-                key: const Key('quote-edit-number'), initialValue: number,
-                onChanged: (value) => number = value,
-                decoration: const InputDecoration(labelText: 'Quote Number'),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Sign2DigitalInputField(
+                  key: const Key('quote-edit-number'), label: 'Quote Number',
+                  hintText: 'Enter quote number',
+                  iconAsset: '', leadingIcon: Icons.tag_outlined,
+                  initialValue: number, onChanged: (value) => number = value,
+                ),
               ),
-              TextFormField(initialValue: address, maxLines: 2,
-                onChanged: (value) => address = value,
-                decoration: const InputDecoration(labelText: 'Billing Address')),
-              TextFormField(initialValue: email,
-                onChanged: (value) => email = value,
-                decoration: const InputDecoration(labelText: 'Client Email')),
-              TextFormField(initialValue: phone,
-                onChanged: (value) => phone = value,
-                decoration: const InputDecoration(labelText: 'Client Phone')),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Sign2DigitalInputField(
+                  label: 'Billing Address',
+                  hintText: 'Enter billing address',
+                  iconAsset: '', leadingIcon: Icons.location_on_outlined,
+                  initialValue: address, onChanged: (value) => address = value,
+                  maxLines: 2,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Sign2DigitalInputField(
+                  label: 'Client Email',
+                  hintText: 'Enter client email',
+                  iconAsset: '', leadingIcon: Icons.email_outlined,
+                  initialValue: email, onChanged: (value) => email = value,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Sign2DigitalInputField(
+                  label: 'Client Phone',
+                  hintText: 'Enter client phone',
+                  iconAsset: '', leadingIcon: Icons.phone_outlined,
+                  initialValue: phone, onChanged: (value) => phone = value,
+                ),
+              ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 initialValue: ['CHF', 'GBP', 'EUR', 'USD'].contains(chosenCurrency)
                     ? chosenCurrency : 'CHF',
-                decoration: const InputDecoration(labelText: 'Currency'),
+                decoration: const InputDecoration(labelText: 'Currency',
+                  prefixIcon: Icon(Icons.currency_exchange_outlined),
+                ),
                 items: ['CHF', 'GBP', 'EUR', 'USD'].map((value) =>
                     DropdownMenuItem(value: value, child: Text(value))).toList(),
                 onChanged: (value) {
@@ -118,14 +148,26 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
                   }
                 },
               ),
-              TextFormField(initialValue: vat,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                onChanged: (value) => vat = value,
-                decoration: const InputDecoration(labelText: 'VAT %')),
-              TextFormField(initialValue: deposit,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                onChanged: (value) => deposit = value,
-                decoration: const InputDecoration(labelText: 'Deposit %')),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Sign2DigitalInputField(
+                  label: 'VAT %',
+                  hintText: 'Enter vat %',
+                  iconAsset: '', leadingIcon: Icons.percent_outlined,
+                  initialValue: vat, onChanged: (value) => vat = value,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Sign2DigitalInputField(
+                  label: 'Deposit %',
+                  hintText: 'Enter deposit %',
+                  iconAsset: '', leadingIcon: Icons.payments_outlined,
+                  initialValue: deposit, onChanged: (value) => deposit = value,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                ),
+              ),
               const SizedBox(height: 12),
               TextButton.icon(
                 key: const Key('quote-edit-valid-until'),
@@ -142,27 +184,69 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
               ),
               const Divider(),
               const Text('Optional payment account (QR only when complete)'),
-              TextFormField(initialValue: iban,
-                onChanged: (value) => iban = value,
-                decoration: const InputDecoration(labelText: 'Swiss IBAN')),
-              TextFormField(initialValue: accountHolder,
-                onChanged: (value) => accountHolder = value,
-                decoration: const InputDecoration(labelText: 'Account holder')),
-              TextFormField(initialValue: street,
-                onChanged: (value) => street = value,
-                decoration: const InputDecoration(labelText: 'Payee street')),
-              TextFormField(initialValue: buildingNumber,
-                onChanged: (value) => buildingNumber = value,
-                decoration: const InputDecoration(labelText: 'Building number')),
-              TextFormField(initialValue: postalCode,
-                onChanged: (value) => postalCode = value,
-                decoration: const InputDecoration(labelText: 'Postal code')),
-              TextFormField(initialValue: city,
-                onChanged: (value) => city = value,
-                decoration: const InputDecoration(labelText: 'Payee city')),
-              TextFormField(initialValue: country,
-                onChanged: (value) => country = value,
-                decoration: const InputDecoration(labelText: 'Country (CH/LI)')),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Sign2DigitalInputField(
+                  label: 'Swiss IBAN',
+                  hintText: 'Enter swiss iban',
+                  iconAsset: '', leadingIcon: Icons.account_balance_outlined,
+                  initialValue: iban, onChanged: (value) => iban = value,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Sign2DigitalInputField(
+                  label: 'Account holder',
+                  hintText: 'Enter account holder',
+                  iconAsset: '', leadingIcon: Icons.person_outline,
+                  initialValue: accountHolder, onChanged: (value) => accountHolder = value,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Sign2DigitalInputField(
+                  label: 'Payee street',
+                  hintText: 'Enter payee street',
+                  iconAsset: '', leadingIcon: Icons.signpost_outlined,
+                  initialValue: street, onChanged: (value) => street = value,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Sign2DigitalInputField(
+                  label: 'Building number',
+                  hintText: 'Enter building number',
+                  iconAsset: '', leadingIcon: Icons.home_outlined,
+                  initialValue: buildingNumber, onChanged: (value) => buildingNumber = value,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Sign2DigitalInputField(
+                  label: 'Postal code',
+                  hintText: 'Enter postal code',
+                  iconAsset: '', leadingIcon: Icons.markunread_mailbox_outlined,
+                  initialValue: postalCode, onChanged: (value) => postalCode = value,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Sign2DigitalInputField(
+                  label: 'Payee city',
+                  hintText: 'Enter payee city',
+                  iconAsset: '', leadingIcon: Icons.location_city_outlined,
+                  initialValue: city, onChanged: (value) => city = value,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Sign2DigitalInputField(
+                  label: 'Country (CH/LI)',
+                  hintText: 'Enter country (ch/li)',
+                  iconAsset: '', leadingIcon: Icons.public_outlined,
+                  initialValue: country, onChanged: (value) => country = value,
+                ),
+              ),
               TextButton.icon(
                 key: const Key('quote-edit-date'),
                 onPressed: () async {
