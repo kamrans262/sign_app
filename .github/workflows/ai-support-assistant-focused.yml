@@ -8,6 +8,15 @@ on:
       - 'lib/core/widgets/sign2digital_dashboard_header.dart'
       - 'lib/features/clients/presentation/screens/clients_screen.dart'
       - 'test/features/support/**'
+      - 'lib/features/auth/data/mobile_auth_repository.dart'
+      - 'lib/features/jobs/presentation/screens/create_job_screen.dart'
+      - 'lib/features/quotes/presentation/screens/create_quote_screen.dart'
+      - 'lib/features/expenses/presentation/screens/add_expense_screen.dart'
+      - 'lib/features/deposits/presentation/screens/add_deposit_screen.dart'
+      - 'lib/features/invoices/presentation/screens/add_invoice_screen.dart'
+      - 'lib/features/labour/presentation/screens/add_labour_entry_screen.dart'
+      - 'lib/features/equipment/presentation/screens/add_equipment_screen.dart'
+      - 'lib/features/documents/presentation/screens/generate_ai_document_screen.dart'
   workflow_dispatch:
 permissions:
   contents: read
@@ -26,6 +35,6 @@ jobs:
           cache: true
       - run: flutter pub get
       - name: Analyze AI Support, header, navigation and test files
-        run: flutter analyze --no-pub --no-fatal-infos --no-fatal-warnings lib/features/support lib/core/widgets/sign2digital_dashboard_header.dart lib/features/clients/presentation/screens/clients_screen.dart test/features/support
+        run: flutter analyze --no-pub --no-fatal-infos --no-fatal-warnings lib/features/support lib/features/auth/data/mobile_auth_repository.dart lib/core/widgets/sign2digital_dashboard_header.dart lib/features/clients/presentation/screens/clients_screen.dart test/features/support
       - name: Verify AI chat and manual-only onboarding preview
-        run: flutter test --no-pub --timeout=50s test/features/support/support_assistant_test.dart
+        run: flutter test --no-pub --timeout=50s test/features/support/support_assistant_test.dart test/features/support/support_voice_session_test.dart
