@@ -66,6 +66,7 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
+  image: ^4.5.4  # Produce a square, aspect-correct Android 12 splash resource.
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -161,8 +162,10 @@ flutter_launcher_icons:
     generate: true
     image_path: "assets/sign_app_icon.png"
 
-# One light, branded launch screen across Android (including dark mode),
-# iOS and web. Never use the launcher app icon as the launch-splash artwork.
+# Keep the original full wordmark for iOS and pre-Android-12. Android 12+
+# requires a SQUARE adaptive splash icon: generated from this same logo by
+# tool/generate_android12_square_splash.dart (safe-circle padded, no stretch).
+# Never use the launcher app icon as the launch-splash artwork.
 flutter_native_splash:
   color: "#FFFFFF"
   color_dark: "#FFFFFF"
@@ -174,7 +177,5 @@ flutter_native_splash:
   android_12:
     color: "#FFFFFF"
     color_dark: "#FFFFFF"
-    image: "assets/logo_splash.png"
-    image_dark: "assets/logo_splash.png"
-    icon_background_color: "#FFFFFF"
-    icon_background_color_dark: "#FFFFFF"
+    image: "assets/logo_splash_android12.png"
+    image_dark: "assets/logo_splash_android12.png"
