@@ -193,7 +193,7 @@ void main() {
         signingRequest:request);
     expect(evidence?.signerName,'Verified Owner');
     expect(evidence?.pngBytes,png);
-    expect(evidence?.signedAt,DateTime.utc(2026,11,15,9,45));
+    expect(evidence!.signedAt.toUtc(),DateTime.utc(2026,11,15,9,45));
   });
 
   test('business signature preview rejects corrupted evidence',() async {
