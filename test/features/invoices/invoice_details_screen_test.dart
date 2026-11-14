@@ -217,15 +217,12 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(AddInvoiceScreen), findsOneWidget);
     await tester.scrollUntilVisible(
-      find.byKey(const Key('invoice-create-number')), -125,
+      find.byKey(const Key('invoice-auto-number-label')), -125,
       scrollable: find.descendant(
         of: find.byKey(const Key('invoice-create-scroll')),
         matching: find.byType(Scrollable)).first);
-    final numberInput = find.descendant(
-      of: find.byKey(const Key('invoice-create-number')),
-      matching: find.byType(EditableText));
-    expect(tester.widget<EditableText>(numberInput).controller.text,
-      'INV-2026-0098');
+    expect(find.text('Invoice Number: INV-2026-0098'), findsOneWidget);
+    expect(find.byKey(const Key('invoice-create-number')), findsNothing);
     await tester.scrollUntilVisible(
       find.byKey(const Key('invoice-create-save')), 140,
       scrollable: find.descendant(

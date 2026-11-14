@@ -377,8 +377,9 @@ class RemoteInvoiceRepository extends InvoiceRepository {
       companyScoped:true,data:_fields(invoice)));
     _check(company);
     final saved=_record(response['invoice'],company);
-    if(saved.status!=InvoiceStatus.draft ||
-       !RegExp(r'^INV-[0-9]{3,}$').hasMatch(saved.number)){
+    // Legacy invoice records may still have their historical numbering.
+    // Only require a real nonempty number from the authoritative server.
+    if(saved.status!=InvoiceStatus.draft || saved.number.trim().isEmpty){
       throw const SignApiException('Invoice numbering was not confirmed.');
     }
     return saved;
