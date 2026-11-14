@@ -112,19 +112,19 @@ void main() {
     expect(find.text('New'), findsOneWidget);
     expect(find.text('Link to Existing Documents'), findsOneWidget);
     expect(find.text('Quote Q-12800'), findsOneWidget);
-    expect(find.text('Addendum Number'), findsOneWidget);
+    expect(find.text('Addendum Number: Assigned automatically on save'), findsOneWidget);
+    expect(find.byKey(const Key('addendum-auto-number-label')), findsOneWidget);
     expect(find.text('Title'), findsOneWidget);
     expect(find.text('Description'), findsOneWidget);
     expect(find.text('Effective Dates'), findsOneWidget);
     final inputs = find.byType(TextFormField);
-    await tester.enterText(inputs.at(0), 'A-0005');
-    await tester.enterText(inputs.at(1), 'Terrace works');
-    await tester.enterText(inputs.at(2), 'Renovate waterproofing');
+    await tester.enterText(inputs.at(0), 'Terrace works');
+    await tester.enterText(inputs.at(1), 'Renovate waterproofing');
     await tester.ensureVisible(find.text('Save as Draft'));
     await tester.tap(find.text('Save as Draft'));
     await tester.pump();
     final saved = AddendumDraftSession.load('ui-draft-1')!;
-    expect(saved.number, 'A-0005');
+    expect(saved.number, isEmpty); // Assigned on successful create.
     expect(saved.linkedDocumentId, quote.id);
     expect(saved.description, 'Renovate waterproofing');
     expect(tester.takeException(), isNull);
@@ -141,11 +141,11 @@ void main() {
     await tester.ensureVisible(find.text('Create Addendum'));
     await tester.tap(find.text('Create Addendum'));
     await tester.pump();
-    expect(find.text('Addendum number is required.'), findsOneWidget);
+    expect(find.text('Title is required.'), findsOneWidget);
     expect(AddendumDraftSession.created, isEmpty);
 
     AddendumDraftSession.save(AddendumDraft(
-      id: 'create-fixture', number: 'A-0005', title: 'Additional works',
+      id: 'create-fixture', title: 'Additional works',
       description: 'Terrace waterproofing',
       effectiveDate: DateTime(2026, 8, 25),
       linkedDocumentId: quote.id,
@@ -167,6 +167,7 @@ void main() {
     expect(document.category, DocumentCategory.addends);
     expect(document.status.toLowerCase(), isNot('signed'));
     expect(document.id, 'create-fixture');
+    expect(document.number, 'ADD-001');
     expect(tester.takeException(), isNull);
   });
 
@@ -185,7 +186,7 @@ void main() {
     expect(find.text('Save Addendum'), findsOneWidget);
     expect(find.text('Create Addendum'), findsNothing);
     expect(find.text('Original work'), findsOneWidget);
-    await tester.enterText(find.byType(TextFormField).at(1), 'Updated work');
+    await tester.enterText(find.byType(TextFormField).at(0), 'Updated work');
     await tester.ensureVisible(find.byKey(const Key('addendum-create')));
     await tester.tap(find.byKey(const Key('addendum-create')));
     await tester.pump();
@@ -231,7 +232,7 @@ void main() {
       requestTemporaryApiKey: (_) async => 'in-memory-demo-key',
     )));
     final fields = find.byType(TextFormField);
-    await tester.enterText(fields.at(1), 'Manual title stays');
+    await tester.enterText(fields.at(0), 'Manual title stays');
     await tester.ensureVisible(find.text('Create with AI Voice'));
     await tester.tap(find.text('Create with AI Voice'));
     await tester.pump();
@@ -244,7 +245,9 @@ void main() {
     expect(find.text('Manual title stays'), findsWidgets);
     final saved = tester.widgetList<TextFormField>(find.byType(TextFormField))
         .map((f) => f.controller?.text).toList();
-    expect(saved, contains('A-0005'));
+    expect(saved, isNot(contains('A-0005')));
+    expect(find.text('Addendum Number: Assigned automatically on save'),
+      findsOneWidget);
     expect(saved, contains('Waterproofing and new tiles'));
     expect(tester.takeException(), isNull);
   });

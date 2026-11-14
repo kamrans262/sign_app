@@ -778,7 +778,7 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
       );
       if (initial == null) {
         if (_repository is RemoteInvoiceRepository) {
-          final created = await (_repository as RemoteInvoiceRepository)
+          final created = await _repository
               .createInvoice(draft);
           if (mounted) { Navigator.of(context).pop(created); }
         } else {
