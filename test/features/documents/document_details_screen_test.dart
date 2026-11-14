@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sign2digital/features/documents/data/demo_document_repository.dart';
 import 'package:sign2digital/features/documents/domain/document_record.dart';
+import 'package:sign2digital/features/quotes/domain/quote_review_models.dart';
+import 'package:sign2digital/features/quotes/presentation/screens/quote_preview_screen.dart';
 import 'package:sign2digital/features/documents/presentation/screens/document_details_screen.dart';
 import 'package:sign2digital/features/documents/presentation/widgets/sign2digital_document_history.dart';
 import 'package:sign2digital/features/quotes/presentation/widgets/sign2digital_signature_action_card.dart';
@@ -148,6 +150,33 @@ void main() {
     await tester.pump();
     expect(find.text('No related documents are available.'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Quotation View card opens standalone Quote Preview, not Preview tab',
+      (tester) async {
+    final quote = QuoteReviewDraft(
+      id: 'local-quote-17',
+      clientName: 'Current Test Customer',
+      quoteNumber: 'Q-17',
+      date: DateTime.utc(2026, 11, 15),
+      terms: 'Current saved quotation terms',
+      items: [QuoteReviewWorkItem(id:'1',title:'Saved work item',
+          description:'Work',quantity:'1',unitPrice:'150.00')],
+    );
+    final document = DocumentRecord(
+      id:'quote-17', category:DocumentCategory.quotes,
+      number:'Q-17', title:'Quote Q-17', project:'Test Job',
+      customer: 'Current Test Customer', status:'draft',
+      timestamp: DateTime.utc(2026,11,15),
+      quote:quote, demoOnly:true,
+    );
+    await tester.pumpWidget(page(document:document));
+    await tester.tap(find.byKey(const Key('document-action-0')));
+    await tester.pumpAndSettle();
+    expect(find.byType(QuotePreviewScreen), findsOneWidget);
+    expect(find.text('Quote Preview'),findsOneWidget);
+    expect(find.text('Current saved quotation terms'),findsOneWidget);
+    expect(find.textContaining('Saved work item'),findsWidgets);
   });
 
   testWidgets('original quote Preview uses linked verified signed PDF',
