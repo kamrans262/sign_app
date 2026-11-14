@@ -165,17 +165,28 @@ class Sign2DigitalQuotePdfBuilder {
               lineAmount('Remaining after deposit',
                 quoteMoney(quote.remainingAfterDepositMinor, quote.currency)),
         pw.SizedBox(height: 65),
-        pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: [
-                  for (final label in const ['Customer Signature', 'Date'])
-                    pw.SizedBox(width: 138, child: pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.start,
-                      children: [
-                        pw.Container(height: 2, color: grey),
-                        pw.SizedBox(height: 6),
-                        pw.Text(label, style: style(10, color: grey)),
-                      ])),
-                ]),
+        // A tiny invisible link annotation marks the signature-line Y position
+        // in the frozen approval PDF. Laravel reads the PDF's own annotation
+        // coordinates when making a separately verified signed artifact.
+        // Keep marker and the signature/date lines in one non-splitting widget.
+        pw.Column(children: [
+          pw.UrlLink(
+            destination: 'https://sign2digital.invalid/signature-anchor-v1',
+            child: pw.SizedBox(width: 1, height: 1),
+          ),
+          pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: [
+              for (final label in const ['Customer Signature', 'Date'])
+                pw.SizedBox(width: 138, child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Container(height: 2, color: grey),
+                    pw.SizedBox(height: 6),
+                    pw.Text(label, style: style(10, color: grey)),
+                  ])),
+            ],
+          ),
+        ]),
         pw.SizedBox(height: 20),
         pw.Container(
           padding: const pw.EdgeInsets.all(15),
