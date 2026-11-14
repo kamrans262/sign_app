@@ -1,7 +1,9 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sign2digital/features/quotes/domain/quote_review_models.dart';
 import 'package:sign2digital/features/quotes/presentation/screens/quote_preview_screen.dart';
+import 'package:sign2digital/features/quotes/data/remote_signature_request_repository.dart';
 
 void main() {
   test('Swiss payment QR is hidden when bank data is missing or invalid', () {
@@ -55,6 +57,36 @@ void main() {
     await tester.ensureVisible(find.byKey(const Key('quote-preview-download')));
     expect(find.byKey(const Key('quote-preview-share')), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('pending quote shows verified business ink and blank customer line',
+      (tester) async {
+    final draft=QuoteReviewDraft(
+      id:'server-quote-12',serverId:12,
+      clientName:'Customer',quoteNumber:'Q-12',
+      date:DateTime.utc(2026,11,15),terms:'Approved terms',
+      approvedLocally:true,
+      items:[QuoteReviewWorkItem(id:'1',title:'Repair',
+        description:'Work',quantity:'1',unitPrice:'80.00')],
+    );
+    final ink=VerifiedQuoteBusinessSignature(
+      requestId:32,signerName:'Business Owner',
+      signedAt:DateTime.utc(2026,11,15,8),
+      pngBytes:base64Decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJ'
+        'AAAADUlEQVQIHWP4z8DwHwAFgAI/ScLTrwAAAABJRU5ErkJggg=='),
+    );
+    await tester.pumpWidget(MaterialApp(home:QuotePreviewScreen(
+      quote:draft,verifiedBusinessSignature:ink,
+    )));
+    await tester.ensureVisible(find.byKey(
+      const Key('quote-preview-verified-business-signature')));
+    expect(find.text('Business Signature'),findsOneWidget);
+    expect(find.text('Business Owner  ·  15/11/2026'),findsOneWidget);
+    expect(find.text('Customer signature pending'),findsOneWidget);
+    expect(find.text('Customer Signature'),findsOneWidget);
+    expect(find.byKey(const Key('quote-preview-verified-signed-pdf')),
+      findsNothing);
   });
 
   testWidgets('approved quote preview has only Download and Send to Customer actions',
