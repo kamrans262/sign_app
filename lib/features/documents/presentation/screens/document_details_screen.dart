@@ -1111,7 +1111,17 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
   }
 
   void _selectTab(int index) {
-    setState(() => _tab = index);
+    setState(() {
+      _tab = index;
+      if (index == 1) _pdfFuture = null;
+    });
+    // Re-read the verified signed/unsigned state when opening a quotation
+    // Preview. An approval or customer signature may have completed while
+    // this screen was open; never reuse a cached unsigned PDF after signing.
+    if (index == 1 && widget.loadDocument != null &&
+        _record?.id.startsWith('quote-') == true) {
+      _load();
+    }
   }
 
   bool _historyCanPreview(DocumentRecord record) {
@@ -1134,7 +1144,8 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
   }
 
   void _view() {
-    setState(() { _action = 0; _tab = 1; });
+    setState(() => _action = 0);
+    _selectTab(1);
   }
 
   static const _label = TextStyle(
