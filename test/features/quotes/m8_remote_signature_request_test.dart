@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:crypto/crypto.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -157,6 +158,66 @@ void main() {
       'POST /api/v1/quotes/22/signature-requests',
       'GET /api/v1/signature-requests/101',
     ]);
+  });
+
+  test('business preview accepts only persisted checksum-verified ink',
+      () async {
+    final png = Uint8List.fromList(
+        [137,80,78,71,13,10,26,10,1,2,3,4,5,6]);
+    final checksum = sha256.convert(png).toString();
+    final api = client(MockClient((request) async {
+      expect(request.headers['X-Company-Id'], '5');
+      if (request.url.path.endsWith('/101/business-signature')) {
+        return http.Response.bytes(png,200,
+            headers:{'content-type':'image/png'});
+      }
+      if (request.url.path.endsWith('/101')) {
+        return http.Response(jsonEncode({'data':{
+          'request':{
+            ...requestRecord(status:'sent'),
+            'business_signer_name':'Verified Owner',
+            'business_signed_at':'2026-11-15T09:45:00Z',
+            'business_signature_sha256':checksum,
+            'approved_revision':2,
+          },
+          'events':[],
+        }}),200);
+      }
+      throw StateError('Unexpected endpoint');
+    }));
+    final signatures = RemoteSignatureRequestRepository(api:api);
+    final quote = approvedSource();
+    final request = await signatures.show(quote,101);
+    expect(request.hasVerifiedBusinessSignature,isTrue);
+    final evidence = await signatures.verifiedBusinessSignature(quote,
+        signingRequest:request);
+    expect(evidence?.signerName,'Verified Owner');
+    expect(evidence?.pngBytes,png);
+    expect(evidence?.signedAt,DateTime.utc(2026,11,15,9,45));
+  });
+
+  test('business signature preview rejects corrupted evidence',() async {
+    final png=Uint8List.fromList([137,80,78,71,13,10,26,10,0,0,0]);
+    final api=client(MockClient((request) async {
+      if (request.url.path.endsWith('/101/business-signature')) {
+        return http.Response.bytes(png,200,
+            headers:{'content-type':'image/png'});
+      }
+      throw StateError('Unexpected endpoint');
+    }));
+    final request=RemoteSigningRequest(
+      id:101,status:'sent',
+      tracking:QuoteDocumentTracking(quoteId:approvedSource().id),
+      approvedRevision:2,
+      businessSignerName:'Verified Owner',
+      businessSignedAt:DateTime.utc(2026,11,15,9,45),
+      businessSignatureSha256:'a'*64,
+    );
+    await expectLater(
+      RemoteSignatureRequestRepository(api:api).verifiedBusinessSignature(
+        approvedSource(),signingRequest:request),
+      throwsA(isA<SignApiException>()),
+    );
   });
 
   test('company response isolation prevents accepting a foreign quote',() async {
