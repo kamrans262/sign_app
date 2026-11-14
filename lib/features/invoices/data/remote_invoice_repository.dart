@@ -354,7 +354,8 @@ class RemoteInvoiceRepository extends InvoiceRepository {
       'job_id':job,'quote_id':draft.sourceQuoteId,
       'addenda_ids':draft.sourceAddendaIds,
       'invoice_type':draft.invoiceType,
-      'invoice_number':draft.number.trim(),
+      if (draft.id.startsWith('invoice-'))
+        'invoice_number':draft.number.trim(),
       'invoice_date':day(draft.date),'due_date':day(draft.dueDate!),
       'vat_basis_points':draft.vatBasisPoints,
       'iban':draft.iban.trim(),'notes':draft.notes.trim(),
@@ -369,15 +370,23 @@ class RemoteInvoiceRepository extends InvoiceRepository {
     return result;
   }
 
-  @override
-  Future<void> saveDraft(InvoiceRecord invoice) async {
+  /// Create and return the server-assigned invoice number immediately.
+  Future<InvoiceRecord> createInvoice(InvoiceRecord invoice) async {
     final company=_company();
     final response=_data(await _api.post('/api/v1/invoices',
       companyScoped:true,data:_fields(invoice)));
     _check(company);
-    if(_record(response['invoice'],company).status!=InvoiceStatus.draft){
-      throw const SignApiException('Invoice was not saved as a draft.');
+    final saved=_record(response['invoice'],company);
+    if(saved.status!=InvoiceStatus.draft ||
+       !RegExp(r'^INV-[0-9]{3,}$').hasMatch(saved.number)){
+      throw const SignApiException('Invoice numbering was not confirmed.');
     }
+    return saved;
+  }
+
+  @override
+  Future<void> saveDraft(InvoiceRecord invoice) async {
+    await createInvoice(invoice);
   }
 
   @override

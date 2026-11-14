@@ -111,7 +111,7 @@ class RemoteAddendumRepository {
       throw const SignApiException('Choose a verified signed original.');
     }
     final body = <String, dynamic>{
-      'number': draft.number.trim(), 'title': draft.title.trim(),
+      'title': draft.title.trim(),
       'change_description': draft.description.trim(),
       'effective_date': _date(draft.effectiveDate!),
       'additional_work': draft.additionalWork.trim().isEmpty

@@ -143,7 +143,8 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
     _iban.text = initial?.iban ?? widget.initialIban;
     _items.addAll(initial?.items ?? widget.initialItems);
     _number.text = initial?.number ??
-        'INV-${DateTime.now().microsecondsSinceEpoch}';
+        (_repository is RemoteInvoiceRepository
+          ? '' : 'INV-${DateTime.now().microsecondsSinceEpoch}');
     if (initial == null && widget.initialJob != null) {
       _job = widget.initialJob;
       _client.text = _job!.clientName;
@@ -611,8 +612,6 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
       matched != null && _job != null && _job!.id != matched.id,
       result.clientName != null && _client.text.trim().isNotEmpty &&
           _client.text.trim() != result.clientName,
-      result.invoiceNumber != null && _number.text.trim().isNotEmpty &&
-          _number.text.trim() != result.invoiceNumber,
       result.iban != null && _iban.text.trim().isNotEmpty &&
           _iban.text.trim() != result.iban,
       result.issueDate != null && _issueDate != null &&
@@ -646,10 +645,6 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
       if (result.clientName != null &&
           (replace || _client.text.trim().isEmpty)) {
         _client.text = result.clientName!;
-      }
-      if (result.invoiceNumber != null &&
-          (replace || _number.text.trim().isEmpty)) {
-        _number.text = result.invoiceNumber!;
       }
       if (result.iban != null &&
           (replace || _iban.text.trim().isEmpty)) {
@@ -742,7 +737,8 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
     final subtotal = _subtotalMinor;
     final total = _totalMinor;
     if (job == null || _client.text.trim().isEmpty ||
-        _number.text.trim().isEmpty || issued == null || due == null ||
+        (_repository is! RemoteInvoiceRepository &&
+          _number.text.trim().isEmpty) || issued == null || due == null ||
         due.isBefore(issued) || !isValidInvoiceIban(_iban.text) ||
         _vatBasisPoints < 0 || _vatBasisPoints > 10000 ||
         subtotal == null || total == null || total <= 0 ||
@@ -781,8 +777,14 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
         sourceAddendaIds:_sourceAddendaIds,
       );
       if (initial == null) {
-        await _repository.saveDraft(draft);
-        if (mounted) { Navigator.of(context).pop(draft); }
+        if (_repository is RemoteInvoiceRepository) {
+          final created = await (_repository as RemoteInvoiceRepository)
+              .createInvoice(draft);
+          if (mounted) { Navigator.of(context).pop(created); }
+        } else {
+          await _repository.saveDraft(draft);
+          if (mounted) { Navigator.of(context).pop(draft); }
+        }
       } else {
         final saved = await _repository.updateInvoice(draft);
         if (mounted) { Navigator.of(context).pop(saved); }
@@ -926,10 +928,12 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
               iconAsset: 'assets/icons/user.svg', controller: _client,
               textCapitalization: TextCapitalization.words),
             const SizedBox(height: 20),
-            Sign2DigitalInputField(
-              key: const Key('invoice-create-number'),
-              label: 'Invoice Number', hintText: 'e.g, A-0005',
-              iconAsset: 'assets/icons/hashtag.svg', controller: _number),
+            Text(widget.initialInvoice == null
+                ? 'Invoice Number: Assigned automatically on save'
+                : 'Invoice Number: ${widget.initialInvoice!.number}',
+              key: const Key('invoice-auto-number-label'),
+              style: const TextStyle(fontFamily: 'Inter', fontSize: 14,
+                color: AppColors.secondaryText)),
             const SizedBox(height: 20),
             Sign2DigitalInputField(
               key: const Key('invoice-create-iban'),

@@ -48,8 +48,6 @@ class RemoteQuoteRepository {
       'client_id':id,
     if (int.tryParse(q.jobId ?? '') case final int id when id > 0)
       'job_id':id,
-    // Preserve user-edited Quote Number; the server keeps its own immutable reference.
-    'quote_number':q.quoteNumber.trim().isEmpty ? null : q.quoteNumber.trim(),
     'client_name':q.clientName.trim(),
     'client_email':q.clientEmail.trim().isEmpty ? null : q.clientEmail.trim(),
     'client_phone':q.clientPhone.trim().isEmpty ? null : q.clientPhone.trim(),

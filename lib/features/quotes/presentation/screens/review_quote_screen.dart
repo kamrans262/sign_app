@@ -63,7 +63,6 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
   /// externally-owned controllers before the closing route animation finishes.
   Future<void> _editDetails() async {
     var client = _draft.clientName;
-    var number = _draft.quoteNumber;
     var address = _draft.billingAddress;
     var email = _draft.clientEmail;
     var phone = _draft.clientPhone;
@@ -94,15 +93,6 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
                   hintText: 'Enter client',
                   iconAsset: '', leadingIcon: Icons.person_outline,
                   initialValue: client, onChanged: (value) => client = value,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Sign2DigitalInputField(
-                  key: const Key('quote-edit-number'), label: 'Quote Number',
-                  hintText: 'Enter quote number',
-                  iconAsset: '', leadingIcon: Icons.tag_outlined,
-                  initialValue: number, onChanged: (value) => number = value,
                 ),
               ),
               Padding(
@@ -294,7 +284,6 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
       _draft.jobId = null;
     }
     _draft.clientName = client.trim();
-    _draft.quoteNumber = number.trim();
     _draft.date = chosenDate;
     _draft.validUntil = validUntil;
     _draft.billingAddress = address.trim();
@@ -465,7 +454,8 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
                 onTap: _editDetails)),
               const SizedBox(height: 15),
               _detailRow('Client', _draft.clientName),
-              _detailRow('Quote Number', _draft.quoteNumber),
+              _detailRow('Quote Number', _draft.quoteNumber.trim().isEmpty
+                  ? 'Assigned automatically on save' : _draft.quoteNumber),
               _detailRow('Date', _dateText(_draft.date), divider: false),
             ]),
           ),

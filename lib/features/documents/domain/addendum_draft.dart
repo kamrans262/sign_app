@@ -113,7 +113,8 @@ class AddendumDraft {
   );
 
   List<String> get validationIssues => [
-    if (number.trim().isEmpty) 'Addendum number is required.',
+    if (serverId != null && number.trim().isEmpty)
+      'Saved addendum number is unavailable.',
     if (title.trim().isEmpty) 'Title is required.',
     if (description.trim().isEmpty) 'Description is required.',
     if (effectiveDate == null) 'Effective date is required.',
@@ -173,6 +174,18 @@ class AddendumDraftSession {
   }
 
   static bool isLocked(String id) => _locked.contains(id);
+
+  static String nextLocalNumber() {
+    var maximum = 0;
+    for (final draft in [..._created.values, ..._drafts.values]) {
+      final match = RegExp(r'^ADD-([0-9]+)$').firstMatch(draft.number);
+      if (match != null) {
+        maximum = maximum < (int.tryParse(match.group(1)!) ?? 0)
+            ? int.parse(match.group(1)!) : maximum;
+      }
+    }
+    return 'ADD-${(maximum + 1).toString().padLeft(3, '0')}';
+  }
 
   static bool isNumberUsed(String number, {String? exceptId}) =>
       _created.values.any((item) => item.id != exceptId &&

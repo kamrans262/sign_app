@@ -204,7 +204,9 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
             fontFamily: 'Inter', color: AppColors.dark)),
           const SizedBox(height: 12),
           Text('Original: ${source.number}'),
-          Text('Addendum: ${draft.number}'),
+          Text(draft.number.isEmpty
+            ? 'Addendum: Assigned automatically on save'
+            : 'Addendum: ${draft.number}'),
           Text(draft.title),
           const SizedBox(height: 10),
           Text(draft.description),
@@ -318,9 +320,6 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
     if (!mounted) return;
     var applied = 0;
     setState(() {
-      if (_number.text.trim().isEmpty && result.number != null) {
-        _number.text = result.number!; applied++;
-      }
       if (_title.text.trim().isEmpty && result.title != null) {
         _title.text = result.title!; applied++;
       }
@@ -416,7 +415,10 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
     try {
       final saved = await RemoteAddendumRepository.shared.save(draft);
       if (!mounted) return;
-      setState(() => _serverDraft = saved);
+      setState(() {
+        _serverDraft = saved;
+        _number.text = saved.number;
+      });
       _notice('Addendum draft saved securely to your company.');
     } catch (_) {
       _notice('Unable to save addendum draft. No approval was recorded.');
@@ -436,10 +438,6 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
       _notice(draft.validationIssues.first);
       return;
     }
-    if (AddendumDraftSession.isNumberUsed(draft.number, exceptId: draft.id)) {
-      _notice('This addendum number is already used.');
-      return;
-    }
     setState(() => _creating = true);
     try {
       final eligible = await _repository.listDocuments();
@@ -452,6 +450,9 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
       }
       final original = linked.single;
       final snapshot = draft.copyWith(
+        number: _live ? draft.number
+          : (draft.number.isEmpty
+              ? AddendumDraftSession.nextLocalNumber() : draft.number),
         linkedDocumentNumber: original.number,
         linkedJobId: original.jobId ?? original.quote?.jobId,
         linkedClientId: original.quote?.clientId ??
@@ -470,7 +471,10 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
         if (!mounted) return;
         // Remember the backend ID before loading document details: if that
         // read fails, retrying must PATCH this record, never POST a duplicate.
-        setState(() => _serverDraft = saved);
+        setState(() {
+          _serverDraft = saved;
+          _number.text = saved.number;
+        });
         final details = await RemoteDocumentRepository.shared
             .details(saved.id);
         if (!mounted) return;
@@ -601,8 +605,12 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
                   label: const Text('Select an existing document'),
                 ),
               const SizedBox(height: 22),
-              _field('Addendum Number', 'e.g, A-0005',
-                'assets/icons/hashtag.svg', _number),
+              Text(_number.text.trim().isEmpty
+                  ? 'Addendum Number: Assigned automatically on save'
+                  : 'Addendum Number: ${_number.text}',
+                key: const Key('addendum-auto-number-label'),
+                style: const TextStyle(fontFamily: 'Inter', fontSize: 14,
+                  color: AppColors.secondaryText)),
               const SizedBox(height: 20),
               _field('Title', 'e.g, Marc dupont',
                 'assets/icons/user.svg', _title),
