@@ -48,6 +48,9 @@ void main() {
     await tester.tap(find.text('Open support'));
     await tester.pumpAndSettle();
 
+    expect(tester.widget<BottomSheet>(find.byType(BottomSheet)).showDragHandle,
+        isFalse, reason: 'Support draws exactly one compact approved handle');
+
     const inputKey = Key('support-input');
     const contentKey = Key('support-sheet-content');
     final originalHeight = tester.getSize(find.byKey(contentKey)).height;
