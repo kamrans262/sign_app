@@ -20,6 +20,9 @@ import '../../../quotes/domain/quote_review_models.dart' show quoteMoney;
 import '../../../quotes/services/quote_pdf_service.dart';
 import '../../../quotes/presentation/widgets/sign2digital_financial_document_sections.dart';
 import '../../../quotes/presentation/screens/send_quote_screen.dart';
+import '../../../quotes/presentation/screens/quote_preview_screen.dart';
+import '../../../quotes/data/remote_quote_repository.dart';
+import '../../../quotes/data/remote_signature_request_repository.dart';
 import '../../../quotes/presentation/screens/signature_request_screen.dart';
 import '../../data/remote_addendum_repository.dart';
 import '../../../auth/data/mobile_auth_repository.dart';
@@ -149,6 +152,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
   Future<Uint8List?>? _pdfFuture;
   List<DocumentHistoryEvent> _extraHistory = const [];
   bool _requestingAddendum = false;
+  bool _openingQuotePreview = false;
 
   static const tabs = ['Details', 'Preview', 'Related', 'History'];
 
@@ -1143,8 +1147,96 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
         (record.verifiedSignedPdfAvailable && widget.loadSignedPdf != null);
   }
 
+  Future<void> _openLatestQuotePreview(DocumentRecord record) async {
+    if (_openingQuotePreview) return;
+    setState(() => _openingQuotePreview = true);
+    try {
+      final quoteMatch = RegExp(r'^quote-([1-9][0-9]*)$')
+          .firstMatch(record.id);
+      final relatedQuote = record.related.where(
+        (item) => RegExp(r'^quote-[1-9][0-9]*$').hasMatch(item.id),
+      ).toList();
+      final serverId = quoteMatch != null
+          ? int.parse(quoteMatch.group(1)!)
+          : relatedQuote.isNotEmpty
+              ? int.parse(relatedQuote.first.id.substring(6))
+              : record.quote?.serverId;
+
+      // A production quotation is always reloaded from Laravel. Do not
+      // show saved but potentially stale details after a quote was revised.
+      final isLive = !record.demoOnly &&
+          (widget.loadDocument != null || (serverId != null &&
+              MobileAuthRepository.shared.isSignedIn));
+      if (isLive && (serverId == null || serverId <= 0)) {
+        throw const FormatException('The original quotation is unavailable.');
+      }
+      final latest = isLive
+          ? await RemoteQuoteRepository.shared.getQuote(serverId!)
+          : record.quote?.copy();
+      if (latest == null) {
+        throw const FormatException('No quotation preview data is available.');
+      }
+      DocumentRecord current = record;
+      if (isLive && widget.loadDocument != null) {
+        final loaded = await widget.loadDocument!(record.id);
+        if (loaded == null || loaded.id != record.id) {
+          throw const FormatException('Quotation details changed. Reopen this record.');
+        }
+        current = loaded;
+      }
+      final signedArtifact = record.id.startsWith('signed-') &&
+              current.verifiedSignedPdfAvailable
+          ? current : _linkedSignedQuote(current);
+      Uint8List? signedPdf;
+      if (signedArtifact != null) {
+        if (widget.loadSignedPdf == null) {
+          throw const FormatException('The verified signed PDF is unavailable.');
+        }
+        signedPdf = await widget.loadSignedPdf!(signedArtifact);
+        if (signedPdf == null || signedPdf.isEmpty) {
+          throw const FormatException('The verified signed PDF is unavailable.');
+        }
+      }
+      VerifiedQuoteBusinessSignature? businessSignature;
+      QuoteDocumentTracking? tracking;
+      if (isLive) {
+        final request = await RemoteSignatureRequestRepository.shared.latest(latest);
+        tracking = request?.tracking;
+        if (signedPdf == null && request != null &&
+            request.businessSignedAt != null) {
+          businessSignature = await RemoteSignatureRequestRepository.shared
+              .verifiedBusinessSignature(latest, signingRequest: request);
+        }
+      }
+      if (!mounted) return;
+      await Sign2DigitalNavigation.push<void>(
+        context,
+        MaterialPageRoute<void>(builder: (_) => QuotePreviewScreen(
+          quote: latest,
+          tracking: tracking,
+          verifiedBusinessSignature: businessSignature,
+          verifiedSignedPdf: signedPdf,
+        )),
+      );
+    } catch (error) {
+      if (mounted) _message('Could not open latest quotation: $error');
+    } finally {
+      if (mounted) setState(() => _openingQuotePreview = false);
+    }
+  }
+
   void _view() {
+    final record = _record;
+    if (record == null) return;
     setState(() => _action = 0);
+    if (record.category == DocumentCategory.quotes &&
+        (record.quote != null ||
+         RegExp(r'^(quote|signed)-[1-9][0-9]*$').hasMatch(record.id))) {
+      _openLatestQuotePreview(record);
+      return;
+    }
+    // Only the quotation View card opens the separate Quote Preview screen.
+    // All other modules preserve the established Preview-tab behavior.
     _selectTab(1);
   }
 
