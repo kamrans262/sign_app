@@ -1200,7 +1200,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
       }
       VerifiedQuoteBusinessSignature? businessSignature;
       QuoteDocumentTracking? tracking;
-      if (isLive) {
+      if (isLive && signedPdf == null && latest.approvedLocally) {
         final request = await RemoteSignatureRequestRepository.shared.latest(latest);
         tracking = request?.tracking;
         if (signedPdf == null && request != null &&
