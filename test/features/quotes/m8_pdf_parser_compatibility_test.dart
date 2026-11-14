@@ -37,6 +37,10 @@ void main() {
     expect(body.contains('/Type /XRef'), isFalse,
         reason: 'Compressed xref streams break the free FPDI parser.');
     expect(body.contains('%%EOF'), isTrue);
+    expect(body.contains('sign2digital.invalid/signature-anchor-v1'), isTrue,
+        reason: 'The server must locate the existing customer-signature line.');
+    expect(RegExp(r'/Rect\s*\[[^\]]+\]').hasMatch(body), isTrue,
+        reason: 'The signature anchor must expose a PDF link rectangle.');
 
     // Synthetic fixture only. The independent PHP acceptance job imports the
     // byte-identical PDF emitted by the actual Flutter quote builder.
