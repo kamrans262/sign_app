@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:printing/printing.dart';
 
 import '../../domain/quote_signed_display_data.dart';
@@ -175,8 +176,17 @@ class DocumentSignedSuccessScreen extends StatelessWidget {
                       SizedBox(
                         height: 48,
                         child: OutlinedButton(
-                          onPressed: onClose ??
-                              () => Navigator.of(context).maybePop(),
+                          onPressed: onClose ?? () {
+                            if (businessSignaturePending) {
+                              if (!Sign2DigitalNavigation.selectDashboardTab(
+                                  context, 0)) {
+                                Navigator.of(context).popUntil(
+                                    (route) => route.isFirst);
+                              }
+                            } else {
+                              Navigator.of(context).maybePop();
+                            }
+                          },
                           style: OutlinedButton.styleFrom(
                             foregroundColor: AppColors.primary,
                             side: const BorderSide(color: AppColors.primary),
