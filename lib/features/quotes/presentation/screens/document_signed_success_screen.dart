@@ -16,11 +16,17 @@ class DocumentSignedSuccessScreen extends StatelessWidget {
     required this.data,
     this.onViewSignedDocument,
     this.onClose,
+    this.businessSignaturePending = false,
+    this.onPreviewQuote,
   });
 
   final QuoteSignedDisplayData data;
   final VoidCallback? onViewSignedDocument;
   final VoidCallback? onClose;
+  /// The business has signed, but the customer has not yet done so.
+  /// Reuses the exact approved success screen rather than claiming completion.
+  final bool businessSignaturePending;
+  final Future<void> Function(BuildContext context)? onPreviewQuote;
 
   static const _months = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -59,7 +65,8 @@ class DocumentSignedSuccessScreen extends StatelessWidget {
   Widget _detailsCard() => Sign2DigitalOutlinedContainer(
     child: Column(
       children: [
-        _detailRow('Signed By:', data.signerName),
+        _detailRow(businessSignaturePending ? 'Business Signed By:' : 'Signed By:',
+          data.signerName),
         const Divider(height: 1, thickness: 1, color: AppColors.lightBorder),
         _detailRow('Date and Time:', _signedTime),
         const Divider(height: 1, thickness: 1, color: AppColors.lightBorder),
@@ -123,12 +130,17 @@ class DocumentSignedSuccessScreen extends StatelessWidget {
                     children: [
                       const Center(child: Sign2DigitalAnimatedSuccess()),
                       const SizedBox(height: 20),
-                      const Text('Document Signed!', textAlign: TextAlign.center,
+                      Text(businessSignaturePending
+                          ? 'Business Signature Added!' : 'Document Signed!',
+                        textAlign: TextAlign.center,
                         style: TextStyle(fontFamily: 'Inter', fontSize: 24,
                           fontWeight: FontWeight.w700, color: AppColors.dark)),
                       const SizedBox(height: 10),
-                      const Text(
-                        'Thank you. Your signatures have been successfully added to the document',
+                      Text(
+                        businessSignaturePending
+                          ? 'Your signature has been saved. '
+                            'The customer signature is still pending.'
+                          : 'Thank you. Your signatures have been successfully added to the document',
                         textAlign: TextAlign.center,
                         style: TextStyle(fontFamily: 'Inter', fontSize: 14,
                           fontWeight: FontWeight.w500,
@@ -152,8 +164,12 @@ class DocumentSignedSuccessScreen extends StatelessWidget {
                       const Spacer(),
                       const SizedBox(height: 40),
                       Sign2DigitalPrimaryButton(
-                        label: 'View Signed Document',
-                        onPressed: () => _viewDocument(context),
+                        label: businessSignaturePending
+                            ? 'Preview Quote' : 'View Signed Document',
+                        onPressed: businessSignaturePending
+                            ? (onPreviewQuote == null ? null
+                                : () => onPreviewQuote!(context))
+                            : () => _viewDocument(context),
                       ),
                       const SizedBox(height: 15),
                       SizedBox(
