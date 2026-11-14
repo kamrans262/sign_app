@@ -24,6 +24,8 @@ import '../../../auth/data/mobile_auth_repository.dart';
 import '../../domain/quote_signature_draft.dart';
 import '../../domain/quote_signing_context.dart';
 import 'document_signed_success_screen.dart';
+import 'quote_preview_screen.dart';
+import '../../../documents/data/remote_document_repository.dart';
 import '../../services/quote_pdf_service.dart';
 import '../widgets/sign2digital_quote_shadow_panel.dart';
 import '../widgets/sign2digital_sending_method_card.dart';
@@ -431,17 +433,90 @@ class _SendQuoteScreenState extends State<SendQuoteScreen> {
           ),
         );
         if (!mounted || result == null || created == null) return;
-        if (delivery == 'email') {
-          _notify(created!.status == 'sent'
-              ? 'Business signature recorded and signing email sent to the customer.'
-              : 'Business signature recorded. Email delivery is not confirmed.');
-        } else {
-          final url = created!.tracking.secureUrl;
+        // Success is only issued after the backend has saved the issuer ink
+        // and recorded its signing time. The customer is NOT signed yet.
+        final confirmed = created!;
+        if (!confirmed.hasVerifiedBusinessSignature ||
+            (confirmed.status != 'ready' && confirmed.status != 'sent' &&
+             confirmed.status != 'viewed')) {
+          _notify('The business signature was submitted, but its verification '
+              'is unavailable. Check View document status.');
+          return;
+        }
+        if (delivery == 'link') {
+          final url = confirmed.tracking.secureUrl;
           if (url != null) {
             await Clipboard.setData(ClipboardData(text: url.toString()));
-            _notify('Business signature recorded. Customer signing link copied.');
           }
         }
+        final quoteId = _quote.serverId!;
+        final requestId = confirmed.id;
+        final currentQuote = _quote.copy();
+        // Replace Send Quote, do not create another app-wide route or a
+        // second success design. Preview uses fresh server state on each tap.
+        Navigator.of(this.context).pushReplacement<void, void>(
+          MaterialPageRoute<void>(
+            builder: (_) => DocumentSignedSuccessScreen(
+              businessSignaturePending: true,
+              data: QuoteSignedDisplayData(
+                documentId: confirmed.tracking.requestId ?? 'quote-$quoteId',
+                quoteNumber: currentQuote.quoteNumber,
+                projectName: currentQuote.jobId == null
+                    ? 'Not linked to a job' : 'Job #${currentQuote.jobId}',
+                signerName: confirmed.businessSignerName,
+                signedAt: confirmed.businessSignedAt!,
+                quoteId: currentQuote.id,
+                jobId: currentQuote.jobId,
+              ),
+              onPreviewQuote: (successContext) async {
+                try {
+                  final latest = await RemoteQuoteRepository.shared.getQuote(quoteId);
+                  final request = await RemoteSignatureRequestRepository.shared
+                      .show(latest, requestId);
+                  final evidence = await RemoteSignatureRequestRepository.shared
+                      .verifiedBusinessSignature(latest, signingRequest: request);
+                  if (evidence == null) {
+                    throw const SignApiException(
+                      'The verified business signature is unavailable.');
+                  }
+                  Uint8List? finalPdf;
+                  if (request.status == 'signed') {
+                    final details = await RemoteDocumentRepository.shared
+                        .details('quote-$quoteId');
+                    final signed = details.related.where(
+                      (record) => record.id.startsWith('signed-') &&
+                          record.status == 'signed' &&
+                          record.verifiedSignedPdfAvailable,
+                    ).toList();
+                    if (signed.isEmpty) {
+                      throw const SignApiException('The final signed PDF is unavailable.');
+                    }
+                    finalPdf = await RemoteDocumentRepository.shared
+                        .downloadPdf(signed.first);
+                  }
+                  if (!successContext.mounted) return;
+                  await Sign2DigitalNavigation.push<void>(
+                    successContext,
+                    MaterialPageRoute<void>(
+                      builder: (_) => QuotePreviewScreen(
+                        quote: latest,
+                        tracking: request.tracking,
+                        verifiedBusinessSignature: finalPdf == null ? evidence : null,
+                        verifiedSignedPdf: finalPdf,
+                      ),
+                    ),
+                  );
+                } catch (error) {
+                  if (!successContext.mounted) return;
+                  ScaffoldMessenger.of(successContext).showSnackBar(
+                    SnackBar(content: Text(
+                      'Unable to open verified quotation preview: $error')),
+                  );
+                }
+              },
+            ),
+          ),
+        );
       } else {
         final created = await create();
         if (!mounted) return;
