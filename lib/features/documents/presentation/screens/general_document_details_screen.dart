@@ -249,6 +249,22 @@ class _GeneralDocumentDetailsScreenState
                 ? pw.FontStyle.italic : pw.FontStyle.normal)),
           pw.SizedBox(height: 12),
         ],
+        pw.SizedBox(height: 55),
+        pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+          children: [
+            for (final label in const ['Customer Signature', 'Date'])
+              pw.SizedBox(width: 160, child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Container(height: 1, color: PdfColors.grey500),
+                  pw.SizedBox(height: 6),
+                  pw.Text(label, style: pw.TextStyle(
+                    font: font, fontSize: 10,
+                    color: PdfColors.grey600)),
+                ],
+              )),
+          ],
+        ),
       ],
     ));
     return document.save();
