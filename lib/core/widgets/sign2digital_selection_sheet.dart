@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_theme.dart';
+import '../theme/sign2digital_motion.dart';
 import '../theme/dashboard_colors.dart';
 import 'sign2digital_modal_guard.dart';
 
@@ -24,6 +25,7 @@ class Sign2DigitalSelectionSheet {
     context: context,
     isScrollControlled: isScrollControlled,
     useSafeArea: useSafeArea,
+    sheetAnimationStyle: Sign2DigitalMotion.bottomSheet,
     // Every picker renders the same custom drag handle.
     showDragHandle: false,
     backgroundColor: AppColors.white,
