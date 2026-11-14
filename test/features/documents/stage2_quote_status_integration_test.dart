@@ -60,6 +60,12 @@ void main() {
     final actionCards = find.byKey(const Key('document-detail-actions'));
     expect(tester.getTopLeft(footer).dy,
         greaterThan(tester.getBottomLeft(actionCards).dy));
+    expect(
+      tester.getBottomLeft(find.byType(Scaffold)).dy -
+          tester.getBottomLeft(footer).dy,
+      lessThanOrEqualTo(36),
+      reason: 'Request Signature must stay at the bottom of the screen.',
+    );
     await tester.tap(find.byKey(const Key('document-action-3')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('document-view-document-status')), findsOneWidget);
