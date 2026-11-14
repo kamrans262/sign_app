@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -146,6 +147,60 @@ void main() {
     await tester.tap(find.byKey(const Key('details-tab-2')));
     await tester.pump();
     expect(find.text('No related documents are available.'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('original quote Preview uses linked verified signed PDF',
+      (tester) async {
+    final signed = DocumentRecord(
+      id: 'signed-9',
+      category: DocumentCategory.quotes,
+      number: 'Q-7',
+      title: 'Signed Quote Q-7',
+      project: 'Test job',
+      customer: 'Customer',
+      timestamp: DateTime(2026, 11, 15),
+      status: 'signed',
+      verifiedSignedPdfAvailable: true,
+      jobId: '12',
+    );
+    final original = DocumentRecord(
+      id: 'quote-7',
+      category: DocumentCategory.quotes,
+      number: 'Q-7',
+      title: 'Quote Q-7',
+      project: 'Test job',
+      customer: 'Customer',
+      timestamp: DateTime(2026, 11, 15),
+      status: 'approved',
+      jobId: '12',
+      related: [signed],
+    );
+    final verifiedBytes = Uint8List.fromList(
+        [37, 80, 68, 70, 45, 49, 46, 52]);
+    Uint8List? previewBytes;
+    String? loadedId;
+    await tester.pumpWidget(MaterialApp(
+      home: DocumentDetailsScreen(
+        documentId: original.id,
+        document: original,
+        initialTab: 1,
+        loadSignedPdf: (record) async {
+          loadedId = record.id;
+          return verifiedBytes;
+        },
+        pdfPreviewBuilder: (bytes) {
+          previewBytes = bytes;
+          return const Text('Verified signed PDF');
+        },
+      ),
+    ));
+    await tester.pumpAndSettle();
+    expect(loadedId, 'signed-9');
+    expect(previewBytes, verifiedBytes);
+    expect(find.text('Verified signed PDF'), findsOneWidget);
+    expect(find.byKey(const Key('document-read-only-quote-preview')),
+        findsNothing);
     expect(tester.takeException(), isNull);
   });
 
