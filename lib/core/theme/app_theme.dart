@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
+import 'sign2digital_motion.dart';
 export 'app_spacing.dart'; // Existing splash imports AppSpacing via app_theme.dart.
 
 abstract final class AppTheme {
@@ -62,6 +63,7 @@ abstract final class AppTheme {
     return ThemeData(
       useMaterial3: true,
       fontFamily: 'Inter',
+      pageTransitionsTheme: Sign2DigitalMotion.pageTransitions,
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
         shape: CircleBorder(),
       ),
@@ -106,6 +108,7 @@ abstract final class AppTheme {
     useMaterial3: true,
     fontFamily: 'Inter',
     brightness: Brightness.dark,
+    pageTransitionsTheme: Sign2DigitalMotion.pageTransitions,
     floatingActionButtonTheme: const FloatingActionButtonThemeData(
       shape: CircleBorder(),
     ),
