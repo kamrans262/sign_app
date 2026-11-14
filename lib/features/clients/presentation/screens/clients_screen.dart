@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/sign2digital_motion.dart';
 
 import '../../../jobs/presentation/screens/jobs_screen.dart';
 import '../../../jobs/presentation/screens/job_details_screen.dart';
@@ -715,7 +716,7 @@ class _ClientsScreenState extends State<ClientsScreen> with WidgetsBindingObserv
               onSupportTap: _openSupportAssistant,
             ),
             Expanded(
-              child: IndexedStack(
+              child: Sign2DigitalAnimatedIndexedStack(
                 index: _selectedIndex,
                 children: [
                   HomeDashboardScreen(
