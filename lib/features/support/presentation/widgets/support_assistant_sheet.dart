@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/sign2digital_motion.dart';
 import '../../../jobs/services/voice_recorder_service.dart';
 import '../../data/support_ai_prompt_catalog.dart';
 import '../../data/support_assistant_repository.dart';
@@ -91,7 +93,14 @@ class _SupportAssistantSheetState extends State<SupportAssistantSheet>
 
   void _bottom() => WidgetsBinding.instance.addPostFrameCallback((_) {
     if (mounted && _scroll.hasClients) {
-      _scroll.jumpTo(_scroll.position.maxScrollExtent);
+      final target = _scroll.position.maxScrollExtent;
+      if (MediaQuery.of(context).disableAnimations) {
+        _scroll.jumpTo(target);
+      } else {
+        unawaited(_scroll.animateTo(target,
+          duration: Sign2DigitalMotion.chatScroll,
+          curve: Curves.easeOutCubic));
+      }
     }
   });
 
@@ -100,7 +109,10 @@ class _SupportAssistantSheetState extends State<SupportAssistantSheet>
     if (!mounted) return;
     final answer = _latestAnswerKey.currentContext;
     if (answer == null) return;
-    Scrollable.ensureVisible(answer, alignment: 0.15);
+    Scrollable.ensureVisible(answer, alignment: 0.15,
+      duration: MediaQuery.of(context).disableAnimations
+        ? Duration.zero : Sign2DigitalMotion.chatScroll,
+      curve: Curves.easeOutCubic);
   });
 
   Future<void> _ask([String? suggested]) async {
@@ -470,8 +482,16 @@ class _SupportAssistantSheetState extends State<SupportAssistantSheet>
 
   @override
   Widget build(BuildContext context) {
-    final height = MediaQuery.sizeOf(context).height -
-        MediaQuery.viewInsetsOf(context).bottom;
+    final media = MediaQuery.of(context);
+    final keyboard = media.viewInsets.bottom;
+    // Flutter's modal sheet does not automatically lift its footer above
+    // the software keyboard, even when isScrollControlled is enabled.
+    // Reserve keyboard space in the sheet itself and cap the visible height.
+    final availableHeight = math.max(0.0,
+        media.size.height - media.viewPadding.top - keyboard - 20);
+    final sheetHeight = math.min(media.size.height * .86, availableHeight);
+    final duration = media.disableAnimations
+        ? Duration.zero : Sign2DigitalMotion.keyboard;
     return Theme(
       data: Theme.of(context).copyWith(
         brightness: Brightness.light,
@@ -480,27 +500,48 @@ class _SupportAssistantSheetState extends State<SupportAssistantSheet>
           brightness: Brightness.light,
           surface: AppColors.white),
       ),
-      child: SizedBox(height: height * .86,
-        child: Column(children: [
-          Padding(padding: const EdgeInsets.fromLTRB(20, 5, 16, 10),
-            child: Row(children: [
-              const Icon(Icons.support_agent_outlined,
-                size: 24, color: AppColors.primary),
-              const SizedBox(width: 10),
-              const Expanded(child: Text(
-                'AI Support',
-                style: TextStyle(fontFamily: 'Inter', fontSize: 20,
-                  fontWeight: FontWeight.w700, color: AppColors.dark))),
-              IconButton(
-                key: const Key('support-close'),
-                tooltip: 'Close',
-                onPressed: () => Navigator.of(context).pop(),
-                icon: const Icon(Icons.close,
-                  color: AppColors.secondaryText)),
-            ])),
-          const Divider(height: 1, color: AppColors.lightBorder),
-          Expanded(child: _chat()),
-        ]),
+      child: AnimatedPadding(
+        key: const Key('support-keyboard-clearance'),
+        padding: EdgeInsets.only(bottom: keyboard),
+        duration: duration,
+        curve: Curves.easeOutCubic,
+        child: AnimatedContainer(
+          key: const Key('support-sheet-content'),
+          duration: duration,
+          curve: Curves.easeOutCubic,
+          height: sheetHeight,
+          child: Column(children: [
+            // Same approved 36x4 handle, with a compact header gap.
+            const SizedBox(height: 12),
+            Center(child: Container(
+              width: 36, height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.placeholder,
+                borderRadius: BorderRadius.circular(4)),
+            )),
+            const SizedBox(height: 8),
+            Padding(padding: const EdgeInsets.fromLTRB(20, 2, 16, 8),
+              child: Row(children: [
+                const Icon(Icons.support_agent_outlined,
+                  size: 24, color: AppColors.primary),
+                const SizedBox(width: 10),
+                const Expanded(child: Text(
+                  'AI Support',
+                  style: TextStyle(fontFamily: 'Inter', fontSize: 20,
+                    fontWeight: FontWeight.w700, color: AppColors.dark))),
+                IconButton(
+                  key: const Key('support-close'),
+                  tooltip: 'Close',
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.close,
+                    color: AppColors.secondaryText)),
+              ])),
+            const Divider(height: 1, color: AppColors.lightBorder),
+            // Chat scrolls independently; its composer stays anchored above
+            // the keyboard and the device's bottom safe area.
+            Expanded(child: SafeArea(top: false, child: _chat())),
+          ]),
+        ),
       ),
     );
   }
