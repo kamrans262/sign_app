@@ -17,6 +17,7 @@ import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import '../../../quotes/presentation/widgets/sign2digital_quote_summary_card.dart';
 import '../../../quotes/presentation/widgets/sign2digital_signature_action_card.dart';
 import '../../../quotes/domain/quote_review_models.dart' show quoteMoney;
+import '../../../quotes/domain/quote_document_tracking.dart';
 import '../../../quotes/services/quote_pdf_service.dart';
 import '../../../quotes/presentation/widgets/sign2digital_financial_document_sections.dart';
 import '../../../quotes/presentation/screens/send_quote_screen.dart';
