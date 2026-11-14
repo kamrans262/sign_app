@@ -2,6 +2,7 @@ import 'package:flutter/material.dart' as material;
 
 import '../theme/app_colors.dart';
 import '../theme/app_theme.dart';
+import '../theme/sign2digital_motion.dart';
 import 'sign2digital_modal_guard.dart';
 
 /// Standardized Sign2Digital sheet shell.
@@ -73,7 +74,7 @@ Future<T?> showSign2DigitalBottomSheet<T>({
     transitionAnimationController: transitionAnimationController,
     anchorPoint: anchorPoint,
     constraints: constraints,
-    sheetAnimationStyle: sheetAnimationStyle,
+    sheetAnimationStyle: sheetAnimationStyle ?? Sign2DigitalMotion.bottomSheet,
     requestFocus: requestFocus,
     // Approved Switch Company sheet visuals. The native handle uses the
     // app's BottomSheetThemeData: 36×4, placeholder color and rounded ends.
