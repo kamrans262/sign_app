@@ -935,6 +935,18 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
       context: context,
       builder: (sheet) => SafeArea(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
+          if (_isApprovedUnsignedQuote(record) &&
+              ActiveCompanySession.canWrite('quotes'))
+            ListTile(
+              key: const Key('document-more-request-signature'),
+              leading: const Icon(Icons.draw_outlined,
+                  color: AppColors.primary),
+              title: const Text('Request Signature'),
+              onTap: () {
+                Navigator.pop(sheet);
+                _requestQuoteSignature(record);
+              },
+            ),
           if (_isApprovedUnsignedQuote(record))
             ListTile(
               key: const Key('document-view-document-status'),
@@ -1169,12 +1181,28 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
       ('Valid Until:', _date(record.validUntil ?? record.quote?.validUntil)),
       ('Status:', _linkedSignedQuote(record) != null ? 'Signed' : record.status),
     ];
-    return Sign2DigitalInformationTable(
-      heading: 'Document Information',
-      rows: [
-        for (var i = 0; i < data.length; i++)
-          Sign2DigitalInformationRow(data[i].$1, data[i].$2,
-            isStatus: i == data.length - 1),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Sign2DigitalInformationTable(
+          heading: 'Document Information',
+          rows: [
+            for (var i = 0; i < data.length; i++)
+              Sign2DigitalInformationRow(data[i].$1, data[i].$2,
+                isStatus: i == data.length - 1),
+          ],
+        ),
+        // Keep the four action cards together with no extra button beneath
+        // them. Signing is the final action at the bottom of Details instead.
+        if (_isApprovedUnsignedQuote(record) &&
+            ActiveCompanySession.canWrite('quotes')) ...[
+          const SizedBox(height: 24),
+          Sign2DigitalPrimaryButton(
+            key: const Key('document-request-signature'),
+            label: 'Request Signature',
+            onPressed: () => _requestQuoteSignature(record),
+          ),
+        ],
       ],
     );
   }
@@ -1365,15 +1393,6 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
           const SizedBox(height: 20),
           if (_tab != 3) ...[
             _actions(),
-            if (_isApprovedUnsignedQuote(record) &&
-                ActiveCompanySession.canWrite('quotes')) ...[
-              const SizedBox(height: 12),
-              Sign2DigitalPrimaryButton(
-                key: const Key('document-request-signature'),
-                label: 'Request Signature',
-                onPressed: () => _requestQuoteSignature(record),
-              ),
-            ],
             const SizedBox(height: 20),
           ],
           Stack(children: [
