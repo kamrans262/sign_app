@@ -68,7 +68,7 @@ class _GeneralDocumentDetailsScreenState
   String _companyName = '', _clientEmail = '', _linkedClientName = '';
   bool _relatedLoading = false;
   List<DocumentRecord>? _relatedDocuments;
-  Future<({Uint8List bytes,bool official})>? _pdfPreviewFuture;
+  Future<({Uint8List bytes,bool official,bool signed})>? _pdfPreviewFuture;
   final ScrollController _scroll = ScrollController();
 
   static const _tabs = ['Details', 'Preview', 'Related', 'History'];
@@ -197,15 +197,16 @@ class _GeneralDocumentDetailsScreenState
 
   /// A frozen, checksum-verified server PDF takes precedence. An unissued
   /// document gets a visibly watermarked, non-exportable PDF draft preview.
-  Future<({Uint8List bytes,bool official})> _loadPreviewPdf(
+  Future<({Uint8List bytes,bool official,bool signed})> _loadPreviewPdf(
       GeneralDocumentDraft d) async {
     if (d.status == 'approved' && d.id != null) {
       final metadata = await _repository.issuedMetadata(d.id!);
       if (metadata != null) {
-        return (bytes: await _repository.issuedPdf(d.id!), official: true);
+        final selected = await _repository.preferredPdf(d.id!);
+        return (bytes: selected.bytes, official: true, signed: selected.signed);
       }
     }
-    return (bytes: await _draftPdf(d), official: false);
+    return (bytes: await _draftPdf(d), official: false, signed: false);
   }
 
   Future<Uint8List> _draftPdf(GeneralDocumentDraft d) async {
@@ -366,9 +367,11 @@ class _GeneralDocumentDetailsScreenState
     if (_busy) return;
     setState(() => _busy = true);
     try {
-      // issuedPdf independently validates the stored official PDF checksum.
-      final bytes = await _repository.issuedPdf(d.id!);
-      final filename = 'Sign2Digital_General_' +
+      // Always export the same checksum-verified version as the Preview tab.
+      final selected = await _repository.preferredPdf(d.id!);
+      final bytes = selected.bytes;
+      final filename = (selected.signed ? 'Signed_' : '') +
+          'Sign2Digital_General_' +
           d.number.replaceAll(RegExp(r'[^A-Za-z0-9_-]'), '_') + '.pdf';
       if (share) {
         await Printing.sharePdf(bytes: bytes, filename: filename);
@@ -518,7 +521,7 @@ class _GeneralDocumentDetailsScreenState
 
   Widget _preview(GeneralDocumentDraft d) {
     _preparePdf(d);
-    return FutureBuilder<({Uint8List bytes,bool official})>(
+    return FutureBuilder<({Uint8List bytes,bool official,bool signed})>(
       future: _pdfPreviewFuture,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
@@ -537,6 +540,13 @@ class _GeneralDocumentDetailsScreenState
               padding: EdgeInsets.only(bottom: 12),
               child: Text('DRAFT / UNISSUED PDF PREVIEW — not an official document.',
                 key: Key('general-document-unissued-label'),
+                style: TextStyle(fontFamily:'Inter',fontSize:12,
+                  color:AppColors.primary)),
+            ),
+            if (data.signed) const Padding(
+              padding: EdgeInsets.only(bottom: 12),
+              child: Text('SIGNED PDF — verified customer signature and signing date.',
+                key: Key('general-document-signed-label'),
                 style: TextStyle(fontFamily:'Inter',fontSize:12,
                   color:AppColors.primary)),
             ),
