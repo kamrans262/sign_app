@@ -1,7 +1,11 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
+import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
+import 'package:printing/printing.dart';
 import 'package:flutter/material.dart';
 import '../../../documents/data/document_activity_session.dart';
+import '../../../../core/widgets/sign2digital_outlined_container.dart';
+import '../../data/remote_signature_request_repository.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../widgets/sign2digital_financial_document_sections.dart';
@@ -37,9 +41,16 @@ class QuotePreviewScreen extends StatefulWidget {
     this.inPersonCustomerSignerId,
     this.inPersonBusinessSignerId,
     this.onSubmitInPersonSignature,
+    this.verifiedBusinessSignature,
+    this.verifiedSignedPdf,
   });
 
   final QuoteReviewDraft quote;
+
+  /// Company-scoped, checksum-verified server evidence, not unsent UI ink.
+  final VerifiedQuoteBusinessSignature? verifiedBusinessSignature;
+  /// Immutable completed PDF, independently verified by the Documents API.
+  final Uint8List? verifiedSignedPdf;
 
   /// Customer mode reuses the same billing, work item, payment and terms UI.
   /// Business Quote Preview retains its original layout by default.
@@ -176,6 +187,8 @@ class _QuotePreviewScreenState extends State<QuotePreviewScreen> {
       // with a clear warning, but NEVER use that file as a verified attachment.
       var legacyCopy = false;
       final bytes = await (() async {
+        if (widget.verifiedSignedPdf case final Uint8List signed
+            when signed.isNotEmpty) return signed;
         if (_quote.serverId != null && _quote.approvedLocally && !_quote.isDemo) {
           try {
             return await RemoteQuoteRepository.shared.fetchApprovedPdf(_quote);
@@ -237,7 +250,50 @@ class _QuotePreviewScreenState extends State<QuotePreviewScreen> {
         showSignature: !widget.customerView,
       );
 
-  Widget _quoteDocument() => _sections.invoiceOrQuoteDocument();
+  Widget _quoteDocument() {
+    final signed = widget.verifiedSignedPdf;
+    if (signed != null && signed.isNotEmpty) {
+      return SizedBox(
+        key: const Key('quote-preview-verified-signed-pdf'),
+        height: 510,
+        child: PdfPreview(
+          build: (_) async => signed,
+          allowPrinting: false, allowSharing: false,
+          canChangeOrientation: false, canChangePageFormat: false,
+          useActions: false,
+        ),
+      );
+    }
+    return _sections.invoiceOrQuoteDocument();
+  }
+
+  Widget _businessSignatureEvidence() {
+    final verified = widget.verifiedBusinessSignature;
+    if (verified == null) return const SizedBox.shrink();
+    final time = verified.signedAt.toLocal();
+    final date = '${time.day.toString().padLeft(2, '0')}/'
+        '${time.month.toString().padLeft(2, '0')}/${time.year}';
+    return Sign2DigitalOutlinedContainer(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Business Signature', style: _text(14, weight: FontWeight.w600)),
+          const SizedBox(height: 10),
+          Image.memory(verified.pngBytes,
+            key: const Key('quote-preview-verified-business-signature'),
+            height: 72, width: 185, fit: BoxFit.contain,
+            alignment: Alignment.centerLeft),
+          const SizedBox(height: 10),
+          Text('${verified.signerName}  ·  $date',
+            style: _text(12, color: AppColors.secondaryText)),
+          const SizedBox(height: 8),
+          Text('Customer signature pending',
+            key: const Key('quote-preview-customer-signature-pending'),
+            style: _text(12, color: AppColors.primary)),
+        ],
+      ),
+    );
+  }
   Widget _paymentDetails() => _sections.paymentDetails();
   Widget _terms() => _sections.terms();
 
@@ -259,6 +315,9 @@ class _QuotePreviewScreenState extends State<QuotePreviewScreen> {
       child: Text('Send to Customer', textAlign: TextAlign.center,
         style: _text(16, color: Colors.white)),
     ));
+    if (widget.verifiedSignedPdf != null) {
+      return SizedBox(width: double.infinity, child: save);
+    }
     if (constraints.maxWidth < 350) {
       return Column(children: [
         SizedBox(width: double.infinity, child: save),
@@ -289,10 +348,16 @@ class _QuotePreviewScreenState extends State<QuotePreviewScreen> {
                   style: _text(12, color: const Color(0xFFE6A23C)))),
               if (widget.customerView) _customerHeading(),
               _quoteDocument(),
-              const SizedBox(height: 20),
-              _paymentDetails(),
-              const SizedBox(height: 20),
-              _terms(),
+              if (widget.verifiedSignedPdf == null) ...[
+                if (widget.verifiedBusinessSignature != null) ...[
+                  const SizedBox(height: 20),
+                  _businessSignatureEvidence(),
+                ],
+                const SizedBox(height: 20),
+                _paymentDetails(),
+                const SizedBox(height: 20),
+                _terms(),
+              ],
               const SizedBox(height: 60),
               if (widget.customerView) _customerAction() else _actions(),
             ]),
