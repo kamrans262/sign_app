@@ -505,7 +505,7 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
       final record = DocumentRecord(
         id: draft.id,
         category: DocumentCategory.addends,
-        number: draft.number, title: 'Addendum ${draft.number}',
+        number: snapshot.number, title: 'Addendum ${snapshot.number}',
         project: original.project,
         customer: original.customer,
         timestamp: DateTime.now(),
