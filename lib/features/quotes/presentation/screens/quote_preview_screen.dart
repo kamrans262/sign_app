@@ -274,6 +274,7 @@ class _QuotePreviewScreenState extends State<QuotePreviewScreen> {
     final date = '${time.day.toString().padLeft(2, '0')}/'
         '${time.month.toString().padLeft(2, '0')}/${time.year}';
     return Sign2DigitalOutlinedContainer(
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
