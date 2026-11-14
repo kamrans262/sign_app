@@ -165,11 +165,14 @@ class Sign2DigitalQuotePdfBuilder {
               lineAmount('Remaining after deposit',
                 quoteMoney(quote.remainingAfterDepositMinor, quote.currency)),
         pw.SizedBox(height: 65),
-        // A tiny invisible link annotation marks the signature-line Y position
-        // in the frozen approval PDF. Laravel reads the PDF's own annotation
-        // coordinates when making a separately verified signed artifact.
-        // Keep marker and the signature/date lines in one non-splitting widget.
-        pw.Column(children: [
+        // The tiny link annotation marks only the signature row and page.
+        // Align it to the left edge of the actual Customer Signature rule.
+        // Laravel independently uses the fixed PDF margin for stamp X, so
+        // previously approved PDFs with a centered marker also work.
+        // Keep marker and both lines together when paginating.
+        pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
           pw.UrlLink(
             destination: 'https://sign2digital.invalid/signature-anchor-v1',
             child: pw.SizedBox(width: 1, height: 1),
