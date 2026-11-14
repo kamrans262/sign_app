@@ -40,6 +40,47 @@ void main() {
     expect(find.text('Close'), findsOneWidget);
   });
 
+  testWidgets('business confirmation reuses success UI and Close returns Home',
+      (tester) async {
+    var previews=0;
+    await tester.pumpWidget(MaterialApp(home: Scaffold(
+      body: Builder(builder: (context) => Center(
+        child: TextButton(
+          onPressed: () => Navigator.of(context).push<void>(
+            MaterialPageRoute<void>(builder: (_) =>
+                DocumentSignedSuccessScreen(
+              businessSignaturePending:true,
+              data:QuoteSignedDisplayData(
+                documentId:'verified-request-3',
+                quoteNumber:'Q-12',
+                projectName:'Job #9',
+                signerName:'Business Owner',
+                signedAt:DateTime.utc(2026,11,15,9),
+              ),
+              onPreviewQuote: (_) async {previews++;},
+            )),
+          ),
+          child:const Text('Open signing result'),
+        ),
+      )),
+    )));
+    await tester.tap(find.text('Open signing result'));
+    await tester.pumpAndSettle();
+    expect(find.text('Business Signature Added!'),findsOneWidget);
+    expect(find.text('Document Signed!'),findsNothing);
+    expect(find.text('Business Signed By:'),findsOneWidget);
+    expect(find.text('Your signature has been saved. '
+        'The customer signature is still pending.'),findsOneWidget);
+    await tester.ensureVisible(find.text('Preview Quote'));
+    await tester.tap(find.text('Preview Quote'));
+    expect(previews,1);
+    await tester.ensureVisible(find.text('Close'));
+    await tester.tap(find.text('Close'));
+    await tester.pumpAndSettle();
+    expect(find.text('Open signing result'),findsOneWidget);
+    expect(find.text('Business Signature Added!'),findsNothing);
+  });
+
   testWidgets('manual quote tour exposes the quote flow', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: QuoteUiDemoScreen()));
     expect(find.text('Northstar Renovations GmbH'), findsOneWidget);
