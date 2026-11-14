@@ -55,10 +55,17 @@ void main() {
       ),
     ));
     expect(find.byKey(const Key('document-request-signature')), findsOneWidget);
+    // Fixed footer is separate from, and lower than, the four action cards.
+    final footer = find.byKey(const Key('document-request-signature'));
+    final actionCards = find.byKey(const Key('document-detail-actions'));
+    expect(tester.getTopLeft(footer).dy,
+        greaterThan(tester.getBottomLeft(actionCards).dy));
     await tester.tap(find.byKey(const Key('document-action-3')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('document-view-document-status')), findsOneWidget);
     expect(find.byKey(const Key('document-send-quote')), findsOneWidget);
+    expect(find.byKey(const Key('document-more-request-signature')),
+        findsOneWidget);
     expect(find.byKey(const Key('document-view-signed-quote')), findsNothing);
     await tester.tap(find.byKey(const Key('document-view-document-status')));
     await tester.pumpAndSettle();
@@ -79,6 +86,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('document-view-document-status')), findsNothing);
     expect(find.byKey(const Key('document-send-quote')), findsNothing);
+    expect(find.byKey(const Key('document-more-request-signature')),
+        findsNothing);
     expect(find.byKey(const Key('document-view-signed-quote')), findsOneWidget);
     await tester.tap(find.byKey(const Key('document-view-signed-quote')));
     await tester.pumpAndSettle();
