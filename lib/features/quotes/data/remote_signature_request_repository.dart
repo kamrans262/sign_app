@@ -1,5 +1,7 @@
 import '../../../core/utils/sign2digital_server_timestamp.dart';
 import 'dart:convert';
+import 'dart:typed_data';
+import 'package:crypto/crypto.dart';
 import '../../../core/services/active_company_session.dart';
 import '../../../core/services/sign_api_client.dart';
 import '../../auth/data/mobile_auth_repository.dart';
@@ -122,6 +124,43 @@ class RemoteSignatureRequestRepository {
       status: (record['status'] ?? 'ready').toString(),
       tracking: _tracking(quote, record,
         data['events'] is List ? List<dynamic>.from(data['events']) : []),
+      approvedRevision: _int(record['approved_revision']),
+      businessSignerName: (record['business_signer_name'] ?? '').toString(),
+      businessSignedAt: Sign2DigitalServerTimestamp.tryParse(
+          record['business_signed_at']),
+      businessSignatureSha256:
+          (record['business_signature_sha256'] ?? '').toString(),
+    );
+  }
+
+  /// Reads the actual issuer signature from private tenant storage and
+  /// independently checks its checksum. Never infer business signing from a
+  /// locally captured image or from an unsigned request.
+  Future<VerifiedQuoteBusinessSignature?> verifiedBusinessSignature(
+    QuoteReviewDraft quote, {RemoteSigningRequest? signingRequest}
+  ) async {
+    final request = signingRequest ?? await latest(quote);
+    if (request == null || request.businessSignedAt == null) return null;
+    if (!request.hasVerifiedBusinessSignature ||
+        (quote.serverRevision != null &&
+         request.approvedRevision != quote.serverRevision)) {
+      throw const SignApiException(
+          'Verified business signature metadata does not match this quotation.');
+    }
+    final company = _company();
+    final bytes = await _api.getPrivateAttachment(
+      '/api/v1/signature-requests/${request.id}/business-signature',
+      mimeType: 'image/png', companyScoped: true, maxBytes: 300 * 1024,
+    );
+    if (company != ActiveCompanySession.companyId) {
+      throw const SignApiException('Company changed during signature preview.');
+    }
+    if (sha256.convert(bytes).toString() != request.businessSignatureSha256) {
+      throw const SignApiException('Business signature integrity check failed.');
+    }
+    return VerifiedQuoteBusinessSignature(
+      requestId: request.id, signerName: request.businessSignerName,
+      signedAt: request.businessSignedAt!, pngBytes: bytes,
     );
   }
 
@@ -222,6 +261,10 @@ class RemoteSignatureRequestRepository {
     return RemoteSigningRequest(
       id: id,
       status: fresh.status,
+      approvedRevision: fresh.approvedRevision,
+      businessSignerName: fresh.businessSignerName,
+      businessSignedAt: fresh.businessSignedAt,
+      businessSignatureSha256: fresh.businessSignatureSha256,
       tracking: QuoteDocumentTracking(
         quoteId: quote.id,
         requestId: fresh.tracking.requestId,
@@ -289,10 +332,34 @@ class RemoteSigningRequest {
     required this.id,
     required this.status,
     required this.tracking,
+    this.approvedRevision = 0,
+    this.businessSignerName = '',
+    this.businessSignedAt,
+    this.businessSignatureSha256 = '',
   });
   final int id;
   final String status;
   final QuoteDocumentTracking tracking;
+  final int approvedRevision;
+  final String businessSignerName;
+  final DateTime? businessSignedAt;
+  final String businessSignatureSha256;
+  bool get hasVerifiedBusinessSignature =>
+      businessSignedAt != null && businessSignerName.trim().isNotEmpty &&
+      RegExp(r'^[a-f0-9]{64}$').hasMatch(businessSignatureSha256);
+}
+
+class VerifiedQuoteBusinessSignature {
+  const VerifiedQuoteBusinessSignature({
+    required this.requestId,
+    required this.signerName,
+    required this.signedAt,
+    required this.pngBytes,
+  });
+  final int requestId;
+  final String signerName;
+  final DateTime signedAt;
+  final Uint8List pngBytes;
 }
 
 
