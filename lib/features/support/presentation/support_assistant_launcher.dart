@@ -21,6 +21,8 @@ abstract final class SupportAssistantLauncher {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
+      // Support provides its own compact approved drag handle.
+      showDragHandle: false,
       builder: (sheetContext) => SupportAssistantSheet(
         screen: screen,
         sampleModule: sampleModule,
