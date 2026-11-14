@@ -46,3 +46,34 @@ class _Sign2DigitalPageTransition extends PageTransitionsBuilder {
     );
   }
 }
+
+/// Fades a newly selected dashboard tab without tearing down other tabs.
+/// Unlike AnimatedSwitcher, this keeps scroll positions and form state alive.
+class Sign2DigitalAnimatedIndexedStack extends StatelessWidget {
+  const Sign2DigitalAnimatedIndexedStack({
+    super.key,
+    required this.index,
+    required this.children,
+  });
+
+  final int index;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final duration = MediaQuery.of(context).disableAnimations
+        ? Duration.zero : const Duration(milliseconds: 180);
+    return IndexedStack(
+      index: index,
+      children: [
+        for (var i = 0; i < children.length; i++)
+          AnimatedOpacity(
+            duration: duration,
+            curve: Curves.easeOut,
+            opacity: i == index ? 1 : 0,
+            child: children[i],
+          ),
+      ],
+    );
+  }
+}
