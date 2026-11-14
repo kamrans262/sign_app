@@ -117,10 +117,13 @@ class _GeneralDocumentIssuedActionsState
     if(_busy||_metadata==null)return;
     setState(()=>_busy=true);
     try{
+      final preferred=signature==null
+        ? await widget.repository.preferredPdf(widget.documentId) : null;
       final bytes=signature==null
-        ? await widget.repository.issuedPdf(widget.documentId)
+        ? preferred!.bytes
         : await widget.repository.signedPdf(widget.documentId,signature);
-      final name=signature==null?_filename:'Signed_'+_filename;
+      final name=(signature!=null||preferred?.signed==true)
+        ? 'Signed_'+_filename : _filename;
       if(share){
         await Printing.sharePdf(bytes:bytes,filename:name);
         _notice('Share sheet opened; recipient delivery is not confirmed.');
