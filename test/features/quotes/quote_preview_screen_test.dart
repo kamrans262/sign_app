@@ -73,8 +73,8 @@ void main() {
       requestId:32,signerName:'Business Owner',
       signedAt:DateTime.utc(2026,11,15,8),
       pngBytes:base64Decode(
-        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJ'
-        'AAAADUlEQVQIHWP4z8DwHwAFgAI/ScLTrwAAAABJRU5ErkJggg=='),
+        'iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0k'
+        'AAAAFElEQVR4nGPkUbL4z8DAwMDEAAUAFFwBaQsvWeIAAAAASUVORK5CYII='),
     );
     await tester.pumpWidget(MaterialApp(home:QuotePreviewScreen(
       quote:draft,verifiedBusinessSignature:ink,
