@@ -1,0 +1,31 @@
+name: Document Numbering Flutter QA
+on:
+  push:
+    branches: [fix/m20-android-live-reminder-integration-2026-11-06]
+    paths:
+      - '.github/workflows/qa-document-numbering-flutter.yml'
+      - 'lib/features/quotes/presentation/screens/review_quote_screen.dart'
+      - 'lib/features/quotes/data/remote_quote_repository.dart'
+      - 'lib/features/invoices/data/remote_invoice_repository.dart'
+      - 'lib/features/invoices/presentation/screens/add_invoice_screen.dart'
+      - 'lib/features/documents/presentation/screens/create_addendum_screen.dart'
+      - 'test/features/invoices/invoice_details_screen_test.dart'
+      - 'test/features/documents/create_addendum_screen_test.dart'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  numbering:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Analyze changed invoice, quote and addendum forms
+        run: flutter analyze --no-pub --no-fatal-infos --no-fatal-warnings lib/features/quotes/presentation/screens/review_quote_screen.dart lib/features/invoices/data/remote_invoice_repository.dart lib/features/invoices/presentation/screens/add_invoice_screen.dart lib/features/documents/presentation/screens/create_addendum_screen.dart
+      - name: Verify number display and existing workflows
+        run: flutter test --no-pub --reporter=expanded --concurrency=2 test/features/invoices/m17_remote_invoice_repository_test.dart test/features/invoices/invoice_details_screen_test.dart test/features/invoices/add_invoice_screen_test.dart test/features/documents/create_addendum_screen_test.dart
