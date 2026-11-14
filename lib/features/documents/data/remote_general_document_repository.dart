@@ -303,9 +303,8 @@ class RemoteGeneralDocumentRepository extends DocumentRepository {
     return bytes;
   }
 
-  /// The Preview, Download and Share actions must agree on the same version.
-  /// A verified signed document takes precedence over its unsigned issue.
-  /// Historical signed PDFs are read unchanged and checksum-verified.
+  /// Prefer the newest checksum-verified signed PDF, otherwise the issued PDF.
+  /// The approved source and existing signed artifacts stay immutable.
   Future<({Uint8List bytes, bool signed})> preferredPdf(int id) async {
     final metadata = await issuedMetadata(id);
     if (metadata == null) {
@@ -315,191 +314,12 @@ class RemoteGeneralDocumentRepository extends DocumentRepository {
     if (records is! List) {
       throw const SignApiException('Signature history is unavailable.');
     }
-    // Server lists signature requests newest first. Prefer the newest
-    // completed request only; never use an unverified signature draft.
     for (final entry in records) {
       final row = _map(entry);
       if (row['status'] != 'signed') continue;
       final signature = _int(row['id']);
       final hash = (row['signed_pdf_sha256'] ?? '').toString();
-      if (signature <= 0 || !RegExp(r'^[a-f0-9]{64}
-    required String recipientEmail,String mode='pdf',
-    String? signatureLink,int? signatureRequestId,
-  }) async {
-    final company=_company();
-    if(!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(recipientEmail.trim())||
-        !const ['pdf','link','signature'].contains(mode)){
-      throw const SignApiException('Enter a valid recipient email.');
-    }
-    if(mode=='signature'){
-      _link(signatureLink,r'^/general-sign/[a-f0-9]{64}$');
-      if(signatureRequestId==null||signatureRequestId<1){
-        throw const SignApiException('Select an active signature invitation.');
-      }
-    }
-    final metadata=await issuedMetadata(_documentId(id));
-    if(metadata==null)throw const SignApiException('Issue the document first.');
-    final issue=_issueInfo(metadata['issue'],id);
-    final key='general-send-'+id.toString()+'-'+
-      DateTime.now().microsecondsSinceEpoch.toString();
-    final response=_data(await _api.post(
-      '/api/v1/general-documents/'+id.toString()+'/send',
-      companyScoped:true,data:{
-        'recipient_email':recipientEmail.trim(),'mode':mode,
-        'request_key':key,
-        if(mode=='signature')'signature_request_id':signatureRequestId,
-        if(mode=='signature')'signature_link':signatureLink,
-      }));
-    _check(company);
-    if(response['email_submitted']!=true||
-        response['mode']!=mode||response['sha256']!=issue['sha256']){
-      throw const SignApiException('Email handoff was not confirmed.');
-    }
-  }
-
-  Future<List<Map<String,dynamic>>> attachments(int id) async {
-    final company=_company();
-    final response=_data(await _api.get('/api/v1/general-documents/$id',
-      companyScoped:true));
-    _check(company);
-    final document=_parse(response['document'],company);
-    if(document.id!=id||response['attachments'] is! List){
-      throw const SignApiException('Invalid general document attachments.');
-    }
-    return (response['attachments'] as List).map((raw){
-      final row=_map(raw);
-      if(_int(row['id'])<1||
-          !const ['application/pdf','image/png','image/jpeg'].contains(
-            (row['mime_type']??'').toString())){
-        throw const SignApiException('Invalid attachment metadata.');
-      }
-      return row;
-    }).toList();
-  }
-
-  Future<void> attach(int id,String filename,Uint8List bytes) async {
-    final company=_company();
-    final result=_data(await _api.postMultipart(
-      '/api/v1/general-documents/$id/attachments',filename:filename,
-      bytes:bytes,companyScoped:true,maxBytes:10*1024*1024));
-    _check(company);
-    if(_int(result['id'])<1){
-      throw const SignApiException('Document attachment not confirmed.');
-    }
-  }
-
-  Future<void> removeAttachment(int id,int attachment) async {
-    final company=_company();
-    await _api.delete('/api/v1/general-documents/$id/attachments/$attachment',
-      companyScoped:true);
-    _check(company);
-  }
-
-  static void _validate(GeneralDocumentDraft draft){
-    if(!const ['letter','statement','power_of_attorney','acceptance','custom']
-          .contains(draft.type)||
-      !const ['en','fr','de','it'].contains(draft.locale)||
-      draft.title.trim().length<2||draft.title.trim().length>255||
-      draft.blocks.isEmpty||draft.blocks.length>100||
-      !const ['manual','ai_draft','note_conversion'].contains(draft.source)){
-      throw const SignApiException('Complete the document title and content.');
-    }
-    var size=0;
-    for(final block in draft.blocks){
-      if(!GeneralTextBlock.kinds.contains(block.type)||
-          block.text.length>4000){
-        throw const SignApiException('Invalid document paragraph.');
-      }
-      size+=block.text.length;
-    }
-    if(size>30000||draft.blocks.every((b)=>b.text.trim().isEmpty)){
-      throw const SignApiException('Enter document content under 30,000 characters.');
-    }
-  }
-
-  Future<GeneralDocumentDraft> save(GeneralDocumentDraft draft,{
-    required String createRequestKey,
-  }) async {
-    _validate(draft);
-    final company=_company();
-    final payload=<String,dynamic>{
-      'type':draft.type,'title':draft.title.trim(),'locale':draft.locale,
-      'client_id':draft.clientId,'job_id':draft.jobId,
-      'blocks':[for(final block in draft.blocks)block.toJson()],
-      'source':draft.source,
-      if(draft.id==null)'request_key':createRequestKey,
-      if(draft.id!=null)'lock_version':draft.lockVersion,
-    };
-    final response=draft.id==null
-      ? await _api.post('/api/v1/general-documents',
-          companyScoped:true,data:payload)
-      : await _api.request('PATCH',
-          '/api/v1/general-documents/'+draft.id.toString(),
-          companyScoped:true,data:payload);
-    _check(company);
-    final saved=_parse(_data(response)['document'],company);
-    if(saved.status!='draft'||(draft.id!=null&&saved.id!=draft.id)){
-      throw const SignApiException('Document save not confirmed.');
-    }
-    return detail(saved.id!);
-  }
-
-  Future<GeneralDocumentDraft> transition(int id,String action,{
-    required int lockVersion,
-  }) async {
-    if(!const ['review','approve','archive'].contains(action)){
-      throw const SignApiException('Invalid document workflow action.');
-    }
-    final company=_company();
-    final data=_data(await _api.post(
-      '/api/v1/general-documents/$id/$action',
-      companyScoped:true,data:{'confirm':true,'lock_version':lockVersion}));
-    _check(company);
-    final record=_parse(data['document'],company);
-    final expected=action=='review'?'reviewed':
-        action=='approve'?'approved':'archived';
-    if(record.id!=id||record.status!=expected){
-      throw const SignApiException('Document workflow was not confirmed.');
-    }
-    return detail(id);
-  }
-
-  Future<GeneralDocumentDraft> suggest({
-    required String type,required String locale,required String instructions,
-    int? clientId,int? jobId,
-  }) async {
-    final company=_company();
-    final data=_data(await _api.post('/api/v1/general-documents/ai/prepare',
-      companyScoped:true,data:{
-        'type':type,'locale':locale,'instructions':instructions,
-        'client_id':clientId,'job_id':jobId,
-      }));
-    _check(company);
-    final suggestion=_map(data['suggestion']);
-    final raw=suggestion['blocks'];
-    if(suggestion['saved']!=false||
-        suggestion['requires_user_review']!=true||
-        raw is! List||raw.isEmpty){
-      throw const SignApiException('AI did not return a reviewable suggestion.');
-    }
-    final blocks=<GeneralTextBlock>[];
-    try{
-      for(final value in raw){
-        blocks.add(GeneralTextBlock.fromJson(_map(value)));
-      }
-    }catch(_){
-      throw const SignApiException('Invalid AI document paragraphs.');
-    }
-    final title=(suggestion['title']??'').toString();
-    if(title.isEmpty||title.length>255){
-      throw const SignApiException('AI returned invalid document title.');
-    }
-    return GeneralDocumentDraft(type:type,title:title,locale:locale,
-      clientId:clientId,jobId:jobId,
-      blocks:List.unmodifiable(blocks),source:'ai_draft');
-  }
-}
-).hasMatch(hash)) {
+      if (signature <= 0 || !RegExp(r'^[a-f0-9]{64}$').hasMatch(hash)) {
         throw const SignApiException('Signed PDF metadata is invalid.');
       }
       return (bytes: await signedPdf(id, signature), signed: true);
