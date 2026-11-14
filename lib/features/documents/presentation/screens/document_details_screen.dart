@@ -1181,28 +1181,12 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
       ('Valid Until:', _date(record.validUntil ?? record.quote?.validUntil)),
       ('Status:', _linkedSignedQuote(record) != null ? 'Signed' : record.status),
     ];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Sign2DigitalInformationTable(
-          heading: 'Document Information',
-          rows: [
-            for (var i = 0; i < data.length; i++)
-              Sign2DigitalInformationRow(data[i].$1, data[i].$2,
-                isStatus: i == data.length - 1),
-          ],
-        ),
-        // Keep the four action cards together with no extra button beneath
-        // them. Signing is the final action at the bottom of Details instead.
-        if (_isApprovedUnsignedQuote(record) &&
-            ActiveCompanySession.canWrite('quotes')) ...[
-          const SizedBox(height: 24),
-          Sign2DigitalPrimaryButton(
-            key: const Key('document-request-signature'),
-            label: 'Request Signature',
-            onPressed: () => _requestQuoteSignature(record),
-          ),
-        ],
+    return Sign2DigitalInformationTable(
+      heading: 'Document Information',
+      rows: [
+        for (var i = 0; i < data.length; i++)
+          Sign2DigitalInformationRow(data[i].$1, data[i].$2,
+            isStatus: i == data.length - 1),
       ],
     );
   }
@@ -1443,6 +1427,19 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
                               key: Key('document-details-missing')))
                           : _body(_record!),
         ),
+        // Approved unsigned quotations have one fixed bottom action, not a
+        // fifth card below View / Download / Share / More.
+        if (_record != null && _tab != 3 &&
+            _isApprovedUnsignedQuote(_record!) &&
+            ActiveCompanySession.canWrite('quotes'))
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 16),
+            child: Sign2DigitalPrimaryButton(
+              key: const Key('document-request-signature'),
+              label: 'Request Signature',
+              onPressed: () => _requestQuoteSignature(_record!),
+            ),
+          ),
       ],
     )),
   );
