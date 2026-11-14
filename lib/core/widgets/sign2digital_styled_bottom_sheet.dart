@@ -87,7 +87,9 @@ Future<T?> showSign2DigitalBottomSheet<T>({
       ),
     ),
     clipBehavior: material.Clip.antiAlias,
-    showDragHandle: true,
+    // Preserve the approved handle by default; allow compact sheets to
+    // render the same 36x4 handle in their own tightly spaced header.
+    showDragHandle: showDragHandle ?? true,
     ),
   );
 }
