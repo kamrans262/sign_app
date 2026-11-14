@@ -150,6 +150,54 @@ void main(){
     client.dispose();
   });
 
+  test('Preview/Download select the latest verified signed PDF',() async{
+    final metadata=meta();
+    (metadata['data'] as Map)['signatures']=[
+      {'id':10,'status':'ready','signed_pdf_sha256':null},
+      {'id':9,'status':'signed','signed_pdf_sha256':signedHash},
+    ];
+    var signedRequests=0;
+    final client=api((request) async{
+      if(request.url.path.endsWith('/issued')){
+        return http.Response(jsonEncode(metadata),200);
+      }
+      if(request.url.path.endsWith('/signatures/9/signed-pdf')){
+        signedRequests++;
+        return http.Response.bytes(signedBytes,200,headers:{
+          'content-type':'application/pdf'});
+      }
+      throw StateError('The unsigned PDF must not replace a signed PDF.');
+    });
+    final selected=await RemoteGeneralDocumentRepository(api:client)
+      .preferredPdf(41);
+    expect(selected.signed,isTrue);
+    expect(selected.bytes,signedBytes);
+    expect(signedRequests,1);
+    client.dispose();
+  });
+
+  test('unsigned issue remains the Preview until customer signs',() async{
+    final metadata=meta();
+    (metadata['data'] as Map)['signatures']=[
+      {'id':11,'status':'viewed','signed_pdf_sha256':null},
+    ];
+    final client=api((request) async{
+      if(request.url.path.endsWith('/issued')){
+        return http.Response(jsonEncode(metadata),200);
+      }
+      if(request.url.path.endsWith('/pdf')){
+        return http.Response.bytes(sampleBytes,200,headers:{
+          'content-type':'application/pdf'});
+      }
+      throw StateError('Unexpected signed-artifact request.');
+    });
+    final selected=await RemoteGeneralDocumentRepository(api:client)
+      .preferredPdf(41);
+    expect(selected.signed,isFalse);
+    expect(selected.bytes,sampleBytes);
+    client.dispose();
+  });
+
   test('company switch invalidates in-flight issuance metadata',() async{
     final pending=Completer<http.Response>();
     final client=api((request)=>pending.future);
