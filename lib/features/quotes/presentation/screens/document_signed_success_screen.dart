@@ -167,9 +167,10 @@ class DocumentSignedSuccessScreen extends StatelessWidget {
                       Sign2DigitalPrimaryButton(
                         label: businessSignaturePending
                             ? 'Preview Quote' : 'View Signed Document',
+                        enabled: !businessSignaturePending ||
+                            onPreviewQuote != null,
                         onPressed: businessSignaturePending
-                            ? (onPreviewQuote == null ? null
-                                : () => onPreviewQuote!(context))
+                            ? () { if (onPreviewQuote != null) onPreviewQuote!(context); }
                             : () => _viewDocument(context),
                       ),
                       const SizedBox(height: 15),
