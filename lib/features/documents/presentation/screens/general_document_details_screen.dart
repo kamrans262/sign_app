@@ -64,7 +64,7 @@ class _GeneralDocumentDetailsScreenState
   List<Map<String, dynamic>>? _events;
   bool _loading = true, _busy = false, _historyLoading = false;
   String? _error, _historyError, _relatedError;
-  int _tab = 0, _action = 0;
+  int _tab = 0, _action = -1; // Keep View unselected on first open.
   String _companyName = '', _clientEmail = '', _linkedClientName = '';
   bool _relatedLoading = false;
   List<DocumentRecord>? _relatedDocuments;
