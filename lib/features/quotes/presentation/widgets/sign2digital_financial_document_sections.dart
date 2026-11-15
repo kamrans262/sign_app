@@ -12,11 +12,15 @@ class Sign2DigitalFinancialDocumentSections {
     this.documentTitle = 'Quote',
     this.dateLabel = 'Valid Until:',
     this.showSignature = true,
+    this.signatureEvidence,
   });
 
   final QuoteReviewDraft document;
   final String documentTitle, dateLabel;
   final bool showSignature;
+  /// Optional verified signing evidence inside the existing quotation card.
+  /// The original Jobs → Quotes layout remains the default unchanged.
+  final Widget? signatureEvidence;
 
   static const _months = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -214,6 +218,11 @@ class Sign2DigitalFinancialDocumentSections {
               ],
             ),
           ),
+          if (signatureEvidence != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 25),
+              child: signatureEvidence!,
+            ),
         ],
       ],
     ),
