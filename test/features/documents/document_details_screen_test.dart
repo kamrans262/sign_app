@@ -48,9 +48,11 @@ void main() {
     expect(find.text('Q-12800'), findsOneWidget);
     expect(find.text('Job'), findsOneWidget);
     expect(find.text('Valid Until:'), findsOneWidget);
-    expect(tester.widget<Sign2DigitalSignatureActionCard>(
-      find.byKey(const Key('document-action-0')),
-    ).selected, isTrue);
+    for (var index = 0; index < 4; index++) {
+      expect(tester.widget<Sign2DigitalSignatureActionCard>(
+        find.byKey(Key('document-action-$index')),
+      ).selected, isFalse);
+    }
     expect(find.byKey(const Key('document-details-scroll')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
