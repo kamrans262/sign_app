@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sign2digital/features/quotes/domain/quote_review_models.dart';
@@ -85,8 +86,46 @@ void main() {
     expect(find.text('Business Owner  ·  15/11/2026'),findsOneWidget);
     expect(find.text('Customer signature pending'),findsOneWidget);
     expect(find.text('Customer Signature'),findsOneWidget);
+    expect(find.byKey(const Key('quote-preview-items-table')),findsOneWidget);
+    expect(find.text('Payment Details'),findsOneWidget);
+    expect(find.text('Approved terms'),findsOneWidget);
     expect(find.byKey(const Key('quote-preview-verified-signed-pdf')),
       findsNothing);
+  });
+
+  testWidgets('signed View quote retains original approved quote sections',
+      (tester) async {
+    final quote = QuoteReviewDraft(
+      id:'server-quote-17',serverId:17,
+      clientName:'Saved Customer',clientEmail:'saved@example.test',
+      quoteNumber:'Q-017',
+      date:DateTime.utc(2026,11,15),
+      validUntil:DateTime.utc(2026,12,15),
+      terms:'Saved approved terms stay visible',
+      approvedLocally:true,
+      items:[QuoteReviewWorkItem(id:'1',title:'Kitchen Repairs',
+        description:'Verified details',quantity:'2',unitPrice:'100.00')],
+    );
+    // This fixture is never parsed as a PDF; the real verified signed
+    // artifact remains a separate Download action rather than a viewer.
+    final signedArtifact = Uint8List.fromList([37,80,68,70,45,49,46,55]);
+    await tester.pumpWidget(MaterialApp(home:QuotePreviewScreen(
+      quote:quote,verifiedSignedPdf:signedArtifact,
+    )));
+    expect(find.text('Quote Preview'),findsOneWidget);
+    expect(find.text('Q-017'),findsOneWidget);
+    expect(find.byKey(const Key('quote-preview-items-table')),findsOneWidget);
+    expect(find.textContaining('Kitchen Repairs'),findsWidgets);
+    expect(find.text('Customer Signature'),findsOneWidget);
+    expect(find.text('Payment Details'),findsOneWidget);
+    expect(find.text('General Terms & Conditions'),findsOneWidget);
+    expect(find.text('Saved approved terms stay visible'),findsOneWidget);
+    expect(find.byKey(const Key('quote-preview-signed-evidence')),findsOneWidget);
+    expect(find.byKey(const Key('quote-preview-verified-signed-pdf')),findsNothing);
+    await tester.ensureVisible(find.byKey(const Key('quote-preview-download')));
+    expect(find.byKey(const Key('quote-preview-download')),findsOneWidget);
+    expect(find.byKey(const Key('quote-preview-share')),findsNothing);
+    expect(tester.takeException(),isNull);
   });
 
   testWidgets('approved quote preview has only Download and Send to Customer actions',
