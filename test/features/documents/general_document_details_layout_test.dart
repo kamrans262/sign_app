@@ -83,6 +83,11 @@ void main() {
     expect(find.text('Documents'), findsOneWidget);
     expect(find.byType(Sign2DigitalQuoteSummaryCard), findsOneWidget);
     expect(find.byType(Sign2DigitalSignatureActionCard), findsNWidgets(4));
+    for (var index = 0; index < 4; index++) {
+      expect(tester.widget<Sign2DigitalSignatureActionCard>(
+        find.byKey(Key('general-document-top-action-$index')),
+      ).selected, isFalse);
+    }
     expect(find.byType(Sign2DigitalDetailsTabs), findsOneWidget);
     expect(find.text('Power of Attorney'), findsWidgets);
     expect(find.text('Document Information'), findsOneWidget);
