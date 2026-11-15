@@ -148,7 +148,8 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
   bool _denied = false;
   bool _loading = false;
   int _tab = 0;
-  int _action = 0;
+  // No action is selected until the user taps a card.
+  int _action = -1;
   String _createdByCompany = '';
   Future<Uint8List?>? _pdfFuture;
   List<DocumentHistoryEvent> _extraHistory = const [];
