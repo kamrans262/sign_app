@@ -253,7 +253,8 @@ class _SendQuoteScreenState extends State<SendQuoteScreen> {
   /// email or creates a signature request. The server enforces tenant
   /// authorization, approved/sent state, revision validity and expiry.
   Future<Uri?> _ensureSecureLink({bool force = false}) async {
-    if (!force && _usableLink case final Uri existing) {
+    final existing = _usableLink;
+    if (!force && existing != null) {
       final expiry = _serverLinkExpiresAt ?? widget.secureLinkExpiresAt;
       if (expiry == null ||
           expiry.difference(DateTime.now()) > const Duration(minutes: 5)) {
