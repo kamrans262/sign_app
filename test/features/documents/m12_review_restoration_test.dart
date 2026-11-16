@@ -83,7 +83,8 @@ RemoteSiteReportRepository _repository(String status) {
 }
 
 void main() {
-  setUp(() => ActiveCompanySession.set(5));
+  setUp(() => ActiveCompanySession.setVerified(5,
+    role: 'owner', permissions: const ['reports.read', 'reports.write']));
   tearDown(ActiveCompanySession.clear);
 
   testWidgets('saved and creation reviews share the approved cover and data components',
@@ -212,13 +213,12 @@ void main() {
       report: _fixture(), repository: _repository('unexpected_state'),
     )));
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(find.text('Approve Report'), 350,
-      scrollable: find.byType(Scrollable).first);
-    await tester.pumpAndSettle();
-    final approve = tester.widget<Sign2DigitalPrimaryButton>(find.ancestor(
-      of: find.text('Approve Report'),
-      matching: find.byType(Sign2DigitalPrimaryButton)));
-    expect(approve.enabled, false);
+    // Unknown server status must never be represented as approved, or
+    // expose actions requiring a verified draft or approved report.
+    expect(find.text('Approve Report'), findsNothing);
+    expect(find.text('Already Approved'), findsNothing);
+    expect(find.text('Send to Client'), findsNothing);
+    expect(find.byKey(const Key('report-review-action-rows')), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
