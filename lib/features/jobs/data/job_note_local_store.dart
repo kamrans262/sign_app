@@ -40,5 +40,13 @@ class JobNoteLocalStore {
     notes.insert(0, note);
   }
 
+  void replace(JobNoteModel note) {
+    final notes = _byJob[_key(note.jobId)];
+    if (notes == null) throw StateError('Note not found.');
+    final index = notes.indexWhere((item) => item.id == note.id);
+    if (index < 0) throw StateError('Note not found.');
+    notes[index] = note;
+  }
+
   void clear() => _byJob.clear();
 }
