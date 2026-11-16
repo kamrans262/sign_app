@@ -38,11 +38,14 @@ class CreateAddendumScreen extends StatefulWidget {
     this.voiceExtractionService,
     this.requestTemporaryApiKey,
     this.requestAddendumSignature,
+    this.jobId,
   });
 
   final DocumentRecord? linkedDocument;
   final DocumentRepository? repository;
   final String? draftId;
+  /// Job-scoped Addenda must never link a signed document from another job.
+  final String? jobId;
   final VoiceRecorderService Function()? voiceRecorderFactory;
   final AddendumVoiceExtractionService? voiceExtractionService;
   final Future<String?> Function(BuildContext)? requestTemporaryApiKey;
@@ -137,7 +140,9 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
       final records = await _repository.listDocuments();
       if (!mounted) return;
       for (final doc in records) {
-        if (doc.id == id) {
+        if (doc.id == id && (widget.jobId == null ||
+            doc.jobId == widget.jobId ||
+            doc.quote?.jobId == widget.jobId)) {
           setState(() => _linked = doc);
           return;
         }
@@ -250,11 +255,17 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
     try {
       final all = await _repository.listDocuments();
       if (!mounted) return;
-      final candidates = all.where((record) => _live
+      final candidates = all.where((record) {
+        final sameJob = widget.jobId == null ||
+            record.jobId == widget.jobId ||
+            record.quote?.jobId == widget.jobId;
+        if (!sameJob) return false;
+        return _live
           ? record.id.startsWith('signed-') &&
               record.status.toLowerCase() == 'signed' &&
               record.verifiedSignedPdfAvailable
-          : record.category != DocumentCategory.addends).toList();
+          : record.category != DocumentCategory.addends;
+      }).toList();
       if (candidates.isEmpty) {
         _notice('No eligible documents are available to link.');
         return;
