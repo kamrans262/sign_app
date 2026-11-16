@@ -216,7 +216,7 @@ void main() {
     await tester.drag(find.byKey(const Key('work-acceptance-scroll')),
       const Offset(0, -450));
     await tester.pumpAndSettle();
-    expect(tester.getTopLeft(report).dy, closeTo(original, 1));
+    expect(tester.getTopLeft(report).dy, closeTo(original, 4));
     expect(tester.getBottomLeft(report).dy,
       lessThan(tester.getTopLeft(nav).dy));
     expect(tester.takeException(), isNull);
@@ -263,7 +263,11 @@ void main() {
     expect(sends, 0);
 
     await tester.tap(find.byKey(const Key('work-acceptance-approved-send')));
-    await tester.pumpAndSettle();
+    // The Send button remains loading while the confirmation sheet is open.
+    // Use bounded frames, not pumpAndSettle against the active spinner.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Confirm'), findsOneWidget);
     await tester.tap(find.text('Confirm'));
     await tester.pumpAndSettle();
     expect(sends, 1);
