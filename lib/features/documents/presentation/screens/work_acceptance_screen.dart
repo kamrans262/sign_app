@@ -9,8 +9,10 @@ import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
 import '../../../../core/widgets/sign2digital_outlined_button.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
+import '../../../../core/widgets/sign2digital_outlined_container.dart';
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import '../../../quotes/presentation/widgets/sign2digital_signature_draw_canvas.dart';
+import '../../../quotes/presentation/widgets/sign2digital_animated_success.dart';
 import '../../domain/document_record.dart';
 import '../../domain/work_acceptance_data.dart';
 import '../widgets/sign2digital_document_history.dart';
@@ -127,8 +129,8 @@ class _WorkAcceptanceScreenState extends State<WorkAcceptanceScreen> {
     return answer==true;
   }
 
-  Future<void> _run(WorkAcceptanceAction action) async {
-    if (_busy) return;
+  Future<bool> _run(WorkAcceptanceAction action) async {
+    if (_busy) return false;
     setState(() => _busy = true);
     try {
       await action(_report);
@@ -136,11 +138,13 @@ class _WorkAcceptanceScreenState extends State<WorkAcceptanceScreen> {
         final fresh=await widget.onRefresh!(_report);
         if(mounted)setState(()=>_report=fresh);
       }
+      return true;
     } catch (error) {
       if (mounted && !await Sign2DigitalSubscriptionGate.handle(
           context, error)) {
         _notice('The report action could not be completed.');
       }
+      return false;
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -211,6 +215,115 @@ class _WorkAcceptanceScreenState extends State<WorkAcceptanceScreen> {
     widget.onNavigationSelected?.call(index);
   }
 
+  void _closeApproved(BuildContext approvedContext) {
+    final navigate = widget.onNavigationSelected;
+    Navigator.of(approvedContext).pop();
+    if (!mounted) return;
+    Navigator.of(context).pop(); // Return from the tracking screen.
+    // The Reports parent switches the application's main tab to Documents.
+    navigate?.call(3);
+  }
+
+  Future<void> _approveAndOpen() async {
+    if (_busy || widget.onApprove == null) return;
+    if (!await _confirm('Approve Acceptance',
+        'Freeze this exact report version for customer signing?')) return;
+    final succeeded = await _run(widget.onApprove!);
+    if (!mounted || !succeeded) return;
+    if (_report.status.toLowerCase() != 'approved' || !_hasVerifiedPdf) {
+      _notice('Approval saved, but its verified PDF is not ready yet.');
+      return;
+    }
+    await Sign2DigitalNavigation.push<void>(
+      context,
+      MaterialPageRoute(builder: (approvedContext) =>
+        _AcceptanceApprovedScreen(
+          report: _report,
+          onClose: () => _closeApproved(approvedContext),
+          onSend: widget.onSend == null ? null : () async {
+            if (!await _confirm('Email Customer',
+                'Send a private, expiring signing link to the linked customer?')) {
+              return false;
+            }
+            return _run(widget.onSend!);
+          },
+        )),
+    );
+  }
+
+  Widget _footerActions() => Column(
+    mainAxisSize: MainAxisSize.min,
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Row(children: [
+        Expanded(child: Sign2DigitalOutlinedButton(
+          key: const Key('work-acceptance-share'),
+          label: 'Share',
+          primaryOutline: true,
+          compactLabel: true,
+          enabled: !_busy,
+          onPressed: _share,
+        )),
+        const SizedBox(width: 10),
+        Expanded(child: Sign2DigitalPrimaryButton(
+          key: const Key('work-acceptance-view-report'),
+          label: 'View Full Report',
+          compactLabel: true,
+          enabled: !_busy,
+          onPressed: _view,
+        )),
+      ]),
+      if (ActiveCompanySession.canWrite('reports') &&
+          _report.status == 'draft' && widget.onEditDraft != null) ...[
+        const SizedBox(height: 12),
+        Sign2DigitalOutlinedButton(
+          label: 'Edit Acceptance Draft',
+          enabled: !_busy,
+          onPressed: () => _run(widget.onEditDraft!),
+        ),
+      ],
+      if (ActiveCompanySession.canWrite('reports') &&
+          _report.status == 'draft' && widget.onApprove != null) ...[
+        const SizedBox(height: 12),
+        Sign2DigitalPrimaryButton(
+          label: 'Approve Acceptance PDF',
+          enabled: !_busy,
+          onPressed: _approveAndOpen,
+        ),
+      ],
+      if (ActiveCompanySession.canWrite('reports') &&
+          _report.status == 'approved' && widget.onSend != null) ...[
+        const SizedBox(height: 12),
+        Sign2DigitalPrimaryButton(
+          label: 'Send to Customer',
+          compactLabel: true,
+          enabled: !_busy,
+          onPressed: () async {
+            if (await _confirm('Email Customer',
+                'Send a private, expiring signing link to the linked customer?')) {
+              await _run(widget.onSend!);
+            }
+          },
+        ),
+      ],
+      if (ActiveCompanySession.canWrite('reports') &&
+          ['sent', 'viewed'].contains(_report.status) &&
+          widget.onRevoke != null) ...[
+        const SizedBox(height: 12),
+        Sign2DigitalOutlinedButton(
+          label: 'Revoke Signing Link',
+          enabled: !_busy,
+          onPressed: () async {
+            if (await _confirm('Revoke Signing Link',
+                'Invalidate the current customer acceptance link?')) {
+              await _run(widget.onRevoke!);
+            }
+          },
+        ),
+      ],
+    ],
+  );
+
   @override
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: AppColors.white,
@@ -276,65 +389,17 @@ class _WorkAcceptanceScreenState extends State<WorkAcceptanceScreen> {
                       child:Text('Customer Comment: ${_evidence!.customerComment}')),
                   const SizedBox(height:20),
                 ],
-                Row(children: [
-                  Expanded(child: Sign2DigitalOutlinedButton(
-                    key: const Key('work-acceptance-share'),
-                    label: 'Share',
-                    primaryOutline: true,
-                    enabled: !_busy,
-                    onPressed: _share,
-                  )),
-                  const SizedBox(width: 10),
-                  Expanded(child: Sign2DigitalPrimaryButton(
-                    key: const Key('work-acceptance-view-report'),
-                    label: 'View Full Report',
-                    enabled: !_busy,
-                    onPressed: _view,
-                  )),
-                ]),
-                if(ActiveCompanySession.canWrite('reports') &&
-                    _report.status=='draft'&&widget.onEditDraft!=null) ...[
-                  const SizedBox(height:12),
-                  Sign2DigitalOutlinedButton(label:'Edit Acceptance Draft',
-                    enabled:!_busy,onPressed:()=>_run(widget.onEditDraft!)),
-                ],
-                if(ActiveCompanySession.canWrite('reports') &&
-                    _report.status=='draft'&&widget.onApprove!=null) ...[
-                  const SizedBox(height:12),
-                  Sign2DigitalPrimaryButton(label:'Approve Acceptance PDF',
-                    enabled:!_busy,onPressed:() async {
-                      if(await _confirm('Approve Acceptance',
-                        'Freeze this exact report version for customer signing?')) {
-                        await _run(widget.onApprove!);
-                      }
-                    }),
-                ],
-                if(ActiveCompanySession.canWrite('reports') &&
-                    _report.status=='approved'&&widget.onSend!=null) ...[
-                  const SizedBox(height:12),
-                  Sign2DigitalPrimaryButton(label:'Send to Customer',
-                    enabled:!_busy,onPressed:() async {
-                      if(await _confirm('Email Customer',
-                        'Send a private, expiring signing link to the linked customer?')) {
-                        await _run(widget.onSend!);
-                      }
-                    }),
-                ],
-                if(ActiveCompanySession.canWrite('reports') &&
-                    ['sent','viewed'].contains(_report.status)&&
-                    widget.onRevoke!=null) ...[
-                  const SizedBox(height:12),
-                  Sign2DigitalOutlinedButton(label:'Revoke Signing Link',
-                    enabled:!_busy,onPressed:() async {
-                      if(await _confirm('Revoke Signing Link',
-                        'Invalidate the current customer acceptance link?')) {
-                        await _run(widget.onRevoke!);
-                      }
-                    }),
-                ],
+
               ],
             ),
           ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 14),
+          child: Center(child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: _footerActions(),
+          )),
         ),
       ]),
     ),
