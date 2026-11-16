@@ -8,6 +8,7 @@ import 'package:sign2digital/features/documents/data/demo_document_repository.da
 import 'package:sign2digital/features/documents/domain/document_record.dart';
 import 'package:sign2digital/features/documents/presentation/screens/documents_screen.dart';
 import 'package:sign2digital/features/documents/presentation/screens/document_details_screen.dart';
+import 'package:sign2digital/features/documents/presentation/screens/create_addendum_screen.dart';
 import 'package:sign2digital/features/quotes/presentation/widgets/sign2digital_quote_summary_card.dart';
 
 class _DocumentSource implements DocumentRepository {
@@ -136,6 +137,43 @@ void main() {
     expect(details.document!.demoOnly, isTrue);
     expect(find.text('Document Information'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('job Addenda provides a working Create Addendum for signed original',
+      (tester) async {
+    final signed = DocumentRecord(
+      id:'signed-44',category:DocumentCategory.quotes,
+      number:'Q-044',title:'Signed Quote Q-044',
+      project:'Renovation',customer:'Test',
+      timestamp:DateTime.utc(2026,11,16),status:'signed',
+      jobId:'22',verifiedSignedPdfAvailable:true,
+    );
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: DocumentsScreen(
+      repository:_DocumentSource(() async => [signed]),
+      jobId:'22',initialCategory:DocumentCategory.addends,
+    ))));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('job-addenda-create')),findsOneWidget);
+    await tester.tap(find.byKey(const Key('job-addenda-create')));
+    await tester.pumpAndSettle();
+    expect(find.byType(CreateAddendumScreen),findsOneWidget);
+    expect(find.byKey(const Key('addendum-linked-document')),findsOneWidget);
+    expect(find.text('Signed Quote Q-044'),findsWidgets);
+    expect(tester.takeException(),isNull);
+  });
+
+  testWidgets('job Addenda refuses unsafe creation without signed original',
+      (tester) async {
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: DocumentsScreen(
+      repository:_DocumentSource(() async => []),
+      jobId:'22',initialCategory:DocumentCategory.addends,
+    ))));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('job-addenda-create')));
+    await tester.pump();
+    expect(find.textContaining('A signed document for this job is required'),
+        findsOneWidget);
+    expect(find.byType(CreateAddendumScreen),findsNothing);
   });
 
   testWidgets('loading, error, retry and empty dataset states',
