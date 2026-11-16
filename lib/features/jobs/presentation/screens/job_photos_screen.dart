@@ -103,8 +103,8 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
     // Different files picked by the user must remain separate photos, even
     // when their bytes happen to match (for example, two exported logos).
     // Use content matching only when the picker lacks a unique source key.
-    bool matches(String sourceKey, Uint8List? bytes) =>
-        value.sourceKey.isNotEmpty && sourceKey.isNotEmpty
+    bool matches(String? sourceKey, Uint8List? bytes) =>
+        value.sourceKey.isNotEmpty && sourceKey != null && sourceKey.isNotEmpty
             ? sourceKey == value.sourceKey
             : bytes != null && _sameBytes(bytes, value.bytes);
     return _pending.any((item) =>
