@@ -203,7 +203,7 @@ class RemoteWorkAcceptanceRepository implements DocumentRepository {
     final data=_data(await _api.post('${_path(report.id)}/send',
         companyScoped:true,data:{'confirm':true}));
     _check(company);
-    return _record(data['acceptance'],company);
+    return _record(data['report'],company);
   }
 
   Future<DocumentRecord> revokeActive(DocumentRecord report) async {
