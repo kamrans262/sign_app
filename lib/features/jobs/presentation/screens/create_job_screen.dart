@@ -418,6 +418,10 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
         _clientError = null;
         updated++;
       }
+      if (_title.text.trim().isEmpty && data.title != null) {
+        _title.text = data.title!;
+        updated++;
+      }
       if (_address.text.trim().isEmpty && data.address != null) {
         _address.text = data.address!;
         updated++;
