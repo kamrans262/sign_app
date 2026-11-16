@@ -107,7 +107,7 @@ class Sign2DigitalJobPhotoCard extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          grouped ? (groupLabel ?? photo.title) : photo.title,
+                          groupLabel ?? photo.title,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
