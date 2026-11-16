@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/services/sign_api_client.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
 import '../../../../core/widgets/sign2digital_checkbox.dart';
@@ -633,10 +634,13 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
         throw StateError('The report service did not return a valid saved report.');
       }
       Navigator.of(context).pop(result);
-    } catch (_) {
+    } catch (error) {
       if (mounted) {
+        final detail = error is SignApiException
+            ? error.message
+            : 'An unexpected error prevented this report from being saved.';
         setState(() => _error =
-          'Report generation failed. Your entered information is preserved.');
+          'Report not generated: $detail Your entered information is preserved.');
       }
     } finally {
       if (mounted) { setState(() => _saving = false); }
