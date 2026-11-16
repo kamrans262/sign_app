@@ -216,12 +216,18 @@ class _AddJobNoteScreenState extends State<AddJobNoteScreen> {
                   'explicitly publishes it.',
                 style: TextStyle(fontSize: 12, color: AppColors.placeholder)),
               const SizedBox(height: 25),
-              Sign2DigitalPrimaryButton(
-                key: const Key('job-note-save'),
-                label: 'Save Note', onPressed: _save, enabled: !_saving),
             ],
           ),
         )),
+      )),
+      Center(child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 720),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+          child: Sign2DigitalPrimaryButton(
+            key: const Key('job-note-save'),
+            label: 'Save Note', onPressed: _save, enabled: !_saving),
+        ),
       )),
     ])),
   );
