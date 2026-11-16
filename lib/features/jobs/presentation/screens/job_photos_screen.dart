@@ -99,18 +99,18 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
 
   bool _sameBytes(Uint8List a, Uint8List b) => listEquals(a, b);
 
-  bool _alreadySelected(LocalJobPhotoSelection value) =>
-      _pending.any(
-        (p) =>
-            p.value.sourceKey == value.sourceKey ||
-            _sameBytes(p.value.bytes, value.bytes),
-      ) ||
-      _photos.any(
-        (photo) =>
-            photo.bytes != null &&
-            (photo.sourceKey == value.sourceKey ||
-                _sameBytes(photo.bytes!, value.bytes)),
-      );
+  bool _alreadySelected(LocalJobPhotoSelection value) {
+    // Different files picked by the user must remain separate photos, even
+    // when their bytes happen to match (for example, two exported logos).
+    // Use content matching only when the picker lacks a unique source key.
+    bool matches(String sourceKey, Uint8List? bytes) =>
+        value.sourceKey.isNotEmpty && sourceKey.isNotEmpty
+            ? sourceKey == value.sourceKey
+            : bytes != null && _sameBytes(bytes, value.bytes);
+    return _pending.any((item) =>
+        matches(item.value.sourceKey, item.value.bytes)) ||
+        _photos.any((item) => matches(item.sourceKey, item.bytes));
+  }
 
   Future<void> _selectPhotos({required bool camera}) async {
     if (_picking) return;
