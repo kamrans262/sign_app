@@ -125,19 +125,19 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.byType(Sign2DigitalJobPhotoCard), findsNWidgets(3));
+    expect(find.byType(Sign2DigitalJobPhotoCard), findsNWidgets(4));
     await tester.tap(find.byKey(const Key('details-tab-1')));
     await tester.pumpAndSettle();
     expect(find.byType(Sign2DigitalJobPhotoCard), findsOneWidget);
     await tester.tap(find.byKey(const Key('details-tab-2')));
     await tester.pumpAndSettle();
-    expect(find.byType(Sign2DigitalJobPhotoCard), findsOneWidget);
+    expect(find.byType(Sign2DigitalJobPhotoCard), findsNWidgets(2));
     await tester.tap(find.byKey(const Key('details-tab-3')));
     await tester.pumpAndSettle();
     expect(find.byType(Sign2DigitalJobPhotoCard), findsOneWidget);
     await tester.tap(find.byKey(const Key('details-tab-0')));
     await tester.pumpAndSettle();
-    expect(find.byType(Sign2DigitalJobPhotoCard), findsNWidgets(3));
+    expect(find.byType(Sign2DigitalJobPhotoCard), findsNWidgets(4));
     await tester.tap(find.byKey(const Key('job-photo-dismiss-banner')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('job-photo-dismiss-banner')), findsNothing);
@@ -151,7 +151,11 @@ void main() {
     await tester.pumpWidget(MaterialApp(home: JobPhotosScreen(
       job: job, store: JobPhotoLocalStore(), source: _FakeSource([]))));
     await tester.pumpAndSettle();
-    expect(find.text('2 photos · 12 Mar 2026 10:00'), findsOneWidget);
+    expect(find.byType(Sign2DigitalJobPhotoCard), findsNWidgets(4));
+    expect(find.text('During Job'), findsNWidgets(2));
+    expect(find.byKey(Key('job-photo-card-demo-${job.id}-2')),
+        findsOneWidget);
+    expect(find.byKey(const Key('job-photos-confirm-pending')), findsNothing);
     final group = find.byKey(Key('job-photo-card-demo-${job.id}-1'));
     await tester.ensureVisible(group);
     await tester.tap(group);
@@ -186,14 +190,13 @@ void main() {
     await tester.ensureVisible(find.byKey(const Key('pending-caption-0')));
     await tester.enterText(find.byKey(const Key('pending-caption-0')),
         'Kitchen before work');
-    await tester.ensureVisible(
-      find.byKey(const Key('job-photos-confirm-pending')),
-    );
-    await tester.tap(find.byKey(const Key('job-photos-confirm-pending')));
+    expect(find.byKey(const Key('job-photos-confirm-pending')), findsNothing);
+    await tester.tap(find.byKey(const Key('job-photos-add-button')));
     await tester.pumpAndSettle();
     expect(store.photosFor(job.id), hasLength(5));
     expect(store.photosFor(job.id).last.caption, 'Kitchen before work');
     expect(find.byKey(const Key('job-photo-pending-panel')), findsNothing);
+    expect(find.byKey(const Key('job-photos-bottom-actions')), findsOneWidget);
     await tester.ensureVisible(find.byKey(const Key('job-photos-upload')));
     await tester.tap(find.byKey(const Key('job-photos-upload')));
     await tester.pumpAndSettle();
