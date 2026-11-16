@@ -194,6 +194,59 @@ class RemoteJobMediaRepository {
     _check(company);
   }
 
+  /// This endpoint reads server-owned conversion records, not a local cache.
+  /// A saved conversion remains visible after closing or reopening the app.
+  Future<bool> hasConvertedDocuments(JobNoteModel note) async {
+    final company = _company();
+    if (note.visibility != JobNoteVisibility.privateNote ||
+        !isLiveJob(note.jobId) || int.tryParse(note.id) == null) {
+      return false;
+    }
+    final data = _payload(await _api.get(
+      '/api/v1/jobs/${note.jobId}/notes/${note.id}/documents',
+      companyScoped: true,
+    ));
+    _check(company);
+    final documents = data['documents'];
+    if (documents is! List) {
+      throw const SignApiException('Unable to verify previous note conversions.');
+    }
+    return documents.any((value) {
+      final record = _map(value);
+      return record['note_id'].toString() == note.id &&
+          record['job_id'].toString() == note.jobId &&
+          ['draft', 'approved'].contains(record['status']);
+    });
+  }
+
+  Future<void> updateNote(JobNoteModel note, {
+    required String title,
+    required String body,
+    required JobNoteVisibility visibility,
+  }) async {
+    final company = _company();
+    if (!isLiveJob(note.jobId) || int.tryParse(note.id) == null) {
+      throw const SignApiException('Only saved company notes can be edited.');
+    }
+    final response = _payload(await _api.request(
+      'PATCH', '/api/v1/jobs/${note.jobId}/notes/${note.id}',
+      companyScoped: true,
+      data: {
+        'title': title.trim(),
+        'body': body.trim(),
+        'visibility': visibility == JobNoteVisibility.privateNote
+            ? 'private' : 'customer_facing',
+      },
+    ));
+    _check(company);
+    final updated = _map(response['note']);
+    if (updated['id'].toString() != note.id ||
+        updated['job_id'].toString() != note.jobId ||
+        updated['company_id'].toString() != company.toString()) {
+      throw const SignApiException('Updated note identity does not match.');
+    }
+  }
+
   Future<Uint8List> audioBytes(String jobId, String noteId) async =>
       (await audioFile(jobId, noteId)).bytes;
 
