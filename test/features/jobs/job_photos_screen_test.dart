@@ -159,6 +159,8 @@ void main() {
     expect(find.text('During Job'), findsOneWidget);
     expect(find.textContaining('2 photos'), findsOneWidget);
     expect(find.byKey(const Key('job-photos-confirm-pending')), findsNothing);
+    await tester.tap(find.byKey(const Key('details-tab-2')));
+    await tester.pumpAndSettle();
     final group = find.byType(Sign2DigitalJobPhotoCard).first;
     expect(find.descendant(of: group, matching: find.byType(Image)),
         findsOneWidget);
@@ -234,6 +236,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(fake.cameraCount, 1);
     expect(find.byKey(const Key('job-photo-pending-panel')), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const Key('remove-pending-0')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('remove-pending-0')));
     await tester.pumpAndSettle();
     expect(store.photosFor(job.id), hasLength(4));
