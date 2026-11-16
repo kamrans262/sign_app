@@ -10,12 +10,14 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
+import '../../../../core/widgets/sign2digital_outlined_button.dart';
 import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import '../../data/job_note_local_store.dart';
 import '../../data/remote_job_media_repository.dart';
 import '../../services/voice_recorder_service.dart';
 import '../../domain/job_model.dart';
 import '../../domain/job_note_model.dart';
+import '../../domain/note_document_draft.dart';
 import '../widgets/sign2digital_job_info_banner.dart';
 import '../widgets/sign2digital_job_note_card.dart';
 import '../widgets/sign2digital_note_visibility_card.dart';
@@ -123,12 +125,59 @@ class _JobNotesScreenState extends State<JobNotesScreen> {
         .toList(growable: false);
   }
 
+  Future<bool> _wasConverted(JobNoteModel note) async {
+    if (note.visibility != JobNoteVisibility.privateNote) return false;
+    if (_remote) {
+      // Company-scoped server documents survive app restarts.
+      return RemoteJobMediaRepository.shared.hasConvertedDocuments(note);
+    }
+    return ConvertedDocumentType.values.any((type) =>
+        NoteDocumentDraftSession.forNote(note.id, type.name) != null);
+  }
+
+  Future<void> _editNote(
+      JobNoteModel note, BuildContext dialogContext) async {
+    Navigator.of(dialogContext).pop();
+    final changed = await Sign2DigitalNavigation.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => AddJobNoteScreen(
+        job: widget.job,
+        existingNote: note,
+        store: _remote ? null : _store,
+        initialType: note.type,
+        initialVisibility: note.visibility,
+        voiceRecorderFactory: widget.voiceRecorderFactory,
+      )),
+    );
+    if (!mounted || changed != true) return;
+    if (_remote) {
+      await _loadRemoteNotes();
+    } else {
+      setState(() {});
+    }
+  }
+
+  Future<void> _convertNote(JobNoteModel note,
+      BuildContext dialogContext, {bool again = false}) async {
+    Navigator.of(dialogContext).pop();
+    await Sign2DigitalNavigation.push<void>(
+      context,
+      MaterialPageRoute<void>(builder: (_) => ConvertDocumentScreen(
+        note: note,
+        forceNew: again,
+        onTabSelected: widget.onTabSelected,
+      )),
+    );
+    if (mounted && _remote) await _loadRemoteNotes();
+  }
+
   void _openNote(JobNoteModel note) {
     final callback = widget.onNoteTap;
     if (callback != null) {
       callback(note);
       return;
     }
+    final converted = _wasConverted(note);
     showDialog<void>(
       context: context,
       barrierColor: const Color(0x80000000),
@@ -143,14 +192,12 @@ class _JobNotesScreenState extends State<JobNotesScreen> {
             children: [
               Text(note.body),
               const SizedBox(height: 12),
-              Text(
-                note.timestampLabel(DateTime.now()),
-                style: const TextStyle(color: AppColors.placeholder),
-              ),
+              Text(note.timestampLabel(DateTime.now()),
+                style: const TextStyle(color: AppColors.placeholder)),
               if (note.audioPath != null) ...[
                 const SizedBox(height: 12),
-                Text(_remote ? 'Voice recording attached to this job.' :
-                    'Voice recording saved on this device.'),
+                Text(_remote ? 'Voice recording attached to this job.'
+                    : 'Voice recording saved on this device.'),
               ],
               if (note.type != JobNoteType.text && note.audioPath == null) ...[
                 const SizedBox(height: 12),
@@ -160,27 +207,78 @@ class _JobNotesScreenState extends State<JobNotesScreen> {
           ),
         ),
         actions: [
-          if (note.audioPath != null && _remote)
-            TextButton(
-              onPressed: () => _playNote(note),
-              child: const Text('Play Recording'),
+          FutureBuilder<bool>(
+            future: converted,
+            builder: (_, snapshot) => Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (note.audioPath != null && _remote) ...[
+                  Sign2DigitalOutlinedButton(
+                    label: 'Play Recording',
+                    primaryOutline: true,
+                    compactLabel: true,
+                    onPressed: () => _playNote(note)),
+                  const SizedBox(height: 10),
+                ],
+                if (snapshot.connectionState == ConnectionState.waiting) ...[
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8),
+                    child: Center(child: CircularProgressIndicator(
+                      color: AppColors.primary))),
+                  const SizedBox(height: 10),
+                ] else if (snapshot.hasError) ...[
+                  const Text(
+                    'Unable to verify previous conversions. '
+                    'Reopen the note to retry.',
+                    style: TextStyle(color: AppColors.secondaryText)),
+                  const SizedBox(height: 10),
+                ] else if (note.visibility ==
+                    JobNoteVisibility.privateNote) ...[
+                  if (snapshot.data == true) ...[
+                    Row(children: [
+                      Expanded(child: Sign2DigitalOutlinedButton(
+                        label: 'Edit',
+                        primaryOutline: true,
+                        compactLabel: true,
+                        onPressed: () => _editNote(note, dialogContext))),
+                      const SizedBox(width: 12),
+                      Expanded(child: Sign2DigitalOutlinedButton(
+                        label: 'Convert Again',
+                        primaryOutline: true,
+                        compactLabel: true,
+                        onPressed: () =>
+                            _convertNote(note, dialogContext, again: true))),
+                    ]),
+                    const SizedBox(height: 10),
+                  ] else ...[
+                    Row(children: [
+                      Expanded(child: Sign2DigitalOutlinedButton(
+                        key: const Key('job-note-convert'),
+                        label: 'Convert to Document',
+                        primaryOutline: true,
+                        compactLabel: true,
+                        onPressed: () =>
+                            _convertNote(note, dialogContext))),
+                      const SizedBox(width: 12),
+                      Expanded(child: Sign2DigitalPrimaryButton(
+                        label: 'Close',
+                        compactLabel: true,
+                        onPressed: () => Navigator.of(dialogContext).pop())),
+                    ]),
+                  ],
+                ],
+                if (snapshot.data == true ||
+                    note.visibility != JobNoteVisibility.privateNote ||
+                    snapshot.hasError ||
+                    snapshot.connectionState == ConnectionState.waiting)
+                  Sign2DigitalPrimaryButton(
+                    label: 'Close',
+                    compactLabel: true,
+                    onPressed: () => Navigator.of(dialogContext).pop(),
+                  ),
+              ],
             ),
-          if (note.visibility == JobNoteVisibility.privateNote)
-            TextButton(
-              key: const Key('job-note-convert'),
-            onPressed: () {
-              Navigator.of(dialogContext).pop();
-              Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
-                builder: (_) => ConvertDocumentScreen(
-                  note: note, onTabSelected: widget.onTabSelected,
-                ),
-              ));
-            },
-            child: const Text('Convert to Document'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Close'),
           ),
         ],
       ),
