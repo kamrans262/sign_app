@@ -96,6 +96,7 @@ void main() {
     expect(find.byKey(const Key('voice-processing-waveform')), findsOneWidget);
     pending.complete(
       const ExtractedJobDetails(
+        title: 'Terrace Renovation',
         clientName: 'Alpine Renovations',
         address: 'Rue de Genève 12, Lausanne',
         description: 'Renovate the terrace.',
@@ -107,6 +108,10 @@ void main() {
     expect(find.byType(AiVoiceFlowDialog), findsNothing);
     expect(find.text('Alpine Renovations'), findsOneWidget);
     expect(find.text('Sophie Bernard'), findsOneWidget);
+    final title = tester.widget<Sign2DigitalInputField>(
+      find.byKey(const Key('job-title-input')),
+    );
+    expect(title.controller.text, 'Terrace Renovation');
     final address = tester.widget<Sign2DigitalInputField>(
       find.widgetWithText(Sign2DigitalInputField, 'Address'),
     );
