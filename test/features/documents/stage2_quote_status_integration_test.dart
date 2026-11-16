@@ -165,6 +165,24 @@ void main() {
     expect(tester.takeException(),isNull);
   });
 
+  testWidgets('quote footer stays evenly split on a narrow phone',
+      (tester) async {
+    tester.view.physicalSize=const Size(320,650);
+    tester.view.devicePixelRatio=1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(MaterialApp(home:DocumentDetailsScreen(
+      documentId:'quote-42',document:_original(status:'approved'),
+    )));
+    final left=find.byKey(const Key('document-quote-download'));
+    final right=find.byKey(const Key('document-quote-send'));
+    expect(left,findsOneWidget);
+    expect(right,findsOneWidget);
+    expect((tester.getSize(left).width-tester.getSize(right).width).abs(),
+        lessThanOrEqualTo(1));
+    expect(tester.takeException(),isNull);
+  });
+
   testWidgets('Documents catalogue shows Signed only for verified related artifact',
       (tester) async {
     await tester.pumpWidget(MaterialApp(
