@@ -133,7 +133,7 @@ void main() {
     )));
     final company = tester.widget<Sign2DigitalInputField>(
       find.widgetWithText(Sign2DigitalInputField, 'Company Name'));
-    company.controller.text = 'My Existing Company';
+    company.controller!.text = 'My Existing Company';
 
     await tester.tap(find.byKey(const Key('create-with-ai-voice-button')));
     await tester.pump();
@@ -146,9 +146,9 @@ void main() {
       find.widgetWithText(Sign2DigitalInputField, 'Address'));
     final email = tester.widget<Sign2DigitalInputField>(
       find.widgetWithText(Sign2DigitalInputField, 'E-mail'));
-    expect(company.controller.text, 'My Existing Company');
-    expect(address.controller.text, 'Rue de Lausanne 3');
-    expect(email.controller.text, 'office@alpine.ch');
+    expect(company.controller!.text, 'My Existing Company');
+    expect(address.controller!.text, 'Rue de Lausanne 3');
+    expect(email.controller!.text, 'office@alpine.ch');
     expect(suggestionsRequested, 1);
     expect(recorder.disposed, isTrue);
   });
