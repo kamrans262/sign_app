@@ -10,6 +10,7 @@ import 'package:sign2digital/features/jobs/presentation/screens/job_details_scre
 import 'package:sign2digital/features/jobs/presentation/screens/job_photos_screen.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:sign2digital/features/jobs/presentation/widgets/sign2digital_job_photo_card.dart';
+import 'package:sign2digital/features/jobs/presentation/widgets/sign2digital_photo_source_card.dart';
 
 class _FakeSource implements JobPhotoSource {
   _FakeSource(this.items);
@@ -58,7 +59,7 @@ void main() {
     }
   });
 
-  testWidgets('Add Photos stays on original screen and opens inline picker',
+  testWidgets('Add Photos confirms selection; source containers open picker',
       (tester) async {
     await setSize(tester, const Size(430, 932));
     final fake = _FakeSource([]);
@@ -71,7 +72,10 @@ void main() {
     expect(tester.getSize(button).width, closeTo(390, 1));
     await tester.tap(button);
     await tester.pumpAndSettle();
-    expect(fake.uploadCount, 1);
+    expect(fake.uploadCount, 0);
+    expect(find.text('Select photos with Upload or Camera first.'),
+        findsOneWidget);
+    expect(find.byType(Sign2DigitalPhotoSourceCard), findsNWidgets(2));
     expect(find.byType(JobPhotosScreen), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
@@ -125,19 +129,19 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.byType(Sign2DigitalJobPhotoCard), findsNWidgets(4));
+    expect(find.byType(Sign2DigitalJobPhotoCard), findsNWidgets(3));
     await tester.tap(find.byKey(const Key('details-tab-1')));
     await tester.pumpAndSettle();
     expect(find.byType(Sign2DigitalJobPhotoCard), findsOneWidget);
     await tester.tap(find.byKey(const Key('details-tab-2')));
     await tester.pumpAndSettle();
-    expect(find.byType(Sign2DigitalJobPhotoCard), findsNWidgets(2));
+    expect(find.byType(Sign2DigitalJobPhotoCard), findsOneWidget);
     await tester.tap(find.byKey(const Key('details-tab-3')));
     await tester.pumpAndSettle();
     expect(find.byType(Sign2DigitalJobPhotoCard), findsOneWidget);
     await tester.tap(find.byKey(const Key('details-tab-0')));
     await tester.pumpAndSettle();
-    expect(find.byType(Sign2DigitalJobPhotoCard), findsNWidgets(4));
+    expect(find.byType(Sign2DigitalJobPhotoCard), findsNWidgets(3));
     await tester.tap(find.byKey(const Key('job-photo-dismiss-banner')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('job-photo-dismiss-banner')), findsNothing);
@@ -151,12 +155,13 @@ void main() {
     await tester.pumpWidget(MaterialApp(home: JobPhotosScreen(
       job: job, store: JobPhotoLocalStore(), source: _FakeSource([]))));
     await tester.pumpAndSettle();
-    expect(find.byType(Sign2DigitalJobPhotoCard), findsNWidgets(4));
-    expect(find.text('During Job'), findsNWidgets(2));
-    expect(find.byKey(Key('job-photo-card-demo-${job.id}-2')),
-        findsOneWidget);
+    expect(find.byType(Sign2DigitalJobPhotoCard), findsNWidgets(3));
+    expect(find.text('During Job'), findsOneWidget);
+    expect(find.textContaining('2 photos'), findsOneWidget);
     expect(find.byKey(const Key('job-photos-confirm-pending')), findsNothing);
-    final group = find.byKey(Key('job-photo-card-demo-${job.id}-1'));
+    final group = find.byType(Sign2DigitalJobPhotoCard).first;
+    expect(find.descendant(of: group, matching: find.byType(Image)),
+        findsOneWidget);
     await tester.ensureVisible(group);
     await tester.tap(group);
     await tester.pumpAndSettle();
