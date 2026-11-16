@@ -50,6 +50,36 @@ void main() {
     ))),
   );
 
+  testWidgets('short Job Addenda list shrinks sheet without blank area',
+      (tester) async {
+    tester.view.physicalSize = const Size(430, 932);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(MaterialApp(home: Scaffold(
+      body: Builder(builder: (context) => ElevatedButton(
+        onPressed: () => showSign2DigitalBottomSheet<JobAddendaSelection>(
+          context: context,
+          isScrollControlled: true,
+          builder: (_) => JobAddendaBottomSheet(
+            jobId: '44', jobReference: 'JOB-044',
+            live: true, canCreate: true,
+            loadDocuments: (_) async => [quote1],
+            loadDetails: (_) async => quote1.withRelated([signed]),
+          ),
+        ),
+        child: const Text('Open compact sheet'),
+      )),
+    )));
+    await tester.tap(find.text('Open compact sheet'));
+    await tester.pumpAndSettle();
+    expect(find.text('Quotes Without Addenda'), findsOneWidget);
+    expect(find.byKey(const Key('job-addenda-quote-quote-1')), findsOneWidget);
+    expect(tester.getSize(find.byType(JobAddendaBottomSheet)).height,
+        lessThan(440));
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('separates existing addenda and genuinely unlinked job quotes',
       (tester) async {
     JobAddendaSelection? selected;
