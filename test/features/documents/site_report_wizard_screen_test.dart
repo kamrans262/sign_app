@@ -12,6 +12,7 @@ import 'package:sign2digital/features/documents/presentation/screens/site_report
 import 'package:sign2digital/features/jobs/data/local_job_photo_source.dart';
 import 'package:sign2digital/features/jobs/data/mock_jobs.dart';
 import 'package:sign2digital/core/widgets/sign2digital_info_banner.dart';
+import 'package:sign2digital/core/services/sign_api_client.dart';
 
 class _PhotoSource implements JobPhotoSource {
   @override
@@ -246,6 +247,38 @@ void main() {
     expect(saved?.siteReportDetails?.photos.length, 1);
     expect(tester.takeException(), isNull);
   });
+
+  for (final failure in [
+    (402, 'Subscription required to create another document.'),
+    (422, 'The selected report details are not valid.'),
+    (500, 'Internal Server Error'),
+  ]) {
+    testWidgets('Site report shows meaningful HTTP ${failure.$1} error and keeps input',
+        (tester) async {
+      await tester.pumpWidget(MaterialApp(home: SiteReportWizardScreen(
+        initial: _completeReviewFixture(),
+        reportGenerator: (_) async => throw SignApiException(
+          failure.$2, statusCode: failure.$1),
+      )));
+      await _openReview(tester);
+      await tester.ensureVisible(find.byKey(const Key('site-report-next')));
+      await tester.tap(find.byKey(const Key('site-report-next')));
+      await tester.pumpAndSettle();
+      expect(find.text('Review Reports'), findsOneWidget);
+      expect(find.textContaining('generation failed'), findsOneWidget);
+      if (failure.$1 == 402) {
+        expect(find.textContaining('Document allowance reached'), findsOneWidget);
+      } else if (failure.$1 == 422) {
+        expect(find.textContaining('selected report details are not valid'), findsOneWidget);
+      } else {
+        expect(find.textContaining('HTTP 500'), findsOneWidget);
+        expect(find.textContaining('Internal Server Error'), findsNothing);
+      }
+      expect(find.textContaining('entered information is preserved'),
+          findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  }
 
   testWidgets('Failed real generation stays on Review, preventing duplicate calls',
       (tester) async {
