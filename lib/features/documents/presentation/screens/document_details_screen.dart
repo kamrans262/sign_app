@@ -1363,6 +1363,9 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
         leftAction = () {
           if (_linkedSignedQuote(record) != null) {
             _openLinkedSignedQuote(record);
+          } else if (record.verifiedSignedPdfAvailable) {
+            // A standalone signed artifact is already the authoritative PDF.
+            _selectTab(1);
           } else {
             _view();
           }
