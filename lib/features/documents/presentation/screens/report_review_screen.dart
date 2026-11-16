@@ -252,6 +252,37 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
     }
   }
 
+  /// Use approved button widgets without creating a new visual style.
+  /// Two actions share each row. When the count is odd, the final action
+  /// occupies the entire width. Extra-narrow screens use full-width actions.
+  Widget _actionRows(List<Widget> actions) => LayoutBuilder(
+    builder: (context, constraints) {
+      if (actions.isEmpty) return const SizedBox.shrink();
+      final columns = constraints.maxWidth >= 280 ? 2 : 1;
+      final rows = <Widget>[];
+      for (var index = 0; index < actions.length; index += columns) {
+        if (rows.isNotEmpty) rows.add(const SizedBox(height: 12));
+        if (columns == 2 && index + 1 < actions.length) {
+          rows.add(Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: actions[index]),
+              const SizedBox(width: 10),
+              Expanded(child: actions[index + 1]),
+            ],
+          ));
+        } else {
+          rows.add(actions[index]);
+        }
+      }
+      return Column(
+        key: const Key('report-review-action-rows'),
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: rows,
+      );
+    },
+  );
+
   Widget _section(String heading, String value) {
     if (value.trim().isEmpty) return const SizedBox.shrink();
     return Padding(
@@ -332,79 +363,59 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
                       fontFamily: 'Inter', color: Color(0xFFB42318))),
                   ),
                 if (_isDraft && ActiveCompanySession.canWrite('reports'))
-                  LayoutBuilder(builder: (context, constraints) {
-                    final edit = Sign2DigitalOutlinedButton(
+                  _actionRows([
+                    Sign2DigitalOutlinedButton(
                       label: 'Edit Draft', onPressed: _editDraft,
+                      primaryOutline: true, compactLabel: true,
                       enabled: !_busy && _latestServerReportLoaded,
-                    );
-                    final ai = Sign2DigitalOutlinedButton(
+                    ),
+                    Sign2DigitalOutlinedButton(
                       label: 'Prepare with AI', onPressed: _prepare,
+                      primaryOutline: true, compactLabel: true,
                       enabled: !_busy && _latestServerReportLoaded,
-                    );
-                    final approve = Sign2DigitalPrimaryButton(
+                    ),
+                    Sign2DigitalPrimaryButton(
                       label: 'Approve Report', loading: _busy,
+                      height: 52, compactLabel: true,
                       enabled: _latestServerReportLoaded,
                       onPressed: _approve,
-                    );
-                    final archive = Sign2DigitalOutlinedButton(
-                      label: 'Archive Report', onPressed: _archive,
-                      enabled: !_busy && _latestServerReportLoaded,
-                    );
-                    // Preserve equal-width original buttons; only phones with
-                    // insufficient two-column space use the vertical fallback.
-                    if (constraints.maxWidth < 270) {
-                      return Column(children: [
-                        edit, const SizedBox(height: 12), ai,
-                        const SizedBox(height: 12), approve,
-                        const SizedBox(height: 12), archive,
-                      ]);
-                    }
-                    return Column(children: [
-                      Row(crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(child: edit), const SizedBox(width: 10),
-                          Expanded(child: ai),
-                        ]),
-                      const SizedBox(height: 12),
-                      Row(crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(child: approve), const SizedBox(width: 10),
-                          Expanded(child: archive),
-                        ]),
-                    ]);
-                  })
-                else if (!_isDraft && _report.status != 'archived') ...[
-                  Sign2DigitalPrimaryButton(
-                    label: 'Already Approved', onPressed: () {},
-                    enabled: false,
-                  ),
-                  if (_report.reportManagedDocumentId != null) ...[
-                    const SizedBox(height: 12),
+                    ),
                     Sign2DigitalOutlinedButton(
-                      label: 'View Approved PDF', onPressed: _openPdf,
-                      enabled: _latestServerReportLoaded,
+                      label: 'Archive Report', onPressed: _archive,
+                      primaryOutline: true, compactLabel: true,
+                      enabled: !_busy && _latestServerReportLoaded,
                     ),
-                    const SizedBox(height: 12),
-                    if (ActiveCompanySession.canWrite('reports'))
-                    Sign2DigitalPrimaryButton(
-                      label: 'Send to Client', loading: _busy,
-                      enabled: _latestServerReportLoaded,
-                      onPressed: _send,
-                    ),
-                  ],
-                ] else if (_report.reportManagedDocumentId != null) ...[
-                  Sign2DigitalOutlinedButton(
-                    label: 'View Approved PDF', onPressed: _openPdf,
-                  ),
-                ],
-                if (!_isDraft && _report.status != 'archived' &&
-                    ActiveCompanySession.canWrite('reports')) ...[
-                  const SizedBox(height: 12),
-                  Sign2DigitalOutlinedButton(
-                    label: 'Archive Report', onPressed: _archive,
-                    enabled: _latestServerReportLoaded,
-                  ),
-                ],
+                  ])
+                else if (!_isDraft)
+                  _actionRows([
+                    if (_report.status != 'archived')
+                      Sign2DigitalPrimaryButton(
+                        label: 'Already Approved', onPressed: () {},
+                        height: 52, compactLabel: true, enabled: false,
+                      ),
+                    if (_report.reportManagedDocumentId != null)
+                      Sign2DigitalOutlinedButton(
+                        label: 'View Approved PDF', onPressed: _openPdf,
+                        primaryOutline: true, compactLabel: true,
+                        enabled: !_busy && _latestServerReportLoaded,
+                      ),
+                    if (_report.status != 'archived' &&
+                        _report.reportManagedDocumentId != null &&
+                        ActiveCompanySession.canWrite('reports'))
+                      Sign2DigitalPrimaryButton(
+                        label: 'Send to Client', loading: _busy,
+                        height: 52, compactLabel: true,
+                        enabled: _latestServerReportLoaded,
+                        onPressed: _send,
+                      ),
+                    if (_report.status != 'archived' &&
+                        ActiveCompanySession.canWrite('reports'))
+                      Sign2DigitalOutlinedButton(
+                        label: 'Archive Report', onPressed: _archive,
+                        primaryOutline: true, compactLabel: true,
+                        enabled: !_busy && _latestServerReportLoaded,
+                      ),
+                  ]),
               ],
             ),
           ))),
