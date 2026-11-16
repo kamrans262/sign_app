@@ -127,6 +127,38 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('Note conversion action remains single line and uses prior conversion state',
+      (tester) async {
+    final note = JobNoteModel(
+      id: 'private-existing-1', jobId: job.id, title: 'Site inspection',
+      body: 'Roofing work is complete', createdAt: DateTime.now(),
+      type: JobNoteType.text, visibility: JobNoteVisibility.privateNote,
+    );
+    await tester.pumpWidget(MaterialApp(home: JobNotesScreen(
+      job: job, notes: [note],
+    )));
+    await tester.tap(find.byKey(const Key('job-note-private-existing-1')));
+    await tester.pumpAndSettle();
+    expect(find.text('Convert to Document'), findsOneWidget);
+    expect(find.text('Convert Again'), findsNothing);
+    final convertLabel = tester.widget<Text>(find.text('Convert to Document'));
+    expect(convertLabel.maxLines, lessThanOrEqualTo(1) /* one-line button */);
+    await tester.tap(find.text('Close'));
+    await tester.pumpAndSettle();
+
+    NoteDocumentDraftSession.save(NoteDocumentDraft(
+      noteId: note.id, jobId: note.jobId, documentType: 'report',
+      title: 'Existing report draft', content: 'Draft contents',
+    ));
+    await tester.tap(find.byKey(const Key('job-note-private-existing-1')));
+    await tester.pumpAndSettle();
+    expect(find.text('Convert to Document'), findsNothing);
+    expect(find.text('Edit'), findsOneWidget);
+    expect(find.text('Convert Again'), findsOneWidget);
+    expect(find.text('Close'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('customer-facing note cannot be converted as a private note',
       (tester) async {
     final note = JobNoteModel(
