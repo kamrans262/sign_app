@@ -204,6 +204,34 @@ void main() {
     expect(tester.takeException(),isNull);
   });
 
+  test('latest signed quote alone stays visible and unverified copies never hide originals', () {
+    final original = _original();
+    final oldSigned = _signed();
+    final recentSigned = DocumentRecord(
+      id:'signed-10',category:DocumentCategory.quotes,
+      number:'Q-42',title:'Signed Quote Q-42',
+      project:'Job 9',jobId:'9',customer:'Approved Customer',
+      timestamp:DateTime.utc(2026,11,15), status:'signed',
+      verifiedSignedPdfAvailable:true,
+    );
+    final unverified = DocumentRecord(
+      id:'signed-13',category:DocumentCategory.quotes,
+      number:'Q-99',title:'Pending Quote Q-99',
+      project:'Job 9',jobId:'9',customer:'Other Customer',
+      timestamp:DateTime.utc(2026,11,16),status:'signed',
+      verifiedSignedPdfAvailable:false,
+    );
+    // The catalogue collapse is UI-only. It never changes the list supplied
+    // by Laravel, and preserves unrelated or unverified records.
+    final input=[original,oldSigned,recentSigned,unverified];
+    final output=latestQuotationCards(input);
+    expect(output.map((doc)=>doc.id),contains('signed-10'));
+    expect(output.map((doc)=>doc.id),isNot(contains('quote-42')));
+    expect(output.map((doc)=>doc.id),isNot(contains('signed-8')));
+    expect(output.map((doc)=>doc.id),contains('signed-13'));
+    expect(input,hasLength(4));
+  });
+
   testWidgets('Documents catalogue shows Signed only for verified related artifact',
       (tester) async {
     await tester.pumpWidget(MaterialApp(
