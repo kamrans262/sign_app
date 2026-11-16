@@ -22,6 +22,7 @@ class AddJobNoteScreen extends StatefulWidget {
     this.store,
     required this.initialType,
     required this.initialVisibility,
+    this.existingNote,
     this.voiceRecorderFactory,
   });
 
@@ -29,6 +30,7 @@ class AddJobNoteScreen extends StatefulWidget {
   final JobNoteLocalStore? store;
   final JobNoteType initialType;
   final JobNoteVisibility initialVisibility;
+  final JobNoteModel? existingNote;
   final VoiceRecorderService Function()? voiceRecorderFactory;
 
   @override
@@ -47,8 +49,13 @@ class _AddJobNoteScreenState extends State<AddJobNoteScreen> {
   @override
   void initState() {
     super.initState();
-    _type = widget.initialType;
-    _visibility = widget.initialVisibility;
+    _type = widget.existingNote?.type ?? widget.initialType;
+    _visibility = widget.existingNote?.visibility ?? widget.initialVisibility;
+    if (widget.existingNote != null) {
+      _title.text = widget.existingNote!.title;
+      _body.text = widget.existingNote!.body;
+      _audioPath = widget.existingNote!.audioPath;
+    }
   }
 
   @override
@@ -109,20 +116,28 @@ class _AddJobNoteScreenState extends State<AddJobNoteScreen> {
     try {
       if (widget.store == null &&
           RemoteJobMediaRepository.isLiveJob(widget.job.id)) {
-        await RemoteJobMediaRepository.shared.createNote(
-          jobId: widget.job.id, title: title, body: body,
-          type: _type, visibility: _visibility, audioPath: _audioPath);
+        if (widget.existingNote != null) {
+          await RemoteJobMediaRepository.shared.updateNote(
+            widget.existingNote!, title: title, body: body,
+            visibility: _visibility);
+        } else {
+          await RemoteJobMediaRepository.shared.createNote(
+            jobId: widget.job.id, title: title, body: body,
+            type: _type, visibility: _visibility, audioPath: _audioPath);
+        }
       } else {
-      widget.store!.add(JobNoteModel(
-        id: 'local-note-${widget.job.id}-${now.microsecondsSinceEpoch}',
-        jobId: widget.job.id,
-        title: title,
-        body: body,
-        createdAt: now,
-        type: _type,
-        visibility: _visibility,
-        audioPath: _audioPath,
-      ));
+        final changed = JobNoteModel(
+          id: widget.existingNote?.id ??
+              'local-note-${widget.job.id}-${now.microsecondsSinceEpoch}',
+          jobId: widget.job.id,
+          title: title, body: body,
+          createdAt: widget.existingNote?.createdAt ?? now,
+          type: _type, visibility: _visibility, audioPath: _audioPath);
+        if (widget.existingNote != null) {
+          widget.store!.replace(changed);
+        } else {
+          widget.store!.add(changed);
+        }
       }
       if (mounted) Navigator.of(context).pop(true);
     } catch (error) {
@@ -147,16 +162,19 @@ class _AddJobNoteScreenState extends State<AddJobNoteScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text('Add Notes', style: TextStyle(
+              Text(widget.existingNote == null ? 'Add Notes' : 'Edit Note', style: const TextStyle(
                 fontFamily: 'Inter', fontSize: 24,
                 fontWeight: FontWeight.w700, color: AppColors.dark)),
               const SizedBox(height: 20),
               Sign2DigitalDetailsTabs(
                 labels: const ['Text Note', 'Voice Note'],
                 selectedIndex: _type == JobNoteType.text ? 0 : 1,
-                onSelected: (value) => setState(() {
-                  _type = value == 0 ? JobNoteType.text : JobNoteType.voice;
-                }),
+                onSelected: (value) {
+                  if (widget.existingNote != null) return;
+                  setState(() {
+                    _type = value == 0 ? JobNoteType.text : JobNoteType.voice;
+                  });
+                },
               ),
               const SizedBox(height: 20),
               Sign2DigitalInputField(
@@ -168,7 +186,7 @@ class _AddJobNoteScreenState extends State<AddJobNoteScreen> {
                 label: 'Note', hintText: 'Enter job observations or a transcript',
                 iconAsset: 'assets/icons/description.svg',
                 controller: _body, minLines: 3, maxLines: 6),
-              if (_type != JobNoteType.text) ...[
+              if (_type != JobNoteType.text && widget.existingNote == null) ...[
                 const SizedBox(height: 15),
                 OutlinedButton.icon(
                   key: const Key('job-note-record'),
@@ -216,13 +234,27 @@ class _AddJobNoteScreenState extends State<AddJobNoteScreen> {
                   'explicitly publishes it.',
                 style: TextStyle(fontSize: 12, color: AppColors.placeholder)),
               const SizedBox(height: 25),
-              Sign2DigitalPrimaryButton(
-                key: const Key('job-note-save'),
-                label: 'Save Note', onPressed: _save, enabled: !_saving),
             ],
           ),
         )),
       )),
     ])),
+    bottomNavigationBar: SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+        child: Align(
+          heightFactor: 1,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: Sign2DigitalPrimaryButton(
+              key: const Key('job-note-save'),
+              label: widget.existingNote == null ? 'Save Note' : 'Save Changes',
+              onPressed: _save, enabled: !_saving,
+            ),
+          ),
+        ),
+      ),
+    ),
   );
 }
