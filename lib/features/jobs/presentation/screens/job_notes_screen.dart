@@ -235,13 +235,14 @@ class _JobNotesScreenState extends State<JobNotesScreen> {
                       const SizedBox(height: 10),
                       Sign2DigitalOutlinedButton(
                         label: 'Convert Again', primaryOutline: true,
+                        oneLine: true,
                         onPressed: () =>
                             _convertNote(note, dialogContext, again: true)),
                     ] else
                       Sign2DigitalOutlinedButton(
                         key: const Key('job-note-convert'),
                         label: 'Convert to Document',
-                        primaryOutline: true,
+                        primaryOutline: true, oneLine: true,
                         onPressed: () => _convertNote(note, dialogContext)),
                     const SizedBox(height: 10),
                   ],
