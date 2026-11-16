@@ -181,6 +181,42 @@ class RemoteJobMediaRepository {
     _check(company);
   }
 
+  Future<bool> hasConvertedDocuments(JobNoteModel note) async {
+    final company = _company();
+    if (note.visibility != JobNoteVisibility.privateNote) return false;
+    final response = _payload(await _api.get(
+      '/api/v1/jobs/${note.jobId}/notes/${note.id}/documents',
+      companyScoped: true));
+    _check(company);
+    final records = response['documents'];
+    if (records is! List) {
+      throw const SignApiException('Unable to determine note conversion status.');
+    }
+    return records.any((value) {
+      final row = _map(value);
+      return row['note_id'].toString() == note.id &&
+          row['job_id'].toString() == note.jobId;
+    });
+  }
+
+  Future<void> updateNote(JobNoteModel note, {
+    required String title, required String body,
+    required JobNoteVisibility visibility,
+  }) async {
+    final company = _company();
+    if (!isLiveJob(note.jobId) || int.tryParse(note.id) == null) {
+      throw const SignApiException('This saved note cannot be updated remotely.');
+    }
+    await _api.request('PATCH',
+      '/api/v1/jobs/${note.jobId}/notes/${note.id}',
+      companyScoped: true, data: {
+        'title': title.trim(), 'body': body.trim(),
+        'visibility': visibility == JobNoteVisibility.privateNote
+            ? 'private' : 'customer_facing',
+      });
+    _check(company);
+  }
+
   Future<Uint8List> audioBytes(String jobId, String noteId) async =>
       (await audioFile(jobId, noteId)).bytes;
 
