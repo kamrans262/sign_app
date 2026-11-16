@@ -40,5 +40,17 @@ class JobNoteLocalStore {
     notes.insert(0, note);
   }
 
+  void replace(JobNoteModel note) {
+    if (note.title.trim().isEmpty ||
+        (note.body.trim().isEmpty && note.audioPath == null)) {
+      throw ArgumentError('Enter note text or record audio.');
+    }
+    final notes = _byJob[_key(note.jobId)];
+    if (notes == null) throw StateError('Note not found.');
+    final index = notes.indexWhere((item) => item.id == note.id);
+    if (index < 0) throw StateError('Note not found.');
+    notes[index] = note;
+  }
+
   void clear() => _byJob.clear();
 }
