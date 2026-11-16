@@ -2,12 +2,12 @@ import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import '../../../../core/services/active_company_session.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
+import '../../../../core/widgets/sign2digital_outlined_button.dart';
 import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import '../../data/job_photo_local_store.dart';
 import '../../data/remote_job_media_repository.dart';
@@ -284,29 +284,25 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
             color: AppColors.placeholder))),
       );
     }
-    // One existing photo card per category, containing every saved photo.
-    // The original full-size PageView receives only that group's photos.
-    final groups = <(JobPhotoCategory, List<JobPhotoModel>)>[
-      for (final category in JobPhotoCategory.values)
-        if (visible.any((photo) => photo.category == category))
-          (category, visible.where((photo) => photo.category == category).toList()),
-    ];
+    // Every saved photo gets its own thumbnail/card. The full-size viewer
+    // still allows paging among photos in the same selected category.
     return Wrap(
       spacing: gap, runSpacing: 20,
       children: [
-        for (final group in groups)
+        for (final photo in visible)
           SizedBox(
-            key: Key('photo-grid-${group.$2.first.id}'),
+            key: Key('photo-grid-${photo.id}'),
             width: itemWidth,
             child: Sign2DigitalJobPhotoCard(
-              photo: group.$2.first,
-              groupPhotos: group.$2,
-              groupLabel: switch (group.$1) {
+              photo: photo,
+              groupLabel: switch (photo.category) {
                 JobPhotoCategory.before => 'Before Job',
                 JobPhotoCategory.during => 'During Job',
                 JobPhotoCategory.after => 'After Job',
               },
-              onTap: () => _openPhoto(group.$2.first, group.$2),
+              onTap: () => _openPhoto(photo,
+                  visible.where((item) => item.category == photo.category)
+                      .toList()),
             ),
           ),
       ],
@@ -416,35 +412,61 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
     required String iconAsset,
     required VoidCallback onTap,
     required Key key,
-  }) => OutlinedButton(
+  }) => Sign2DigitalOutlinedButton(
     key: key,
-    onPressed: _picking ? null : onTap,
-    style: OutlinedButton.styleFrom(
-      side: const BorderSide(color: AppColors.primary),
-      foregroundColor: AppColors.primary,
-      backgroundColor: AppColors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      minimumSize: const Size(0, 48),
-    ),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SvgPicture.asset(iconAsset, width: 21, height: 21),
-        const SizedBox(width: 8),
-        Flexible(
-          child: Text(
-            label,
-            style: const TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-      ],
-    ),
+    label: label,
+    iconAsset: iconAsset,
+    onPressed: onTap,
+    primaryOutline: true,
+    enabled: !_picking && !_savingPhotos,
   );
+
+  /// Fixed below the scroll area so Upload, Camera and Add Photos remain
+  /// aligned above the existing bottom navigation on every tab.
+  Widget _bottomPhotoActions() {
+    if (!ActiveCompanySession.canWrite('jobs')) {
+      return const SizedBox.shrink();
+    }
+    return SafeArea(
+      top: false, bottom: false,
+      child: Padding(
+        key: const Key('job-photos-bottom-actions'),
+        padding: const EdgeInsets.fromLTRB(20, 10, 20, 14),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(children: [
+              Expanded(child: _photoAction(
+                label: 'Upload',
+                iconAsset: 'assets/icons/cloud-upload-outlined.svg',
+                onTap: () => _selectPhotos(camera: false),
+                key: const Key('job-photos-upload'),
+              )),
+              const SizedBox(width: 10),
+              Expanded(child: _photoAction(
+                label: 'Camera',
+                iconAsset: 'assets/icons/camera-outlined.svg',
+                onTap: () => _selectPhotos(camera: true),
+                key: const Key('job-photos-camera'),
+              )),
+            ]),
+            const SizedBox(height: 12),
+            Sign2DigitalPrimaryButton(
+              key: const Key('job-photos-add-button'),
+              label: '＋ Add Photos',
+              loading: _savingPhotos,
+              enabled: !_picking,
+              // Single confirmation action: select using Upload/Camera, edit
+              // category/caption in the pending panel, then Add Photos saves.
+              onPressed: _pending.isEmpty
+                  ? () => _selectPhotos(camera: false)
+                  : _commitPendingPhotos,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -504,55 +526,16 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
                         ),
                         const SizedBox(height: 20),
                         _photoGrid(constraints.maxWidth),
-                        const SizedBox(height: 30),
-                        if (ActiveCompanySession.canWrite('jobs')) Row(
-                          children: [
-                            Expanded(
-                              child: _photoAction(
-                                label: 'Upload',
-                                iconAsset:
-                                    'assets/icons/cloud-upload-outlined.svg',
-                                onTap: () => _selectPhotos(camera: false),
-                                key: const Key('job-photos-upload'),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: _photoAction(
-                                label: 'Camera',
-                                iconAsset: 'assets/icons/camera-outlined.svg',
-                                onTap: () => _selectPhotos(camera: true),
-                                key: const Key('job-photos-camera'),
-                              ),
-                            ),
-                          ],
-                        ),
-                        if (ActiveCompanySession.canWrite('jobs') && _pending.isNotEmpty) ...[
-                          const SizedBox(height: 20),
-                          _pendingPreviews(),
-                          const SizedBox(height: 10),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: TextButton(
-                              key: const Key('job-photos-confirm-pending'),
-                              onPressed: _savingPhotos ? null : _commitPendingPhotos,
-                              child: const Text('Confirm selected photos'),
-                            ),
-                          ),
-                        ],
                         const SizedBox(height: 20),
-                        if (ActiveCompanySession.canWrite('jobs'))
-                        Sign2DigitalPrimaryButton(
-                          key: const Key('job-photos-add-button'),
-                          label: '＋ Add Photos',
-                          onPressed: () => _selectPhotos(camera: false),
-                        ),
+                        if (ActiveCompanySession.canWrite('jobs') &&
+                            _pending.isNotEmpty) _pendingPreviews(),
                       ],
                     );
                   },
                 ),
               ),
             ),
+            _bottomPhotoActions(),
           ],
         ),
       ),
