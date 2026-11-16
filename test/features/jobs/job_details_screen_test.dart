@@ -162,6 +162,28 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('Job Details Addenda opens the actionable job-scoped list',
+      (tester) async {
+    tester.view.physicalSize = const Size(430, 932);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(MaterialApp(home: JobDetailsScreen(job: job)));
+    await pumpUi(tester);
+    final target=find.byKey(const Key('job-section-addenda'));
+    await tester.scrollUntilVisible(
+      target, 170,
+      scrollable:find.descendant(
+        of:find.byKey(const Key('job-details-scroll')),
+        matching:find.byType(Scrollable)).first,
+    );
+    await tester.tap(target);
+    await pumpUi(tester);
+    expect(find.text('Addenda'),findsWidgets);
+    expect(find.byKey(const Key('job-addenda-create')),findsOneWidget);
+    expect(tester.takeException(),isNull);
+  });
+
   testWidgets('all section cards forward their own typed callback', (
     tester,
   ) async {
