@@ -80,6 +80,32 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('Upload and Camera remain directly above the fixed Add Photos button',
+      (tester) async {
+    await setSize(tester, const Size(430, 932));
+    await tester.pumpWidget(MaterialApp(home: JobPhotosScreen(
+      job: job, store: JobPhotoLocalStore(), source: _FakeSource([]))));
+    await tester.pumpAndSettle();
+
+    final upload = find.byKey(const Key('job-photos-upload'));
+    final camera = find.byKey(const Key('job-photos-camera'));
+    final button = find.byKey(const Key('job-photos-add-button'));
+    expect(upload, findsOneWidget);
+    expect(camera, findsOneWidget);
+    expect(button, findsOneWidget);
+    final bottomOfChoices = tester.getBottomLeft(upload).dy;
+    final topOfButton = tester.getTopLeft(button).dy;
+    expect(topOfButton, greaterThan(bottomOfChoices));
+    expect(topOfButton - bottomOfChoices, lessThan(25));
+
+    await tester.drag(find.byKey(const Key('job-photos-scroll')),
+        const Offset(0, -400));
+    await tester.pumpAndSettle();
+    expect(tester.getBottomLeft(upload).dy, closeTo(bottomOfChoices, 0.1));
+    expect(tester.getTopLeft(button).dy, closeTo(topOfButton, 0.1));
+    expect(tester.takeException(), isNull);
+  });
+
   test('photo demo entries have unique IDs and real categories', () {
     final records = JobPhotoModel.demoFor(job.id);
     expect(records.length, 4);
