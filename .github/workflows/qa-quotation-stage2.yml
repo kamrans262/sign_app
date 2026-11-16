@@ -8,6 +8,8 @@ on:
       - 'lib/features/documents/presentation/screens/document_details_screen.dart'
       - 'lib/features/documents/presentation/screens/documents_screen.dart'
       - 'lib/features/documents/presentation/screens/create_addendum_screen.dart'
+      - 'lib/features/jobs/presentation/screens/job_photos_screen.dart'
+      - 'test/features/jobs/job_details_screen_test.dart'
       - 'lib/core/widgets/sign2digital_outlined_button.dart'
       - 'test/features/documents/documents_screen_test.dart'
       - 'lib/features/quotes/presentation/screens/signature_request_screen.dart'
