@@ -103,7 +103,7 @@ void main() {
     api.dispose();
   });
 
-  testWidgets('Add Photos previews every selected gallery photo by swiping',
+  testWidgets('two selected photos save once and render as separate cards',
       (tester) async {
     tester.view.physicalSize = const Size(430, 932);
     tester.view.devicePixelRatio = 1;
@@ -120,23 +120,18 @@ void main() {
     await tester.pumpWidget(MaterialApp(home:
       JobPhotosScreen(job: job, store: store, source: source)));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.byKey(const Key('job-photos-add-button')));
+    await tester.tap(find.byKey(const Key('job-photos-upload')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('pending-category-0')),findsOneWidget);
+    expect(find.byKey(const Key('pending-category-1')),findsOneWidget);
+    expect(find.byKey(const Key('job-photos-confirm-pending')),findsNothing);
     await tester.tap(find.byKey(const Key('job-photos-add-button')));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('add-photo-gallery')));
-    await tester.pumpAndSettle();
-    expect(find.byKey(const Key('add-photo-preview-pages')), findsOneWidget);
-    expect(find.text('Photo 1 of 2'), findsOneWidget);
-    await tester.drag(find.byKey(const Key('add-photo-preview-pages')),
-      const Offset(-280, 0));
-    await tester.pumpAndSettle();
-    expect(find.text('Photo 2 of 2'), findsOneWidget);
-    await tester.ensureVisible(find.byKey(const Key('add-photo-save')));
-    await tester.tap(find.byKey(const Key('add-photo-save')));
-    await tester.pumpAndSettle();
-    expect(find.byType(AddPhotosScreen), findsNothing);
     expect(store.photosFor(job.id), hasLength(6));
     expect(store.photosFor(job.id).last.sourceKey, 'gallery/two');
+    expect(find.byKey(const Key('job-photo-pending-panel')),findsNothing);
+    expect(find.byKey(Key('photo-grid-local-${job.id}')),findsNothing);
+    expect(find.byType(AddPhotosScreen),findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -242,9 +237,8 @@ void main() {
     await tester.ensureVisible(find.byKey(const Key('job-photos-upload')));
     await tester.tap(find.byKey(const Key('job-photos-upload')));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(
-      find.byKey(const Key('job-photos-confirm-pending')));
-    await tester.tap(find.byKey(const Key('job-photos-confirm-pending')));
+    expect(find.byKey(const Key('job-photos-confirm-pending')),findsNothing);
+    await tester.tap(find.byKey(const Key('job-photos-add-button')));
     await tester.pumpAndSettle();
     expect(posts, 1);
     expect(reads, greaterThanOrEqualTo(2));
