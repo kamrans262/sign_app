@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -80,6 +81,43 @@ void main() {
         'Inspector');
     expect(records.single.meetingMinutesDetails!.actionDetails.single.dueDate,
         DateTime(2026,11,12));
+    api.dispose();
+  });
+
+  test('meeting dictation requests structured title and summary while leaving draft unsaved',
+      () async {
+    final temp = await Directory.systemTemp.createTemp('minutes-voice-test');
+    addTearDown(() => temp.delete(recursive: true));
+    final audio = File('${temp.path}/minutes.m4a');
+    await audio.writeAsBytes(List<int>.filled(25, 1));
+    final api = client((request) async {
+      expect(request.method, 'POST');
+      expect(request.url.path, '/api/v1/reports/voice/transcribe');
+      expect(request.headers['X-Company-Id'], '7');
+      expect(request.body, contains('meeting_minutes'));
+      return http.Response(jsonEncode({'data': {
+        'job_id': 34,
+        'transcript': 'Meet about tiling and plumbing',
+        'suggestion': {
+          'title': 'Renovation Progress Meeting',
+          'summary': 'Reviewed plumbing and the upcoming tiling work.',
+          'attendees': <String>[],
+          'absentees': <String>[],
+          'decisions': <String>[],
+          'nextSteps': ['Begin tiling'],
+          'outstandingPoints': <String>[],
+          'actionItems': <String>[],
+        },
+        'requires_user_review': true, 'applied': false, 'approved': false,
+      }}), 200);
+    });
+    final data = await RemoteSiteReportRepository(api: api)
+        .transcribeMinutesAudio('34', audio.path);
+    final suggestion = data['suggestion'] as Map<String, dynamic>;
+    expect(suggestion['title'], 'Renovation Progress Meeting');
+    expect(suggestion['summary'], 'Reviewed plumbing and the upcoming tiling work.');
+    expect(suggestion['nextSteps'], ['Begin tiling']);
+    expect(data['transcript'], 'Meet about tiling and plumbing');
     api.dispose();
   });
 
