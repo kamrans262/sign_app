@@ -184,9 +184,9 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
         canCreate: !live || ActiveCompanySession.canWrite('documents'),
         loadDocuments: (jobId) async {
           if (live) return documentService.listDocuments(jobId: jobId);
-          final records = await const DemoDocumentRepository().listDocuments();
-          return records.where((d) =>
-              d.jobId == jobId || d.quote?.jobId == jobId).toList();
+          // Do not query unverified demo signed files for a job-specific
+          // sheet. Only saved, server-owned jobs have an audit-backed link.
+          return const <DocumentRecord>[];
         },
         loadDetails: documentService.details,
       ),
