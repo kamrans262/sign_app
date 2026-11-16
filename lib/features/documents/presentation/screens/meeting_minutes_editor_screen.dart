@@ -135,13 +135,46 @@ class _MeetingMinutesEditorScreenState extends State<MeetingMinutesEditorScreen>
           extraction: OpenAiVoiceJobExtractionService(),
           recordingTitle: 'Dictate Meeting Minutes',
           onAudioProcessed: (path) async {
-            final text = await RemoteSiteReportRepository.shared
-                .transcribeAudio(_job!.id, path);
+            final result = await RemoteSiteReportRepository.shared
+                .transcribeMinutesAudio(_job!.id, path);
             if (!mounted) return;
-            final earlier = _summary.text.trim();
+            final raw = result['suggestion'];
+            final suggestion = raw is Map ? Map<String, dynamic>.from(raw) : null;
+            String? text(Object? value) => value is String &&
+                value.trim().isNotEmpty ? value.trim() : null;
+            String lines(Object? value) => value is List
+                ? value.whereType<String>()
+                    .map((line) => line.trim())
+                    .where((line) => line.isNotEmpty)
+                    .join('\n')
+                : '';
+            void fill(TextEditingController field, String candidate) {
+              if (field.text.trim().isEmpty && candidate.isNotEmpty) {
+                field.text = candidate;
+              }
+            }
             setState(() {
-              _summary.text = earlier.isEmpty ? text : '$earlier\n$text';
-              _error = null;
+              if (suggestion != null) {
+                final title = text(suggestion['title']);
+                if (title != null &&
+                    (_title.text.trim().isEmpty ||
+                     _title.text.trim() == 'Meeting Minutes')) {
+                  _title.text = title;
+                }
+                fill(_summary, text(suggestion['summary']) ?? '');
+                fill(_attendees, lines(suggestion['attendees']));
+                fill(_absentees, lines(suggestion['absentees']));
+                fill(_decisions, lines(suggestion['decisions']));
+                fill(_nextSteps, lines(suggestion['nextSteps']));
+                fill(_outstanding, lines(suggestion['outstandingPoints']));
+                fill(_actions, lines(suggestion['actionItems']));
+                _error = null;
+              } else {
+                // Keep dictation editable if AI is temporarily unavailable.
+                fill(_summary, text(result['transcript']) ?? '');
+                _error = 'AI formatting unavailable. Review the transcribed '
+                    'notes before saving.';
+              }
             });
           },
         ),
