@@ -178,7 +178,8 @@ void main() {
         matching:find.byType(Scrollable)).first,
     );
     await tester.tap(target);
-    await tester.pumpAndSettle();
+    await pumpUi(tester);
+    await tester.pump(const Duration(milliseconds: 600));
     expect(find.byKey(const Key('job-addenda-bottom-sheet')),findsOneWidget);
     expect(find.text('View Addenda'),findsOneWidget);
     expect(find.text('Quotes Without Addenda'),findsOneWidget);
