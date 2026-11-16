@@ -175,7 +175,7 @@ void main() {
 
   testWidgets('Persisted job upload reaches Laravel, reloads verified DB rows',
       (tester) async {
-    ActiveCompanySession.set(7);
+    ActiveCompanySession.setVerified(7,role:'owner',permissions:const []);
     addTearDown(ActiveCompanySession.clear);
     tester.view.physicalSize = const Size(430, 932);
     tester.view.devicePixelRatio = 1;
