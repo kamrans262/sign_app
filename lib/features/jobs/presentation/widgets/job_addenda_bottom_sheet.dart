@@ -154,7 +154,7 @@ class _JobAddendaBottomSheetState extends State<JobAddendaBottomSheet> {
   @override
   Widget build(BuildContext context) => SafeArea(
     child: SizedBox(
-      height: (MediaQuery.sizeOf(context).height * .72).clamp(290.0, 590.0),
+      height: (MediaQuery.sizeOf(context).height * .72).clamp(290.0, 590.0).toDouble(),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
         child: Column(children: [
