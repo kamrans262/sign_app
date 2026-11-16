@@ -20,6 +20,12 @@ import '../../../quotes/data/remote_quote_repository.dart';
 import '../../../quotes/presentation/screens/review_quote_screen.dart';
 import '../../../quotes/presentation/screens/quote_preview_screen.dart';
 import '../../../documents/presentation/screens/documents_screen.dart';
+import '../../../documents/presentation/screens/document_details_screen.dart';
+import '../../../documents/presentation/screens/create_addendum_screen.dart';
+import '../../../documents/data/remote_document_repository.dart';
+import '../../../documents/data/remote_addendum_repository.dart';
+import '../../../documents/data/demo_document_repository.dart';
+import '../widgets/job_addenda_bottom_sheet.dart';
 import '../../../documents/presentation/screens/reports_screen.dart';
 import '../../../expenses/presentation/screens/expenses_screen.dart';
 import '../../../deposits/presentation/screens/deposits_screen.dart';
@@ -164,7 +170,88 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
   bool get _persistedLiveJob => MobileAuthRepository.shared.isSignedIn &&
       int.tryParse(job.id) != null;
 
+  Future<void> _openJobAddenda(BuildContext context) async {
+    final live = _persistedLiveJob;
+    final documentService = RemoteDocumentRepository.shared;
+    final choice = await showSign2DigitalBottomSheet<JobAddendaSelection>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => JobAddendaBottomSheet(
+        key: const Key('job-addenda-bottom-sheet'),
+        jobId: job.id,
+        jobReference: job.referenceNumber,
+        live: live,
+        canCreate: !live || ActiveCompanySession.canWrite('documents'),
+        loadDocuments: (jobId) async {
+          if (live) return documentService.listDocuments(jobId: jobId);
+          final records = await const DemoDocumentRepository().listDocuments();
+          return records.where((d) =>
+              d.jobId == jobId || d.quote?.jobId == jobId).toList();
+        },
+        loadDetails: documentService.details,
+      ),
+    );
+    if (!context.mounted || choice == null) return;
+    try {
+      if (choice.isExisting) {
+        final detail = live
+            ? await documentService.details(choice.document.id)
+            : choice.document;
+        if (!context.mounted) return;
+        if (detail.id != choice.document.id ||
+            (detail.jobId != job.id && detail.quote?.jobId != job.id)) {
+          throw const FormatException('Addendum does not belong to this job.');
+        }
+        await Sign2DigitalNavigation.push<void>(context,
+          MaterialPageRoute<void>(builder: (_) => DocumentDetailsScreen(
+            documentId: detail.id,
+            document: detail,
+            loadDocument: live ? documentService.details : null,
+            loadSignedPdf: live ? documentService.downloadPdf : null,
+            requestAddendumSignature: live
+                ? RemoteAddendumRepository.shared.requestSignature : null,
+            onApproveAddendum: live ? (record) async {
+              final number = int.parse(
+                record.id.substring('addendum-'.length));
+              final saved = await RemoteAddendumRepository.shared.get(number);
+              await RemoteAddendumRepository.shared.approve(saved);
+              return documentService.details(record.id);
+            } : null,
+          )),
+        );
+      } else {
+        final original = choice.signedOriginal ?? choice.document;
+        if (live && (!RegExp(r'^signed-[1-9][0-9]*$')
+            .hasMatch(original.id) ||
+            !original.verifiedSignedPdfAvailable)) {
+          throw const FormatException(
+              'Sign this quotation before creating an addendum.');
+        }
+        await Sign2DigitalNavigation.push<void>(context,
+          MaterialPageRoute<void>(builder: (_) => CreateAddendumScreen(
+            linkedDocument: original,
+            jobId: job.id,
+            repository: live ? documentService
+                : const DemoDocumentRepository(),
+            requestAddendumSignature: live
+                ? RemoteAddendumRepository.shared.requestSignature : null,
+          )),
+        );
+      }
+    } catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Could not open job addendum: $error')));
+    }
+  }
+
   Future<void> _openSection(BuildContext context, JobSection section) async {
+    // Addenda always opens the job-scoped selection sheet, even when the
+    // originating dashboard supplies an onSectionTap callback.
+    if (section == JobSection.addenda) {
+      await _openJobAddenda(context);
+      return;
+    }
     if (onSectionTap != null) {
       onSectionTap!(section);
       return;
@@ -223,24 +310,6 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
           clientPhone: client?.id == job.clientId ? client!.phone : null,
           clientAddress: client?.id == job.clientId ? client!.address : null,
           companyId: companyId,
-        ),
-      ));
-      return;
-    }
-    if (section == JobSection.addenda) {
-      await Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
-        builder: (_) => Scaffold(
-          backgroundColor: Colors.white,
-          body: SafeArea(child: Column(children: [
-            Sign2DigitalHeader(
-              title: 'Addenda',
-              onBack: () => Navigator.of(context).maybePop(),
-            ),
-            Expanded(child: DocumentsScreen(
-              initialCategory: DocumentCategory.addends,
-              jobId: job.id,
-            )),
-          ])),
         ),
       ));
       return;
