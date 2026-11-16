@@ -19,6 +19,7 @@ import '../../../jobs/data/local_job_photo_source.dart';
 import '../../../jobs/data/mock_jobs.dart';
 import '../../../jobs/data/remote_job_repository.dart';
 import '../../../../core/services/active_company_session.dart';
+import '../../../../core/services/sign_api_client.dart';
 import '../../../jobs/domain/job_model.dart';
 import '../../../jobs/presentation/widgets/sign2digital_photo_preview.dart';
 import '../../domain/document_record.dart';
@@ -605,10 +606,26 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
         throw StateError('The report service did not return a valid saved report.');
       }
       Navigator.of(context).pop(result);
-    } catch (_) {
+    } catch (error) {
       if (mounted) {
+        final detail = switch (error) {
+          SignApiException(:final statusCode, :final message)
+              when statusCode == 402 =>
+            'Document allowance reached. $message',
+          SignApiException(:final statusCode, :final message)
+              when statusCode == 422 =>
+            'Please check the report information. $message',
+          SignApiException(:final statusCode)
+              when statusCode != null && statusCode >= 500 =>
+            'The server could not save the report (HTTP $statusCode). '
+            'Check Laravel logs before retrying.',
+          SignApiException(:final statusCode, :final message) =>
+            '${statusCode == null ? '' : 'HTTP $statusCode: '}$message',
+          _ => 'An unexpected error prevented the report from being saved.',
+        };
         setState(() => _error =
-          'Report generation failed. Your entered information is preserved.');
+          'Report generation failed: $detail '
+          'Your entered information is preserved.');
       }
     } finally {
       if (mounted) { setState(() => _saving = false); }
