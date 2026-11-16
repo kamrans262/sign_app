@@ -33,6 +33,7 @@ void main() {
         return http.Response(jsonEncode({
           'data': {
             'suggestions': {
+              'title': 'Window Installation',
               'clientName': 'Alpine AG',
               'address': 'Lausanne',
               'description': 'Install three windows',
@@ -48,6 +49,7 @@ void main() {
     );
     final details =
         await RemoteVoiceJobExtractionService(api: api).extract(file.path);
+    expect(details.title, 'Window Installation');
     expect(details.clientName, 'Alpine AG');
     expect(details.description, 'Install three windows');
     expect(details.budgetChf, 1200);
