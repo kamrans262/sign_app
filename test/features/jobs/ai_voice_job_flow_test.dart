@@ -111,11 +111,11 @@ void main() {
     final title = tester.widget<Sign2DigitalInputField>(
       find.byKey(const Key('job-title-input')),
     );
-    expect(title.controller.text, 'Terrace Renovation');
+    expect(title.controller!.text, 'Terrace Renovation');
     final address = tester.widget<Sign2DigitalInputField>(
       find.widgetWithText(Sign2DigitalInputField, 'Address'),
     );
-    expect(address.controller.text, 'Rue de Genève 12, Lausanne');
+    expect(address.controller!.text, 'Rue de Genève 12, Lausanne');
     expect(recorder.disposed, isTrue);
   });
 
@@ -188,11 +188,11 @@ void main() {
     final address = tester.widget<Sign2DigitalInputField>(
       find.widgetWithText(Sign2DigitalInputField, 'Address'),
     );
-    address.controller.text = 'Keep this manual address';
+    address.controller!.text = 'Keep this manual address';
     await openVoice(tester);
     await tester.tap(find.byKey(const Key('voice-save')));
     await tester.pumpAndSettle();
-    expect(address.controller.text, 'Keep this manual address');
+    expect(address.controller!.text, 'Keep this manual address');
     expect(find.text('Create Job'), findsOneWidget);
   });
 
