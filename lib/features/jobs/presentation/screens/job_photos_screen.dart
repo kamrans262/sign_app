@@ -7,7 +7,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
-import '../../../../core/widgets/sign2digital_outlined_button.dart';
+import '../widgets/sign2digital_photo_source_card.dart';
 import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import '../../data/job_photo_local_store.dart';
 import '../../data/remote_job_media_repository.dart';
@@ -284,27 +284,36 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
             color: AppColors.placeholder))),
       );
     }
-    // Every saved photo gets its own thumbnail/card. The full-size viewer
-    // still allows paging among photos in the same selected category.
+    // One cover per category, retaining the full photo collection behind
+    // the card. Tapping opens the approved viewer with swipe pagination.
+    final grouped = <JobPhotoCategory, List<JobPhotoModel>>{};
+    for (final photo in visible) {
+      grouped.putIfAbsent(photo.category, () => []).add(photo);
+    }
     return Wrap(
       spacing: gap, runSpacing: 20,
       children: [
-        for (final photo in visible)
-          SizedBox(
-            key: Key('photo-grid-${photo.id}'),
-            width: itemWidth,
-            child: Sign2DigitalJobPhotoCard(
-              photo: photo,
-              groupLabel: switch (photo.category) {
-                JobPhotoCategory.before => 'Before Job',
-                JobPhotoCategory.during => 'During Job',
-                JobPhotoCategory.after => 'After Job',
-              },
-              onTap: () => _openPhoto(photo,
-                  visible.where((item) => item.category == photo.category)
-                      .toList()),
-            ),
-          ),
+        for (final category in JobPhotoCategory.values)
+          if (grouped.containsKey(category))
+            Builder(builder: (context) {
+              final photos = grouped[category]!.toList()
+                ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+              final cover = photos.first;
+              return SizedBox(
+                key: Key('photo-grid-${cover.id}'),
+                width: itemWidth,
+                child: Sign2DigitalJobPhotoCard(
+                  photo: cover,
+                  groupPhotos: photos,
+                  groupLabel: switch (category) {
+                    JobPhotoCategory.before => 'Before Job',
+                    JobPhotoCategory.during => 'During Job',
+                    JobPhotoCategory.after => 'After Job',
+                  },
+                  onTap: () => _openPhoto(cover, photos),
+                ),
+              );
+            }),
       ],
     );
   }
@@ -407,22 +416,40 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
     );
   }
 
-  Widget _photoAction({
-    required String label,
-    required String iconAsset,
-    required VoidCallback onTap,
-    required Key key,
-  }) => Sign2DigitalOutlinedButton(
-    key: key,
-    label: label,
-    iconAsset: iconAsset,
-    onPressed: onTap,
-    primaryOutline: true,
-    enabled: !_picking && !_savingPhotos,
-  );
+  /// Reuse the approved Add Photos source containers in the scroll area.
+  /// Upload and Camera are not fixed at the bottom of Job Photos.
+  Widget _photoSourceChoices() {
+    if (!ActiveCompanySession.canWrite('jobs')) {
+      return const SizedBox.shrink();
+    }
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(child: Sign2DigitalPhotoSourceCard(
+            key: const Key('job-photos-upload'),
+            title: 'Upload',
+            description: 'Choose existing photos',
+            iconAsset: 'assets/icons/cloud-upload-outlined.svg',
+            enabled: !_picking && !_savingPhotos,
+            onTap: () => _selectPhotos(camera: false),
+          )),
+          const SizedBox(width: 16),
+          Expanded(child: Sign2DigitalPhotoSourceCard(
+            key: const Key('job-photos-camera'),
+            title: 'Camera',
+            description: 'Take a photo',
+            iconAsset: 'assets/icons/camera-outlined.svg',
+            enabled: !_picking && !_savingPhotos,
+            onTap: () => _selectPhotos(camera: true),
+          )),
+        ],
+      ),
+    );
+  }
 
-  /// Fixed below the scroll area so Upload, Camera and Add Photos remain
-  /// aligned above the existing bottom navigation on every tab.
+  /// Add Photos is the sole confirmation/save action. No second
+  /// "Confirm selected photos" control is presented.
   Widget _bottomPhotoActions() {
     if (!ActiveCompanySession.canWrite('jobs')) {
       return const SizedBox.shrink();
@@ -432,37 +459,12 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
       child: Padding(
         key: const Key('job-photos-bottom-actions'),
         padding: const EdgeInsets.fromLTRB(20, 10, 20, 14),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(children: [
-              Expanded(child: _photoAction(
-                label: 'Upload',
-                iconAsset: 'assets/icons/cloud-upload-outlined.svg',
-                onTap: () => _selectPhotos(camera: false),
-                key: const Key('job-photos-upload'),
-              )),
-              const SizedBox(width: 10),
-              Expanded(child: _photoAction(
-                label: 'Camera',
-                iconAsset: 'assets/icons/camera-outlined.svg',
-                onTap: () => _selectPhotos(camera: true),
-                key: const Key('job-photos-camera'),
-              )),
-            ]),
-            const SizedBox(height: 12),
-            Sign2DigitalPrimaryButton(
-              key: const Key('job-photos-add-button'),
-              label: '＋ Add Photos',
-              loading: _savingPhotos,
-              enabled: !_picking,
-              // Single confirmation action: select using Upload/Camera, edit
-              // category/caption in the pending panel, then Add Photos saves.
-              onPressed: _pending.isEmpty
-                  ? () => _selectPhotos(camera: false)
-                  : _commitPendingPhotos,
-            ),
-          ],
+        child: Sign2DigitalPrimaryButton(
+          key: const Key('job-photos-add-button'),
+          label: '＋ Add Photos',
+          loading: _savingPhotos,
+          enabled: !_picking,
+          onPressed: _commitPendingPhotos,
         ),
       ),
     );
@@ -518,6 +520,10 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
                           ),
                         ),
                         const SizedBox(height: 20),
+                        if (ActiveCompanySession.canWrite('jobs')) ...[
+                          _photoSourceChoices(),
+                          const SizedBox(height: 20),
+                        ],
                         Sign2DigitalDetailsTabs(
                           labels: const ['All', 'Before', 'During', 'After'],
                           selectedIndex: _selectedTab,
