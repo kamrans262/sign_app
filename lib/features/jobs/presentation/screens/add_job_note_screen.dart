@@ -236,16 +236,23 @@ class _AddJobNoteScreenState extends State<AddJobNoteScreen> {
           ),
         )),
       )),
-      Center(child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 720),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
-          child: Sign2DigitalPrimaryButton(
-            key: const Key('job-note-save'),
-            label: widget.existingNote == null ? 'Save Note' : 'Save Changes',
-            onPressed: _save, enabled: !_saving),
-        ),
-      )),
     ])),
+    bottomNavigationBar: SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+        child: Align(
+          heightFactor: 1,
+          alignment: Alignment.center,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: Sign2DigitalPrimaryButton(
+              key: const Key('job-note-save'),
+              label: widget.existingNote == null ? 'Save Note' : 'Save Changes',
+              onPressed: _save, enabled: !_saving),
+          ),
+        ),
+      ),
+    ),
   );
 }
