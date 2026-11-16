@@ -416,8 +416,7 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
     );
   }
 
-  /// Reuse the approved Add Photos source containers in the scroll area.
-  /// Upload and Camera are not fixed at the bottom of Job Photos.
+  /// Reuse the existing source containers immediately above Add Photos.
   Widget _photoSourceChoices() {
     if (!ActiveCompanySession.canWrite('jobs')) {
       return const SizedBox.shrink();
@@ -459,12 +458,20 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
       child: Padding(
         key: const Key('job-photos-bottom-actions'),
         padding: const EdgeInsets.fromLTRB(20, 10, 20, 14),
-        child: Sign2DigitalPrimaryButton(
-          key: const Key('job-photos-add-button'),
-          label: '＋ Add Photos',
-          loading: _savingPhotos,
-          enabled: !_picking,
-          onPressed: _commitPendingPhotos,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _photoSourceChoices(),
+            const SizedBox(height: 12),
+            Sign2DigitalPrimaryButton(
+              key: const Key('job-photos-add-button'),
+              label: '＋ Add Photos',
+              loading: _savingPhotos,
+              enabled: !_picking,
+              onPressed: _commitPendingPhotos,
+            ),
+          ],
         ),
       ),
     );
@@ -520,10 +527,6 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
                           ),
                         ),
                         const SizedBox(height: 20),
-                        if (ActiveCompanySession.canWrite('jobs')) ...[
-                          _photoSourceChoices(),
-                          const SizedBox(height: 20),
-                        ],
                         Sign2DigitalDetailsTabs(
                           labels: const ['All', 'Before', 'During', 'After'],
                           selectedIndex: _selectedTab,
