@@ -409,3 +409,158 @@ class _WorkAcceptanceScreenState extends State<WorkAcceptanceScreen> {
     ),
   );
 }
+
+/// Uses the existing signed-document success styling without incorrectly
+/// claiming that the customer has signed. Only a verified approved PDF
+/// can reach this screen.
+class _AcceptanceApprovedScreen extends StatefulWidget {
+  const _AcceptanceApprovedScreen({
+    required this.report,
+    required this.onClose,
+    required this.onSend,
+  });
+
+  final DocumentRecord report;
+  final VoidCallback onClose;
+  final Future<bool> Function()? onSend;
+
+  @override
+  State<_AcceptanceApprovedScreen> createState() =>
+      _AcceptanceApprovedScreenState();
+}
+
+class _AcceptanceApprovedScreenState
+    extends State<_AcceptanceApprovedScreen> {
+  bool _busy = false;
+  bool _sent = false;
+  String? _error;
+
+  Future<void> _send() async {
+    if (_busy || _sent || widget.onSend == null) return;
+    setState(() { _busy = true; _error = null; });
+    try {
+      final sent = await widget.onSend!();
+      if (mounted && sent) setState(() => _sent = true);
+    } catch (_) {
+      if (mounted) {
+        setState(() => _error =
+          'Unable to send this work acceptance to the customer.');
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _viewPdf() async {
+    final pdf = widget.report.workAcceptance?.verifiedReportPdf;
+    if (pdf == null || pdf.isEmpty) return;
+    try {
+      await Printing.layoutPdf(onLayout: (_) async => pdf);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Unable to open the approved PDF.'),
+      ));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: AppColors.white,
+    body: SafeArea(child: LayoutBuilder(
+      builder: (context, viewport) => SingleChildScrollView(
+        key: const Key('work-acceptance-approved-scroll'),
+        child: Center(child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: 720, minHeight: viewport.maxHeight),
+          child: IntrinsicHeight(child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 36, 20, 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Center(child: Sign2DigitalAnimatedSuccess()),
+                const SizedBox(height: 20),
+                const Text('Work Acceptance Approved!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontFamily: 'Inter', fontSize: 24,
+                    fontWeight: FontWeight.w700, color: AppColors.dark)),
+                const SizedBox(height: 10),
+                const Text(
+                  'Your approved work acceptance PDF is ready. '
+                  'The customer has not signed the document yet.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontFamily: 'Inter', fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.secondaryText)),
+                const SizedBox(height: 25),
+                Sign2DigitalOutlinedContainer(
+                  child: InkWell(
+                    onTap: _viewPdf,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(widget.report.number,
+                            style: const TextStyle(fontFamily: 'Inter',
+                              fontSize: 16, fontWeight: FontWeight.w600,
+                              color: AppColors.dark)),
+                          const SizedBox(height: 8),
+                          Text(widget.report.project,
+                            style: const TextStyle(fontFamily: 'Inter',
+                              color: AppColors.dark)),
+                          const SizedBox(height: 6),
+                          Text('Customer: ${widget.report.customer}',
+                            style: const TextStyle(fontFamily: 'Inter',
+                              color: AppColors.secondaryText)),
+                          const SizedBox(height: 12),
+                          const Row(children: [
+                            Icon(Icons.picture_as_pdf_outlined,
+                              color: AppColors.primary, size: 20),
+                            SizedBox(width: 8),
+                            Text('View Approved PDF',
+                              style: TextStyle(fontFamily: 'Inter',
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.primary)),
+                          ]),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                if (_sent) ...[
+                  const SizedBox(height: 16),
+                  const Text('Signing request sent to the customer.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontFamily: 'Inter',
+                      color: AppColors.primary)),
+                ],
+                if (_error != null) ...[
+                  const SizedBox(height: 12),
+                  Text(_error!, style: const TextStyle(
+                    color: Color(0xFFB42318))),
+                ],
+                const Spacer(),
+                const SizedBox(height: 40),
+                Row(children: [
+                  Expanded(child: Sign2DigitalOutlinedButton(
+                    key: const Key('work-acceptance-approved-close'),
+                    label: 'Close', primaryOutline: true,
+                    compactLabel: true,
+                    enabled: !_busy, onPressed: widget.onClose)),
+                  const SizedBox(width: 10),
+                  Expanded(child: Sign2DigitalPrimaryButton(
+                    key: const Key('work-acceptance-approved-send'),
+                    label: _sent ? 'Sent to Customer' : 'Send to Customer',
+                    compactLabel: true, loading: _busy,
+                    enabled: !_busy && !_sent && widget.onSend != null,
+                    onPressed: _send)),
+                ]),
+              ],
+            ),
+          )),
+        )),
+      ),
+    )),
+  );
+}
