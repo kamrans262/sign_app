@@ -1384,12 +1384,13 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
         Expanded(child: Sign2DigitalOutlinedButton(
           key: Key(leftKey), label: leftLabel,
           primaryOutline: true, enabled: leftEnabled,
+          compactLabel: status == 'signed',
           onPressed: leftAction,
         )),
         const SizedBox(width: 10),
         Expanded(child: Sign2DigitalPrimaryButton(
           key: Key(rightKey), label: rightLabel,
-          compactLabel: true, enabled: rightEnabled,
+          compactLabel: true, height: 52, enabled: rightEnabled,
           onPressed: rightAction,
         )),
       ]),
