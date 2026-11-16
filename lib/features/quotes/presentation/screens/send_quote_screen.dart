@@ -80,7 +80,7 @@ typedef QuotePdfGenerator = Future<Uint8List> Function(QuoteReviewDraft quote);
 class SendQuoteScreen extends StatefulWidget {
   const SendQuoteScreen({super.key, required this.quote,
     this.pdfGenerator, this.secureDocumentUrl, this.secureLinkExpiresAt,
-    this.secureLinkDelivery, this.tracking, this.signingContext,
+    this.secureLinkDelivery, this.secureLinkLoader, this.tracking, this.signingContext,
     this.onSubmitSignature, this.onSubmitVerifiedSignature});
 
   final QuoteReviewDraft quote;
@@ -95,6 +95,11 @@ class SendQuoteScreen extends StatefulWidget {
   final DateTime? secureLinkExpiresAt;
   /// Must actually dispatch via a connected delivery service. No fake success.
   final Future<bool> Function(Uri link, QuoteSendDraft draft)? secureLinkDelivery;
+  /// Optional trusted service override for widget tests/integrations.
+  /// In production, the existing tenant-authorized quote share API issues
+  /// a protected read-only URL without sending an email or signing request.
+  final Future<Map<String, dynamic>> Function(QuoteReviewDraft quote)?
+      secureLinkLoader;
 
   @override
   State<SendQuoteScreen> createState() => _SendQuoteScreenState();
@@ -111,6 +116,8 @@ class _SendQuoteScreenState extends State<SendQuoteScreen> {
   String? _pdfError;
   String? _serverSecureLink;
   DateTime? _serverLinkExpiresAt;
+  bool _loadingSecureLink = false;
+  String? _secureLinkError;
 
   static const _border = AppColors.lightBorder;
   static const _hint = AppColors.placeholder;
@@ -136,6 +143,11 @@ class _SendQuoteScreenState extends State<SendQuoteScreen> {
     _messageController = TextEditingController(text: _sendDraft.message);
     _messageEdited = _sendDraft.message != _templateText('professional');
     if (_sendDraft.pdfAttached) { _preparePdf(); }
+    // A server-approved quote should already have its protected view link
+    // before the customer chooses Email or Secure Link.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _ensureSecureLink();
+    });
   }
 
   @override
@@ -231,10 +243,60 @@ class _SendQuoteScreenState extends State<SendQuoteScreen> {
     return link;
   }
 
+  bool get _canGenerateSecureLink => _quote.serverId != null &&
+      _quote.approvedLocally && !_quote.isDemo &&
+      (widget.secureLinkLoader != null ||
+          (MobileAuthRepository.shared.isSignedIn &&
+              ActiveCompanySession.canWrite('quotes')));
+
+  /// Fetch/renew a Laravel-signed read-only URL. This call never sends an
+  /// email or creates a signature request. The server enforces tenant
+  /// authorization, approved/sent state, revision validity and expiry.
+  Future<Uri?> _ensureSecureLink({bool force = false}) async {
+    if (!force && _usableLink case final Uri existing) {
+      final expiry = _serverLinkExpiresAt ?? widget.secureLinkExpiresAt;
+      if (expiry == null ||
+          expiry.difference(DateTime.now()) > const Duration(minutes: 5)) {
+        return existing;
+      }
+    }
+    if (!_canGenerateSecureLink || _loadingSecureLink) return _usableLink;
+    setState(() {
+      _loadingSecureLink = true;
+      _secureLinkError = null;
+    });
+    try {
+      final result = await (widget.secureLinkLoader?.call(_quote.copy()) ??
+          RemoteQuoteRepository.shared.share(_quote,
+              method: 'secure_link'));
+      if (!mounted) return null;
+      final url = Uri.tryParse((result['secure_link'] ?? '').toString());
+      final expiry = DateTime.tryParse((result['expires_at'] ?? '').toString());
+      if (url == null || url.scheme != 'https' || url.host.isEmpty ||
+          expiry == null || !DateTime.now().isBefore(expiry)) {
+        throw const FormatException('Server returned an invalid protected link.');
+      }
+      setState(() {
+        _serverSecureLink = url.toString();
+        _serverLinkExpiresAt = expiry;
+      });
+      return url;
+    } catch (error) {
+      if (mounted) {
+        setState(() => _secureLinkError =
+            'Unable to load the protected link. Retry when connected.');
+      }
+      return null;
+    } finally {
+      if (mounted) setState(() => _loadingSecureLink = false);
+    }
+  }
+
   Future<void> _copyLink() async {
-    final link = _usableLink;
+    final link = await _ensureSecureLink();
+    if (!mounted) return;
     if (link == null) {
-      _notify('No valid secure document link is available yet.');
+      _notify('Secure link unavailable. Retry when connected.');
       return;
     }
     await Clipboard.setData(ClipboardData(text: link.toString()));
@@ -838,28 +900,45 @@ class _SendQuoteScreenState extends State<SendQuoteScreen> {
         TextButton(onPressed: _preparePdf, child: const Text('Retry PDF generation')),
     ]));
 
-  Widget _linkBox() => Container(
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(color: _infoBlue,
-      borderRadius: BorderRadius.circular(10)),
-    child: Row(children: [
-      _assetIcon('link', Icons.link),
-      const SizedBox(width: 10),
-      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(_usableLink != null ? 'Secure document link' :
-              'Secure document link unavailable',
-              style: _style(14, weight: FontWeight.w600)),
-          const SizedBox(height: 4),
-          Text(_usableLink?.toString() ??
-              'A protected, expiring link requires a connected service.',
-            softWrap: true, style: _style(12, color: _hint)),
-        ])),
-      IconButton(key: const Key('send-copy-link'),
-        onPressed: _usableLink == null ? null : _copyLink,
-        tooltip: 'Copy secure link',
-        icon: _assetIcon('copy', Icons.copy_outlined)),
-    ]));
+  Widget _linkBox() {
+    final link = _usableLink;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: _infoBlue,
+        borderRadius: BorderRadius.circular(10)),
+      child: Row(children: [
+        _assetIcon('link', Icons.link),
+        const SizedBox(width: 10),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(link != null ? 'Secure document link' :
+                _loadingSecureLink ? 'Preparing secure document link' :
+                'Secure document link unavailable',
+                style: _style(14, weight: FontWeight.w600)),
+            const SizedBox(height: 4),
+            Text(link?.toString() ??
+                (_loadingSecureLink
+                    ? 'Generating a protected link for this approved quote…'
+                    : _secureLinkError ??
+                      'A protected link is available for approved saved quotes.'),
+              softWrap: true, style: _style(12, color: _hint)),
+            if (link == null && _canGenerateSecureLink &&
+                !_loadingSecureLink) ...[
+              const SizedBox(height: 6),
+              TextButton(
+                key: const Key('send-retry-secure-link'),
+                onPressed: () => _ensureSecureLink(force: true),
+                child: const Text('Retry secure link'),
+              ),
+            ],
+          ])),
+        IconButton(key: const Key('send-copy-link'),
+          onPressed: link == null || _loadingSecureLink ? null : _copyLink,
+          tooltip: 'Copy secure link',
+          icon: _assetIcon('copy', Icons.copy_outlined)),
+      ]),
+    );
+  }
 
   Widget _content() => Column(crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
