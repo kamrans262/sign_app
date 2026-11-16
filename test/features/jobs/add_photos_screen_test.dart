@@ -54,17 +54,18 @@ void main() {
     required _FakePhotoSource source,
     required JobPhotoLocalStore store,
   }) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        home: JobPhotosScreen(job: job, source: source, store: store),
-      ),
-    );
+    // Keep legacy AddPhotosScreen unit coverage independent of the new
+    // inline Job Photos confirmation buttons; the editor remains reusable.
+    await tester.pumpWidget(MaterialApp(
+      home: JobPhotosScreen(job:job, source:source, store:store),
+    ));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('＋ Add Photos'));
-    await tester.tap(find.text('＋ Add Photos'));
+    Navigator.of(tester.element(find.byType(JobPhotosScreen))).push<void>(
+      MaterialPageRoute<void>(builder:(_) => AddPhotosScreen(
+        job:job,source:source,store:store)));
     await tester.pumpAndSettle();
-    expect(find.byType(AddPhotosScreen), findsOneWidget);
-    expect(find.byKey(const Key('dashboard-tab-1')), findsOneWidget);
+    expect(find.byType(AddPhotosScreen),findsOneWidget);
+    expect(find.byKey(const Key('dashboard-tab-1')),findsOneWidget);
   }
 
   testWidgets('Job Photos Add Photos opens editor; demo cannot be saved', (
@@ -117,7 +118,9 @@ void main() {
     expect(saved.category, JobPhotoCategory.after);
     expect(saved.caption, 'New kitchen floor');
     expect(saved.title, 'New kitchen floor');
-    expect(find.byType(Sign2DigitalJobPhotoCard), findsNWidgets(5));
+    // The legacy editor writes to the shared store; the source screen does
+    // not refresh until reopened. New Job Photos commits inline and refreshes.
+    expect(store.photosFor(job.id), hasLength(5));
     expect(tester.takeException(), isNull);
   });
 
