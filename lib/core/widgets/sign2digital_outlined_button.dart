@@ -14,6 +14,7 @@ class Sign2DigitalOutlinedButton extends StatelessWidget {
     this.leading,
     this.enabled = true,
     this.primaryOutline = false,
+    this.compactLabel = false,
     this.destructive = false,
     super.key,
   });
@@ -24,6 +25,9 @@ class Sign2DigitalOutlinedButton extends StatelessWidget {
   final Widget? leading;
   final bool enabled;
   final bool primaryOutline;
+  /// Scale down long button labels to a single line, without changing
+  /// the default outline button typography anywhere else.
+  final bool compactLabel;
   final bool destructive;
 
   @override
@@ -66,15 +70,25 @@ class Sign2DigitalOutlinedButton extends StatelessWidget {
                     const SizedBox(width: 20),
                   ],
                   Flexible(
-                    child: Text(
-                      label,
-                      maxLines: 2,
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.outlinedButton.copyWith(
-                        color: destructive ? const Color(0xFFFF1B23)
-                            : primaryOutline ? AppColors.primary : AppColors.dark,
-                      ),
-                    ),
+                    child: compactLabel
+                        ? FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(label,
+                              maxLines: 1, softWrap: false,
+                              style: AppTextStyles.outlinedButton.copyWith(
+                                fontSize: 14,
+                                color: destructive ? const Color(0xFFFF1B23)
+                                    : primaryOutline ? AppColors.primary : AppColors.dark,
+                              )))
+                        : Text(
+                            label,
+                            maxLines: 2,
+                            textAlign: TextAlign.center,
+                            style: AppTextStyles.outlinedButton.copyWith(
+                              color: destructive ? const Color(0xFFFF1B23)
+                                  : primaryOutline ? AppColors.primary : AppColors.dark,
+                            ),
+                          ),
                   ),
                 ],
               ),
