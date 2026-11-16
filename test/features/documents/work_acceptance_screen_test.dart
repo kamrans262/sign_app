@@ -24,6 +24,7 @@ DocumentRecord _record({
   bool signature = false,
   bool reportPdf = false,
   String name = 'Signer One',
+  String? status,
 }) {
   return DocumentRecord(
     id: 'wa-test-1',
@@ -34,8 +35,8 @@ DocumentRecord _record({
     project: 'Kitchen renovation',
     customer: name,
     timestamp: DateTime(2026, 8, 12, 10, 15),
-    status: done.contains(WorkAcceptanceStage.completed)
-        ? 'Completed' : 'Pending',
+    status: status ?? (done.contains(WorkAcceptanceStage.completed)
+        ? 'Completed' : 'Pending'),
     demoOnly: demo,
     workAcceptance: WorkAcceptanceEvidence(
       events: [
@@ -79,6 +80,31 @@ void main() {
     final nav = tester.widget<Sign2DigitalBottomNavigationBar>(
       find.byType(Sign2DigitalBottomNavigationBar));
     expect(nav.selectedIndex, 2);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Approval uses signed-document success style but does not fake a customer signature',
+      (tester) async {
+    var approvalCalls = 0;
+    var sendCalls = 0;
+    await tester.pumpWidget(MaterialApp(home: WorkAcceptanceScreen(
+      report: _record(status: 'draft'),
+      onApprove: (_) async { approvalCalls++; },
+      onRefresh: (_) async => _record(status: 'approved', reportPdf: true),
+      onSend: (_) async { sendCalls++; },
+    )));
+    await tester.tap(find.text('Approve Acceptance PDF'));
+    await tester.pumpAndSettle();
+    expect(find.text('Confirm'), findsOneWidget);
+    await tester.tap(find.text('Confirm'));
+    await tester.pumpAndSettle();
+    expect(approvalCalls, 1);
+    expect(find.text('Work Acceptance Approved'), findsOneWidget);
+    expect(find.textContaining('Customer approval and signature are still pending'),
+        findsOneWidget);
+    expect(find.text('Send to Customer'), findsOneWidget);
+    expect(find.text('Close'), findsOneWidget);
+    expect(sendCalls, 0);
     expect(tester.takeException(), isNull);
   });
 
