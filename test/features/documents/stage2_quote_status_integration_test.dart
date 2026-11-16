@@ -183,6 +183,27 @@ void main() {
     expect(tester.takeException(),isNull);
   });
 
+  testWidgets('signed quote status buttons use matching height and single lines',
+      (tester) async {
+    tester.view.physicalSize = const Size(320, 650);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(MaterialApp(home: DocumentDetailsScreen(
+      documentId:'signed-8', document:_signed(),
+    )));
+    final view=find.byKey(const Key('document-quote-view-signed'));
+    final download=find.byKey(const Key('document-quote-download-signed'));
+    expect(view, findsOneWidget);
+    expect(download, findsOneWidget);
+    expect(tester.getSize(view).height, tester.getSize(download).height);
+    expect((tester.getSize(view).width-tester.getSize(download).width).abs(),
+        lessThan(1));
+    final label=tester.widget<Text>(find.text('View Signed Document'));
+    expect(label.maxLines, 1);
+    expect(tester.takeException(),isNull);
+  });
+
   testWidgets('Documents catalogue shows Signed only for verified related artifact',
       (tester) async {
     await tester.pumpWidget(MaterialApp(
@@ -191,9 +212,11 @@ void main() {
       ),
     ));
     await tester.pumpAndSettle();
-    final quoteCard = find.byKey(const Key('document-card-quote-42'));
-    expect(quoteCard, findsOneWidget);
-    expect(find.descendant(of: quoteCard, matching: find.text('Signed')),
+    // Only the authoritative signed artifact should be displayed once.
+    expect(find.byKey(const Key('document-card-quote-42')), findsNothing);
+    final signedCard = find.byKey(const Key('document-card-signed-8'));
+    expect(signedCard, findsOneWidget);
+    expect(find.descendant(of: signedCard, matching: find.text('Signed')),
         findsOneWidget);
     expect(tester.takeException(), isNull);
   });
