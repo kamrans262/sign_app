@@ -29,6 +29,7 @@ class ConvertDocumentScreen extends StatefulWidget {
     this.quotePreparationService,
     this.notePreparationService,
     this.requestTemporaryApiKey,
+    this.forceNew = false,
     this.typeLabels = const ['Quote', 'Report', 'Latter', 'Custom'],
   });
 
@@ -37,6 +38,7 @@ class ConvertDocumentScreen extends StatefulWidget {
   final QuotePreparationService? quotePreparationService;
   final NoteDocumentPreparationService? notePreparationService;
   final Future<String?> Function(BuildContext)? requestTemporaryApiKey;
+  final bool forceNew;
   final List<String> typeLabels;
 
   @override
@@ -73,8 +75,8 @@ class _ConvertDocumentScreenState extends State<ConvertDocumentScreen> {
       _stage = null;
       _reviewOpened = false;
       _approved = false;
-      _genericDraft = NoteDocumentDraftSession.forNote(
-        widget.note.id, _type.name);
+      _genericDraft = (widget.forceNew ? null : NoteDocumentDraftSession.forNote(
+        widget.note.id, _type.name));
       if (_genericDraft != null) {
         _stage = QuotePreparationStage.completed;
         _approved = _genericDraft!.approvedLocally;
@@ -353,8 +355,8 @@ class _ConvertDocumentScreenState extends State<ConvertDocumentScreen> {
   @override
   void initState() {
     super.initState();
-    _genericDraft = NoteDocumentDraftSession.forNote(
-        widget.note.id, _type.name);
+    _genericDraft = (widget.forceNew ? null : NoteDocumentDraftSession.forNote(
+        widget.note.id, _type.name));
     _approved = _genericDraft?.approvedLocally ?? false;
     if (_genericDraft != null) _stage = QuotePreparationStage.completed;
   }
