@@ -361,6 +361,11 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
       order: _sort,
       query: _search.text,
     ).where((record) {
+      // The verified signed artifact is the latest representation of this
+      // quotation. Never show both its unsigned parent and signed copy as
+      // separate cards in the same Documents list.
+      if (record.category == DocumentCategory.quotes &&
+          _hasVerifiedSignedQuote(record)) return false;
       final jobId = widget.jobId;
       if (jobId == null) return true;
       if (record.jobId == jobId || record.quote?.jobId == jobId) return true;
