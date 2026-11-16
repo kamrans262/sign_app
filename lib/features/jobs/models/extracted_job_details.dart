@@ -2,6 +2,7 @@
 /// Missing or uncertain values stay null; no client/member ID is fabricated.
 class ExtractedJobDetails {
   const ExtractedJobDetails({
+    this.title,
     this.clientName,
     this.address,
     this.description,
@@ -12,6 +13,7 @@ class ExtractedJobDetails {
     this.transcript,
   });
 
+  final String? title;
   final String? clientName;
   final String? address;
   final String? description;
@@ -22,7 +24,7 @@ class ExtractedJobDetails {
   final String? transcript;
 
   bool get hasSuggestions =>
-      clientName != null ||
+      title != null || clientName != null ||
       address != null ||
       description != null ||
       startDate != null ||
@@ -56,6 +58,7 @@ class ExtractedJobDetails {
         : (rawBudget is String ? double.tryParse(rawBudget) : null);
     final rawMembers = value['teamMemberNames'];
     return ExtractedJobDetails(
+      title: _text(value['title']),
       clientName: _text(value['clientName']),
       address: _text(value['address']),
       description: _text(value['description']),
