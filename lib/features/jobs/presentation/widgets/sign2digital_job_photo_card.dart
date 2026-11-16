@@ -73,33 +73,15 @@ class Sign2DigitalJobPhotoCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (photos.length == 1)
-                    ClipRRect(
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(10),
-                      ),
-                      child: SizedBox(height: imageHeight,
-                        child: picture(photo)),
-                    )
-                  else
-                    Padding(
-                      padding: const EdgeInsets.all(10),
-                      child: Wrap(
-                        spacing: 6, runSpacing: 6,
-                        children: [
-                          for (final item in photos)
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: SizedBox(
-                                width: (width - 28) / 2,
-                                height: ((width - 28) / 2 * 0.70)
-                                    .clamp(56.0, 126.0).toDouble(),
-                                child: picture(item),
-                              ),
-                            ),
-                        ],
-                      ),
+                  // One cover image per group. All remaining photos are
+                  // browsable in the existing full-screen swipe viewer.
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(10),
                     ),
+                    child: SizedBox(height: imageHeight,
+                      child: picture(photo)),
+                  ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
                     child: Column(
