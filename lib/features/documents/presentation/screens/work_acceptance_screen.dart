@@ -488,7 +488,7 @@ class _AcceptanceApprovedScreenState extends State<_AcceptanceApprovedScreen> {
                   const SizedBox(width: 10),
                   Expanded(child: Sign2DigitalPrimaryButton(
                     label: _sent ? 'Sent to Customer' : 'Send to Customer',
-                    loading: _busy,
+                    oneLine: true, loading: _busy,
                     enabled: !_busy && !_sent && widget.onSend != null,
                     onPressed: _send)),
                 ]),
