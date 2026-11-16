@@ -182,6 +182,35 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     );
   }
 
+  Future<void> _createJobAddendum() async {
+    if (widget.jobId == null || !ActiveCompanySession.canWrite('documents')) {
+      return;
+    }
+    // Addenda are derived only from the exact verified signed original for
+    // this job, never from the newest unrelated company document.
+    final sources = _documents.where((record) =>
+        record.id.startsWith('signed-') &&
+        record.status.toLowerCase() == 'signed' &&
+        record.verifiedSignedPdfAvailable &&
+        record.jobId == widget.jobId).toList();
+    if (sources.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('A signed document for this job is required '
+            'before creating an addendum.'),
+      ));
+      return;
+    }
+    await Sign2DigitalNavigation.push<void>(context, MaterialPageRoute<void>(
+      builder: (_) => CreateAddendumScreen(
+        jobId: widget.jobId,
+        linkedDocument: sources.length == 1 ? sources.single : null,
+        repository: _repository,
+        requestAddendumSignature: widget.requestAddendumSignature,
+      ),
+    ));
+    if (mounted) await _load();
+  }
+
   Future<void> _uploadPdf() async {
     try {
       final chosen = await FilePicker.pickFiles(
@@ -282,6 +311,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
       await Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
         builder: (_) => CreateAddendumScreen(
           draftId: selected.addendumDraftId,
+          jobId: widget.jobId,
           repository: _repository,
           requestAddendumSignature: widget.requestAddendumSignature,
         ),
@@ -397,6 +427,19 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                       onChanged: (_) => setState(() {}),
                       onTrailingTap: _openDocumentFilters,
                     ),
+                    if (widget.jobId != null &&
+                        widget.initialCategory == DocumentCategory.addends &&
+                        ActiveCompanySession.canWrite('documents')) ...[
+                      const SizedBox(height: 15),
+                      Sign2DigitalPrimaryButton(
+                        key: const Key('job-addenda-create'),
+                        label: 'Create Addendum',
+                        height: 48,
+                        leading: const Icon(Icons.add, size: 20,
+                          color: AppColors.white),
+                        onPressed: _createJobAddendum,
+                      ),
+                    ],
                     if (widget.repository == null &&
                         MobileAuthRepository.shared.isSignedIn &&
                         ActiveCompanySession.canWrite('documents')) ...[
