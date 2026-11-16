@@ -13,7 +13,6 @@ import '../../../../core/widgets/sign2digital_header.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../../../core/widgets/sign2digital_outlined_button.dart';
 import '../../../quotes/presentation/screens/review_quote_screen.dart';
-import '../../../../core/widgets/sign2digital_outlined_button.dart';
 import '../../../../core/widgets/sign2digital_information_table.dart';
 import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import '../../../quotes/presentation/widgets/sign2digital_quote_summary_card.dart';
@@ -1380,15 +1379,15 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 16),
       child: Row(children: [
         Expanded(child: Sign2DigitalOutlinedButton(
-          key: Key(leftKey!), label: leftLabel!,
+          key: Key(leftKey), label: leftLabel,
           primaryOutline: true, enabled: leftEnabled,
-          onPressed: leftAction!,
+          onPressed: leftAction,
         )),
         const SizedBox(width: 10),
         Expanded(child: Sign2DigitalPrimaryButton(
-          key: Key(rightKey!), label: rightLabel!,
+          key: Key(rightKey), label: rightLabel,
           compactLabel: true, enabled: rightEnabled,
-          onPressed: rightAction!,
+          onPressed: rightAction,
         )),
       ]),
     );
