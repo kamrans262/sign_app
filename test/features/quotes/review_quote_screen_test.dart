@@ -43,6 +43,35 @@ void main() {
     expect(find.text('CHF 216.00'), findsWidgets);
   });
 
+  testWidgets('editing from Documents uses fresh saved quote, not stale session',
+      (tester) async {
+    final stale = QuoteReviewDraft(
+      id:'server-quote-12', serverId:12,
+      clientName:'Stale Customer',quoteNumber:'Q-12',
+      date:DateTime.utc(2026,11,12),terms:'Old Terms',
+      items:[QuoteReviewWorkItem(
+        id:'one',title:'Old Item',description:'',quantity:'1',
+        unitPrice:'10.00')],
+    );
+    QuoteReviewSessionStore.save(stale);
+    final fresh = stale.copy()
+      ..clientName='Current Customer'
+      ..terms='Fresh Saved Terms';
+    await tester.pumpWidget(MaterialApp(home:ReviewQuoteScreen(
+      initialDraft:fresh,preferInitialDraft:true,
+    )));
+    expect(find.text('Current Customer'),findsOneWidget);
+    expect(find.text('Stale Customer'),findsNothing);
+    expect(find.text('Old Terms'),findsNothing);
+    await tester.ensureVisible(find.byKey(const Key('quote-terms-toggle')));
+    await tester.tap(find.byKey(const Key('quote-terms-toggle')));
+    await tester.pump();
+    expect(find.byType(TextFormField),findsWidgets);
+    expect(tester.widget<TextFormField>(
+      find.byKey(const Key('quote-terms-edit'))).initialValue,
+      'Fresh Saved Terms');
+  });
+
   testWidgets('missing unit price blocks approval but permits local draft', (tester) async {
     await tester.pumpWidget(MaterialApp(home: ReviewQuoteScreen(
       initialDraft: QuoteReviewDraft.figmaDemo(),
