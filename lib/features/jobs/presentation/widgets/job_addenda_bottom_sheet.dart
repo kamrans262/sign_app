@@ -158,11 +158,15 @@ class _JobAddendaBottomSheetState extends State<JobAddendaBottomSheet> {
 
   @override
   Widget build(BuildContext context) => SafeArea(
-    child: SizedBox(
-      height: (MediaQuery.sizeOf(context).height * .72).clamp(290.0, 590.0).toDouble(),
+    child: ConstrainedBox(
+      // Content-sized for short lists; longer lists stay scrollable.
+      constraints: BoxConstraints(
+        maxHeight: (MediaQuery.sizeOf(context).height * .72)
+            .clamp(290.0, 590.0).toDouble(),
+      ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
-        child: Column(children: [
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
           Row(children: [
             const CircleAvatar(
               radius: 24, backgroundColor: Color(0xFFE3ECF0),
@@ -186,15 +190,18 @@ class _JobAddendaBottomSheetState extends State<JobAddendaBottomSheet> {
               icon: const Icon(Icons.close, color: AppColors.dark)),
           ]),
           const SizedBox(height: 8),
-          Expanded(child: _loading
-              ? const Center(child: CircularProgressIndicator(
-                  key: Key('job-addenda-loading')))
+          Flexible(fit: FlexFit.loose, child: _loading
+              ? const SizedBox(height: 90, child: Center(
+                  child: CircularProgressIndicator(
+                    key: Key('job-addenda-loading'))))
               : _error != null
-                  ? Center(child: TextButton(
-                      key: const Key('job-addenda-retry'),
-                      onPressed: _load,
-                      child: Text('$_error Tap to retry.')))
-                  : ListView(children: [
+                  ? Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: TextButton(
+                        key: const Key('job-addenda-retry'),
+                        onPressed: _load,
+                        child: Text('$_error Tap to retry.')))
+                  : ListView(shrinkWrap: true, children: [
                       _section('View Addenda',
                           'Addenda belonging to this job'),
                       if (_addenda.isEmpty)
