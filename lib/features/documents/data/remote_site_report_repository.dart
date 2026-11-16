@@ -257,8 +257,28 @@ class RemoteSiteReportRepository implements DocumentRepository {
     );
   }
 
-  /// Optional M12 dictation: text is never inserted or saved without user review.
-  Future<String> transcribeAudio(String jobId, String path) async {
+  /// Site Reports keep the original plain-text dictation API.
+  Future<String> transcribeAudio(String jobId, String path) async =>
+      (await _transcribe(jobId, path))['transcript'] as String;
+
+  /// Meeting Minutes can request a separately suggested title, summary,
+  /// attendees and actions. Neither endpoint inserts or saves user content.
+  Future<Map<String, dynamic>> transcribeMinutesAudio(
+      String jobId, String path) async {
+    final result = await _transcribe(jobId, path, mode: 'meeting_minutes');
+    final suggestion = result['suggestion'];
+    if (suggestion != null && suggestion is! Map) {
+      throw const SignApiException('Invalid meeting minutes suggestion.');
+    }
+    return {
+      'transcript': result['transcript'],
+      'suggestion': suggestion == null ? null :
+          Map<String, dynamic>.from(suggestion),
+    };
+  }
+
+  Future<Map<String, dynamic>> _transcribe(
+      String jobId, String path, {String? mode}) async {
     final company = _company();
     if (int.tryParse(jobId) == null) {
       throw const SignApiException('Select a real company job before dictating.');
@@ -272,7 +292,7 @@ class RemoteSiteReportRepository implements DocumentRepository {
       '/api/v1/reports/voice/transcribe',
       filename: file.uri.pathSegments.last, bytes: await file.readAsBytes(),
       companyScoped: true, maxBytes: 25 * 1024 * 1024,
-      fields: {'job_id': jobId},
+      fields: {'job_id': jobId, if (mode != null) 'mode': mode},
     ));
     _check(company);
     if (response['job_id'].toString() != jobId ||
@@ -284,7 +304,7 @@ class RemoteSiteReportRepository implements DocumentRepository {
         transcript.length > 20000) {
       throw const SignApiException('Voice transcription was empty.');
     }
-    return transcript.trim();
+    return {...response, 'transcript': transcript.trim()};
   }
 
   Future<DocumentRecord> saveDraft(DocumentRecord draft) async {
