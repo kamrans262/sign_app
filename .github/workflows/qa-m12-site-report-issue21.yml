@@ -7,6 +7,9 @@ on:
       - '.github/workflows/qa-m12-site-report-issue21.yml'
       - 'lib/features/documents/presentation/screens/site_report_wizard_screen.dart'
       - 'lib/features/documents/presentation/screens/report_review_screen.dart'
+      - 'lib/features/documents/presentation/screens/meeting_minutes_editor_screen.dart'
+      - 'lib/features/documents/data/remote_site_report_repository.dart'
+      - 'test/features/documents/m12_remote_site_report_repository_test.dart'
       - 'lib/features/documents/presentation/screens/reports_screen.dart'
       - 'lib/features/documents/presentation/widgets/site_report_review_content.dart'
       - 'test/features/documents/m12_review_restoration_test.dart'
@@ -32,7 +35,7 @@ jobs:
       - run: flutter pub get
       - name: Analyze M12 implementation and QA
         run: |
-          flutter analyze --no-pub --no-fatal-infos lib/features/documents/presentation/screens/site_report_wizard_screen.dart lib/features/documents/presentation/screens/report_review_screen.dart lib/features/documents/presentation/screens/reports_screen.dart lib/features/documents/presentation/widgets/site_report_review_content.dart test/features/documents/m12_review_restoration_test.dart
+          flutter analyze --no-pub --no-fatal-infos lib/features/documents/data/remote_site_report_repository.dart lib/features/documents/presentation/screens/meeting_minutes_editor_screen.dart lib/features/documents/presentation/screens/site_report_wizard_screen.dart lib/features/documents/presentation/screens/report_review_screen.dart lib/features/documents/presentation/screens/reports_screen.dart lib/features/documents/presentation/widgets/site_report_review_content.dart test/features/documents/m12_review_restoration_test.dart
       - name: Test original review, creation, edit, photos, statuses and API
         run: |
           flutter test --no-pub --concurrency=2 --timeout=2m --reporter=expanded test/features/documents/m12_review_restoration_test.dart test/features/documents/site_report_wizard_screen_test.dart test/features/documents/reports_screen_test.dart test/features/documents/m12_remote_site_report_repository_test.dart
