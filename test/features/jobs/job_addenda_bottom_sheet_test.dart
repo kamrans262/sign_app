@@ -97,9 +97,11 @@ void main() {
     await tester.pumpWidget(app((choice)=>selected=choice));
     await tester.tap(find.text('Open Addenda'));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(
-        find.byKey(const Key('job-addenda-quote-quote-3')));
-    await tester.tap(find.byKey(const Key('job-addenda-quote-quote-3')));
+    final quote = find.byKey(const Key('job-addenda-quote-quote-3'));
+    await tester.drag(find.byType(ListView).last,
+        const Offset(0, -270));
+    await tester.pumpAndSettle();
+    await tester.tap(quote);
     await tester.pump();
     expect(selected,isNull);
     expect(find.textContaining('verified signed quotation'),findsOneWidget);
