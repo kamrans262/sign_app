@@ -162,7 +162,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Job Details Addenda opens the actionable job-scoped list',
+  testWidgets('Job Details Addenda opens the two-section bottom sheet',
       (tester) async {
     tester.view.physicalSize = const Size(430, 932);
     tester.view.devicePixelRatio = 1;
@@ -179,8 +179,10 @@ void main() {
     );
     await tester.tap(target);
     await pumpUi(tester);
-    expect(find.text('Addenda'),findsWidgets);
-    expect(find.byKey(const Key('job-addenda-create')),findsOneWidget);
+    expect(find.byKey(const Key('job-addenda-bottom-sheet')),findsOneWidget);
+    expect(find.text('View Addenda'),findsOneWidget);
+    expect(find.text('Quotes Without Addenda'),findsOneWidget);
+    expect(find.byKey(const Key('job-addenda-create')),findsNothing);
     expect(tester.takeException(),isNull);
   });
 
@@ -200,7 +202,8 @@ void main() {
         ),
       ),
     );
-    for (final section in JobSection.values) {
+    for (final section in JobSection.values.where(
+        (value) => value != JobSection.addenda)) {
       final target = find.byKey(Key('job-section-${section.name}'));
       await tester.scrollUntilVisible(
         target,
