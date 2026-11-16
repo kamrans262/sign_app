@@ -54,17 +54,23 @@ void main() {
         documentId: 'quote-42', document: _original(),
       ),
     ));
-    expect(find.byKey(const Key('document-request-signature')), findsOneWidget);
-    // Fixed footer is separate from, and lower than, the four action cards.
-    final footer = find.byKey(const Key('document-request-signature'));
+    expect(find.byKey(const Key('document-quote-download')), findsOneWidget);
+    expect(find.byKey(const Key('document-quote-send')), findsOneWidget);
+    expect(find.byKey(const Key('document-request-signature')), findsNothing);
+    // Two equal-width actions remain below the existing View/More cards.
+    final footer = find.byKey(const Key('document-quote-status-actions'));
     final actionCards = find.byKey(const Key('document-detail-actions'));
     expect(tester.getTopLeft(footer).dy,
         greaterThan(tester.getBottomLeft(actionCards).dy));
+    final download = find.byKey(const Key('document-quote-download'));
+    final send = find.byKey(const Key('document-quote-send'));
+    expect((tester.getSize(download).width -
+        tester.getSize(send).width).abs(), lessThanOrEqualTo(1));
     expect(
       tester.getBottomLeft(find.byType(Scaffold)).dy -
           tester.getBottomLeft(footer).dy,
       lessThanOrEqualTo(36),
-      reason: 'Request Signature must stay at the bottom of the screen.',
+      reason: 'Two equal actions must stay at the bottom of the screen.',
     );
     await tester.tap(find.byKey(const Key('document-action-3')));
     await tester.pumpAndSettle();
@@ -87,6 +93,9 @@ void main() {
       home: DocumentDetailsScreen(documentId: original.id, document: original),
     ));
     expect(find.byKey(const Key('document-request-signature')), findsNothing);
+    expect(find.byKey(const Key('document-quote-view-signed')), findsOneWidget);
+    expect(find.byKey(const Key('document-quote-download-signed')), findsOneWidget);
+    expect(find.byKey(const Key('document-quote-send')), findsNothing);
     expect(find.text('Signed'), findsWidgets);
     await tester.tap(find.byKey(const Key('document-action-3')));
     await tester.pumpAndSettle();
@@ -115,12 +124,45 @@ void main() {
       home: DocumentDetailsScreen(documentId: 'quote-42',
         document: _original(related: [unverified])),
     ));
-    expect(find.byKey(const Key('document-request-signature')), findsOneWidget);
+    expect(find.byKey(const Key('document-request-signature')), findsNothing);
+    expect(find.byKey(const Key('document-quote-download')), findsOneWidget);
+    expect(find.byKey(const Key('document-quote-send')), findsOneWidget);
     await tester.tap(find.byKey(const Key('document-action-3')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('document-view-signed-quote')), findsNothing);
     expect(find.byKey(const Key('document-view-document-status')), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('draft quote shows Edit and Approve as equal-width actions',
+      (tester) async {
+    final draft = _original(status:'draft',quote:(_quote()
+      ..approvedLocally=false));
+    await tester.pumpWidget(MaterialApp(
+      home: DocumentDetailsScreen(documentId:draft.id,document:draft),
+    ));
+    final edit=find.byKey(const Key('document-quote-edit'));
+    final approve=find.byKey(const Key('document-quote-approve'));
+    expect(edit,findsOneWidget);
+    expect(approve,findsOneWidget);
+    expect(find.byKey(const Key('document-quote-send')),findsNothing);
+    expect(find.byKey(const Key('document-quote-download')),findsNothing);
+    expect((tester.getSize(edit).width -
+        tester.getSize(approve).width).abs(),lessThanOrEqualTo(1));
+    expect(tester.takeException(),isNull);
+  });
+
+  testWidgets('sent quote shows Download and View Status, without approval',
+      (tester) async {
+    final sent = _original(status:'sent');
+    await tester.pumpWidget(MaterialApp(
+      home: DocumentDetailsScreen(documentId:sent.id,document:sent),
+    ));
+    expect(find.byKey(const Key('document-quote-download')),findsOneWidget);
+    expect(find.byKey(const Key('document-quote-status')),findsOneWidget);
+    expect(find.byKey(const Key('document-quote-approve')),findsNothing);
+    expect(find.byKey(const Key('document-quote-send')),findsNothing);
+    expect(tester.takeException(),isNull);
   });
 
   testWidgets('Documents catalogue shows Signed only for verified related artifact',
