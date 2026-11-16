@@ -12,6 +12,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../../../core/widgets/sign2digital_outlined_button.dart';
+import '../../../quotes/presentation/screens/review_quote_screen.dart';
+import '../../../../core/widgets/sign2digital_outlined_button.dart';
 import '../../../../core/widgets/sign2digital_information_table.dart';
 import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import '../../../quotes/presentation/widgets/sign2digital_quote_summary_card.dart';
@@ -155,6 +157,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
   List<DocumentHistoryEvent> _extraHistory = const [];
   bool _requestingAddendum = false;
   bool _openingQuotePreview = false;
+  bool _quoteActionBusy = false;
 
   static const tabs = ['Details', 'Preview', 'Related', 'History'];
 
@@ -1242,6 +1245,155 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
     _selectTab(1);
   }
 
+  /// Draft editing and approval always use the existing Review Quote flow.
+  /// Re-read from the authorized company API before opening an editable quote.
+  Future<void> _reviewDraftQuote(DocumentRecord record) async {
+    if (_quoteActionBusy || !ActiveCompanySession.canWrite('quotes')) return;
+    setState(() => _quoteActionBusy = true);
+    try {
+      final fresh = widget.loadDocument == null
+          ? record : await widget.loadDocument!(record.id);
+      if (!mounted) return;
+      if (fresh == null || fresh.id != record.id ||
+          fresh.status.toLowerCase() != 'draft') {
+        _message('This quotation is no longer a draft. Reopen the document.');
+        if (widget.loadDocument != null) await _load();
+        return;
+      }
+      final quote = fresh.quote;
+      if (quote == null || (!quote.isDemo && quote.serverId == null)) {
+        _message('The saved quotation could not be loaded for editing.');
+        return;
+      }
+      await Sign2DigitalNavigation.push<void>(context, MaterialPageRoute<void>(
+        builder: (_) => ReviewQuoteScreen(
+          initialDraft: quote.copy(),
+          preferInitialDraft: true,
+        ),
+      ));
+      if (mounted && widget.loadDocument != null) await _load();
+    } catch (error) {
+      if (mounted) _message('Could not open quotation for review: $error');
+    } finally {
+      if (mounted) setState(() => _quoteActionBusy = false);
+    }
+  }
+
+  Future<void> _sendApprovedQuote(DocumentRecord record) async {
+    if (_quoteActionBusy || !ActiveCompanySession.canWrite('quotes')) return;
+    setState(() => _quoteActionBusy = true);
+    try {
+      final fresh = widget.loadDocument == null
+          ? record : await widget.loadDocument!(record.id);
+      if (!mounted) return;
+      if (fresh == null || fresh.id != record.id ||
+          fresh.status.toLowerCase() != 'approved' ||
+          _isVerifiedSignedQuote(fresh)) {
+        _message('Quotation status changed. Reopen the document.');
+        if (widget.loadDocument != null) await _load();
+        return;
+      }
+      final quote = fresh.quote;
+      if (quote == null || !quote.approvedLocally) {
+        _message('An approved quotation is required before sending.');
+        return;
+      }
+      await Sign2DigitalNavigation.push<void>(context, MaterialPageRoute<void>(
+        builder: (_) => SendQuoteScreen(quote: quote.copy()),
+      ));
+      if (mounted && widget.loadDocument != null) await _load();
+    } catch (error) {
+      if (mounted) _message('Could not open Send Quote: $error');
+    } finally {
+      if (mounted) setState(() => _quoteActionBusy = false);
+    }
+  }
+
+  /// The four existing View / Download / Share / More cards stay intact.
+  /// Two equal-width, status-specific buttons appear beneath the quote detail.
+  /// No new PDF/signing/approval UI is introduced.
+  Widget _quoteBottomActions(DocumentRecord record) {
+    if (record.category != DocumentCategory.quotes) {
+      return const SizedBox.shrink();
+    }
+    final status = _isVerifiedSignedQuote(record)
+        ? 'signed' : record.status.toLowerCase();
+    String? leftLabel, rightLabel;
+    String? leftKey, rightKey;
+    VoidCallback? leftAction, rightAction;
+    var leftEnabled = !_quoteActionBusy;
+    var rightEnabled = !_quoteActionBusy;
+
+    switch (status) {
+      case 'draft':
+        leftLabel = 'Edit';
+        rightLabel = 'Approve';
+        leftKey = 'document-quote-edit';
+        rightKey = 'document-quote-approve';
+        leftAction = () => _reviewDraftQuote(record);
+        rightAction = () => _reviewDraftQuote(record);
+        leftEnabled &= ActiveCompanySession.canWrite('quotes') &&
+            record.quote != null;
+        rightEnabled = leftEnabled;
+      case 'approved':
+        leftLabel = 'Download';
+        rightLabel = 'Send to Customer';
+        leftKey = 'document-quote-download';
+        rightKey = 'document-quote-send';
+        leftAction = _doDownload;
+        rightAction = () => _sendApprovedQuote(record);
+        leftEnabled &= record.verifiedSignedPdfAvailable ||
+            (record.demoOnly && record.quote != null);
+        rightEnabled &= ActiveCompanySession.canWrite('quotes') &&
+            record.quote?.approvedLocally == true;
+      case 'sent':
+        leftLabel = 'Download';
+        rightLabel = 'View Status';
+        leftKey = 'document-quote-download';
+        rightKey = 'document-quote-status';
+        leftAction = _doDownload;
+        rightAction = () => _viewQuoteStatus(record);
+        leftEnabled &= record.verifiedSignedPdfAvailable ||
+            (record.demoOnly && record.quote != null);
+        rightEnabled &= record.quote?.approvedLocally == true;
+      case 'signed':
+        leftLabel = 'View Signed Document';
+        rightLabel = 'Download Signed PDF';
+        leftKey = 'document-quote-view-signed';
+        rightKey = 'document-quote-download-signed';
+        leftAction = () {
+          if (_linkedSignedQuote(record) != null) {
+            _openLinkedSignedQuote(record);
+          } else {
+            _view();
+          }
+        };
+        rightAction = _doDownload;
+        leftEnabled &= record.verifiedSignedPdfAvailable ||
+            _linkedSignedQuote(record) != null;
+        rightEnabled = leftEnabled;
+      default:
+        return const SizedBox.shrink();
+    }
+    return Padding(
+      key: const Key('document-quote-status-actions'),
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 16),
+      child: Row(children: [
+        Expanded(child: Sign2DigitalOutlinedButton(
+          key: Key(leftKey!), label: leftLabel!,
+          primaryOutline: true, enabled: leftEnabled,
+          onPressed: leftAction!,
+        )),
+        const SizedBox(width: 10),
+        Expanded(child: Sign2DigitalPrimaryButton(
+          key: Key(rightKey!), label: rightLabel!,
+          compactLabel: true, enabled: rightEnabled,
+          onPressed: rightAction!,
+        )),
+      ]),
+    );
+  }
+
   static const _label = TextStyle(
     fontFamily: 'Inter', fontSize: 14, fontWeight: FontWeight.w500,
     letterSpacing: -0.3, color: AppColors.placeholder,
@@ -1532,19 +1684,11 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
                               key: Key('document-details-missing')))
                           : _body(_record!),
         ),
-        // Approved unsigned quotations have one fixed bottom action, not a
-        // fifth card below View / Download / Share / More.
+        // Two equal-width actions for the current quote status. Other
+        // document categories retain their existing footer and four cards.
         if (_record != null && _tab != 3 &&
-            _isApprovedUnsignedQuote(_record!) &&
-            ActiveCompanySession.canWrite('quotes'))
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 10, 20, 16),
-            child: Sign2DigitalPrimaryButton(
-              key: const Key('document-request-signature'),
-              label: 'Request Signature',
-              onPressed: () => _requestQuoteSignature(_record!),
-            ),
-          ),
+            _record!.category == DocumentCategory.quotes)
+          _quoteBottomActions(_record!),
       ],
     )),
   );
