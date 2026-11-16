@@ -51,6 +51,9 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
   }
 
   bool get _isDraft => _report.status.toLowerCase() == 'draft';
+  bool get _isKnownFinalStatus =>
+      const ['approved', 'sent', 'archived']
+          .contains(_report.status.toLowerCase());
 
   Future<void> _reload() async {
     if (mounted) setState(() => _latestServerReportLoaded = false);
@@ -386,7 +389,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
                       enabled: !_busy && _latestServerReportLoaded,
                     ),
                   ])
-                else if (!_isDraft)
+                else if (_isKnownFinalStatus)
                   _actionRows([
                     if (_report.status != 'archived')
                       Sign2DigitalPrimaryButton(
