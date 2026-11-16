@@ -13,6 +13,7 @@ class Sign2DigitalPrimaryButton extends StatelessWidget {
     this.enabled = true,
     this.height = 48,
     this.leading,
+    this.oneLine = false,
     super.key,
   });
 
@@ -22,6 +23,7 @@ class Sign2DigitalPrimaryButton extends StatelessWidget {
   final bool enabled;
   final double height;
   final Widget? leading;
+  final bool oneLine;
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +52,11 @@ class Sign2DigitalPrimaryButton extends StatelessWidget {
                 ),
               )
             : leading == null
-                ? Text(label, style: AppTextStyles.primaryButton)
+                ? (oneLine ? FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(label, maxLines: 1, softWrap: false,
+                      style: AppTextStyles.primaryButton))
+                    : Text(label, style: AppTextStyles.primaryButton))
                 : Row(mainAxisSize: MainAxisSize.min, children: [
                     leading!,
                     const SizedBox(width: 10),
