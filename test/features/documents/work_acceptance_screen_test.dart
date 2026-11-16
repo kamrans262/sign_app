@@ -197,6 +197,84 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('Work Acceptance buttons stay fixed above the bottom navigation',
+      (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(MaterialApp(home: WorkAcceptanceScreen(
+      report: _record(status: 'draft'), onApprove: (_) async {},
+    )));
+    await tester.pumpAndSettle();
+    final share = find.byKey(const Key('work-acceptance-share'));
+    final report = find.byKey(const Key('work-acceptance-view-report'));
+    final nav = find.byType(Sign2DigitalBottomNavigationBar);
+    expect(tester.getTopLeft(share).dy,
+      closeTo(tester.getTopLeft(report).dy, 1));
+    final original = tester.getTopLeft(report).dy;
+    await tester.drag(find.byKey(const Key('work-acceptance-scroll')),
+      const Offset(0, -450));
+    await tester.pumpAndSettle();
+    expect(tester.getTopLeft(report).dy, closeTo(original, 1));
+    expect(tester.getBottomLeft(report).dy,
+      lessThan(tester.getTopLeft(nav).dy));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Approve opens verified success, can send, and Close selects Documents',
+      (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    var approvals = 0;
+    var sends = 0;
+    int? selectedTab;
+    await tester.pumpWidget(MaterialApp(home: Scaffold(
+      body: Builder(builder: (context) => TextButton(
+        onPressed: () => Navigator.of(context).push<void>(
+          MaterialPageRoute(builder: (_) => WorkAcceptanceScreen(
+            report: _record(status: 'draft'),
+            onApprove: (_) async { approvals++; },
+            onRefresh: (_) async => _record(status:
+                sends > 0 ? 'sent' : 'approved', reportPdf: true),
+            onSend: (_) async { sends++; },
+            onNavigationSelected: (index) => selectedTab = index,
+          )),
+        ),
+        child: const Text('Open acceptance'),
+      )),
+    )));
+    await tester.tap(find.text('Open acceptance'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Approve Acceptance PDF'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Confirm'));
+    await tester.pumpAndSettle();
+
+    expect(approvals, 1);
+    expect(find.text('Work Acceptance Approved!'), findsOneWidget);
+    expect(find.textContaining('has not signed'), findsOneWidget);
+    expect(find.text('View Approved PDF'), findsOneWidget);
+    expect(find.byKey(const Key('work-acceptance-approved-send')), findsOneWidget);
+    expect(find.byKey(const Key('work-acceptance-approved-close')), findsOneWidget);
+    expect(find.text('Client Signature'), findsNothing);
+    expect(sends, 0);
+
+    await tester.tap(find.byKey(const Key('work-acceptance-approved-send')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Confirm'));
+    await tester.pumpAndSettle();
+    expect(sends, 1);
+    expect(find.text('Sent to Customer'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('work-acceptance-approved-close')));
+    await tester.pumpAndSettle();
+    expect(selectedTab, 3);
+    expect(find.text('Open acceptance'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('Back button returns to the selected Reports screen',
       (tester) async {
     await tester.pumpWidget(MaterialApp(home: Scaffold(
