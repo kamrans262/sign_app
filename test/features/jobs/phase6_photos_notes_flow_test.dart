@@ -127,6 +127,60 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('Note conversion buttons stay on one line; converted notes edit and convert again',
+      (tester) async {
+    final store = JobNoteLocalStore(includeDemoNotes: false);
+    final note = JobNoteModel(
+      id: 'private-existing-1', jobId: job.id, title: 'Site inspection',
+      body: 'Roofing work is complete', createdAt: DateTime.now(),
+      type: JobNoteType.text, visibility: JobNoteVisibility.privateNote,
+    );
+    store.add(note);
+    await tester.pumpWidget(MaterialApp(home: JobNotesScreen(
+      job: job, store: store,
+    )));
+    await tester.tap(find.byKey(const Key('job-note-private-existing-1')));
+    await tester.pumpAndSettle();
+    expect(find.text('Convert to Document'), findsOneWidget);
+    expect(find.text('Convert Again'), findsNothing);
+    final initialLabel =
+        tester.widget<Text>(find.text('Convert to Document'));
+    expect(initialLabel.maxLines, 1);
+    await tester.tap(find.text('Close'));
+    await tester.pumpAndSettle();
+
+    NoteDocumentDraftSession.save(NoteDocumentDraft(
+      noteId: note.id, jobId: note.jobId, documentType: 'report',
+      title: 'Prepared site report', content: 'Existing report text',
+    ));
+    await tester.tap(find.byKey(const Key('job-note-private-existing-1')));
+    await tester.pumpAndSettle();
+    expect(find.text('Convert to Document'), findsNothing);
+    expect(find.text('Edit'), findsOneWidget);
+    expect(find.text('Convert Again'), findsOneWidget);
+    expect(tester.widget<Text>(find.text('Convert Again')).maxLines, 1);
+
+    await tester.tap(find.text('Edit'));
+    await tester.pumpAndSettle();
+    expect(find.byType(AddJobNoteScreen), findsOneWidget);
+    expect(find.text('Edit Note'), findsOneWidget);
+    await tester.enterText(find.byType(TextFormField).at(1),
+      'Roofing inspected and completed');
+    await tester.tap(find.byKey(const Key('job-note-save')));
+    await tester.pumpAndSettle();
+    expect(store.notesFor(job.id).single.body,
+        'Roofing inspected and completed');
+
+    await tester.tap(find.byKey(const Key('job-note-private-existing-1')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Convert Again'));
+    await tester.pumpAndSettle();
+    expect(find.byType(ConvertDocumentScreen), findsOneWidget);
+    expect(tester.widget<ConvertDocumentScreen>(
+      find.byType(ConvertDocumentScreen)).forceNew, true);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('customer-facing note cannot be converted as a private note',
       (tester) async {
     final note = JobNoteModel(
