@@ -13,6 +13,8 @@ import '../../data/remote_job_media_repository.dart';
 import '../../services/voice_recorder_service.dart';
 import '../../domain/job_model.dart';
 import '../../domain/job_note_model.dart';
+import '../../domain/note_document_draft.dart';
+import '../../../../core/widgets/sign2digital_outlined_button.dart';
 import '../widgets/sign2digital_job_info_banner.dart';
 import '../widgets/sign2digital_job_note_card.dart';
 import '../widgets/sign2digital_note_visibility_card.dart';
@@ -120,12 +122,55 @@ class _JobNotesScreenState extends State<JobNotesScreen> {
         .toList(growable: false);
   }
 
+  Future<bool> _wasConverted(JobNoteModel note) async {
+    if (note.visibility != JobNoteVisibility.privateNote) return false;
+    if (_remote) {
+      // Server-side records survive app restarts and preserve the original PDFs.
+      return RemoteJobMediaRepository.shared.hasConvertedDocuments(note);
+    }
+    return ConvertedDocumentType.values.any((type) =>
+        NoteDocumentDraftSession.forNote(note.id, type.name) != null);
+  }
+
+  Future<void> _editNote(JobNoteModel note, BuildContext dialogContext) async {
+    Navigator.of(dialogContext).pop();
+    final changed = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => AddJobNoteScreen(
+        job: widget.job,
+        existingNote: note,
+        store: _remote ? null : _store,
+        initialType: note.type,
+        initialVisibility: note.visibility,
+        voiceRecorderFactory: widget.voiceRecorderFactory,
+      )),
+    );
+    if (!mounted || changed != true) return;
+    if (_remote) {
+      await _loadRemoteNotes();
+    } else {
+      setState(() {});
+    }
+  }
+
+  Future<void> _convertNote(
+      JobNoteModel note, BuildContext dialogContext, {bool again = false}) async {
+    Navigator.of(dialogContext).pop();
+    await Navigator.of(context).push<void>(MaterialPageRoute(
+      builder: (_) => ConvertDocumentScreen(
+        note: note, forceNew: again,
+        onTabSelected: widget.onTabSelected,
+      ),
+    ));
+    if (mounted && _remote) await _loadRemoteNotes();
+  }
+
   void _openNote(JobNoteModel note) {
     final callback = widget.onNoteTap;
     if (callback != null) {
       callback(note);
       return;
     }
+    final converted = _wasConverted(note);
     showDialog<void>(
       context: context,
       barrierColor: const Color(0x80000000),
@@ -156,28 +201,57 @@ class _JobNotesScreenState extends State<JobNotesScreen> {
             ],
           ),
         ),
+        actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
         actions: [
-          if (note.audioPath != null && _remote)
-            TextButton(
-              onPressed: () => _playNote(note),
-              child: const Text('Play Recording'),
+          FutureBuilder<bool>(
+            future: converted,
+            builder: (_, snapshot) => SizedBox(
+              width: double.infinity,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (note.audioPath != null && _remote) ...[
+                    TextButton(
+                      onPressed: () => _playNote(note),
+                      child: const Text('Play Recording'),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                  if (snapshot.connectionState == ConnectionState.waiting)
+                    const Center(child: CircularProgressIndicator(
+                      color: AppColors.primary))
+                  else if (snapshot.hasError)
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 12),
+                      child: Text('Could not check previous conversions.',
+                        style: TextStyle(color: AppColors.secondaryText)),
+                    )
+                  else if (note.visibility == JobNoteVisibility.privateNote) ...[
+                    if (snapshot.data == true) ...[
+                      Sign2DigitalOutlinedButton(
+                        label: 'Edit', primaryOutline: true,
+                        onPressed: () => _editNote(note, dialogContext)),
+                      const SizedBox(height: 10),
+                      Sign2DigitalOutlinedButton(
+                        label: 'Convert Again', primaryOutline: true,
+                        onPressed: () =>
+                            _convertNote(note, dialogContext, again: true)),
+                    ] else
+                      Sign2DigitalOutlinedButton(
+                        key: const Key('job-note-convert'),
+                        label: 'Convert to Document',
+                        primaryOutline: true,
+                        onPressed: () => _convertNote(note, dialogContext)),
+                    const SizedBox(height: 10),
+                  ],
+                  Sign2DigitalPrimaryButton(
+                    label: 'Close',
+                    onPressed: () => Navigator.of(dialogContext).pop(),
+                  ),
+                ],
+              ),
             ),
-          if (note.visibility == JobNoteVisibility.privateNote)
-            TextButton(
-              key: const Key('job-note-convert'),
-            onPressed: () {
-              Navigator.of(dialogContext).pop();
-              Navigator.of(context).push<void>(MaterialPageRoute<void>(
-                builder: (_) => ConvertDocumentScreen(
-                  note: note, onTabSelected: widget.onTabSelected,
-                ),
-              ));
-            },
-            child: const Text('Convert to Document'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Close'),
           ),
         ],
       ),
