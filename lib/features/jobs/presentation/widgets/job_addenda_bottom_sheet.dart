@@ -134,7 +134,11 @@ class _JobAddendaBottomSheetState extends State<JobAddendaBottomSheet> {
     padding: const EdgeInsets.only(bottom: 10),
     child: Sign2DigitalOutlinedContainer(
       padding: EdgeInsets.zero,
-      child: ListTile(
+      // ListTile needs its own Material above the outlined decoration, or
+      // Flutter hides ink effects and flags an accessibility assertion.
+      child: Material(
+        type: MaterialType.transparency,
+        child: ListTile(
         key: key,
         leading: Icon(icon, color: AppColors.primary, size: 24),
         title: Text(title,
@@ -147,6 +151,7 @@ class _JobAddendaBottomSheetState extends State<JobAddendaBottomSheet> {
             color: AppColors.secondaryText)),
         trailing: const Icon(Icons.chevron_right, color: AppColors.primary),
         onTap: onTap,
+        ),
       ),
     ),
   );
