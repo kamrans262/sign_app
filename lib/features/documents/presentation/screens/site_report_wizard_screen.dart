@@ -640,7 +640,7 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
             ? error.message
             : 'An unexpected error prevented this report from being saved.';
         setState(() => _error =
-          'Report not generated: $detail Your entered information is preserved.');
+          'Report generation failed: $detail Your entered information is preserved.');
       }
     } finally {
       if (mounted) { setState(() => _saving = false); }
