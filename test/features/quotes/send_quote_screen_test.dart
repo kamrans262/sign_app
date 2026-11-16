@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:flutter/services.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -119,6 +120,90 @@ void main() {
     expect(find.textContaining('requires a real connected service'), findsOneWidget);
     final copy = tester.widget<IconButton>(find.byKey(const Key('send-copy-link')));
     expect(copy.onPressed, isNull);
+  });
+
+  testWidgets('saved approved quote gets protected link automatically',
+      (tester) async {
+    final quote = readyQuote(id: 'server-quote-12')..serverId = 12;
+    var calls = 0;
+    await tester.pumpWidget(MaterialApp(home: SendQuoteScreen(
+      quote: quote, pdfGenerator: fakePdf,
+      secureLinkLoader: (q) async {
+        calls++;
+        expect(q.serverId, 12);
+        return {
+          'secure_link': 'https://quotes.example.test/quote-view/12?signature=verified',
+          'expires_at': DateTime.now().add(const Duration(days: 7))
+              .toUtc().toIso8601String(),
+        };
+      },
+    )));
+    await tester.pumpAndSettle();
+    expect(calls, 1, reason: 'The user must not need to press Send first.');
+    expect(find.text('Secure document link'), findsOneWidget);
+    expect(find.textContaining('https://quotes.example.test/quote-view/12'),
+        findsOneWidget);
+    final copy = tester.widget<IconButton>(find.byKey(const Key('send-copy-link')));
+    expect(copy.onPressed, isNotNull);
+    await tapOnScreen(tester, find.byKey(const Key('send-copy-link')));
+    final clipboard = await Clipboard.getData(Clipboard.kTextPlain);
+    expect(clipboard?.text,
+        'https://quotes.example.test/quote-view/12?signature=verified');
+    expect(calls, 1, reason: 'Copying a valid link must reuse it.');
+  });
+
+  testWidgets('failed link generation shows Retry and recovers',
+      (tester) async {
+    final quote = readyQuote(id: 'server-quote-13')..serverId = 13;
+    var calls = 0;
+    await tester.pumpWidget(MaterialApp(home: SendQuoteScreen(
+      quote: quote, pdfGenerator: fakePdf,
+      secureLinkLoader: (_) async {
+        calls++;
+        if (calls == 1) throw StateError('offline');
+        return {
+          'secure_link': 'https://quotes.example.test/quote-view/13?signature=verified',
+          'expires_at': DateTime.now().add(const Duration(days: 7))
+              .toUtc().toIso8601String(),
+        };
+      },
+    )));
+    await tester.pumpAndSettle();
+    expect(calls, 1);
+    expect(find.textContaining('Retry when connected'), findsOneWidget);
+    expect(tester.widget<IconButton>(
+        find.byKey(const Key('send-copy-link'))).onPressed, isNull);
+    await tapOnScreen(tester, find.byKey(const Key('send-retry-secure-link')));
+    expect(calls, 2);
+    expect(find.text('Secure document link'), findsOneWidget);
+    expect(tester.widget<IconButton>(
+        find.byKey(const Key('send-copy-link'))).onPressed, isNotNull);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('expired signed link is regenerated before copying',
+      (tester) async {
+    final quote = readyQuote(id: 'server-quote-14')..serverId = 14;
+    var calls = 0;
+    await tester.pumpWidget(MaterialApp(home: SendQuoteScreen(
+      quote: quote, pdfGenerator: fakePdf,
+      secureLinkLoader: (_) async {
+        calls++;
+        return {
+          'secure_link': 'https://quotes.example.test/quote-view/14?token=$calls',
+          'expires_at': DateTime.now().add(
+              Duration(minutes: calls == 1 ? 2 : 10080))
+              .toUtc().toIso8601String(),
+        };
+      },
+    )));
+    await tester.pumpAndSettle();
+    expect(calls, 1);
+    await tapOnScreen(tester, find.byKey(const Key('send-copy-link')));
+    expect(calls, 2, reason: 'Near-expiry links must be renewed for sharing.');
+    final clipboard = await Clipboard.getData(Clipboard.kTextPlain);
+    expect(clipboard?.text,
+        'https://quotes.example.test/quote-view/14?token=2');
   });
 
   testWidgets('back and reopen retain edited message', (tester) async {
