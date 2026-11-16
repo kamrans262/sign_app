@@ -15,6 +15,7 @@ class Sign2DigitalOutlinedButton extends StatelessWidget {
     this.enabled = true,
     this.primaryOutline = false,
     this.destructive = false,
+    this.oneLine = false,
     super.key,
   });
 
@@ -25,6 +26,7 @@ class Sign2DigitalOutlinedButton extends StatelessWidget {
   final bool enabled;
   final bool primaryOutline;
   final bool destructive;
+  final bool oneLine;
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +66,9 @@ class Sign2DigitalOutlinedButton extends StatelessWidget {
                   Flexible(
                     child: Text(
                       label,
-                      maxLines: 2,
+                      maxLines: oneLine ? 1 : 2,
+                      softWrap: !oneLine,
+                      overflow: oneLine ? TextOverflow.ellipsis : null,
                       textAlign: TextAlign.center,
                       style: AppTextStyles.outlinedButton.copyWith(
                         color: destructive ? const Color(0xFFFF1B23)
