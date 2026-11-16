@@ -155,6 +155,15 @@ void main() {
         expect(find.text('Edit Draft'), findsNothing);
         expect(find.text('Already Approved'), findsNothing);
         expect(find.text('View Approved PDF'), findsOneWidget);
+        final pdfButton = find.ancestor(
+          of: find.text('View Approved PDF'),
+          matching: find.byType(Sign2DigitalOutlinedButton));
+        expect(tester.getSize(pdfButton).width,
+          closeTo(tester.getSize(
+            find.byKey(const Key('report-review-action-rows'))).width, 1),
+          reason: 'The odd final action spans the full available row');
+        expect(tester.widget<Sign2DigitalOutlinedButton>(pdfButton).primaryOutline,
+          isTrue);
       } else {
         expect(find.text('Edit Draft'), findsNothing);
         expect(find.text('Approve Report'), findsNothing);
@@ -164,6 +173,34 @@ void main() {
         expect(button.onPressed, isNull);
         expect(find.text('View Approved PDF'), findsOneWidget);
         expect(find.text('Send to Client'), findsOneWidget);
+        expect(find.text('Archive Report'), findsOneWidget);
+        final approved = find.ancestor(
+          of: find.text('Already Approved'),
+          matching: find.byType(Sign2DigitalPrimaryButton));
+        final pdf = find.ancestor(
+          of: find.text('View Approved PDF'),
+          matching: find.byType(Sign2DigitalOutlinedButton));
+        final send = find.ancestor(
+          of: find.text('Send to Client'),
+          matching: find.byType(Sign2DigitalPrimaryButton));
+        final archive = find.ancestor(
+          of: find.text('Archive Report'),
+          matching: find.byType(Sign2DigitalOutlinedButton));
+        expect(tester.getTopLeft(approved).dy,
+          closeTo(tester.getTopLeft(pdf).dy, 1));
+        expect(tester.getTopLeft(send).dy,
+          closeTo(tester.getTopLeft(archive).dy, 1));
+        expect(tester.getTopLeft(send).dy,
+          greaterThan(tester.getBottomLeft(approved).dy));
+        expect(tester.getSize(approved).width,
+          closeTo(tester.getSize(pdf).width, 1));
+        expect(tester.getSize(send).width,
+          closeTo(tester.getSize(archive).width, 1));
+        for (final outlined in [pdf, archive]) {
+          final widget = tester.widget<Sign2DigitalOutlinedButton>(outlined);
+          expect(widget.primaryOutline, isTrue);
+          expect(widget.compactLabel, isTrue);
+        }
       }
       expect(tester.takeException(), isNull);
     });
