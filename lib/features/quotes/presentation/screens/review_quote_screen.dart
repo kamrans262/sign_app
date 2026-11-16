@@ -2,6 +2,9 @@ import '../../../../core/widgets/sign2digital_input_field.dart';
 import '../../../../core/widgets/sign2digital_form_dialog.dart';
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import '../../../../core/widgets/sign2digital_subscription_gate.dart';
+import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
+import '../../../documents/data/remote_document_repository.dart';
+import '../../../documents/presentation/screens/document_details_screen.dart';
 import 'package:flutter/material.dart';
 import '../../../documents/data/document_activity_session.dart';
 
@@ -19,11 +22,14 @@ import 'quote_preview_screen.dart';
 class ReviewQuoteScreen extends StatefulWidget {
   const ReviewQuoteScreen({
     super.key, required this.initialDraft,
-    this.onSaved, this.onApproved,
+    this.onSaved, this.onApproved, this.preferInitialDraft = false,
   });
   final QuoteReviewDraft initialDraft;
   final ValueChanged<QuoteReviewDraft>? onSaved;
   final ValueChanged<QuoteReviewDraft>? onApproved;
+  /// Document Details always supplies a fresh server quote, never a stale
+  /// in-memory editing snapshot from another visit.
+  final bool preferInitialDraft;
 
   @override
   State<ReviewQuoteScreen> createState() => _ReviewQuoteScreenState();
@@ -40,8 +46,10 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
   @override
   void initState() {
     super.initState();
-    _draft = QuoteReviewSessionStore.load(widget.initialDraft.id) ??
-        widget.initialDraft.copy();
+    _draft = widget.preferInitialDraft
+        ? widget.initialDraft.copy()
+        : QuoteReviewSessionStore.load(widget.initialDraft.id) ??
+            widget.initialDraft.copy();
     _nextItemNumber = _draft.items.length;
   }
 
@@ -307,6 +315,61 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
     _updated();
   }
 
+  /// Use the approved two-button modal. The app never claims a local/demo
+  /// draft was persisted in Laravel or navigates to a fictional document ID.
+  Future<void> _showSavedDocumentConfirmation({
+    required QuoteReviewDraft saved,
+    required bool approved,
+  }) async {
+    final id = saved.serverId;
+    if (id == null || id <= 0 || !_remoteMode) return;
+    final goToDocument = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => Sign2DigitalApprovedConfirmation(
+        title: Text(approved ? 'Quote Approved!' : 'Draft Saved!'),
+        content: Text(approved
+            ? 'Your approved quotation is saved in Documents.'
+            : 'Your draft quotation is saved in Documents. '
+              'You can edit or approve it there.'),
+        icon: approved ? Icons.check_circle_outline : Icons.description_outlined,
+        actions: [
+          TextButton(
+            key: const Key('quote-document-confirm-close'),
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Close'),
+          ),
+          TextButton(
+            key: const Key('quote-take-me-to-document'),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Take Me to Document'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted || goToDocument != true) return;
+    try {
+      final documentId = 'quote-$id';
+      final record = await RemoteDocumentRepository.shared.details(documentId);
+      if (record.id != documentId || record.quote?.serverId != id) {
+        throw const FormatException('Saved quotation is unavailable.');
+      }
+      if (!mounted) return;
+      await Sign2DigitalNavigation.push<void>(
+        context,
+        MaterialPageRoute<void>(
+          builder: (_) => DocumentDetailsScreen(
+            documentId: documentId,
+            document: record,
+            loadDocument: RemoteDocumentRepository.shared.details,
+            loadSignedPdf: RemoteDocumentRepository.shared.downloadPdf,
+          ),
+        ),
+      );
+    } catch (error) {
+      _notice('Could not open saved document: $error');
+    }
+  }
+
   Future<void> _saveDraft() async {
     if (_savingToServer) return;
     if (_remoteMode) {
@@ -318,7 +381,8 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
         QuoteReviewSessionStore.save(_draft);
         DocumentActivitySession.saved(_draft);
         widget.onSaved?.call(_draft.copy());
-        _notice('Quote draft saved to your company account.');
+        await _showSavedDocumentConfirmation(
+          saved: _draft.copy(), approved: false);
       } catch (error) {
         if (mounted) _notice('Could not save quote: $error');
       } finally {
@@ -371,6 +435,12 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
     final approvedSnapshot = _draft.copy();
     widget.onApproved?.call(approvedSnapshot);
     if (!mounted) return;
+    if (_remoteMode) {
+      await _showSavedDocumentConfirmation(
+        saved: approvedSnapshot, approved: true);
+      return;
+    }
+    // Retain the existing local/Figma preview flow for unsaved demo quotes.
     Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
       builder: (_) => QuotePreviewScreen(quote: approvedSnapshot),
     ));
