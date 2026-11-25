@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sign2digital/core/services/active_company_session.dart';
 import 'package:sign2digital/features/clients/presentation/screens/more_screen.dart';
 
 void main() {
@@ -10,6 +11,8 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
+    ActiveCompanySession.setVerified(11, role: 'owner', permissions: const []);
+    addTearDown(ActiveCompanySession.clear);
     await tester.pumpWidget(const MaterialApp(
       home: Scaffold(body: MoreScreen()),
     ));
@@ -41,6 +44,22 @@ void main() {
     expect(find.text('Subscription Management'), findsNothing);
     expect(find.byKey(const Key('open-quote-ui-demo')), findsNothing);
     expect(find.byKey(const Key('open-subscription-management')), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+  testWidgets('Subscription is not offered to non-owner company members', (tester) async {
+    ActiveCompanySession.setVerified(11, role: 'admin', permissions: const [
+      'documents.read', 'reports.read', 'labour.read', 'invoices.read',
+      'equipment.read', 'expenses.read',
+    ]);
+    addTearDown(ActiveCompanySession.clear);
+    await tester.pumpWidget(const MaterialApp(home: Scaffold(body: MoreScreen())));
+    await tester.pumpAndSettle();
+    final list = find.byKey(const Key('more-menu-scroll'));
+    await tester.scrollUntilVisible(find.byKey(const Key('open-expenses')), 150,
+      scrollable: find.descendant(of: list, matching: find.byType(Scrollable)).first);
+    await tester.drag(list, const Offset(0, -300));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('open-subscription')), findsNothing);
     expect(tester.takeException(), isNull);
   });
 }

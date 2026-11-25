@@ -144,7 +144,9 @@ void main() {
       repository: RemoteSubscriptionRepository(api:_api()))));
     await tester.pumpAndSettle();
     expect(find.text('Free allowance'), findsOneWidget);
-    expect(find.text('Free'), findsOneWidget);
+    expect(tester.widget<Text>(find.byKey(const Key('subscription-plan-price'))).data, 'Free');
+    expect(find.descendant(of: find.byKey(const Key('subscription-status')),
+      matching: find.text('Free')), findsOneWidget);
     expect(find.text('Upgrade Plan'), findsOneWidget);
     expect(find.text('Active'), findsNothing);
     expect(find.byKey(const Key('m23-free-document-allowance')), findsOneWidget);
