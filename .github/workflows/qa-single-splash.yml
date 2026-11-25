@@ -14,6 +14,8 @@ on:
       - 'android/app/src/main/res/values-night-v31/styles.xml'
       - 'test/features/splash/splash_navigation_test.dart'
       - 'test/widget_test.dart'
+      - 'ios/Runner/Base.lproj/LaunchScreen.storyboard'
+      - 'ios/Runner/Assets.xcassets/LaunchImage.imageset/**'
   workflow_dispatch:
 permissions:
   contents: read
@@ -31,6 +33,24 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
+      - name: Verify checked-in iOS splash matches Android artwork
+        run: |
+          cmp ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage.png android/app/src/main/res/drawable-mdpi/android12splash.png
+          cmp ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage@2x.png android/app/src/main/res/drawable-xhdpi/android12splash.png
+          cmp ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage@3x.png android/app/src/main/res/drawable-xxhdpi/android12splash.png
+          python3 - <<'PY'
+          import xml.etree.ElementTree as ET
+          root = ET.parse('ios/Runner/Base.lproj/LaunchScreen.storyboard').getroot()
+          view = root.find('.//imageView')
+          assert view.attrib['image'] == 'LaunchImage'
+          assert view.attrib['contentMode'] == 'scaleAspectFit'
+          constraints = root.findall('.//constraint')
+          for attr in ('width', 'height'):
+              assert any(c.get('firstItem') == view.get('id') and c.get('firstAttribute') == attr and c.get('constant') == '288' for c in constraints)
+          for attr in ('centerX', 'centerY'):
+              assert any(c.get('firstItem') == view.get('id') and c.get('firstAttribute') == attr and c.get('secondAttribute') == attr for c in constraints)
+          assert any(all(c.get(k) == '1' for k in ('red','green','blue','alpha')) for c in root.findall('.//color') if c.get('key') == 'backgroundColor')
+          PY
       - name: Create Android 12 square logo with preserved proportions
         run: dart run tool/generate_android12_square_splash.dart
       - name: Analyze splash startup
