@@ -28,6 +28,7 @@ class LoginScreen extends StatefulWidget {
     this.onGoogle,
     this.onGoogleSignIn,
     this.onApple,
+    this.onAppleSignIn,
     super.key,
   });
 
@@ -38,6 +39,7 @@ class LoginScreen extends StatefulWidget {
   /// Receives the current 'Keep me signed in' value for OAuth sessions.
   final ValueChanged<bool>? onGoogleSignIn;
   final VoidCallback? onApple;
+  final ValueChanged<bool>? onAppleSignIn;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -169,9 +171,10 @@ class _LoginScreenState extends State<LoginScreen> {
                               ? () => widget.onGoogleSignIn!(_keepSignedIn)
                               : widget.onGoogle ??
                                   () => _showUnavailable('Google sign in'),
-                          onApple:
-                              widget.onApple ??
-                              () => _showUnavailable('Apple sign in'),
+                          onApple: widget.onAppleSignIn != null
+                              ? () => widget.onAppleSignIn!(_keepSignedIn)
+                              : widget.onApple ??
+                                  () => _showUnavailable('Apple sign in'),
                           onSubmit: _submit,
                         ),
                       ),

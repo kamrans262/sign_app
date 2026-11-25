@@ -6,6 +6,7 @@ import '../../../company/data/remote_company_repository.dart';
 import 'company_entry_gate.dart';
 import '../../data/mobile_auth_repository.dart';
 import '../../services/google_sign_in_client.dart';
+import '../../services/apple_sign_in_client.dart';
 import 'create_account_screen.dart';
 import 'forgot_password_screen.dart';
 import 'login_screen.dart';
@@ -54,7 +55,8 @@ class _MobileAuthGatewayState extends State<MobileAuthGateway> {
     Sign2DigitalNavigation.push(context,MaterialPageRoute<void>(
       builder: (_) => CreateAccountScreen(
         onCreateAccount: _register,
-        onGoogle: () => _googleLogin(true)),
+        onGoogle: () => _googleLogin(true),
+        onApple: () => _appleLogin(true)),
     ));
   }
 
@@ -79,6 +81,33 @@ class _MobileAuthGatewayState extends State<MobileAuthGateway> {
           builder: (_) => TwoFactorLoginScreen(onVerify: (code) async {
             await _auth.verifyTwoFactor(ticket, code,
               rememberMe: rememberMe);
+            if (!mounted) return;
+            _openCompanyGate();
+          }),
+        ));
+        return;
+      }
+      _openCompanyGate();
+    });
+  }
+
+  void _appleLogin(bool rememberMe) {
+    _execute(() async {
+      final nonce = await _auth.beginAppleSignIn();
+      if (!mounted) return;
+      final credential = await AppleSignInClient.signIn(nonce);
+      if (credential == null || !mounted) return;
+      final name = credential['name'];
+      final outcome = await _auth.signInWithApple(
+        credential['id_token'] as String, nonce: nonce,
+        name: name is String ? name : null, rememberMe: rememberMe,
+      );
+      if (!mounted) return;
+      if (outcome.requiresTwoFactor) {
+        final ticket = outcome.twoFactorTicket!;
+        await Sign2DigitalNavigation.push(context, MaterialPageRoute<void>(
+          builder: (_) => TwoFactorLoginScreen(onVerify: (code) async {
+            await _auth.verifyTwoFactor(ticket, code, rememberMe: rememberMe);
             if (!mounted) return;
             _openCompanyGate();
           }),
@@ -220,6 +249,7 @@ class _MobileAuthGatewayState extends State<MobileAuthGateway> {
     return LoginScreen(
       onSubmit: _login,
       onGoogleSignIn: _googleLogin,
+      onAppleSignIn: _appleLogin,
       onCreateAccount: _openRegistration,
       onForgotPassword: _openForgotPassword,
     );
