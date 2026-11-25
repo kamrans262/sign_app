@@ -176,7 +176,7 @@ class MobileAuthRepository {
       authenticated: false, data: {
         'id_token': appleIdToken,
         'nonce': nonce,
-        if (authorizationCode != null) 'authorization_code': authorizationCode,
+        'authorization_code': ?authorizationCode,
         if (name != null && name.isNotEmpty) 'name': name,
         'device_name': 'Sign2Digital Apple Mobile',
       });
