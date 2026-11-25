@@ -140,7 +140,7 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
     EquipmentRecord current=record;
     if(_repository is RemoteEquipmentRepository){
       try{
-        current=await _repository.detail(record);
+        current=await (_repository as RemoteEquipmentRepository).detail(record);
       }catch(_){
         _notice('Unable to load verified equipment details.');
         return;

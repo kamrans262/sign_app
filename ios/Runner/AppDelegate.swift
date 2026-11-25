@@ -87,9 +87,6 @@ private final class AppleAuthBridge: NSObject, ASAuthorizationControllerDelegate
       return
     }
     var response: [String: String] = ["id_token": token]
-    if let data = credential.authorizationCode, let code = String(data: data, encoding: .utf8) {
-      response["authorization_code"] = code
-    }
     if let name = credential.fullName {
       response["name"] = PersonNameComponentsFormatter().string(from: name)
     }

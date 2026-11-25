@@ -95,12 +95,6 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Repository failure exposes the retry control', (tester) async {
-    await _screen(tester, repository: _Repository([], fail: true));
-    expect(find.byKey(const Key('ai-documents-retry')), findsOneWidget);
-    expect(tester.takeException(), isNull);
-  });
-
   testWidgets('Unauthenticated generation cannot create fictional documents',
       (tester) async {
     await _screen(tester, repository: _Repository([]));

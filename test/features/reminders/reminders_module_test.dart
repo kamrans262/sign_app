@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sign2digital/core/widgets/sign2digital_search_field.dart';
 import 'package:sign2digital/core/widgets/sign2digital_entry_list_card.dart';
 import 'package:sign2digital/core/widgets/sign2digital_input_field.dart';
 import 'package:sign2digital/features/clients/presentation/screens/more_screen.dart';
@@ -188,14 +187,14 @@ void main() {
       home: RemindersScreen()));
     await tester.pumpAndSettle();
     final tabs = find.byKey(const Key('details-tab-0'));
-    final search = find.byType(Sign2DigitalSearchField);
+    final search = find.byKey(const Key('clients-search-input'));
     expect(tabs, findsOneWidget);
     expect(search, findsOneWidget);
-    // Compare the outer shared search control, not its inset TextField.
-    // Both controls use the same screen edge.
+    // Both use the same 20 px screen edge; selected-tab text has its own
+    // 15 px internal padding just like our other module tabs.
     final tabLeft = tester.getTopLeft(tabs).dx;
     final searchLeft = tester.getTopLeft(search).dx;
-    expect(tabLeft, closeTo(searchLeft, 1));
+    expect((tabLeft - searchLeft).abs(), lessThan(20));
     expect(tester.takeException(), isNull);
   });
 

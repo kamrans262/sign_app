@@ -29,19 +29,6 @@ class SignApiException implements Exception {
 /// Tokens are supplied by the authentication module (M2); they are never
 /// embedded in the application or persisted by this client.
 class SignApiClient {
-  static Future<void> Function(SignApiClient)? aiConsentPrompt;
-  static final _aiPath = RegExp(r'^/api/v1/(?:support/assistant(?:/transcribe)?|ai/(?:companies|jobs)/voice|jobs/[^/]+/notes/[^/]+/(?:transcribe|documents/prepare)|quotes/prepare/[^/]+|(?:labour|invoices|deposits|expenses|reminders)/ai/[^/]+|general-documents/(?:ai/prepare|voice/transcribe)|reports/(?:voice/transcribe|[^/]+/prepare-ai)|addenda/prepare/voice|equipment(?:-loans)?/voice/prepare)$');
-  Future<void> _requireAiConsent(String endpoint) async {
-    if (!_aiPath.hasMatch(endpoint)) return;
-    final prompt = aiConsentPrompt;
-    if (prompt == null) return; // Backend remains fail-closed; tests can inject a prompt.
-    final token = await _tokenProvider?.call();
-    await prompt(this);
-    if (token == null || token != await _tokenProvider?.call()) {
-      throw const SignApiException('Account changed. Try again.');
-    }
-  }
-
   SignApiClient({
     Uri? baseUrl,
     http.Client? httpClient,
@@ -91,7 +78,6 @@ class SignApiClient {
     bool authenticated = true,
     bool companyScoped = false,
   }) async {
-    if (method == 'POST') await _requireAiConsent(endpoint);
     final headers = await _headers(
       authenticated: authenticated,
       companyScoped: companyScoped,
@@ -287,7 +273,6 @@ class SignApiClient {
         bytes.isEmpty || bytes.length > maxBytes) {
       throw const SignApiException('The selected file exceeds the allowed size.');
     }
-    await _requireAiConsent(endpoint);
     final request = http.MultipartRequest('POST', _uri(endpoint))
       ..followRedirects = false;
     request.headers.addAll(await _headers(

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sign2digital/core/services/active_company_session.dart';
 import 'package:sign2digital/core/widgets/sign2digital_bottom_navigation_bar.dart';
 import 'package:sign2digital/core/widgets/sign2digital_dashboard_header.dart';
 import 'package:sign2digital/features/clients/presentation/screens/more_screen.dart';
@@ -35,8 +34,6 @@ Future<void> _scrollTo(WidgetTester tester, Key key) async {
 void main() {
   testWidgets('More opens Subscription with the global header and More nav',
       (tester) async {
-    ActiveCompanySession.setVerified(11, role: 'owner', permissions: const []);
-    addTearDown(ActiveCompanySession.clear);
     await tester.pumpWidget(const MaterialApp(
       home: Scaffold(body: MoreScreen()),
     ));

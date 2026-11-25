@@ -9,7 +9,7 @@ import 'features/quotes/presentation/screens/public_customer_signing_screen.dart
 /// flutter build web -t lib/guest_signing_main.dart
 ///   --dart-define=SIGN2DIGITAL_SIGNING_API_BASE_URL=https://api.example.com
 ///
-/// Configure the host to rewrite `/sign/<opaqueToken>` to index.html.
+/// Configure the host to rewrite /sign/<opaqueToken> to index.html.
 /// The API still authorizes every token and signature server-side.
 void main() {
   WidgetsFlutterBinding.ensureInitialized();

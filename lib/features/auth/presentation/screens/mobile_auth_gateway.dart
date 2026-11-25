@@ -100,7 +100,6 @@ class _MobileAuthGatewayState extends State<MobileAuthGateway> {
       final name = credential['name'];
       final outcome = await _auth.signInWithApple(
         credential['id_token'] as String, nonce: nonce,
-        authorizationCode: credential['authorization_code'] as String?,
         name: name is String ? name : null, rememberMe: rememberMe,
       );
       if (!mounted) return;

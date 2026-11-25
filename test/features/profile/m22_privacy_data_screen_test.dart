@@ -62,7 +62,6 @@ void main() {
     );
     await tester.pumpWidget(MaterialApp(
       home: PrivacyDataScreen(api: api)));
-    await tester.scrollUntilVisible(find.byKey(const Key('m22-privacy-deactivate')), 150, scrollable: find.byType(Scrollable).first);
     await tester.tap(find.byKey(const Key('m22-privacy-deactivate')));
     await tester.pumpAndSettle();
     expect(find.text('Deactivate Account?'), findsOneWidget);
@@ -72,41 +71,37 @@ void main() {
     expect(find.byKey(const Key('m22-privacy-scroll')), findsOneWidget);
   });
 
-  testWidgets('account deletion requires explicit phrase and recent email proof',
+  testWidgets('account deletion requires explicit phrase and password',
       (tester) async {
-    var completed = 0;
+    var writes = 0;
     final api = SignApiClient(
       baseUrl: Uri.parse('https://example.test'),
       tokenProvider: () async => 'test-token',
       httpClient: MockClient((request) async {
-        if (request.url.path.endsWith('/deletion/options')) {
-          return http.Response(jsonEncode({'data':{'companies':[], 'apple_linked':false,
-            'platform_admin':false,'two_factor_required':false}}),200);
-        }
-        if (request.url.path.endsWith('/deletion/challenge')) {
-          return http.Response(jsonEncode({'data':{'sent':true}}),200);
-        }
-        completed++;
-        return http.Response('{}',403);
+        writes++;
+        return http.Response('{}', 403);
       }),
     );
     await tester.pumpWidget(MaterialApp(home: PrivacyDataScreen(api: api)));
-    await tester.scrollUntilVisible(find.byKey(const Key('m22-privacy-delete')),150,
-      scrollable:find.byType(Scrollable).first);
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('m22-privacy-delete')), 150,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.tap(find.byKey(const Key('m22-privacy-delete')));
     await tester.pumpAndSettle();
     expect(find.text('Permanently Delete Account?'), findsOneWidget);
-    await tester.tap(find.text('Continue'));
+    Sign2DigitalPrimaryButton button = tester.widget<Sign2DigitalPrimaryButton>(
+        find.byKey(const Key('m22-delete-confirm')));
+    expect(button.enabled, isFalse);
+    await tester.enterText(find.byKey(const Key('m22-delete-type')), 'DELETE');
+    await tester.enterText(find.byKey(const Key('m22-delete-password')),
+      'sample-password');
     await tester.pumpAndSettle();
-    expect(find.text('Confirm Account Deletion'), findsOneWidget);
-    final button = find.byKey(const Key('m22-delete-confirm'));
-    expect(tester.widget<Sign2DigitalPrimaryButton>(button).enabled,isFalse);
-    await tester.enterText(find.byKey(const Key('m22-delete-type')),'DELETE');
-    await tester.enterText(find.byKey(const Key('m25-delete-code')),'123456');
-    await tester.pumpAndSettle();
-    expect(tester.widget<Sign2DigitalPrimaryButton>(button).enabled,isTrue);
+    button = tester.widget<Sign2DigitalPrimaryButton>(
+        find.byKey(const Key('m22-delete-confirm')));
+    expect(button.enabled, isTrue);
     await tester.tap(find.text('Keep Account'));
     await tester.pumpAndSettle();
-    expect(completed,0);
+    expect(writes, 0);
   });
 }

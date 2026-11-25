@@ -33,7 +33,7 @@ void main() {
         expect(arrow, findsOneWidget);
         expect(find.text(status), findsOneWidget);
         expect(
-          (tester.getTopRight(find.byWidget(tester.widget<Transform>(badge).child!)).dx - tester.getTopRight(arrow).dx).abs(),
+          (tester.getTopRight(badge).dx - tester.getTopRight(arrow).dx).abs(),
           lessThan(1),
         );
         expect(

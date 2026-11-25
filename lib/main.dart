@@ -10,8 +10,6 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform;
 
 import 'core/theme/app_theme.dart';
-import 'core/services/sign_api_client.dart';
-import 'core/services/m25_ai_consent.dart';
 import 'features/profile/data/app_settings_repository.dart';
 import 'features/auth/data/mobile_auth_repository.dart';
 import 'features/auth/presentation/screens/mobile_auth_gateway.dart';
@@ -29,7 +27,6 @@ Future<void> m20BackgroundMessage(RemoteMessage message) async {}
 
 Future<void> main() async {
   final binding = WidgetsFlutterBinding.ensureInitialized();
-  SignApiClient.aiConsentPrompt = (api) => M25AiConsent.ensure(api, M20PushCoordinator.navigatorKey.currentState?.overlay?.context);
   // Android/iOS already show an OS launch splash. Keep that single splash
   // until authentication is restored; do not display a second Flutter page.
   final mobileNativeSplash = !kIsWeb &&

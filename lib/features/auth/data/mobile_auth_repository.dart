@@ -162,7 +162,7 @@ class MobileAuthRepository {
   }
 
   Future<EmailOtpVerification> signInWithApple(String appleIdToken,
-      {required String nonce, String? name, String? authorizationCode, required bool rememberMe}) async {
+      {required String nonce, String? name, required bool rememberMe}) async {
     if (appleIdToken.isEmpty) {
       throw const SignApiException('Apple sign-in did not return a token.');
     }
@@ -176,7 +176,6 @@ class MobileAuthRepository {
       authenticated: false, data: {
         'id_token': appleIdToken,
         'nonce': nonce,
-        'authorization_code': ?authorizationCode,
         if (name != null && name.isNotEmpty) 'name': name,
         'device_name': 'Sign2Digital Apple Mobile',
       });

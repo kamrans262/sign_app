@@ -204,8 +204,6 @@ void main() {
     expect(tester.widget<Sign2DigitalPrimaryButton>(
         find.byKey(const Key('m22-privacy-export'))).label,
         'Copy My Account Data');
-    await tester.scrollUntilVisible(find.byKey(const Key('m22-privacy-deactivate')), 150,
-      scrollable: find.byType(Scrollable).first);
     expect(tester.widget<Sign2DigitalOutlinedButton>(
         find.byKey(const Key('m22-privacy-deactivate'))).primaryOutline,
         isTrue);

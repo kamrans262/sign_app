@@ -55,7 +55,7 @@ void main() {
       expect(badge, findsOneWidget);
       // Match the Jobs cards: the badge and chevron share a right edge.
       expect(
-        (tester.getTopRight(find.byWidget(tester.widget<Transform>(badge).child!)).dx - tester.getTopRight(chevron).dx).abs(),
+        (tester.getTopRight(badge).dx - tester.getTopRight(chevron).dx).abs(),
         lessThan(1),
       );
       expect(

@@ -51,7 +51,7 @@ Future<void> _show(
     home: GenerateAiDocumentScreen(
       jobs: [MockJobsData.jobs.first],
       initialJob: selectJob ? MockJobsData.jobs.first : null,
-      datePicker: (_, _) async => DateTime(2026, 8, 25),
+      datePicker: (_, __) async => DateTime(2026, 8, 25),
       documentGenerator: generator,
       voiceRecorderFactory: _Recorder.new,
       voiceExtractionService: _Extraction(),

@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
@@ -12,6 +13,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
 import '../../../../core/widgets/sign2digital_information_table.dart';
 import '../../../../core/widgets/sign2digital_outlined_button.dart';
+import '../../../../core/widgets/sign2digital_outlined_container.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../../clients/presentation/widgets/sign2digital_details_tabs.dart';
 import '../../../clients/data/remote_client_repository.dart';

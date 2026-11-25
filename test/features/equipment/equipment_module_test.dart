@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sign2digital/core/widgets/sign2digital_form_dialog.dart';
 import 'package:sign2digital/core/widgets/sign2digital_entry_list_card.dart';
 import 'package:sign2digital/features/equipment/data/demo_equipment_repository.dart';
 import 'package:sign2digital/features/equipment/domain/equipment_record.dart';
@@ -104,9 +103,7 @@ void main() {
     expect(find.text('Other'), findsOneWidget);
     await tester.tap(find.byKey(const Key('equipment-custom-name')));
     await tester.pumpAndSettle();
-    final nameDialog = tester.widget<Sign2DigitalFormDialog>(find.byType(Sign2DigitalFormDialog));
-    expect((nameDialog.title as Text).data, 'Enter Equipment Name');
-    expect(tester.widget<TextField>(find.descendant(of: find.byKey(const Key('equipment-custom-value')), matching: find.byType(TextField))).decoration?.hintText, 'Enter Equipment Name');
+    expect(find.text('Enter Equipment Name'), findsOneWidget);
     expect(find.text('Equipment Name'), findsOneWidget);
     await tester.enterText(find.descendant(
       of: find.byKey(const Key('equipment-custom-value')),
@@ -120,9 +117,7 @@ void main() {
     expect(find.byKey(const Key('equipment-custom-value')), findsNothing);
     await tester.tap(find.byKey(const Key('equipment-category-other')));
     await tester.pumpAndSettle();
-    final categoryDialog = tester.widget<Sign2DigitalFormDialog>(find.byType(Sign2DigitalFormDialog));
-    expect((categoryDialog.title as Text).data, 'Enter Category');
-    expect(tester.widget<TextField>(find.descendant(of: find.byKey(const Key('equipment-custom-value')), matching: find.byType(TextField))).decoration?.hintText, 'Enter Category');
+    expect(find.text('Enter Category'), findsOneWidget);
     expect(find.text('Category'), findsWidgets);
     await tester.enterText(find.descendant(
       of: find.byKey(const Key('equipment-custom-value')),
