@@ -58,7 +58,9 @@ abstract final class M23BillingDeepLinks {
 
   static void start() {
     if (kIsWeb || (defaultTargetPlatform != TargetPlatform.android &&
-        defaultTargetPlatform != TargetPlatform.iOS)) return;
+        defaultTargetPlatform != TargetPlatform.iOS)) {
+      return;
+    }
     _subscription ??= AppLinks().uriLinkStream.listen(
       accept, onError: (Object _) {
         // A failed deep link never interrupts the regular application.
@@ -77,7 +79,9 @@ abstract final class M23BillingDeepLinks {
   static void presentIfReady() {
     if (_showing || _pending == null ||
         !MobileAuthRepository.shared.isSignedIn ||
-        ActiveCompanySession.companyId == null) return;
+        ActiveCompanySession.companyId == null) {
+      return;
+    }
     final nav = M20PushCoordinator.navigatorKey.currentState;
     if (nav == null) return;
     final result = _pending!;
