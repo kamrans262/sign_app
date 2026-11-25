@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/services/sign_api_client.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -130,83 +131,80 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
 
   Future<void> _deleteAccount() async {
     if (_busy) return;
-    var confirmation = '';
-    var password = '';
-    final approved = await showDialog<String>(
-      context: context,
-      builder: (dialog) => StatefulBuilder(
-        builder: (context, refresh) => Sign2DigitalApprovedConfirmation(
-          title: const Text('Permanently Delete Account?'),
-          content: SingleChildScrollView(child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('Your personal profile and private support data will '
-                'be erased and every session revoked. Issued company records '
-                'and signed documents are retained for legal integrity. '
-                'Transfer company ownership and administrator access first.'),
-              const SizedBox(height: 12),
-              Sign2DigitalInputField(
-                key: const Key('m22-delete-type'),
-                label: 'Confirmation',
-                hintText: 'Type DELETE',
-                iconAsset: '',
-                leadingIcon: Icons.warning_amber_outlined,
-                leadingIconSize: 24,
-                onChanged: (value) => refresh(() => confirmation = value),
-              ),
-              const SizedBox(height: 12),
-              Sign2DigitalInputField(
-                key: const Key('m22-delete-password'),
-                label: 'Confirm Password',
-                hintText: 'Enter account password',
-                iconAsset: '',
-                leadingIcon: Icons.lock_outline_rounded,
-                leadingIconSize: 24,
-                obscureText: true,
-                onChanged: (value) => refresh(() => password = value),
-              ),
-            ],
-          )),
-          actions: [
-            TextButton(onPressed: () => Navigator.of(dialog).pop(),
-              child: const Text('Keep Account')),
-            TextButton(
-              key: const Key('m22-delete-confirm'),
-              onPressed: confirmation == 'DELETE' && password.isNotEmpty
-                ? () => Navigator.of(dialog).pop(password) : null,
-              child: const Text('Delete Account')),
-          ],
-        ),
-      ),
-    );
-    if (!mounted || approved == null) return;
+    final start = await showDialog<bool>(context: context, builder: (dialog) =>
+      Sign2DigitalApprovedConfirmation(
+        title: const Text('Permanently Delete Account?'),
+        content: const Text('Your personal profile and private support data will be erased. '
+          'Business records may be retained. Review active subscriptions separately. '
+          'We will send a verification code to your registered email. '
+          'If your company has other members, ownership must be resolved first.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(dialog).pop(false), child: const Text('Keep Account')),
+          TextButton(onPressed: () => Navigator.of(dialog).pop(true), child: const Text('Send Code')),
+        ],
+      ));
+    if (start != true || !mounted) return;
     setState(() { _busy = true; _message = null; });
     try {
-      final response = await _api.post('/api/v1/me/delete',
-        data: {'password': approved});
-      if (response['data'] is! Map<String, dynamic> ||
-          response['data']['deleted'] != true ||
-          response['data']['requires_login'] != true) {
-        throw const SignApiException('Deletion was not confirmed.');
-      }
+      final challenge = await _api.post('/api/v1/me/deletion/challenge');
+      if (!mounted) return;
+      final requires2fa = (challenge['data'] as Map?)?['two_factor_required'] == true;
+      var code = '', confirmation = '', second = '';
+      final approved = await showDialog<Map<String, dynamic>>(context: context,
+        builder: (dialog) => StatefulBuilder(builder: (context, refresh) =>
+          Sign2DigitalApprovedConfirmation(
+            title: const Text('Confirm Account Deletion'),
+            content: Column(mainAxisSize: MainAxisSize.min, children: [
+              const Text('Enter the emailed code and type DELETE. This cannot be undone.'),
+              const SizedBox(height: 12),
+              Sign2DigitalInputField(key: const Key('m25-delete-code'), label: 'Verification Code',
+                hintText: 'Six-digit email code', iconAsset: '', onChanged: (v) => refresh(() => code=v.trim())),
+              const SizedBox(height: 12),
+              Sign2DigitalInputField(key: const Key('m22-delete-type'), label: 'Confirmation',
+                hintText: 'Type DELETE', iconAsset: '', onChanged: (v) => refresh(() => confirmation=v)),
+              if (requires2fa) ...[
+                const SizedBox(height: 12),
+                Sign2DigitalInputField(label: 'Authenticator or Recovery Code', hintText: 'Enter code',
+                  iconAsset: '', onChanged: (v) => refresh(() => second=v.trim())),
+              ],
+            ]),
+            actions: [
+              TextButton(onPressed: () => Navigator.of(dialog).pop(), child: const Text('Keep Account')),
+              TextButton(key: const Key('m22-delete-confirm'),
+                onPressed: confirmation == 'DELETE' && RegExp(r'^[0-9]{6}$').hasMatch(code) && (!requires2fa || second.isNotEmpty)
+                  ? () => Navigator.of(dialog).pop({'code': code,'confirmation': confirmation,if(requires2fa)'two_factor_code':second}) : null,
+                child: const Text('Delete Account')),
+            ],
+          )));
+      if (!mounted || approved == null) return;
+      final response = await _api.post('/api/v1/me/deletion/complete', data: approved);
+      if ((response['data'] as Map?)?['deleted'] != true) throw const SignApiException('Deletion was not confirmed.');
       try { await MobileAuthRepository.shared.logout(); } catch (_) {}
       if (!mounted) return;
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute<void>(builder: (_) => const MobileAuthGateway()),
-        (_) => false);
+      Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute<void>(builder: (_) => const MobileAuthGateway()), (_) => false);
     } on SignApiException catch (error) {
-      if (mounted) {
-        setState(() => _message = error.statusCode == 422
-          ? 'Check your password and transfer all company ownership first.'
-          : 'Unable to delete this account. No changes were confirmed.');
-      }
+      if(mounted) setState(() => _message=error.message);
     } catch (_) {
-      if (mounted) {
-        setState(() => _message =
-          'Unable to delete this account. No changes were confirmed.');
-      }
+      if(mounted) setState(() => _message='Unable to delete this account. No changes were confirmed.');
     } finally {
-      if (mounted) setState(() => _busy = false);
+      if(mounted) setState(() => _busy=false);
+    }
+  }
+  Future<void> _withdrawAi() async {
+    if(_busy)return;
+    setState(() { _busy=true; _message=null; });
+    try {
+      final state=(await _api.get('/api/v1/me/ai-consent'))['data'] as Map;
+      await _api.put('/api/v1/me/ai-consent',data:{'version':state['version'],'allowed':false});
+      if(mounted)setState(()=>_message='AI permission withdrawn. Manual features remain available.');
+    } catch (_) {
+      if(mounted)setState(()=>_message='Unable to update AI permission.');
+    } finally {if(mounted)setState(()=>_busy=false);}
+  }
+  Future<void> _openLegal(String path) async {
+    final uri=SignApiConfig.baseUrl.replace(path:path,query:null,fragment:null);
+    if(!await launchUrl(uri,mode:LaunchMode.externalApplication)&&mounted) {
+      setState(()=>_message='Unable to open legal information.');
     }
   }
 
@@ -248,6 +246,16 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
               onPressed: _export,
             ),
             const SizedBox(height: 28),
+            const Text('AI Privacy', style: TextStyle(fontFamily:'Inter',fontSize:20,fontWeight:FontWeight.w600,color:AppColors.dark)),
+            const SizedBox(height:10),
+            const Text('AI features share selected content with OpenAI only with your permission. You can withdraw that permission at any time.'),
+            const SizedBox(height:12),
+            Sign2DigitalOutlinedButton(label:'Withdraw AI Permission',enabled:!_busy,primaryOutline:true,onPressed:_withdrawAi),
+            const SizedBox(height:12),
+            Sign2DigitalOutlinedButton(label:'Privacy Policy',primaryOutline:true,onPressed:()=>_openLegal('/privacy-policy')),
+            const SizedBox(height:10),
+            Sign2DigitalOutlinedButton(label:'Terms and Conditions',primaryOutline:true,onPressed:()=>_openLegal('/terms-and-conditions')),
+            const SizedBox(height:28),
             const Text('Account Deactivation',
               style: TextStyle(fontFamily: 'Inter', fontSize: 20,
                 fontWeight: FontWeight.w600, color: AppColors.dark)),

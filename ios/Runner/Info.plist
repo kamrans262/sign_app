@@ -89,7 +89,7 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
     <key>NSMicrophoneUsageDescription</key>
-    <string>Record spoken job details to fill the Create Job form.</string>
+    <string>Record voice requests for job details, documents and support. With permission, recordings may be sent to OpenAI for transcription.</string>
 
 	<key>NSCameraUsageDescription</key>
 	<string>Capture job progress photos using the camera.</string>
