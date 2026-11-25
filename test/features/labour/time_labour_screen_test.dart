@@ -157,7 +157,7 @@ void main() {
 
   testWidgets('connected Labour lists all saved hours and opens manual form from plus',
       (tester) async {
-    ActiveCompanySession.set(7);
+    ActiveCompanySession.setVerified(7, role: 'owner', permissions: const []);
     addTearDown(ActiveCompanySession.clear);
     final repository = _ManualOnlyRemoteLabourRepository();
     await tester.pumpWidget(MaterialApp(
@@ -210,7 +210,7 @@ void main() {
 
   testWidgets('live timer is accessible only from plus after choosing a job',
       (tester) async {
-    ActiveCompanySession.set(7);
+    ActiveCompanySession.setVerified(7, role: 'owner', permissions: const []);
     addTearDown(ActiveCompanySession.clear);
     final repository = _ManualOnlyRemoteLabourRepository();
     await tester.pumpWidget(MaterialApp(
@@ -369,7 +369,7 @@ void main() {
 
   testWidgets('company switch immediately clears old entries and ignores late loads',
       (tester) async {
-    ActiveCompanySession.set(7);
+    ActiveCompanySession.setVerified(7, role: 'owner', permissions: const []);
     addTearDown(ActiveCompanySession.clear);
     final repository=_SwitchingLabourStub();
     await tester.pumpWidget(MaterialApp(

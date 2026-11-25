@@ -171,6 +171,7 @@ void main() {
 
   testWidgets('live job manage menu uses existing sheet and correct action',
       (tester) async {
+    ActiveCompanySession.setVerified(5, role: 'owner', permissions: const []);
     String? selected;
     await tester.pumpWidget(MaterialApp(home: JobDetailsScreen(
       job: sampleJob(), details: JobDetailsModel.liveUnconnected(sampleJob()),
@@ -192,6 +193,7 @@ void main() {
 
   testWidgets('live landscape jobs keep all tabs without demo rows',
       (tester) async {
+    ActiveCompanySession.setVerified(5, role: 'owner', permissions: const []);
     tester.view.physicalSize = const Size(1024, 768);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);

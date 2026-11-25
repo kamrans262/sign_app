@@ -29,7 +29,8 @@ void main() {
     'demo company repository supplies sample and accepts local edits',
     () async {
       final repository = DemoCompanyRepository();
-      expect((await repository.list()).single.companyName, 'Alpine Studio');
+      final initial = await repository.list();
+      expect(initial.map((company) => company.companyName), contains('Alpine Studio'));
       final profile = CompanyProfile(
         id: 'demo-current-company',
         companyName: 'New Demo Company',
@@ -47,7 +48,7 @@ void main() {
       );
       await repository.save(profile);
       expect((await repository.byId(profile.id))?.logoFileName, 'brand.svg');
-      expect((await repository.list()).length, 2);
+      expect((await repository.list()).length, initial.length + 1);
     },
   );
 }

@@ -79,7 +79,7 @@ void main() {
     expect(QuoteTrackingHomeSession.currentQuote, isNull);
   });
 
-  test('server retains user editable quote number separately from reference',
+  test('server assigns the immutable quote number rather than a local override',
       () async {
     var requests = 0;
     final service = RemoteQuoteRepository(
@@ -89,7 +89,7 @@ void main() {
         expect(request.url.path, '/api/v1/quotes');
         expect(request.headers['X-Company-Id'], '5');
         final body = jsonDecode(request.body) as Map<String, dynamic>;
-        expect(body['quote_number'], 'R-2026/004');
+        expect(body.containsKey('quote_number'), isFalse);
         expect(body.containsKey('reference_number'), isFalse);
         expect(body.containsKey('status'), isFalse);
         return http.Response(jsonEncode({
@@ -97,8 +97,8 @@ void main() {
             'quote': {
               'id': 52,
               'company_id': 5,
-              'reference_number': 'Q-2026-000052',
-              'quote_number': 'R-2026/004',
+              'reference_number': 'Q-001',
+              'quote_number': 'Q-001',
               'status': 'draft',
               'revision': 1,
             },
@@ -108,7 +108,7 @@ void main() {
     );
     final saved = await service.saveDraft(sampleQuote());
     expect(saved.serverId, 52);
-    expect(saved.quoteNumber, 'R-2026/004');
+    expect(saved.quoteNumber, 'Q-001');
     expect(saved.approvedLocally, isFalse);
     expect(requests, 1);
   });
