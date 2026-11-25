@@ -8,7 +8,6 @@ import 'package:sign2digital/features/jobs/data/mock_jobs.dart';
 import 'package:sign2digital/features/jobs/domain/job_photo_model.dart';
 import 'package:sign2digital/features/jobs/presentation/screens/add_photos_screen.dart';
 import 'package:sign2digital/features/jobs/presentation/screens/job_photos_screen.dart';
-import 'package:sign2digital/features/jobs/presentation/widgets/sign2digital_job_photo_card.dart';
 
 class _FakePhotoSource implements JobPhotoSource {
   _FakePhotoSource({this.pick, this.cancel = false});

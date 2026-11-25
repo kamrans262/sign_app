@@ -17,7 +17,6 @@ import '../../../jobs/data/mock_jobs.dart';
 import '../../../jobs/data/remote_job_repository.dart';
 import '../../../auth/data/mobile_auth_repository.dart';
 import '../../data/remote_general_document_repository.dart';
-import 'general_document_editor_screen.dart';
 import '../../../jobs/domain/job_model.dart';
 import '../../../jobs/models/extracted_job_details.dart';
 import '../../../jobs/presentation/screens/job_notes_screen.dart';

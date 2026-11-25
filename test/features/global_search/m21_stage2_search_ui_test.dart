@@ -8,7 +8,6 @@ import 'package:http/testing.dart';
 import 'package:sign2digital/core/services/active_company_session.dart';
 import 'package:sign2digital/core/services/sign_api_client.dart';
 import 'package:sign2digital/features/company/data/remote_company_repository.dart';
-import 'package:sign2digital/features/global_search/data/global_search_source.dart';
 import 'package:sign2digital/features/global_search/data/global_search_filter_picker.dart';
 import 'package:sign2digital/features/global_search/data/remote_global_search_provider.dart';
 import 'package:sign2digital/features/global_search/presentation/screens/global_search_screen.dart';
