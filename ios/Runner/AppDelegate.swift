@@ -169,6 +169,14 @@ private final class StoreKitBridge {
             product.type == .autoRenewable else {
         result(FlutterError(code: "unavailable", message: nil, details: nil)); return
       }
+      // An Apple subscription group belongs to one Apple account. Prevent
+      // a second tenant from purchasing against another tenant's active transaction.
+      for await v in StoreKit.Transaction.currentEntitlements {
+        if case .verified(let t) = v, t.productType == .autoRenewable,
+           t.appAccountToken != uuid {
+          result(FlutterError(code: "other_company", message: "This Apple subscription belongs to another company.", details: nil)); return
+        }
+      }
       switch try await product.purchase(options: [.appAccountToken(uuid)]) {
       case .success(let verification):
         guard case .verified(let t) = verification else {

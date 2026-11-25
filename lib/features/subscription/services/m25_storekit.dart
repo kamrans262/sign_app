@@ -40,6 +40,9 @@ abstract final class M25StoreKit {
       if(token is! String)throw const SignApiException('Purchase authorization is unavailable.');
       final result=await _channel.invokeMapMethod<String,dynamic>('purchase',{'id':product,'token':token});
       final status=result?['status'];
+      if(status=='cancelled' && ActiveCompanySession.companyId==company) {
+        await api.post('/api/v1/billing/apple/cancel-pending',companyScoped:true);
+      }
       if(status!='purchased')return status as String? ?? 'pending';
       final id=result?['id'];
       if(id is! String)throw const SignApiException('Purchase verification is pending.');

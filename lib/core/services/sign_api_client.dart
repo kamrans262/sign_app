@@ -411,7 +411,11 @@ class SignApiClient {
   Future<void> _requireAiConsent(String endpoint) async {
     if (_aiPath.hasMatch(endpoint)) {
       final prompt = aiConsentPrompt;
-      if (prompt != null) await prompt(this);
+      if (prompt != null) {
+        final token=await _tokenProvider?.call();
+        await prompt(this);
+        if(token==null||token!=await _tokenProvider?.call())throw const SignApiException('Account changed. Try again.');
+      }
     }
   }
   SignApiClient({

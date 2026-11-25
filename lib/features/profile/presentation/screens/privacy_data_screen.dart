@@ -12,6 +12,10 @@ import '../../../../core/widgets/sign2digital_input_field.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../../../core/widgets/sign2digital_outlined_button.dart';
 import '../../../auth/data/mobile_auth_repository.dart';
+import '../../../auth/services/apple_sign_in_client.dart';
+import '../../../subscription/services/m25_storekit.dart';
+import '../../../../core/widgets/sign2digital_selection_field.dart';
+import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import '../../../auth/presentation/screens/mobile_auth_gateway.dart';
 
 /// Personal-account privacy controls. Company jobs and issued documents are
@@ -131,64 +135,114 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
 
   Future<void> _deleteAccount() async {
     if (_busy) return;
-    final start = await showDialog<bool>(context: context, builder: (dialog) =>
-      Sign2DigitalApprovedConfirmation(
-        title: const Text('Permanently Delete Account?'),
-        content: const Text('Your personal profile and private support data will be erased. '
-          'Business records may be retained. Review active subscriptions separately. '
-          'We will send a verification code to your registered email. '
-          'If your company has other members, ownership must be resolved first.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(dialog).pop(false), child: const Text('Keep Account')),
-          TextButton(onPressed: () => Navigator.of(dialog).pop(true), child: const Text('Send Code')),
-        ],
-      ));
-    if (start != true || !mounted) return;
     setState(() { _busy = true; _message = null; });
     try {
-      final challenge = await _api.post('/api/v1/me/deletion/challenge');
+      final options=(await _api.get('/api/v1/me/deletion/options'))['data'] as Map;
       if (!mounted) return;
-      final requires2fa = (challenge['data'] as Map?)?['two_factor_required'] == true;
-      var code = '', confirmation = '', second = '';
-      final approved = await showDialog<Map<String, dynamic>>(context: context,
-        builder: (dialog) => StatefulBuilder(builder: (context, refresh) =>
-          Sign2DigitalApprovedConfirmation(
-            title: const Text('Confirm Account Deletion'),
-            content: Column(mainAxisSize: MainAxisSize.min, children: [
-              const Text('Enter the emailed code and type DELETE. This cannot be undone.'),
-              const SizedBox(height: 12),
-              Sign2DigitalInputField(key: const Key('m25-delete-code'), label: 'Verification Code',
-                hintText: 'Six-digit email code', iconAsset: '', onChanged: (v) => refresh(() => code=v.trim())),
-              const SizedBox(height: 12),
-              Sign2DigitalInputField(key: const Key('m22-delete-type'), label: 'Confirmation',
-                hintText: 'Type DELETE', iconAsset: '', onChanged: (v) => refresh(() => confirmation=v)),
-              if (requires2fa) ...[
-                const SizedBox(height: 12),
-                Sign2DigitalInputField(label: 'Authenticator or Recovery Code', hintText: 'Enter code',
-                  iconAsset: '', onChanged: (v) => refresh(() => second=v.trim())),
-              ],
-            ]),
-            actions: [
-              TextButton(onPressed: () => Navigator.of(dialog).pop(), child: const Text('Keep Account')),
-              TextButton(key: const Key('m22-delete-confirm'),
-                onPressed: confirmation == 'DELETE' && RegExp(r'^[0-9]{6}$').hasMatch(code) && (!requires2fa || second.isNotEmpty)
-                  ? () => Navigator.of(dialog).pop({'code': code,'confirmation': confirmation,if(requires2fa)'two_factor_code':second}) : null,
-                child: const Text('Delete Account')),
+      final companies=(options['companies'] as List).map((v)=>Map<String,dynamic>.from(v as Map)).toList();
+      if (options['platform_admin']==true) {
+        setState(()=>_message='Transfer platform administration before deleting this account.');
+        return;
+      }
+      final apple=M25StoreKit.isIos && options['apple_linked']==true;
+      final requires2fa=options['two_factor_required']==true;
+      final transfers=<String,int>{};
+      var closeSole=false;
+      var confirmation='',second='',code='';
+      final hasSole=companies.any((c)=>c['can_close']==true);
+      final shared=companies.where((c)=>c['can_close']!=true).toList();
+      if(shared.any((c)=>(c['successors'] as List).isEmpty)) {
+        setState(()=>_message='An active company administrator must be available to take ownership. Use Help & Support to arrange transfer.');
+        return;
+      }
+      final accepted=await showDialog<bool>(context:context,
+        builder:(dialog)=>StatefulBuilder(builder:(context,refresh)=>Sign2DigitalApprovedConfirmation(
+          title:const Text('Permanently Delete Account?'),
+          content:Column(mainAxisSize:MainAxisSize.min,children:[
+            const Text('Your personal profile and private support data will be erased and sessions revoked. Required business records may be retained. Cancel any subscriptions separately; you can delete now without waiting for a billing period to end.'),
+            if(M25StoreKit.isIos) TextButton(onPressed:() async {try{await M25StoreKit.manage();}catch(_){}},child:const Text('Manage Apple Subscription')),
+            if(hasSole) CheckboxListTile(
+              contentPadding:EdgeInsets.zero,value:closeSole,
+              title:const Text('Close my sole-owner companies and retain required business records.'),
+              onChanged:(v)=>refresh(()=>closeSole=v==true)),
+            for(final c in shared) ...[
+              const SizedBox(height:12),
+              Sign2DigitalSelectionField(label:'Transfer ${c['name']}',hintText:'Choose new owner',iconAsset:'',
+                leadingIcon:Icons.people_outline,
+                value:(c['successors'] as List).cast<Map>().where((m)=>m['id']==transfers['${c['id']}']).map((m)=>m['name'] as String).firstOrNull,
+                onTap:() async {
+                  final choices=(c['successors'] as List).cast<Map>();
+                  final selected=await Sign2DigitalSelectionSheet.show(context,title:'Transfer ${c['name']}',
+                    options:choices.map((m)=>'${m['id']}').toList(),labelForOption:(id)=>'${choices.firstWhere((m)=>'${m['id']}'==id)['name']}');
+                  if(selected!=null && context.mounted)refresh(()=>transfers['${c['id']}']=int.parse(selected));
+                }),
             ],
-          )));
-      if (!mounted || approved == null) return;
-      final response = await _api.post('/api/v1/me/deletion/complete', data: approved);
-      if ((response['data'] as Map?)?['deleted'] != true) throw const SignApiException('Deletion was not confirmed.');
-      try { await MobileAuthRepository.shared.logout(); } catch (_) {}
-      if (!mounted) return;
-      Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute<void>(builder: (_) => const MobileAuthGateway()), (_) => false);
-    } on SignApiException catch (error) {
-      if(mounted) setState(() => _message=error.message);
-    } catch (_) {
-      if(mounted) setState(() => _message='Unable to delete this account. No changes were confirmed.');
-    } finally {
-      if(mounted) setState(() => _busy=false);
-    }
+            if(apple) const Text('You will confirm your identity with Apple.'),
+          ]),
+          actions:[
+            TextButton(onPressed:()=>Navigator.of(dialog).pop(false),child:const Text('Keep Account')),
+            TextButton(onPressed:(!hasSole||closeSole)&&shared.every((c)=>transfers.containsKey('${c['id']}'))
+              ?()=>Navigator.of(dialog).pop(true):null,child:const Text('Continue')),
+          ])));
+      if(accepted!=true||!mounted)return;
+      Map<String,dynamic> proof={};
+      if(apple) {
+        final challenge=await _api.post('/api/v1/auth/apple/challenge',authenticated:false);
+        final nonce=(challenge['data'] as Map)['nonce'] as String;
+        final credential=await AppleSignInClient.signIn(nonce);
+        if(credential==null||!mounted)return;
+        proof={'apple_id_token':credential['id_token'],'apple_nonce':nonce,
+          if(credential['authorization_code']!=null)'apple_authorization_code':credential['authorization_code']};
+      } else {
+        await _api.post('/api/v1/me/deletion/challenge');
+      }
+      if(!mounted)return;
+      final approved=await showDialog<Map<String,dynamic>>(context:context,
+        builder:(dialog)=>StatefulBuilder(builder:(context,refresh)=>Sign2DigitalApprovedConfirmation(
+          title:const Text('Confirm Account Deletion'),
+          content:Column(mainAxisSize:MainAxisSize.min,children:[
+            Text(apple?'Type DELETE to permanently erase your account.':'Enter the emailed code and type DELETE. This cannot be undone.'),
+            if(!apple)...[
+              const SizedBox(height:12),
+              Sign2DigitalInputField(key:const Key('m25-delete-code'),label:'Verification Code',hintText:'Six-digit email code',iconAsset:'',
+                leadingIcon:Icons.mail_outline,keyboardType:TextInputType.number,onChanged:(v)=>refresh(()=>code=v.trim())),
+            ],
+            const SizedBox(height:12),
+            Sign2DigitalInputField(key:const Key('m22-delete-type'),label:'Confirmation',hintText:'Type DELETE',iconAsset:'',
+              leadingIcon:Icons.warning_amber_outlined,onChanged:(v)=>refresh(()=>confirmation=v)),
+            if(requires2fa)...[
+              const SizedBox(height:12),
+              Sign2DigitalInputField(label:'Authenticator or Recovery Code',hintText:'Enter code',iconAsset:'',
+                leadingIcon:Icons.lock_outline,onChanged:(v)=>refresh(()=>second=v.trim())),
+            ],
+          ]),
+          actions:[
+            TextButton(onPressed:()=>Navigator.of(dialog).pop(),child:const Text('Keep Account')),
+            TextButton(key:const Key('m22-delete-confirm'),
+              onPressed:confirmation=='DELETE'&&(apple||RegExp(r'^[0-9]{6}$').hasMatch(code))&&(!requires2fa||second.isNotEmpty)
+                ?()=>Navigator.of(dialog).pop(<String,dynamic>{
+                  ...proof,if(!apple)'code':code,'confirmation':'DELETE',
+                  if(requires2fa)'two_factor_code':second,'close_sole_owned':closeSole,'ownership_transfers':transfers,
+                }):null,child:const Text('Delete Account')),
+          ])));
+      if(!mounted||approved==null)return;
+      final response=await _api.post('/api/v1/me/deletion/complete',data:approved);
+      if((response['data'] as Map?)?['deleted']!=true)throw const SignApiException('Deletion was not confirmed.');
+      final manual=(response['data'] as Map?)?['manual_apple_revocation']==true;
+      if(manual&&mounted){
+        await showDialog<void>(context:context,builder:(dialog)=>Sign2DigitalApprovedConfirmation(
+          title:const Text('Account Deleted'),
+          content:const Text('To remove any remaining Apple authorization, open Settings, your Apple Account, Sign in with Apple, Sign2Digital, and choose Stop Using Apple ID.'),
+          actions:[TextButton(onPressed:()=>Navigator.of(dialog).pop(),child:const Text('Done'))]));
+      }
+      try{await MobileAuthRepository.shared.logout();}catch(_){}
+      if(!mounted)return;
+      Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute<void>(builder:(_)=>const MobileAuthGateway()),(_)=>false);
+    } on SignApiException catch(error){
+      if(mounted)setState(()=>_message=error.message);
+    } catch(_){
+      if(mounted)setState(()=>_message='Unable to delete this account. No changes were confirmed.');
+    } finally{if(mounted)setState(()=>_busy=false);}
   }
   Future<void> _withdrawAi() async {
     if(_busy)return;
