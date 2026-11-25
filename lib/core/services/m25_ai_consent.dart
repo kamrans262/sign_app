@@ -18,7 +18,7 @@ abstract final class M25AiConsent {
   }
   static Future<void> _ensure(SignApiClient api, BuildContext? context) async {
     final state = (await api.get('/api/v1/me/ai-consent'))['data'];
-    if (state is! Map || state['version'] is! String) {
+    if (state is! Map || state['version'] is! String || state['user_id'] is! int) {
       throw const SignApiException('AI privacy configuration is unavailable.');
     }
     if (state['allowed'] == true) return;
@@ -41,7 +41,7 @@ abstract final class M25AiConsent {
         ],
       ));
     if (allowed != true) throw const SignApiException('AI assistance was not enabled.');
-    final updated = await api.put('/api/v1/me/ai-consent', data: {'allowed': true, 'version': state['version']});
+    final updated = await api.put('/api/v1/me/ai-consent', data: {'allowed': true, 'version': state['version'], 'user_id': state['user_id']});
     if ((updated['data'] as Map?)?['allowed'] != true) throw const SignApiException('AI permission was not saved.');
   }
 }

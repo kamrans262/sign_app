@@ -169,7 +169,7 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
               const SizedBox(height:12),
               Sign2DigitalSelectionField(label:'Transfer ${c['name']}',hintText:'Choose new owner',iconAsset:'',
                 leadingIcon:Icons.people_outline,
-                value:(c['successors'] as List).cast<Map>().where((m)=>m['id']==transfers['${c['id']}']).map((m)=>m['name'] as String).firstOrNull,
+                value:transfers.containsKey('${c['id']}') ? (c['successors'] as List).cast<Map>().firstWhere((m)=>m['id']==transfers['${c['id']}'])['name'] as String : null,
                 onTap:() async {
                   final choices=(c['successors'] as List).cast<Map>();
                   final selected=await Sign2DigitalSelectionSheet.show(context,title:'Transfer ${c['name']}',
@@ -249,7 +249,7 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
     setState(() { _busy=true; _message=null; });
     try {
       final state=(await _api.get('/api/v1/me/ai-consent'))['data'] as Map;
-      await _api.put('/api/v1/me/ai-consent',data:{'version':state['version'],'allowed':false});
+      await _api.put('/api/v1/me/ai-consent',data:{'version':state['version'],'allowed':false,'user_id':state['user_id']});
       if(mounted)setState(()=>_message='AI permission withdrawn. Manual features remain available.');
     } catch (_) {
       if(mounted)setState(()=>_message='Unable to update AI permission.');
