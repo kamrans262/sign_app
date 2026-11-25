@@ -56,7 +56,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 50));
     expect(find.byType(AiVoiceFlowDialog), findsOneWidget);
-    expect(find.text('Record Deposit Details'), findsOneWidget);
+    expect(find.text('Record Job Details'), findsOneWidget);
     await tester.tap(find.byKey(const Key('voice-cancel')));
     await tester.pumpAndSettle();
     expect(recorder.cancels, 1);

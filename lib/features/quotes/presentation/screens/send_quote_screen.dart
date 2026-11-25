@@ -512,6 +512,7 @@ class _SendQuoteScreenState extends State<SendQuoteScreen> {
             await Clipboard.setData(ClipboardData(text: url.toString()));
           }
         }
+        if (!mounted) return;
         final quoteId = _quote.serverId!;
         final requestId = confirmed.id;
         final currentQuote = _quote.copy();

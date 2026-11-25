@@ -22,8 +22,10 @@ summary = [re.fullmatch(r"\s*(\d+) issues? found\.\s*", line) for line in lines]
 counts = [int(match.group(1)) for match in summary if match]
 if (result.returncode == 1 and diagnostics and counts == [len(diagnostics)]
     and all(line.startswith("info - ")
-            and "'package:flutter/material.dart' is deprecated" in line
-            and "package:material_ui/material_ui.dart" in line
+            and (("'package:flutter/material.dart' is deprecated" in line
+                  and "package:material_ui/material_ui.dart" in line)
+                 or ("'package:flutter/cupertino.dart' is deprecated" in line
+                     and "package:cupertino_ui/cupertino_ui.dart" in line))
             and line.endswith(" - deprecated_member_use") for line in diagnostics)):
     print("Only the documented Flutter Material import compatibility notices remain.")
     sys.exit(0)
