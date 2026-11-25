@@ -9,6 +9,8 @@
     <!-- M23 Stripe Checkout returns via this mobile URL scheme. -->
     <key>FlutterDeepLinkingEnabled</key>
     <false/>
+    <key>GIDClientID</key>
+    <string>473496260414-4i054req2o6eot89cenm7tmm0bd0iarm.apps.googleusercontent.com</string>
     <key>CFBundleURLTypes</key>
     <array>
         <dict>
@@ -16,6 +18,12 @@
             <string>Sign2Digital Checkout</string>
             <key>CFBundleURLSchemes</key>
             <array><string>sign2digital</string></array>
+        </dict>
+        <dict>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>CFBundleURLSchemes</key>
+            <array><string>com.googleusercontent.apps.473496260414-4i054req2o6eot89cenm7tmm0bd0iarm</string></array>
         </dict>
     </array>
 	<key>CFBundleDisplayName</key>
