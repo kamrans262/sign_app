@@ -16,6 +16,7 @@ import '../../domain/subscription_plan.dart';
 import '../widgets/subscription_current_plan_card.dart';
 import '../widgets/subscription_management_action_card.dart';
 import 'choose_plan_screen.dart';
+import '../../services/m25_storekit.dart';
 
 /// Manages an existing subscription without pretending demo status is verified.
 /// Payment and billing callbacks are supplied by the future backend integration.
@@ -386,7 +387,13 @@ class _SubscriptionManagementScreenState
                   icon: Icons.swap_horiz_rounded,
                   onTap: _changePlan,
                 ),
-                if (_data!.canManageBilling || _data!.demoOnly) ...[
+                if (M25StoreKit.isIos) ...[
+                  const SizedBox(height: 20),
+                  SubscriptionManagementActionCard(title:'Manage Apple Subscription',
+                    subtitle:'View, change or cancel in the App Store',icon:Icons.credit_card_outlined,
+                    onTap:() async {try{await M25StoreKit.manage();await _load();}catch(_){if(mounted)_notice('Apple subscription settings are unavailable.');}}),
+                ],
+                if (!M25StoreKit.isIos && (_data!.canManageBilling || _data!.demoOnly)) ...[
                   const SizedBox(height: 20),
                   SubscriptionManagementActionCard(
                     key: const Key('subscription-action-payment-method'),
@@ -414,7 +421,7 @@ class _SubscriptionManagementScreenState
                   icon: Icons.format_list_bulleted_rounded,
                   onTap: _usage,
                 ),
-                if (_canCancelSubscription) ...[
+                if (!M25StoreKit.isIos && _canCancelSubscription) ...[
                   const SizedBox(height: 20),
                   SubscriptionManagementActionCard(
                     key: const Key('subscription-action-cancel'),

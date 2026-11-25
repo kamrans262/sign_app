@@ -12,6 +12,7 @@ import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform;
 import 'core/theme/app_theme.dart';
 import 'core/services/sign_api_client.dart';
 import 'core/services/m25_ai_consent.dart';
+import 'features/subscription/services/m25_storekit.dart';
 import 'features/profile/data/app_settings_repository.dart';
 import 'features/auth/data/mobile_auth_repository.dart';
 import 'features/auth/presentation/screens/mobile_auth_gateway.dart';
@@ -40,6 +41,7 @@ Future<void> main() async {
   }
   // Catch Checkout links before splash/session restore, including cold starts.
   M23BillingDeepLinks.start();
+  M25StoreKit.start();
   // Existing platforms with native Firebase configuration initialize here.
   // Missing configuration is nonfatal while M20 push delivery is disabled.
   if (!kIsWeb && (defaultTargetPlatform == TargetPlatform.android ||

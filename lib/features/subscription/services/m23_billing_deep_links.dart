@@ -57,8 +57,7 @@ abstract final class M23BillingDeepLinks {
   static bool _showing = false;
 
   static void start() {
-    if (kIsWeb || (defaultTargetPlatform != TargetPlatform.android &&
-        defaultTargetPlatform != TargetPlatform.iOS)) return;
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
     _subscription ??= AppLinks().uriLinkStream.listen(
       accept, onError: (Object _) {
         // A failed deep link never interrupts the regular application.
@@ -68,6 +67,7 @@ abstract final class M23BillingDeepLinks {
 
   @visibleForTesting
   static void accept(Uri uri) {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) return;
     final parsed = M23BillingReturn.parse(uri);
     if (parsed == null) return;
     _pending = parsed;

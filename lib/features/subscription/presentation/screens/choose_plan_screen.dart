@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../auth/data/mobile_auth_repository.dart';
 import '../../data/remote_subscription_repository.dart';
 import 'subscription_payment_details_screen.dart';
+import '../../services/m25_storekit.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
@@ -144,6 +145,10 @@ class _ChoosePlanScreenState extends State<ChoosePlanScreen> {
       _notice('Payment Details is not connected yet. Your selection is saved.');
       return;
     }
+    if (M25StoreKit.isIos && current.appleProductId==null) {
+      _notice('Apple subscription product is unavailable.');
+      return;
+    }
     Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
       builder: (_) => SubscriptionPaymentDetailsScreen(
         plan: current,
@@ -231,6 +236,17 @@ class _ChoosePlanScreenState extends State<ChoosePlanScreen> {
                       ),
                     ),
                   ],
+                ],
+                if (M25StoreKit.isIos && _catalog is RemoteSubscriptionPlanCatalog) ...[
+                  const SizedBox(height: 16),
+                  TextButton(onPressed: _loading?null:() async {
+                    setState(()=>_loading=true);
+                    try {
+                      final count=await (widget.billingRepository??RemoteSubscriptionRepository()).restoreApple();
+                      if(mounted)_notice(count>0?'Apple purchases verified.':'No matching Apple purchases found for this company.');
+                    } catch (_) { if(mounted)_notice('Restore is unavailable. Please retry.'); }
+                    finally {if(mounted)setState(()=>_loading=false);}
+                  },child:const Text('Restore Purchases')),
                 ],
               ],
             ),
