@@ -24,7 +24,6 @@ class SubscriptionPlanOption {
     this.canCheckout = false,
     this.amountMinor,
     this.currency,
-    this.appleProductId,
   });
 
   final String id;
@@ -40,7 +39,6 @@ class SubscriptionPlanOption {
   /// Published, admin-owned price in currency minor units; never trusted to charge.
   final int? amountMinor;
   final String? currency;
-  final String? appleProductId;
 }
 
 /// Plans can later be loaded from the billing catalog without changing UI.

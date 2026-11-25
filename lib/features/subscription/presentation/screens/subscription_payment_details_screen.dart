@@ -9,8 +9,6 @@ import '../../../quotes/presentation/widgets/sign2digital_quote_shadow_panel.dar
 import '../../data/remote_subscription_repository.dart';
 import '../../domain/subscription_plan.dart';
 import '../widgets/subscription_feature_list.dart';
-import '../../services/m25_storekit.dart';
-import '../../../../core/services/sign_api_client.dart';
 
 /// M23 Stripe-hosted payment review. Flutter NEVER collects credit cards,
 /// treats a redirect as payment, or fabricates paid entitlement.
@@ -56,18 +54,6 @@ class _SubscriptionPaymentDetailsScreenState
     }
     setState(() { _working=true; _error=null; });
     try {
-      if (M25StoreKit.isIos) {
-        final product=widget.plan.appleProductId;
-        if(product==null)throw const SignApiException('Apple product unavailable.');
-        final status=await _repository.applePurchase(product);
-        if(mounted)setState(()=>_status=switch(status){
-          'active'=>'Apple subscription verified.',
-          'cancelled'=>'Purchase cancelled.',
-          'provider_conflict'=>'Purchase verified, but another provider is connected. Contact support.',
-          _=>'Purchase status: $status. Restore purchases to refresh.',
-        });
-        return;
-      }
       if (widget.changeExistingPlan) {
         final preview=await _repository.previewChange(planId);
         if (!mounted) return;
@@ -154,8 +140,7 @@ class _SubscriptionPaymentDetailsScreenState
 
   @override
   Widget build(BuildContext context) {
-    final ios=M25StoreKit.isIos;
-    final enabled=widget.plan.canCheckout && (!ios || widget.plan.appleProductId!=null) &&
+    final enabled=widget.plan.canCheckout &&
         widget.plan.serverPlanId!=null &&
         widget.plan.serverPlanId!>0;
     return Scaffold(
@@ -182,7 +167,7 @@ class _SubscriptionPaymentDetailsScreenState
                       style:const TextStyle(fontFamily:'Inter',fontSize:16,
                         fontWeight:FontWeight.w600,color:AppColors.dark)),
                     const SizedBox(height:8),
-                    Text(ios && widget.plan.appleProductId==null?'Price unavailable':widget.plan.priceLabel,key:const Key('m23-review-price'),
+                    Text(widget.plan.priceLabel,key:const Key('m23-review-price'),
                       style:const TextStyle(fontFamily:'Inter',fontSize:20,
                         fontWeight:FontWeight.w600,color:AppColors.primary)),
                     const SizedBox(height:12),
@@ -200,7 +185,7 @@ class _SubscriptionPaymentDetailsScreenState
                 padding:const EdgeInsets.all(20),
                 child:Column(crossAxisAlignment:CrossAxisAlignment.start,
                   children:[
-                    Text(ios ? 'Apple App Store subscription' : enabled
+                    Text(enabled
                         ? (widget.changeExistingPlan
                             ? 'Review plan change' : 'Secure Stripe Checkout')
                         : 'Payment setup is pending',
@@ -208,9 +193,7 @@ class _SubscriptionPaymentDetailsScreenState
                       style:const TextStyle(fontFamily:'Inter',fontSize:16,
                         fontWeight:FontWeight.w600,color:AppColors.dark)),
                     const SizedBox(height:10),
-                    Text(ios
-                      ? 'Payment is charged to your Apple Account. The subscription automatically renews unless cancelled at least 24 hours before the current period ends. Manage or cancel in Apple subscription settings. Access is confirmed only after server verification.'
-                      : enabled
+                    Text(enabled
                       ? (widget.changeExistingPlan
                           ? 'Review the Stripe billing preview and explicitly '
                             'confirm before changing the subscription.'
@@ -225,11 +208,6 @@ class _SubscriptionPaymentDetailsScreenState
                         color:AppColors.placeholder)),
                 ]),
               ),
-              if(ios)...[
-                TextButton(onPressed:()=>_open(SignApiConfig.baseUrl.replace(path:'/terms-and-conditions')),child:const Text('Terms and Conditions')),
-                TextButton(onPressed:()=>_open(SignApiConfig.baseUrl.replace(path:'/privacy-policy')),child:const Text('Privacy Policy')),
-                TextButton(onPressed:_working?null:() async {try{final count=await _repository.restoreApple();if(mounted)setState(()=>_status=count>0?'Purchases verified.':'No matching purchase found.');}catch(_){if(mounted)setState(()=>_error='Restore unavailable.');}},child:const Text('Restore Purchases')),
-              ],
               if(_status!=null)...[
                 const SizedBox(height:20),
                 Text(_status!,key:const Key('m23-provider-status'),
@@ -262,7 +240,7 @@ class _SubscriptionPaymentDetailsScreenState
           child:Padding(padding:const EdgeInsets.fromLTRB(20,10,20,20),
             child:Sign2DigitalPrimaryButton(
               key:const Key('m23-checkout-unavailable'),
-              label:ios?'Subscribe with Apple':widget.changeExistingPlan
+              label:widget.changeExistingPlan
                   ? 'Review and Confirm Plan Change'
                   : 'Continue to Secure Checkout',
               enabled:enabled && !_working,

@@ -13,7 +13,7 @@ import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../../../core/widgets/sign2digital_outlined_button.dart';
 import '../../../auth/data/mobile_auth_repository.dart';
 import '../../../auth/services/apple_sign_in_client.dart';
-import '../../../subscription/services/m25_storekit.dart';
+import 'package:flutter/foundation.dart';
 import '../../../../core/widgets/sign2digital_selection_field.dart';
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import '../../../auth/presentation/screens/mobile_auth_gateway.dart';
@@ -144,7 +144,7 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
         setState(()=>_message='Transfer platform administration before deleting this account.');
         return;
       }
-      final apple=M25StoreKit.isIos && options['apple_linked']==true;
+      final apple=!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS && options['apple_linked']==true;
       final requires2fa=options['two_factor_required']==true;
       final transfers=<String,int>{};
       var closeSole=false;
@@ -160,7 +160,6 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
           title:const Text('Permanently Delete Account?'),
           content:Column(mainAxisSize:MainAxisSize.min,children:[
             const Text('Your personal profile and private support data will be erased and sessions revoked. Required business records may be retained. Cancel any subscriptions separately; you can delete now without waiting for a billing period to end.'),
-            if(M25StoreKit.isIos) TextButton(onPressed:() async {try{await M25StoreKit.manage();}catch(_){}},child:const Text('Manage Apple Subscription')),
             if(hasSole) CheckboxListTile(
               contentPadding:EdgeInsets.zero,value:closeSole,
               title:const Text('Close my sole-owner companies and retain required business records.'),

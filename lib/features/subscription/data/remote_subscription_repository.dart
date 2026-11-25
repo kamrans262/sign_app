@@ -5,7 +5,6 @@ import '../../../core/services/active_company_session.dart';
 import '../../auth/data/mobile_auth_repository.dart';
 import '../domain/subscription_plan.dart';
 import 'subscription_overview_repository.dart';
-import '../services/m25_storekit.dart';
 
 /// Authenticated, company-bound M23 data: no local subscription/status fixture.
 class RemoteSubscriptionRepository implements SubscriptionOverviewRepository {
@@ -69,9 +68,8 @@ class RemoteSubscriptionRepository implements SubscriptionOverviewRepository {
     }
     return SubscriptionOverview(
       planName: _string(result['plan_name']),
-      provider: _string(result['provider']),
       status: _string(result['status']),
-      priceLabel: M25StoreKit.isIos ? null : _string(result['price_label']),
+      priceLabel: _string(result['price_label']),
       billingDescription: _string(result['billing_description']),
       features: features is List ? allowed : null,
       usage: SubscriptionUsage(
@@ -83,16 +81,13 @@ class RemoteSubscriptionRepository implements SubscriptionOverviewRepository {
       freeDocumentsRemaining: _integer(allowance['remaining']),
       freeDocumentsUsed: _integer(allowance['used']),
       enforcementEnabled: allowance['enforcement_enabled'] == true,
-      canCheckout: !M25StoreKit.isIos && result['can_checkout'] == true,
-      canManageBilling: !M25StoreKit.isIos && result['can_manage_billing'] == true,
+      canCheckout: result['can_checkout'] == true,
+      canManageBilling: result['can_manage_billing'] == true,
       cancelAtPeriodEnd: result['cancel_at_period_end'] == true,
       periodEndsAt: _string(result['period_ends_at']),
       demoOnly: false,
     );
   }
-
-  Future<String> applePurchase(String product) => M25StoreKit.purchase(_api, product);
-  Future<int> restoreApple() => M25StoreKit.restore(_api);
 
   Future<Map<String, dynamic>> usage() => _get('/api/v1/billing/usage');
   Future<Map<String, dynamic>> history() => _get('/api/v1/billing/history');
@@ -112,7 +107,6 @@ class RemoteSubscriptionRepository implements SubscriptionOverviewRepository {
 
   Future<Map<String, dynamic>> _write(
       String endpoint, Map<String, dynamic> body) async {
-    if (M25StoreKit.isIos) throw const SignApiException('Use Apple subscription management on iOS.');
     final company = ActiveCompanySession.companyId;
     if (company == null || company < 1) {
       throw const SignApiException('Choose a company before managing billing.');
@@ -227,13 +221,6 @@ class RemoteSubscriptionPlanCatalog implements SubscriptionPlanCatalog {
       throw const SignApiException('Invalid plan catalogue.');
     }
     final parsed = <SubscriptionPlanOption>[];
-    Map<String, dynamic>? apple;
-    List<Map<String,dynamic>> products = [];
-    if (M25StoreKit.isIos) {
-      apple = await M25StoreKit.catalog(_repo._api);
-      final ids = (apple['products'] as List).map((x)=>(x as Map)['id'] as String).toList();
-      if (apple['enabled'] == true) products = await M25StoreKit.products(ids);
-    }
     for (final item in plans) {
       final row = RemoteSubscriptionRepository._record(item);
       final code = RemoteSubscriptionRepository._string(row['code']);
@@ -249,20 +236,6 @@ class RemoteSubscriptionPlanCatalog implements SubscriptionPlanCatalog {
           period == null || featureLabels is! List ||
           featureLabels.any((label) => label is! String)) {
         throw const SignApiException('Invalid configured plan.');
-      }
-      if (M25StoreKit.isIos) {
-        final matches = (apple!['products'] as List).where((p)=>(p as Map)['plan_id']==row['id']).toList();
-        if(matches.isEmpty) continue;
-        final productId=(matches.first as Map)['id'] as String;
-        final available=products.where((p)=>p['id']==productId && p['period']==row['period']).toList();
-        if(available.isEmpty) continue;
-        parsed.add(SubscriptionPlanOption(serverPlanId: RemoteSubscriptionRepository._integer(row['id']),
-          appleProductId: productId, canCheckout: apple['can_purchase']==true,
-          id: code, name: name, period: period,
-          priceLabel: '${available.first['price']} / ${period==SubscriptionBillingPeriod.monthly?'month':'year'}',
-          description: RemoteSubscriptionRepository._string(row['description'])??'',
-          featureLabels: List<String>.unmodifiable(featureLabels.cast<String>())));
-        continue;
       }
       parsed.add(SubscriptionPlanOption(
         serverPlanId: RemoteSubscriptionRepository._integer(row['id']),

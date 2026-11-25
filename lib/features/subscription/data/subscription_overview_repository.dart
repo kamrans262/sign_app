@@ -30,7 +30,6 @@ class SubscriptionUsage {
 class SubscriptionOverview {
   const SubscriptionOverview({
     this.planName,
-    this.provider,
     this.status,
     this.priceLabel,
     this.billingDescription,
@@ -48,7 +47,6 @@ class SubscriptionOverview {
   });
 
   final String? planName;
-  final String? provider;
   final String? status;
   final String? priceLabel;
   final String? billingDescription;
