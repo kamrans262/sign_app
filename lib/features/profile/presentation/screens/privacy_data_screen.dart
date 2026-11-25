@@ -72,7 +72,7 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
 
   Future<void> _deactivate() async {
     if (_busy) return;
-    final password = TextEditingController();
+    var password = '';
     final approved = await showDialog<String>(
       context: context,
       builder: (dialog) => Sign2DigitalApprovedConfirmation(
@@ -84,7 +84,7 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
           const SizedBox(height: 16),
           Sign2DigitalInputField(
             key: const Key('m22-privacy-password'),
-            controller: password,
+            onChanged: (value) => password = value,
             label: 'Confirm Password',
             hintText: 'Enter account password',
             iconAsset: '',
@@ -99,12 +99,11 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
             child: const Text('Keep Account')),
           TextButton(
             key: const Key('m22-privacy-confirm'),
-            onPressed: () => Navigator.of(dialog).pop(password.text),
+            onPressed: () => Navigator.of(dialog).pop(password),
             child: const Text('Deactivate')),
         ],
       ),
     );
-    password.dispose();
     if (!mounted || approved == null || approved.isEmpty) return;
     setState(() { _busy = true; _message = null; });
     try {

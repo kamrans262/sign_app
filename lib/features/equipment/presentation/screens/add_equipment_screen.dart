@@ -100,31 +100,27 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
   }
 
   Future<String?> _customValue(String title) async {
-    final input = TextEditingController();
-    try {
-      final value = await showDialog<String>(
-        context: context,
-        builder: (dialog) => Sign2DigitalFormDialog(
-          title: Text('Enter $title'),
-          content: Sign2DigitalInputField(
-            key: const Key('equipment-custom-value'),
-            label: title, hintText: 'Enter $title',
-            iconAsset: '', leadingIcon: Icons.edit_outlined,
-            textCapitalization: TextCapitalization.words,
-            controller: input, maxLength: 100,
-            autofocus: true),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(dialog),
-              child: const Text('Cancel')),
-            TextButton(onPressed: () =>
-              Navigator.pop(dialog, input.text.trim()),
-              child: const Text('Use')),
-          ]),
-      );
-      return value == null || value.isEmpty ? null : value;
-    } finally {
-      input.dispose();
-    }
+    // The field owns its controller until the dialog's exit animation finishes.
+    var input = '';
+    final value = await showDialog<String>(
+      context: context,
+      builder: (dialog) => Sign2DigitalFormDialog(
+        title: Text('Enter $title'),
+        content: Sign2DigitalInputField(
+          key: const Key('equipment-custom-value'),
+          label: title, hintText: 'Enter $title',
+          iconAsset: '', leadingIcon: Icons.edit_outlined,
+          textCapitalization: TextCapitalization.words,
+          onChanged: (value) => input = value, maxLength: 100,
+          autofocus: true),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialog),
+            child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(dialog, input.trim()),
+            child: const Text('Use')),
+        ]),
+    );
+    return value == null || value.isEmpty ? null : value;
   }
 
   Future<void> _chooseName() async {
