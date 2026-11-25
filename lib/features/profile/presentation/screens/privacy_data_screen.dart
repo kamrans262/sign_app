@@ -6,6 +6,10 @@ import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/services/sign_api_client.dart';
+import '../../../../core/services/active_company_session.dart';
+import '../../../../core/navigation/sign2digital_navigation.dart';
+import '../../../subscription/presentation/screens/subscription_management_screen.dart';
+import '../../../subscription/data/remote_subscription_repository.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
 import '../../../../core/widgets/sign2digital_input_field.dart';
@@ -159,7 +163,7 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
         builder:(dialog)=>StatefulBuilder(builder:(context,refresh)=>Sign2DigitalApprovedConfirmation(
           title:const Text('Permanently Delete Account?'),
           content:Column(mainAxisSize:MainAxisSize.min,children:[
-            const Text('Your personal profile and private support data will be erased and sessions revoked. Required business records may be retained. Cancel any subscriptions separately; you can delete now without waiting for a billing period to end.'),
+            const Text('Your personal profile and private support data will be erased and sessions revoked. Required business records may be retained. Cancel any Stripe subscriptions separately through Subscription Management; you can delete now without waiting for a billing period to end.'),
             if(hasSole) CheckboxListTile(
               contentPadding:EdgeInsets.zero,value:closeSole,
               title:const Text('Close my sole-owner companies and retain required business records.'),
@@ -301,7 +305,7 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
             const SizedBox(height: 28),
             const Text('AI Privacy', style: TextStyle(fontFamily:'Inter',fontSize:20,fontWeight:FontWeight.w600,color:AppColors.dark)),
             const SizedBox(height:10),
-            const Text('AI features share selected content with OpenAI only with your permission. You can withdraw that permission at any time.'),
+            const Text('AI features share selected content with OpenAI only with your permission. You can withdraw that permission at any time.', style: TextStyle(fontFamily: 'Inter', fontSize: 14, color: AppColors.secondaryText)),
             const SizedBox(height:12),
             Sign2DigitalOutlinedButton(label:'Withdraw AI Permission',enabled:!_busy,primaryOutline:true,onPressed:_withdrawAi),
             const SizedBox(height:12),
@@ -329,6 +333,12 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
               onPressed: _deactivate,
             ),
             const SizedBox(height: 28),
+            if (ActiveCompanySession.isOwner) ...[
+              const Text('Account deletion does not cancel Stripe billing. Manage your company subscription first if needed.', style: TextStyle(fontFamily: 'Inter', fontSize: 14, color: AppColors.secondaryText)),
+              const SizedBox(height: 12),
+              Sign2DigitalOutlinedButton(label: 'Manage Subscription', primaryOutline: true, enabled: !_busy, onPressed: () => Sign2DigitalNavigation.open<void>(context, SubscriptionManagementScreen(repository: RemoteSubscriptionRepository(api: _api)))),
+              const SizedBox(height: 28),
+            ],
             const Text('Delete Personal Account',
               style: TextStyle(fontFamily: 'Inter', fontSize: 20,
                 fontWeight: FontWeight.w600, color: AppColors.dark)),

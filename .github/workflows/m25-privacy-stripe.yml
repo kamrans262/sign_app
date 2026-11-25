@@ -1,0 +1,42 @@
+name: M25 Privacy and Stripe Regression
+on:
+  push:
+    branches: [fix/m20-android-live-reminder-integration-2026-11-06]
+    paths:
+      - '.github/workflows/m25-privacy-stripe.yml'
+      - 'lib/**'
+      - 'test/core/m25_ai_consent_test.dart'
+      - 'test/features/profile/**'
+      - 'ios/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  privacy-billing:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      # Current stable reports migration deprecations for existing Flutter
+      # Material imports. Keep errors/warnings fatal; report infos separately.
+      - run: dart analyze --fatal-warnings --no-fatal-infos lib/core/services/sign_api_client.dart lib/core/services/m25_ai_consent.dart lib/features/profile lib/features/subscription test/core/m25_ai_consent_test.dart
+      - run: flutter test --no-pub --reporter=expanded test/core/m25_ai_consent_test.dart test/features/profile/m22_privacy_data_screen_test.dart test/features/subscription
+      - name: Check iOS app privacy declarations and no purchase bridge
+        run: |
+          python3 - <<'PY'
+          import plistlib
+          from pathlib import Path
+          p=plistlib.loads(Path('ios/Runner/PrivacyInfo.xcprivacy').read_bytes())
+          assert p['NSPrivacyTracking'] is False
+          assert 'NSPrivacyCollectedDataTypes' in p
+          info=plistlib.loads(Path('ios/Runner/Info.plist').read_bytes())
+          assert 'OpenAI' in info['NSMicrophoneUsageDescription']
+          assert 'sign2digital' in str(info['CFBundleURLTypes'])
+          assert 'StoreKitBridge' not in Path('ios/Runner/AppDelegate.swift').read_text()
+          assert 'authorization_code' in Path('ios/Runner/AppDelegate.swift').read_text()
+          PY

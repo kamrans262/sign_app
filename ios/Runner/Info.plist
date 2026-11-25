@@ -92,11 +92,11 @@
     <string>Record voice requests for job details, documents and support. With permission, recordings may be sent to OpenAI for transcription.</string>
 
 	<key>NSCameraUsageDescription</key>
-	<string>Capture job progress photos using the camera.</string>
+	<string>Capture job photos, receipts and document images you choose to attach. AI processing requires separate permission.</string>
 	<key>NSContactsUsageDescription</key>
 	<string>Read the contacts you select for review before importing them into your Sign2Digital company.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Choose job photos from your photo library.</string>
+	<string>Choose photos, receipts or document images to attach to your company records. AI processing requires separate permission.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>
