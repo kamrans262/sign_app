@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sign2digital/core/widgets/sign2digital_entry_list_card.dart';
 import 'package:sign2digital/core/widgets/sign2digital_input_field.dart';
+import 'package:sign2digital/core/widgets/sign2digital_search_field.dart';
+import 'package:sign2digital/features/clients/presentation/widgets/sign2digital_details_tabs.dart';
 import 'package:sign2digital/features/clients/presentation/screens/more_screen.dart';
 import 'package:sign2digital/features/reminders/data/demo_reminder_repository.dart';
 import 'package:sign2digital/features/reminders/data/remote_reminder_repository.dart';
@@ -68,7 +70,9 @@ Future<void> _reach(WidgetTester tester, String key, {bool up = false}) async {
   final finder = find.byKey(Key(key));
   if (finder.evaluate().isEmpty) {
     await tester.scrollUntilVisible(finder, up ? -180 : 180,
-      scrollable: find.byType(Scrollable).first);
+      scrollable: find.descendant(
+        of: find.byKey(const Key('reminder-form-scroll')),
+        matching: find.byType(Scrollable)).first);
   } else {
     await tester.ensureVisible(finder);
   }
@@ -192,9 +196,15 @@ void main() {
     expect(search, findsOneWidget);
     // Both use the same 20 px screen edge; selected-tab text has its own
     // 15 px internal padding just like our other module tabs.
-    final tabLeft = tester.getTopLeft(tabs).dx;
-    final searchLeft = tester.getTopLeft(search).dx;
-    expect((tabLeft - searchLeft).abs(), lessThan(20));
+    // Compare the shared tab strip and search containers, not inner text
+    // with different built-in horizontal paddings. No UI change required.
+    final tabStrip = find.byType(Sign2DigitalDetailsTabs);
+    final searchSurface = find.byType(Sign2DigitalSearchField);
+    expect(tabStrip, findsOneWidget);
+    expect(searchSurface, findsOneWidget);
+    final tabLeft = tester.getTopLeft(tabStrip).dx;
+    final searchLeft = tester.getTopLeft(searchSurface).dx;
+    expect((tabLeft - searchLeft).abs(), lessThan(2));
     expect(tester.takeException(), isNull);
   });
 
