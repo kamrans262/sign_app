@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_outlined_container.dart';
@@ -115,11 +116,11 @@ class _JobAddendaBottomSheetState extends State<JobAddendaBottomSheet> {
   Widget _section(String title, String subtitle) => Padding(
     padding: const EdgeInsets.fromLTRB(0, 18, 0, 10),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(title, style: const TextStyle(
+      Text(AppStrings.of(context).tr(title), style: const TextStyle(
         fontFamily: 'Inter', fontSize: 16, fontWeight: FontWeight.w600,
         color: AppColors.dark)),
       const SizedBox(height: 4),
-      Text(subtitle, style: const TextStyle(
+      Text(AppStrings.of(context).tr(subtitle), style: const TextStyle(
         fontFamily: 'Inter', fontSize: 12,
         fontWeight: FontWeight.w500, color: AppColors.secondaryText)),
     ]),
@@ -142,11 +143,11 @@ class _JobAddendaBottomSheetState extends State<JobAddendaBottomSheet> {
         child: ListTile(
         key: key,
         leading: Icon(icon, color: AppColors.primary, size: 24),
-        title: Text(title,
+        title: Text(AppStrings.of(context).tr(title),
           maxLines: 1, overflow: TextOverflow.ellipsis,
           style: const TextStyle(fontFamily: 'Inter', fontSize: 14,
             fontWeight: FontWeight.w600, color: AppColors.dark)),
-        subtitle: Text(subtitle,
+        subtitle: Text(AppStrings.of(context).tr(subtitle),
           maxLines: 2, overflow: TextOverflow.ellipsis,
           style: const TextStyle(fontFamily: 'Inter', fontSize: 12,
             color: AppColors.secondaryText)),
@@ -201,7 +202,7 @@ class _JobAddendaBottomSheetState extends State<JobAddendaBottomSheet> {
                       child: TextButton(
                         key: const Key('job-addenda-retry'),
                         onPressed: _load,
-                        child: Text('$_error Tap to retry.')))
+                        child: Text('${AppStrings.of(context).tr(_error!)} ${AppStrings.of(context).tr('Tap to retry.')}')))
                   : ListView(shrinkWrap: true, children: [
                       _section('View Addenda',
                           'Addenda belonging to this job'),

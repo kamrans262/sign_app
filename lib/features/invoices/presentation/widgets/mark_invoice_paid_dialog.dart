@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/localization/app_strings.dart';
+import '../../../../core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_modal_surface.dart';
 import '../../../../core/widgets/sign2digital_outlined_button.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
@@ -70,21 +72,21 @@ class _MarkInvoicePaidDialogState extends State<MarkInvoicePaidDialog> {
               size: 26, color: AppColors.primary),
           ),
           const SizedBox(height: 15),
-          const Text('Mark as Paid',
+          const LocalizedUiText('Mark as Paid',
             key: Key('invoice-paid-confirm-heading'),
             textAlign: TextAlign.center,
             style: TextStyle(fontFamily: 'Inter', fontSize: 18,
               fontWeight: FontWeight.w600, color: AppColors.dark,
               decoration: TextDecoration.none)),
           const SizedBox(height: 5),
-          const Text('This will record the invoice as manually paid',
+          const LocalizedUiText('This will record the invoice as manually paid',
             textAlign: TextAlign.center,
             style: TextStyle(fontFamily: 'Inter', fontSize: 14,
               fontWeight: FontWeight.w500, color: AppColors.placeholder,
               decoration: TextDecoration.none)),
           if (_error != null) ...[
             const SizedBox(height: 12),
-            Text(_error!, key: const Key('invoice-paid-error'),
+            Text(AppStrings.of(context).tr(_error!), key: const Key('invoice-paid-error'),
               textAlign: TextAlign.center,
               style: const TextStyle(fontFamily: 'Inter',
                 fontSize: 12, color: Color(0xFFB42318),

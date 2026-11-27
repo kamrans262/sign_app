@@ -185,14 +185,14 @@ class _EquipmentLoanReminderActionsState
             mainAxisSize:MainAxisSize.min,
             crossAxisAlignment:CrossAxisAlignment.start,
             children:[
-              Text('Borrower: '+p.borrowerName),
+              Text('${AppStrings.of(context).tr('Borrower')}: '+p.borrowerName),
               const SizedBox(height:6),
-              Text('Email: '+p.borrowerEmail),
+              Text('${AppStrings.of(context).tr('Email')}: '+p.borrowerEmail),
               const SizedBox(height:10),
-              Text(enable
+              Text(AppStrings.of(context).tr(enable
                 ?'Only this loan opts in. Automatic sending also requires '
                     'the company server scheduler to be enabled.'
-                :'This stops future automatic overdue reminders for this loan.'),
+                :'This stops future automatic overdue reminders for this loan.')),
               if(enable)DropdownButton<int>(
                 key:const Key('equipment-reminder-frequency'),
                 value:const [1,3,7,14,30].contains(frequency)
@@ -200,7 +200,7 @@ class _EquipmentLoanReminderActionsState
                 items:[
                   for(final days in [1,3,7,14,30])
                     DropdownMenuItem<int>(
-                      value:days,child:Text('Every '+days.toString()+' days')),
+                      value:days,child:Text(AppStrings.of(context).format('Every {days} days', {'days': days}))),
                 ],
                 onChanged:(value){
                   if(value!=null)refresh(()=>frequency=value);
@@ -209,10 +209,10 @@ class _EquipmentLoanReminderActionsState
                 key:const Key('equipment-reminder-policy-confirm'),
                 value:approved,contentPadding:EdgeInsets.zero,
                 controlAffinity:ListTileControlAffinity.leading,
-                title:Text(enable
+                title:Text(AppStrings.of(context).tr(enable
                   ?'I confirm this is the recipient email and opt in '
                       'to overdue notices.'
-                  :'I confirm I want to stop automatic notices.'),
+                  :'I confirm I want to stop automatic notices.')),
                 onChanged:(v)=>refresh(()=>approved=v??false)),
             ])),
           actions:[

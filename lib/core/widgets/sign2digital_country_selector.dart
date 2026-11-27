@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:country_flags/country_flags.dart';
 
 import '../theme/app_colors.dart';
+import '../localization/app_strings.dart';
 import '../theme/app_text_styles.dart';
 import 'sign2digital_outlined_container.dart';
 
@@ -238,7 +239,7 @@ class Sign2DigitalCountrySelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: 'Country calling code ${selected.name} ${selected.dialCode}',
+      label: 'Country calling code ${AppStrings.of(context).tr(selected.name)} ${selected.dialCode}',
       button: true,
       child: InkWell(
         key: const Key('country-selector'),
@@ -280,6 +281,7 @@ class _CountrySelectionSheetState extends State<_CountrySelectionSheet> {
     final filtered = Sign2DigitalCountries.all.where((item) {
       final needle = _query.toLowerCase().trim();
       return item.name.toLowerCase().contains(needle) ||
+          AppStrings.of(context).tr(item.name).toLowerCase().contains(needle) ||
           item.dialCode.contains(needle) ||
           item.isoCode.toLowerCase().contains(needle);
     }).toList();
@@ -295,7 +297,7 @@ class _CountrySelectionSheetState extends State<_CountrySelectionSheet> {
               onChanged: (value) => setState(() => _query = value),
               textInputAction: TextInputAction.search,
               decoration: InputDecoration(
-                labelText: 'Search country or calling code',
+                labelText: AppStrings.of(context).tr('Search country or calling code'),
                 prefixIcon: const Icon(Icons.search, color: AppColors.primary),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
@@ -316,7 +318,7 @@ class _CountrySelectionSheetState extends State<_CountrySelectionSheet> {
                     country.isoCode,
                     theme: const ImageTheme(width: 28, height: 21),
                   ),
-                  title: Text(country.name, style: AppTextStyles.fieldInput),
+                  title: Text(AppStrings.of(context).tr(country.name), style: AppTextStyles.fieldInput),
                   trailing: Row(mainAxisSize: MainAxisSize.min, children: [
                     Text(country.dialCode, style: AppTextStyles.fieldInput),
                     if (country.isoCode == widget.selected.isoCode) ...[

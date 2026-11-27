@@ -2,6 +2,7 @@ import '../../../../core/widgets/sign2digital_form_dialog.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/localization/app_strings.dart';
 
 /// Reusable temporary-key prompt for development-time direct OpenAI calls.
 /// A key never leaves this dialog except as the caller's in-memory return value.
@@ -32,7 +33,7 @@ abstract final class Sign2DigitalTemporaryAiKeyDialog {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(message),
+                  Text(AppStrings.of(context).tr(message)),
                   const SizedBox(height: 15),
                   TextFormField(
                     key: const Key('quote-openai-api-key'),
@@ -42,11 +43,11 @@ abstract final class Sign2DigitalTemporaryAiKeyDialog {
                     keyboardType: TextInputType.visiblePassword,
                     onChanged: (value) => draft = value,
                     decoration: InputDecoration(
-                      labelText: 'OpenAI API key',
+                      labelText: AppStrings.of(context).tr('OpenAI API key'),
                       prefixIcon: const Icon(Icons.key_outlined),
-                      errorText: error,
+                      errorText: error == null ? null : AppStrings.of(context).tr(error!),
                       suffixIcon: IconButton(
-                        tooltip: visible ? 'Hide API key' : 'Show API key',
+                        tooltip: AppStrings.of(context).tr(visible ? 'Hide API key' : 'Show API key'),
                         icon: Icon(visible
                             ? Icons.visibility_off_outlined
                             : Icons.visibility_outlined),
