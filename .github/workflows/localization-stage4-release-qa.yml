@@ -39,7 +39,7 @@ jobs:
         run: flutter build apk --debug --no-pub
   ios-simulator-compile:
     name: ios-simulator-no-codesign
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
@@ -47,6 +47,7 @@ jobs:
         with:
           channel: stable
           cache: true
+      - run: xcodebuild -version && swift -version
       - run: flutter pub get
       - name: Native iOS project, identity and localization configuration
         run: |
