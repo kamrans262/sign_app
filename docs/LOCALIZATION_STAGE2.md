@@ -18,3 +18,13 @@ Localized dynamic invoice, expense and labour confirmations, retry suffixes, sel
 
 ## Language selection correction
 Selecting a language now persists the device-local locale and updates the interface immediately, independently of the account preferences save. The existing Save Preferences action remains responsible for account settings. Added a widget regression for immediate French labels and a failed account save. No native or backend files changed.
+
+## Stage 2 code audit closure
+The 94 feature presentation screens were reviewed for direct literal Text widget
+candidates. Remaining high-impact consent, privacy, signed document, quote,
+report, invoice, labour, equipment and profile label gaps were translated and
+connected to the existing components. Source-level widget lint and focused
+multilanguage regression tests were added. No iOS/macOS project files changed.
+The code audit does not replace physical French/German/Italian screen overflow
+checks, real network error inspection or release builds; those are Stage 4.
+Stage 3 is backend/PDF/email/AI/customer pages (not mobile QA).
