@@ -1,7 +1,7 @@
 # Stage 1 — Mobile interface localization
 
 - Supported languages: English (fallback), French, German, Italian.
-- Existing Profile & Settings > Preferences > Language > Save Preferences applies an explicit device-local interface choice after a successful preferences save.
+- Existing Profile & Settings > Preferences > Language immediately applies and persists an explicit device-local interface choice. Save Preferences remains available to save account preferences; a server save failure does not revert the interface choice.
 - No saved device choice: Flutter resolves the device language against the supported languages. Unsupported languages fall back to English.
 - Existing server preferences retain their canonical language names. Saving unrelated settings does not overwrite the server language. Device-local UI choice does not automatically sync across devices; no backend changes.
 - Localized in Stage 1: preference screen, More entry menu, profile settings entry cards, bottom navigation, selection-sheet close/default subtitle, Flutter-provided Material/Cupertino controls. Catalog uses explicit static labels, with English fallback. Do not translate API values, document data, user-entered text or signed files.

@@ -113,7 +113,7 @@ void main() {
     language.dispose();
   });
 
-  testWidgets('Preference save applies locale only after successful repository save',
+  testWidgets('Language changes immediately even if account preference save fails',
       (tester) async {
     tester.view.physicalSize = const Size(430, 1100);
     tester.view.devicePixelRatio = 1;
@@ -142,6 +142,11 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('preferences-option-French')));
     await tester.pumpAndSettle();
+    expect(language.value, const Locale('fr'));
+    expect(stored, 'fr');
+    expect(repo.saved.language, 'English');
+    expect(find.text('Préférences'), findsOneWidget);
+    expect(find.text('Accueil'), findsOneWidget);
     final save = find.byKey(const Key('preferences-save'));
     if (save.evaluate().isEmpty) {
       await tester.scrollUntilVisible(save, 180, scrollable: find.descendant(
@@ -152,8 +157,9 @@ void main() {
     await tester.ensureVisible(save);
     await tester.tap(save);
     await tester.pumpAndSettle();
-    expect(language.value, const Locale('en'));
-    expect(stored, isNull);
+    expect(language.value, const Locale('fr'));
+    expect(stored, 'fr');
+    expect(repo.saved.language, 'English');
     repo.fail = false;
     await tester.pump(const Duration(seconds: 5));
     await tester.pumpAndSettle();

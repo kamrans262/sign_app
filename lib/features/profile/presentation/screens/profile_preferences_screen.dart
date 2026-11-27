@@ -118,8 +118,23 @@ class _ProfilePreferencesScreenState extends State<ProfilePreferencesScreen> {
         'preferences-option-${option.replaceAll('/', '-').replaceAll(' ', '-')}',
       ),
     );
-    if (mounted && !_saving && value != null) {
+    if (!mounted || _saving || value == null) return;
+    if (title != 'Language') {
       setState(() => onPicked(value));
+      return;
+    }
+
+    // The interface choice is device-local. Apply it immediately instead of
+    // waiting for an unrelated account preferences request to succeed.
+    setState(() => _saving = true);
+    try {
+      await _language.select(value);
+      if (!mounted) return;
+      setState(() => onPicked(value));
+    } catch (_) {
+      if (mounted) _showMessage('Unable to save preferences. Try again.');
+    } finally {
+      if (mounted) setState(() => _saving = false);
     }
   }
 
@@ -143,15 +158,7 @@ class _ProfilePreferencesScreenState extends State<ProfilePreferencesScreen> {
           ? selectedLanguage : _storedLanguage;
       await widget.repository.save(_draft.copyWith(language: savedLanguage));
       _storedLanguage = savedLanguage;
-      if (shouldApplyLanguage) {
-        try {
-          await _language.select(selectedLanguage);
-          _languageSelected = false;
-        } catch (_) {
-          if (mounted) _showMessage('Preferences saved, but the interface language could not be saved on this device. Try again.');
-          return;
-        }
-      }
+      if (shouldApplyLanguage) _languageSelected = false;
       if (mounted) {
         _showMessage('Preferences saved.', locale: _language.value);
       }

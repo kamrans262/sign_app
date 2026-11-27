@@ -15,3 +15,6 @@ The dedicated localisation workflow also passed at f444103, including full Flutt
 
 ## Follow-up mobile coverage
 Localized dynamic invoice, expense and labour confirmations, retry suffixes, selected dashboard and expense/labour financial display, detail timestamps and VAT percentage labels. Added placeholder regression tests. This changes Dart and documentation only, with no Apple project/configuration or dependency changes. Full remaining screen audit, native device builds and backend-provided text are not certified by this change.
+
+## Language selection correction
+Selecting a language now persists the device-local locale and updates the interface immediately, independently of the account preferences save. The existing Save Preferences action remains responsible for account settings. Added a widget regression for immediate French labels and a failed account save. No native or backend files changed.
