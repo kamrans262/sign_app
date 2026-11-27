@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:sign2digital/core/widgets/sign2digital_entry_list_card.dart';
 import 'package:sign2digital/core/widgets/sign2digital_input_field.dart';
 import 'package:sign2digital/core/widgets/sign2digital_search_field.dart';
@@ -80,6 +81,7 @@ Future<void> _reach(WidgetTester tester, String key, {bool up = false}) async {
 }
 
 void main() {
+  setUpAll(() async => initializeDateFormatting());
   setUp(DemoReminderRepository.resetForTests);
 
   test('M20 signed-in reminder screens use the real Laravel repository by default', () {

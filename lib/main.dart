@@ -5,6 +5,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
@@ -38,6 +39,9 @@ Future<void> main() async {
   if (mobileNativeSplash) {
     FlutterNativeSplash.preserve(widgetsBinding: binding);
   }
+  // Load the local date symbols for French, German and Italian even offline.
+  // This does not alter API dates, PDF metadata or the approved UI.
+  await initializeDateFormatting();
   // Catch Checkout links before splash/session restore, including cold starts.
   M23BillingDeepLinks.start();
   // Existing platforms with native Firebase configuration initialize here.
