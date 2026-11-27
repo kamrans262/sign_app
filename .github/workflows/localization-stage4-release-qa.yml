@@ -1,0 +1,66 @@
+name: Sign2Digital Stage 4 release QA (no deployment)
+on:
+  push:
+    branches: [fix/m20-android-live-reminder-integration-2026-11-06]
+    paths:
+      - 'lib/**'
+      - 'test/core/localization/**'
+      - 'test/core/sign_api_client_test.dart'
+      - 'test/features/quotes/**'
+      - 'test/features/subscription/**'
+      - 'ios/**'
+      - 'pubspec.yaml'
+      - '.github/workflows/localization-stage4-release-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: sign2digital-stage4-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  four-language-and-android:
+    name: localization-tests-android
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Verify new locale code without fatal SDK info notices
+        run: flutter analyze --no-pub --no-fatal-infos lib/core/localization lib/features/quotes/services lib/features/invoices/services lib/features/documents/services
+      - name: Locale, authenticated API, PDF/signature and billing regressions
+        run: |
+          flutter test --no-pub --concurrency=2 --timeout=80s test/core/localization test/core/sign_api_client_test.dart
+          flutter test --no-pub --concurrency=2 --timeout=80s test/features/quotes/m7_quote_pdf_parity_test.dart test/features/quotes/m8_pdf_parser_compatibility_test.dart test/features/quotes/m7_approved_pdf_download_test.dart
+      - name: Compile Android debug only — do not sign or deploy
+        run: flutter build apk --debug --no-pub
+  ios-simulator-compile:
+    name: ios-simulator-no-codesign
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Native iOS project, identity and localization configuration
+        run: |
+          plutil -lint ios/Runner/Info.plist
+          python3 - <<'PY'
+          import pathlib, plistlib
+          info=plistlib.loads(pathlib.Path('ios/Runner/Info.plist').read_bytes())
+          assert info.get('CFBundleLocalizations') == ['en','fr','de','it']
+          project=pathlib.Path('ios/Runner.xcodeproj/project.pbxproj').read_text()
+          assert 'com.sign2digital.app' in project
+          assert 'ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;' in project
+          assert 'FlutterGeneratedPluginSwiftPackage' in project
+          assert pathlib.Path('ios/Runner/RunnerRelease.entitlements').is_file()
+          print('Bundle ID, localizations, app icon and entitlements are unchanged.')
+          PY
+      - name: Simulator compile only — no App Store signing or upload
+        run: flutter build ios --simulator --debug --no-codesign --no-pub
