@@ -200,6 +200,9 @@ void main(){
   });
 
   testWidgets('loan detail keeps history and uses return confirmation',(tester) async{
+    // The return action is visible only to a verified member with write access.
+    ActiveCompanySession.setVerified(7, role: 'owner', permissions: const []);
+    addTearDown(ActiveCompanySession.clear);
     const repository=DemoEquipmentLoanRepository();
     final record=await repository.createLoan(EquipmentLoanRecord(
       assetId:1,equipmentCode:'EQP-0001',

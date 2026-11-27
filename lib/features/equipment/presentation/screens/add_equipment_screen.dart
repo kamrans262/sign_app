@@ -100,31 +100,29 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
   }
 
   Future<String?> _customValue(String title) async {
-    final input = TextEditingController();
-    try {
-      final value = await showDialog<String>(
-        context: context,
-        builder: (dialog) => Sign2DigitalFormDialog(
-          title: Text('Enter $title'),
-          content: Sign2DigitalInputField(
-            key: const Key('equipment-custom-value'),
-            label: title, hintText: 'Enter $title',
-            iconAsset: '', leadingIcon: Icons.edit_outlined,
-            textCapitalization: TextCapitalization.words,
-            controller: input, maxLength: 100,
-            autofocus: true),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(dialog),
-              child: const LocalizedUiText('Cancel')),
-            TextButton(onPressed: () =>
-              Navigator.pop(dialog, input.text.trim()),
-              child: const Text('Use')),
-          ]),
-      );
-      return value == null || value.isEmpty ? null : value;
-    } finally {
-      input.dispose();
-    }
+    // Let the existing TextFormField own its internal controller. Disposing a
+    // manually supplied controller as soon as showDialog returns races with
+    // its exit animation and can detach the focused field mid-frame.
+    String entered = '';
+    final value = await showDialog<String>(
+      context: context,
+      builder: (dialog) => Sign2DigitalFormDialog(
+        title: Text('Enter $title'),
+        content: Sign2DigitalInputField(
+          key: const Key('equipment-custom-value'),
+          label: title, hintText: 'Enter $title',
+          iconAsset: '', leadingIcon: Icons.edit_outlined,
+          textCapitalization: TextCapitalization.words,
+          onChanged: (text) => entered = text, maxLength: 100,
+          autofocus: true),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialog),
+            child: const LocalizedUiText('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(dialog, entered.trim()),
+            child: const Text('Use')),
+        ]),
+    );
+    return value == null || value.isEmpty ? null : value;
   }
 
   Future<void> _chooseName() async {
