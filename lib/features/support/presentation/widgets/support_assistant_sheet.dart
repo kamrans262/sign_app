@@ -352,11 +352,11 @@ class _SupportAssistantSheetState extends State<SupportAssistantSheet>
         controller: _scroll,
         padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
         children: [
-          _bubble('Hi! I can explain how Sign2Digital works and take you '
-              'to the right screen. Ask by typing or tapping the microphone.',
+          _bubble(AppStrings.of(context).tr('Hi! I can explain how Sign2Digital works and take you '
+              'to the right screen. Ask by typing or tapping the microphone.'),
               false),
-          if (sample != null) _promptCard(sample.prompt,
-              title: 'AI Voice example: ${sample.title}'),
+          if (sample != null) _promptCard(AppStrings.of(context).tr(sample.prompt),
+              title: AppStrings.of(context).format('AI Voice example: {title}', {'title': AppStrings.of(context).tr(sample.title)})),
           if (_turns.isEmpty) ...[
             const LocalizedUiText('POPULAR QUESTIONS', style: TextStyle(
               fontFamily: 'Inter', fontSize: 12,
@@ -368,7 +368,7 @@ class _SupportAssistantSheetState extends State<SupportAssistantSheet>
                 child: OutlinedButton(
                   key: Key('support-question-$i'),
                   onPressed: widget.authenticated
-                    ? () => _ask(_questions[i]) : null,
+                    ? () => _ask(AppStrings.of(context).tr(_questions[i])) : null,
                   style: OutlinedButton.styleFrom(
                     alignment: Alignment.centerLeft,
                     foregroundColor: AppColors.dark,
@@ -376,7 +376,7 @@ class _SupportAssistantSheetState extends State<SupportAssistantSheet>
                     side: const BorderSide(color: AppColors.lightBorder),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10))),
-                  child: Text(_questions[i], style: const TextStyle(
+                  child: Text(AppStrings.of(context).tr(_questions[i]), style: const TextStyle(
                     fontFamily: 'Inter', fontSize: 13)),
                 ),
               ),
@@ -393,7 +393,7 @@ class _SupportAssistantSheetState extends State<SupportAssistantSheet>
                   key: Key('support-open-${turn.screen!}'),
                   onPressed: () => _go(turn.screen!),
                   icon: const Icon(Icons.arrow_forward_rounded, size: 18),
-                  label: Text(_destinationLabel(turn.screen!)),
+                  label: Text(AppStrings.of(context).tr(_destinationLabel(turn.screen!))),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.primary,
                     side: const BorderSide(color: AppColors.primary)),
