@@ -231,7 +231,7 @@ class _AddJobNoteScreenState extends State<AddJobNoteScreen> {
                 ]);
               }),
               const SizedBox(height: 10),
-              const Text('Customer-facing is a label only. This note is not '
+              const LocalizedUiText('Customer-facing is a label only. This note is not '
                   'sent or visible to customers until a secure backend '
                   'explicitly publishes it.',
                 style: TextStyle(fontSize: 12, color: AppColors.placeholder)),

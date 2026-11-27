@@ -225,7 +225,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
         record.jobId == widget.jobId).toList();
     if (sources.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('A signed document for this job is required '
+        content: LocalizedUiText('A signed document for this job is required '
             'before creating an addendum.'),
       ));
       return;

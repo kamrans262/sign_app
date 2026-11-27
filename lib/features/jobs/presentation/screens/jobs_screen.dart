@@ -150,7 +150,7 @@ class _JobsScreenState extends State<JobsScreen> {
       return;
     }
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-      content: Text('Job draft saved in the design preview only.'),
+      content: LocalizedUiText('Job draft saved in the design preview only.'),
     ));
   }
 

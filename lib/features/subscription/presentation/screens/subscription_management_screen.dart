@@ -224,7 +224,7 @@ class _SubscriptionManagementScreenState
           ],
           if (data.demoOnly) ...[
             const SizedBox(height: 16),
-            const Text('Demo preview · Usage values are samples.',
+            const LocalizedUiText('Demo preview · Usage values are samples.',
               style: TextStyle(
                 fontFamily: 'Inter', fontSize: 12,
                 color: AppColors.placeholder)),

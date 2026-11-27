@@ -70,7 +70,7 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
       builder: (dialog) => Sign2DigitalApprovedConfirmation(
         title: const LocalizedUiText('Deactivate Account?'),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
-          const Text('Deactivation disables sign-in and revokes active sessions. '
+          const LocalizedUiText('Deactivation disables sign-in and revokes active sessions. '
             'It does not delete company records or signed documents. '
             'Active company owners must transfer or close ownership first.'),
           const SizedBox(height: 16),
@@ -141,7 +141,7 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
           content: SingleChildScrollView(child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('Your personal profile and private support data will '
+              const LocalizedUiText('Your personal profile and private support data will '
                 'be erased and every session revoked. Issued company records '
                 'and signed documents are retained for legal integrity. '
                 'Transfer company ownership and administrator access first.'),
@@ -233,7 +233,7 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
               style: TextStyle(fontFamily: 'Inter', fontSize: 20,
                 fontWeight: FontWeight.w600, color: AppColors.dark)),
             const SizedBox(height: 12),
-            const Text('View a copy of your own profile, preferences and '
+            const LocalizedUiText('View a copy of your own profile, preferences and '
               'support-ticket conversations. Company records, invoices and '
               'signed documents are not included in this personal export.',
               style: TextStyle(fontFamily: 'Inter', fontSize: 14,
@@ -253,7 +253,7 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
               style: TextStyle(fontFamily: 'Inter', fontSize: 20,
                 fontWeight: FontWeight.w600, color: AppColors.dark)),
             const SizedBox(height: 10),
-            const Text('Disable access to this account after confirming your '
+            const LocalizedUiText('Disable access to this account after confirming your '
               'password. Existing company documents are preserved. '
               'This is not a permanent data-deletion request.',
               style: TextStyle(fontFamily: 'Inter', fontSize: 14,
@@ -273,7 +273,7 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
               style: TextStyle(fontFamily: 'Inter', fontSize: 20,
                 fontWeight: FontWeight.w600, color: AppColors.dark)),
             const SizedBox(height: 10),
-            const Text('Permanently erase personal profile and private support '
+            const LocalizedUiText('Permanently erase personal profile and private support '
               'data, while retaining legally necessary company records. '
               'This cannot be undone.',
               style: TextStyle(fontFamily: 'Inter', fontSize: 14,

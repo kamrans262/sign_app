@@ -136,7 +136,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     await _load();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Report draft saved in the Flutter demo session.'),
+        content: LocalizedUiText('Report draft saved in the Flutter demo session.'),
       ));
     }
   }

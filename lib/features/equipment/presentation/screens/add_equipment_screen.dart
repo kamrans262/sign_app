@@ -304,7 +304,7 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
         builder: (dialog) => Sign2DigitalFormDialog(
           title: const LocalizedUiText('Connect Equipment AI'),
           content: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Text('Enter a temporary OpenAI API key to process your '
+            const LocalizedUiText('Enter a temporary OpenAI API key to process your '
               'recording. Audio is transmitted to OpenAI; API charges may apply.'),
             Sign2DigitalInputField(
               key: const Key('equipment-ai-key'),
@@ -332,7 +332,7 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
       context: context,
       builder: (dialog) => Sign2DigitalApprovedConfirmation(
         title: const LocalizedUiText('Use extracted equipment details?'),
-        content: const Text('Only empty text fields and missing selections '
+        content: const LocalizedUiText('Only empty text fields and missing selections '
           'will be filled. Review and correct every field before saving.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(dialog, false),

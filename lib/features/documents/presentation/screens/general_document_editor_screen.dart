@@ -523,7 +523,7 @@ class _GeneralDocumentEditorScreenState extends State<GeneralDocumentEditorScree
             ]),
           ),
           const SizedBox(height:12),
-          const Text('Text preview only. Official PDF actions are available '
+          const LocalizedUiText('Text preview only. Official PDF actions are available '
             'after approval and verified issuance.',
             style:TextStyle(fontFamily:'Inter',fontSize:12,
               color:AppColors.secondaryText)),
@@ -651,7 +651,7 @@ class _GeneralDocumentEditorScreenState extends State<GeneralDocumentEditorScree
             if(_saved?.status=='approved'&&_saved?.id!=null)...[
               const Padding(
                 padding:EdgeInsets.only(top:16,bottom:8),
-                child:Text('Approved source is immutable. Electronic '
+                child:LocalizedUiText('Approved source is immutable. Electronic '
                   'signatures may require additional legal formalities.',
                   style:TextStyle(fontFamily:'Inter',fontSize:12,
                     color:AppColors.placeholder))),
