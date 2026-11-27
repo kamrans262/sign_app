@@ -1,5 +1,6 @@
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:sign2digital/core/localization/app_display_formats.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
@@ -300,7 +301,7 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
                 trailing: options[i] == selected
                     ? const Icon(Icons.check_circle_rounded,
                         color: AppColors.primary) : null,
-                title: Text(options[i]),
+                title: Text(AppStrings.of(sheet).tr(options[i])),
                 onTap: () => Navigator.of(sheet).pop(options[i]),
               ),
           ],

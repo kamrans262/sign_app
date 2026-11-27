@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -374,7 +376,7 @@ class _AiVoiceFlowDialogState extends State<AiVoiceFlowDialog>
       );
 
   Widget _label(String label, TextStyle style) =>
-      Text(label, textAlign: TextAlign.center, style: style);
+      Text(AppStrings.of(context).tr(label), textAlign: TextAlign.center, style: style);
 
   Widget _buttons({required bool canSave}) => Row(
     children: [
@@ -391,7 +393,7 @@ class _AiVoiceFlowDialogState extends State<AiVoiceFlowDialog>
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
-            child: const Text(
+            child: const LocalizedUiText(
               'Cancel',
               style: TextStyle(
                 fontFamily: 'Inter',
@@ -444,13 +446,13 @@ class _AiVoiceFlowDialogState extends State<AiVoiceFlowDialog>
         ),
         const SizedBox(height: 15),
         Text(
-          active
+          AppStrings.of(context).tr(active
               ? '● Recording'
               : paused
               ? 'Paused'
               : _step == _VoiceStep.saving
               ? 'Saving…'
-              : 'Preparing microphone…',
+              : 'Preparing microphone…'),
           key: const Key('voice-recording-status'),
           textAlign: TextAlign.center,
           style: TextStyle(
@@ -535,7 +537,7 @@ class _AiVoiceFlowDialogState extends State<AiVoiceFlowDialog>
           filled: false,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
           suffixIcon: IconButton(
-            tooltip: _keyVisible ? 'Hide API key' : 'Show API key',
+            tooltip: AppStrings.of(context).tr(_keyVisible ? 'Hide API key' : 'Show API key'),
             onPressed: () => setState(() => _keyVisible = !_keyVisible),
             icon: Icon(
               _keyVisible
@@ -582,7 +584,7 @@ class _AiVoiceFlowDialogState extends State<AiVoiceFlowDialog>
               borderRadius: BorderRadius.circular(10),
             ),
           ),
-          child: const Text('Close / Manual Entry'),
+          child: const LocalizedUiText('Close / Manual Entry'),
         ),
       ),
     ],
@@ -627,7 +629,7 @@ class _AiVoiceFlowDialogState extends State<AiVoiceFlowDialog>
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
-            child: const Text('Close / Manual Entry'),
+            child: const LocalizedUiText('Close / Manual Entry'),
           ),
         ),
       ],

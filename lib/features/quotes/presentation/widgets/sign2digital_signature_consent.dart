@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -21,7 +23,7 @@ Future<bool> showSign2DigitalSignatureConsent(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
+            const LocalizedUiText(
               'Confirm agreement',
               style: TextStyle(
                 fontFamily: 'Inter',
@@ -31,7 +33,7 @@ Future<bool> showSign2DigitalSignatureConsent(
               ),
             ),
             const SizedBox(height: 20),
-            const Text('Terms & Conditions', style: AppTextStyles.fieldLabel),
+            const LocalizedUiText('Terms & Conditions', style: AppTextStyles.fieldLabel),
             const SizedBox(height: 10),
             Container(
               key: const Key('signature-consent-terms'),
@@ -45,7 +47,7 @@ Future<bool> showSign2DigitalSignatureConsent(
               child: SingleChildScrollView(
                 child: Text(
                   termsText.isEmpty
-                      ? 'The document has no terms to accept.'
+                      ? AppStrings.of(dialogContext).tr('The document has no terms to accept.')
                       : termsText,
                   textAlign: TextAlign.left,
                   style: AppTextStyles.fieldInput,
@@ -60,7 +62,7 @@ Future<bool> showSign2DigitalSignatureConsent(
               contentPadding: EdgeInsets.zero,
               activeColor: AppColors.primary,
               dense: true,
-              title: const Text(
+              title: const LocalizedUiText(
                 'I have read and agree to these terms.',
                 style: AppTextStyles.fieldInput,
               ),

@@ -145,6 +145,7 @@ class _AddDepositScreenState extends State<AddDepositScreen> {
       title: 'Payment Method',
       subtitle: 'Choose how the deposit was received',
       icon: Icons.account_balance_outlined,
+      translateOptions: true,
       options: const ['Bank transfer', 'Cash', 'Card', 'Cheque', 'Other', 'Custom'],
       selected: _methodChoice,
       keyForOption: (value) => Key(
@@ -518,7 +519,7 @@ class _AddDepositScreenState extends State<AddDepositScreen> {
                       label: 'Payment Method',
                       hintText: 'Select payment method',
                       iconAsset: 'assets/icons/description.svg',
-                      value: _methodChoice,
+                      translateValue: true, value: _methodChoice,
                       onTap: _selectPaymentMethod,
                       trailing: const Icon(Icons.keyboard_arrow_down_rounded,
                         color: AppColors.secondaryText),

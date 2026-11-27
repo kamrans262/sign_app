@@ -359,7 +359,7 @@ class _CreateEquipmentLoanScreenState extends State<CreateEquipmentLoanScreen> {
                 iconAsset: 'assets/icons/description.svg',
                 leadingIcon: Icons.person_outline_rounded,
                 hintText: 'Select Borrower Type',
-                value: _borrowerType == 'client'
+                translateValue: true, value: _borrowerType == 'client'
                   ? 'Existing Client' : 'Other Person',
                 trailing: const Icon(Icons.keyboard_arrow_down_rounded,
                   color: AppColors.secondaryText),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
@@ -24,7 +25,7 @@ class Sign2DigitalAiVoiceButton extends StatelessWidget {
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 75),
             child: FittedBox(fit: BoxFit.scaleDown,
-              child: Text('Create with AI Voice',
+              child: LocalizedUiText('Create with AI Voice',
                 style: AppTextStyles.primaryButton)),
           ),
         )),
@@ -37,7 +38,7 @@ class Sign2DigitalAiVoiceButton extends StatelessWidget {
             ),
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-              child: Text('New', style: TextStyle(
+              child: LocalizedUiText('New', style: TextStyle(
                 color: AppColors.primary, fontFamily: 'Inter',
                 fontSize: 12, fontWeight: FontWeight.w500)),
             ),

@@ -214,7 +214,7 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
           for (final status in EquipmentStatus.values)
             ListTile(
               key: Key('equipment-status-${status.name}'),
-              title: Text(status.label),
+              title: Text(AppStrings.of(sheet).tr(status.label)),
               selected: _status == status,
               trailing: _status == status
                   ? const Icon(Icons.check_circle_rounded,
