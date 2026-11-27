@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/widgets.dart';
+import 'package:sign2digital/core/localization/app_language_controller.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
@@ -8,6 +10,24 @@ import 'package:sign2digital/core/services/sign_api_client.dart';
 
 void main() {
   final base = Uri.parse('https://forestgreen-pigeon-673192.hostingersite.com');
+
+  test('requests send the selected interface language without altering auth', () async {
+    final previous = AppLanguageController.shared.value;
+    AppLanguageController.shared.value = const Locale('fr');
+    addTearDown(() => AppLanguageController.shared.value = previous);
+    final client = SignApiClient(
+      baseUrl: base,
+      tokenProvider: () async => 'test-token',
+      httpClient: MockClient((request) async {
+        expect(request.headers['Accept-Language'], 'fr');
+        expect(request.headers['X-App-Language'], 'fr');
+        expect(request.headers['Authorization'], 'Bearer test-token');
+        return http.Response(jsonEncode({'data': {'user': {'id': 1}}}), 200);
+      }),
+    );
+    await client.currentAccount();
+    client.dispose();
+  });
 
   test('health check is public and never adds an authentication token', () async {
     final client = SignApiClient(
