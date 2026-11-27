@@ -2,6 +2,7 @@ import '../../../../core/navigation/sign2digital_navigation.dart';
 import '../../../../core/services/active_company_session.dart';
 import '../../../../core/widgets/sign2digital_subscription_gate.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_display_formats.dart';
 import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
@@ -78,10 +79,10 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
     'July', 'August', 'September', 'October', 'November', 'December',
   ];
 
-  static String _date(DateTime value) =>
-      '${value.day} ${_months[value.month - 1]} ${value.year}';
+  String _date(DateTime value) => AppDisplayFormats.date(context, value,
+      english: '${value.day} ${_months[value.month - 1]} ${value.year}');
 
-  static String _timestamp(DateTime value) {
+  String _timestamp(DateTime value) {
     final local = value.toLocal();
     final hour = local.hour % 12 == 0 ? 12 : local.hour % 12;
     return '${_date(local)}, $hour:'
@@ -89,7 +90,8 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
         '${local.hour < 12 ? 'AM' : 'PM'}';
   }
 
-  String _money(int? minor) => quoteMoney(minor, _record.currency);
+  String _money(int? minor) => AppDisplayFormats.money(context, minor,
+      _record.currency, english: quoteMoney(minor, _record.currency));
   String get _filename =>
       'Sign2Digital_Invoice_${_record.number.replaceAll(
         RegExp(r'[^A-Za-z0-9_-]'), '_')}.pdf';
@@ -140,7 +142,7 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
   Widget _amount() => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(_record.formattedAmount,
+      Text(AppDisplayFormats.money(context, (_record.amount * 100).round(), _record.currency, english: _record.formattedAmount),
         key: const Key('invoice-details-amount'),
         style: const TextStyle(fontFamily: 'Inter', fontSize: 22,
           fontWeight: FontWeight.w700, color: AppColors.dark)),
@@ -171,7 +173,7 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
       Sign2DigitalInformationRow(
         'VAT ${(invoice.vatBasisPoints / 100).toStringAsFixed(2)}%',
         _money(invoice.vatMinor)),
-      Sign2DigitalInformationRow('Total', invoice.formattedAmount),
+      Sign2DigitalInformationRow('Total', AppDisplayFormats.money(context, (invoice.amount * 100).round(), invoice.currency, english: invoice.formattedAmount)),
       Sign2DigitalInformationRow('Amount Received',
         payments.isEmpty ? 'Not recorded' : _money(invoice.receivedMinor)),
       Sign2DigitalInformationRow('Amount Due',
@@ -231,7 +233,7 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
                 label: 'VAT ${(_record.vatBasisPoints / 100).toStringAsFixed(2)}%',
                 value: _money(_record.vatMinor)),
               Sign2DigitalDocumentAmountRow(
-                label: 'Total', value: _record.formattedAmount,
+                label: 'Total', value: AppDisplayFormats.money(context, (_record.amount * 100).round(), _record.currency, english: _record.formattedAmount),
                 highlight: true),
             ]),
           ),

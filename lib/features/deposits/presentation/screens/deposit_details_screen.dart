@@ -2,6 +2,7 @@ import '../../../../core/navigation/sign2digital_navigation.dart';
 import '../../../../core/services/active_company_session.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_display_formats.dart';
 import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import 'package:flutter/services.dart';
@@ -68,14 +69,14 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
     'July','August','September','October','November','December',
   ];
 
-  static String _date(DateTime date) =>
-      '${date.day} ${_months[date.month - 1]} ${date.year}';
+  String _date(DateTime date) => AppDisplayFormats.date(context, date,
+      english: '${date.day} ${_months[date.month - 1]} ${date.year}');
 
-  static String _shortDate(DateTime date) =>
-      '${_months[date.month - 1].substring(0, 3)} '
-      '${date.day}, ${date.year}';
+  String _shortDate(DateTime date) => AppDisplayFormats.date(context, date,
+      short: true, english: '${_months[date.month - 1].substring(0, 3)} '
+      '${date.day}, ${date.year}');
 
-  static String _timestamp(DateTime when) {
+  String _timestamp(DateTime when) {
     final date = when.toLocal();
     final hour = date.hour % 12 == 0 ? 12 : date.hour % 12;
     return '${_date(date)}, $hour:'
@@ -131,7 +132,7 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
   Widget _amount() => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(_record.formattedAmount,
+      Text(AppDisplayFormats.money(context, (_record.amount * 100).round(), 'CHF', english: _record.formattedAmount),
         key: const Key('deposit-detail-amount'),
         style: const TextStyle(fontFamily: 'Inter',
           fontWeight: FontWeight.w700, fontSize: 22, color: AppColors.dark)),
@@ -155,7 +156,7 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
       Sign2DigitalInformationRow('Job', _record.title, onCopy: _copyJob),
       Sign2DigitalInformationRow('Date', _date(_record.date)),
       Sign2DigitalInformationRow('Client', _record.clientName),
-      Sign2DigitalInformationRow('Amount', _record.formattedAmount),
+      Sign2DigitalInformationRow('Amount', AppDisplayFormats.money(context, (_record.amount * 100).round(), 'CHF', english: _record.formattedAmount)),
       Sign2DigitalInformationRow('Payment Method',
         _paymentMethodLabel(_record.paymentMethod)),
       Sign2DigitalInformationRow('Reference Number',

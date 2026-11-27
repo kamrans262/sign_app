@@ -6,6 +6,7 @@ import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 import '../../../documents/data/remote_document_repository.dart';
 import '../../../documents/presentation/screens/document_details_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_display_formats.dart';
 import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../documents/data/document_activity_session.dart';
@@ -328,8 +329,8 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
     final goToDocument = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => Sign2DigitalApprovedConfirmation(
-        title: Text(approved ? 'Quote Approved!' : 'Draft Saved!'),
-        content: Text(approved
+        title: LocalizedUiText(approved ? 'Quote Approved!' : 'Draft Saved!'),
+        content: LocalizedUiText(approved
             ? 'Your approved quotation is saved in Documents.'
             : 'Your draft quotation is saved in Documents. '
               'You can edit or approve it there.'),
@@ -448,10 +449,11 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
     ));
   }
 
-  static String _dateText(DateTime date) {
+  String _dateText(DateTime date) {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return '${date.day} ${months[date.month - 1]} ${date.year}';
+    return AppDisplayFormats.date(context, date, short: true,
+      english: '${date.day} ${months[date.month - 1]} ${date.year}');
   }
 
   Widget _outlineAction({required String label, required VoidCallback onTap,
@@ -460,7 +462,7 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
       key: key,
       onPressed: onTap,
       icon: Icon(icon ?? Icons.edit_outlined, size: 18),
-      label: Text(label, maxLines: 1, style: const TextStyle(fontFamily: 'Inter',
+      label: LocalizedUiText(label, maxLines: 1, style: const TextStyle(fontFamily: 'Inter',
           fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.primary)),
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
@@ -472,7 +474,7 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
   }
 
   Widget _panelHeader(String heading, Widget action) => Row(children: [
-    Expanded(child: Text(heading, style: const TextStyle(fontFamily: 'Inter',
+    Expanded(child: LocalizedUiText(heading, style: const TextStyle(fontFamily: 'Inter',
       fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.dark))),
     const SizedBox(width: 8),
     action,
@@ -480,7 +482,7 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
 
   Widget _detailRow(String label, String value, {bool divider = true}) => Column(children: [
     Padding(padding: const EdgeInsets.symmetric(vertical: 15), child: Row(children: [
-      Expanded(flex: 4, child: Text(label, style: const TextStyle(fontFamily: 'Inter',
+      Expanded(flex: 4, child: LocalizedUiText(label, style: const TextStyle(fontFamily: 'Inter',
           fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.placeholder))),
       const SizedBox(width: 10),
       Expanded(flex: 6, child: Text(value.isEmpty ? 'Not Specified' : value,
@@ -494,7 +496,7 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
   Widget _pricingRow(String label, String amount) => Padding(
     padding: const EdgeInsets.fromLTRB(10, 0, 10, 20),
     child: Row(children: [
-      Expanded(child: Text(label, style: const TextStyle(fontFamily: 'Inter',
+      Expanded(child: LocalizedUiText(label, style: const TextStyle(fontFamily: 'Inter',
           fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.placeholder))),
       const SizedBox(width: 16),
       Expanded(child: Text(amount, textAlign: TextAlign.right,

@@ -4,6 +4,7 @@ import '../../../company/data/remote_company_repository.dart';
 import '../../../../core/widgets/sign2digital_subscription_gate.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_display_formats.dart';
 import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
@@ -541,11 +542,11 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
                 : 'Status: ${response.confirmedSentAt == null ? 'Link ready (not emailed)' : response.status}',
             key: const Key('addendum-signature-request-status')),
           const SizedBox(height: 10),
-          const Text('The customer must sign the separate addendum. '
+          const LocalizedUiText('The customer must sign the separate addendum. '
             'The original signed document remains unchanged.'),
           if (response.emailTransportAccepted) ...[
             const SizedBox(height: 10),
-            const Text('The email was accepted by the sending service. '
+            const LocalizedUiText('The email was accepted by the sending service. '
               'Inbox delivery is not yet confirmed.'),
           ],
           if (link != null) ...[
@@ -557,7 +558,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
                 await Clipboard.setData(ClipboardData(text: link));
                 if (!sheet.mounted) return;
                 ScaffoldMessenger.of(sheet).showSnackBar(
-                  const SnackBar(content: Text('Secure link copied. '
+                  const SnackBar(content: LocalizedUiText('Secure link copied. '
                     'Copying does not confirm delivery.')),
                 );
               },
@@ -596,7 +597,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
               style: TextStyle(fontFamily: 'Inter', fontSize: 18,
                 fontWeight: FontWeight.w600, color: AppColors.dark)),
             const SizedBox(height: 12),
-            const Text('An active signing link was created but not emailed. '
+            const LocalizedUiText('An active signing link was created but not emailed. '
               'Replacing it will invalidate that old link and email a new '
               'secure link to the original verified customer.'),
             const SizedBox(height: 20),
@@ -1409,7 +1410,8 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
     if (date == null) return 'Not available';
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return '${months[date.month - 1]} ${date.day}, ${date.year}';
+    return AppDisplayFormats.date(context, date, short: true,
+      english: '${months[date.month - 1]} ${date.day}, ${date.year}');
   }
 
   Widget _details(DocumentRecord record) {

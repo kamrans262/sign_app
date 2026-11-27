@@ -13,6 +13,13 @@ abstract final class AppDisplayFormats {
     return DateFormat.yMMMMd(code).format(date);
   }
 
+  static String date(BuildContext context, DateTime date,
+      {required String english, bool short = false}) {
+    final code = AppStrings.of(context).locale.languageCode;
+    if (code == 'en') return english;
+    return (short ? DateFormat.yMMMd(code) : DateFormat.yMMMMd(code)).format(date);
+  }
+
   static String time(BuildContext context, TimeOfDay value,
       {required String english}) {
     final code = AppStrings.of(context).locale.languageCode;
