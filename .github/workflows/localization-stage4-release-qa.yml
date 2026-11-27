@@ -63,5 +63,32 @@ jobs:
           assert pathlib.Path('ios/Runner/RunnerRelease.entitlements').is_file()
           print('Bundle ID, localizations, app icon and entitlements are unchanged.')
           PY
+      - name: Supply CI-only placeholder for absent private Firebase plist
+        run: |
+          python3 - <<'PY'
+          import pathlib, plistlib
+          path = pathlib.Path('ios/Runner/GoogleService-Info.plist')
+          if path.exists():
+              print('Existing plist retained, never overwritten.')
+          else:
+              # Ephemeral runner only. Fake IDs for a compiler smoke test.
+              # NEVER commit or use this file for real APNs/Firebase/TestFlight.
+              ci = {
+                'PLIST_VERSION': '1',
+                'API_KEY': 'CI_ONLY_NOT_A_REAL_FIREBASE_KEY',
+                'GCM_SENDER_ID': '000000000000',
+                'GOOGLE_APP_ID': '1:000000000000:ios:0000000000000000000000',
+                'PROJECT_ID': 'sign2digital-ci-placeholder',
+                'BUNDLE_ID': 'com.sign2digital.app',
+                'IS_ADS_ENABLED': False,
+                'IS_ANALYTICS_ENABLED': False,
+                'IS_APPINVITE_ENABLED': False,
+                'IS_GCM_ENABLED': False,
+                'IS_SIGNIN_ENABLED': False,
+              }
+              path.write_bytes(plistlib.dumps(ci, fmt=plistlib.FMT_XML))
+              print('Created fake Firebase plist in CI workspace only.')
+          PY
+          plutil -lint ios/Runner/GoogleService-Info.plist
       - name: Simulator compile only — no App Store signing or upload
         run: flutter build ios --simulator --debug --no-codesign --no-pub
