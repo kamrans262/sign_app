@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -37,7 +38,7 @@ class Sign2DigitalPhotoSourceCard extends StatelessWidget {
             children: [
               SvgPicture.asset(iconAsset, width: 24, height: 24),
               const SizedBox(height: 8),
-              Text(
+              LocalizedUiText(
                 title,
                 maxLines: 2,
                 textAlign: TextAlign.center,
@@ -49,7 +50,7 @@ class Sign2DigitalPhotoSourceCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 5),
-              Text(
+              LocalizedUiText(
                 description,
                 textAlign: TextAlign.center,
                 style: const TextStyle(

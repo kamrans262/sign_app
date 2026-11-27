@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/quote_review_models.dart';
 import 'sign2digital_quote_item_field.dart';
@@ -113,7 +114,7 @@ class Sign2DigitalQuoteWorkItemCard extends StatelessWidget {
           Align(alignment: Alignment.centerLeft, child: TextButton.icon(
             onPressed: () { item.dimensions = ''; onChanged(); },
             icon: const Icon(Icons.add, size: 16),
-            label: const Text('Add dimensions'),
+            label: const LocalizedUiText('Add dimensions'),
           )),
         for (final entry in item.otherFields.entries) ...[
           const SizedBox(height: 15),

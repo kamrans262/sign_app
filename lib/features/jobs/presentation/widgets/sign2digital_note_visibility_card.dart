@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -71,7 +72,7 @@ class Sign2DigitalNoteVisibilityCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
+                      LocalizedUiText(
                         label,
                         softWrap: true,
                         style: const TextStyle(
@@ -83,7 +84,7 @@ class Sign2DigitalNoteVisibilityCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 3),
-                      Text(
+                      LocalizedUiText(
                         description,
                         style: const TextStyle(
                           fontFamily: 'Inter',

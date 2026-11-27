@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import 'sign2digital_quote_shadow_panel.dart';
@@ -18,7 +19,7 @@ class Sign2DigitalExtractedInformationCard extends StatelessWidget {
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         const Padding(
           padding: EdgeInsets.fromLTRB(20, 18, 20, 12),
-          child: Text('Extracted Information', style: TextStyle(
+          child: LocalizedUiText('Extracted Information', style: TextStyle(
             fontFamily: 'Inter', fontSize: 18, fontWeight: FontWeight.w600,
             letterSpacing: -0.3, color: AppColors.dark,
           )),
@@ -26,7 +27,7 @@ class Sign2DigitalExtractedInformationCard extends StatelessWidget {
         if (fields.isEmpty)
           const Padding(
             padding: EdgeInsets.fromLTRB(20, 12, 20, 24),
-            child: Text('No extracted details are available yet.',
+            child: LocalizedUiText('No extracted details are available yet.',
               style: TextStyle(fontFamily: 'Inter', fontSize: 14,
                 color: AppColors.placeholder)),
           )

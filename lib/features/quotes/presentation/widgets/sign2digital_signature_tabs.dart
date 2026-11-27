@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 
 import '../../../../core/theme/app_colors.dart';
 
@@ -55,7 +56,7 @@ class Sign2DigitalSignatureTabs extends StatelessWidget {
                         ),
                       ),
                     ),
-                    child: Text(
+                    child: LocalizedUiText(
                       labels[i],
                       style: TextStyle(
                         fontFamily: 'Inter',

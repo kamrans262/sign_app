@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -42,7 +43,7 @@ class Sign2DigitalExtractedInfoRow extends StatelessWidget {
                       errorBuilder: (context, error, stackTrace) =>
                           Icon(field.fallbackIcon, size: 16, color: accent))),
               const SizedBox(width: 10),
-              Flexible(child: Text(field.label,
+              Flexible(child: LocalizedUiText(field.label,
                   style: TextStyle(fontFamily: 'Inter', fontSize: 14,
                       fontWeight: FontWeight.w500, height: 1.25, color: accent))),
             ],

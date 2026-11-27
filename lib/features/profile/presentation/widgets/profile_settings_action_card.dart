@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/dashboard_colors.dart';
@@ -45,7 +46,7 @@ class ProfileSettingsActionCard extends StatelessWidget {
               Expanded(child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(
+                  LocalizedUiText(title, style: const TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -53,7 +54,7 @@ class ProfileSettingsActionCard extends StatelessWidget {
                     color: AppColors.dark,
                   )),
                   const SizedBox(height: 5),
-                  Text(subtitle, style: const TextStyle(
+                  LocalizedUiText(subtitle, style: const TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 12,
                     fontWeight: FontWeight.w400,

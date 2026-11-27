@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -140,7 +141,7 @@ class Sign2DigitalJobNoteCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 5),
-                      Text(
+                      LocalizedUiText(
                         note.visibility == JobNoteVisibility.privateNote
                             ? 'Private Note' : 'Customer-facing',
                         style: const TextStyle(

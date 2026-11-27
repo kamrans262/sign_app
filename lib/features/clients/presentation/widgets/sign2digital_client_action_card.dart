@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -46,7 +47,7 @@ class Sign2DigitalClientActionCard extends StatelessWidget {
               else
                 Icon(fallbackIcon, size: 24, color: AppColors.primary),
               const SizedBox(height: 5),
-              Text(
+              LocalizedUiText(
                 label,
                 textAlign: TextAlign.center,
                 style: const TextStyle(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 
 import '../../../../core/theme/app_colors.dart';
 
@@ -36,7 +37,7 @@ class Sign2DigitalSignatureActionCard extends StatelessWidget {
           Icon(icon, size: 24, color: selected ? (selectedIconColor ?? Colors.white) :
             (documentStyling ? AppColors.placeholder : AppColors.primary)),
           const SizedBox(height: 5),
-          Text(label, maxLines: 2, textAlign: TextAlign.center,
+          LocalizedUiText(label, maxLines: 2, textAlign: TextAlign.center,
             style: TextStyle(fontFamily: 'Inter', fontSize: 12,
               fontWeight: FontWeight.w500,
               color: selected ? Colors.white :
