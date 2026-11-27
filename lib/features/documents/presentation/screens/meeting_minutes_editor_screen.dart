@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
@@ -193,8 +194,8 @@ class _MeetingMinutesEditorScreenState extends State<MeetingMinutesEditorScreen>
         return;
       }
       final selected = await Sign2DigitalSelectionSheet.showCustom<JobModel>(
-        context: context, title: 'Select Job / Project',
-        subtitle: 'Select a saved job and its linked client',
+        context: context, title: AppStrings.of(context).tr('Select Job / Project'),
+        subtitle: AppStrings.of(context).tr('Select a saved job and its linked client'),
         icon: Icons.work_outline_rounded,
         isScrollControlled: true,
         builder: (sheet) => SafeArea(child: ConstrainedBox(
@@ -322,7 +323,8 @@ class _MeetingMinutesEditorScreenState extends State<MeetingMinutesEditorScreen>
     padding: const EdgeInsets.only(bottom: 15),
     child: Sign2DigitalInputField(
       label: label,
-      hintText: 'Enter ${label.toLowerCase()}',
+      hintText: AppStrings.of(context).format('Enter {field}',
+        {'field': AppStrings.of(context).tr(label).toLowerCase()}),
       iconAsset: '', leadingIcon: Icons.edit_note_outlined,
       controller: controller,
       minLines: multiline ? 3 : 1,
@@ -342,8 +344,8 @@ class _MeetingMinutesEditorScreenState extends State<MeetingMinutesEditorScreen>
           children: [
             ListTile(
               key: const Key('meeting-select-job'),
-              title: Text(_job?.title ?? 'Select Job / Project'),
-              subtitle: Text(_job?.clientName ?? 'Choose a real job and client'),
+              title: Text(_job?.title ?? AppStrings.of(context).tr('Select Job / Project')),
+              subtitle: Text(_job?.clientName ?? AppStrings.of(context).tr('Choose a real job and client')),
               trailing: const Icon(Icons.chevron_right),
               onTap: _chooseJob,
             ),
@@ -371,7 +373,7 @@ class _MeetingMinutesEditorScreenState extends State<MeetingMinutesEditorScreen>
             _field('Action Items (task | owner | YYYY-MM-DD)', _actions, multiline: true),
             if (_error != null)
               Padding(padding: const EdgeInsets.only(bottom: 12),
-                child: Text(_error!, style: const TextStyle(
+                child: Text(AppStrings.of(context).tr(_error!), style: const TextStyle(
                   fontFamily: 'Inter', color: Color(0xFFB42318)))),
             Sign2DigitalPrimaryButton(
               key: const Key('meeting-save-draft'),

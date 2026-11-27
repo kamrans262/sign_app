@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
@@ -241,11 +242,11 @@ class _WorkAcceptanceEditorScreenState extends State<WorkAcceptanceEditorScreen>
     const types={'cleaned':'Cleaned / Restored',
       'pending':'Pending','not_applicable':'Not Applicable'};
     final value=await Sign2DigitalSelectionSheet.showCustom<String>(
-      context:context,title:'Cleaning / Restoration',
+      context:context,title:AppStrings.of(context).tr('Cleaning / Restoration'),
       icon:Icons.cleaning_services_outlined,
       builder:(sheet)=>Column(mainAxisSize:MainAxisSize.min,children:[
         for(final entry in types.entries)ListTile(
-          title:Text(entry.value),
+          title:Text(AppStrings.of(context).tr(entry.value)),
           trailing:entry.key==_cleaning?const Icon(Icons.check_circle,
             color:AppColors.primary):null,
           onTap:()=>Navigator.of(sheet).pop(entry.key)),
@@ -316,12 +317,12 @@ class _WorkAcceptanceEditorScreenState extends State<WorkAcceptanceEditorScreen>
   Widget build(BuildContext context) => Scaffold(
     backgroundColor:AppColors.white,
     body:SafeArea(bottom:false,child:Column(children:[
-      Sign2DigitalHeader(title:widget.initial==null
+      Sign2DigitalHeader(translateTitle:true,title:widget.initial==null
           ?'Create Work Acceptance':'Edit Work Acceptance'),
       Expanded(child:ListView(padding:const EdgeInsets.fromLTRB(20,0,20,24),children:[
           ListTile(key:const Key('acceptance-select-job'),
-            title:Text(_job?.title??'Select Job / Project'),
-            subtitle:Text(_job?.clientName??'Choose a saved job and customer'),
+            title:Text(_job?.title??AppStrings.of(context).tr('Select Job / Project')),
+            subtitle:Text(_job?.clientName??AppStrings.of(context).tr('Choose a saved job and customer')),
             trailing:const Icon(Icons.chevron_right),
             onTap:widget.initial==null?_chooseJob:null),
           const SizedBox(height:15),
@@ -333,7 +334,12 @@ class _WorkAcceptanceEditorScreenState extends State<WorkAcceptanceEditorScreen>
             trailing:const Icon(Icons.calendar_today_outlined),
             onTap:_chooseDate),
           ListTile(title:const LocalizedUiText('Cleaning / Restoration Status'),
-            subtitle:Text(_cleaning.replaceAll('_',' ')),
+            subtitle:Text(AppStrings.of(context).tr(switch(_cleaning) {
+              'cleaned' => 'Cleaned / Restored',
+              'pending' => 'Pending',
+              'not_applicable' => 'Not Applicable',
+              _ => _cleaning,
+            })),
             trailing:const Icon(Icons.chevron_right),
             onTap:_chooseCleaning),
           const SizedBox(height:15),

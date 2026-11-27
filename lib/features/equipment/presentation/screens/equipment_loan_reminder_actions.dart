@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 
 import '../../../../core/services/active_company_session.dart';
@@ -117,13 +118,13 @@ class _EquipmentLoanReminderActionsState
               mainAxisSize:MainAxisSize.min,
               crossAxisAlignment:CrossAxisAlignment.start,
               children:[
-                Text('Borrower: '+current.borrowerName),
+                Text('${AppStrings.of(context).tr('Borrower')}: '+current.borrowerName),
                 const SizedBox(height:6),
-                Text('Email: '+current.borrowerEmail),
+                Text('${AppStrings.of(context).tr('Email')}: '+current.borrowerEmail),
                 const SizedBox(height:6),
-                Text('Equipment: '+current.equipmentName),
+                Text('${AppStrings.of(context).tr('Equipment')}: '+current.equipmentName),
                 const SizedBox(height:6),
-                Text('Return due: '+current.expectedReturnDate),
+                Text('${AppStrings.of(context).tr('Return due')}: '+current.expectedReturnDate),
                 const SizedBox(height:10),
                 const LocalizedUiText('This sends an email to the configured transport. '
                   'Inbox delivery is not confirmed.'),
@@ -220,7 +221,7 @@ class _EquipmentLoanReminderActionsState
             TextButton(
               key:const Key('equipment-reminder-policy-save'),
               onPressed:approved?()=>Navigator.pop(dialog,frequency):null,
-              child:Text(enable?'Enable Reminders':'Disable Reminders')),
+              child:Text(AppStrings.of(context).tr(enable?'Enable Reminders':'Disable Reminders'))),
           ],
         )));
     if(result==null||!mounted)return;
@@ -287,8 +288,8 @@ class _EquipmentLoanReminderActionsState
               icon:const Icon(Icons.notifications_outlined,
                 color:AppColors.primary),
               label:Text(p.automaticEnabled
-                ?'Overdue Reminders: On ('+p.frequencyDays.toString()+' days)'
-                :'Overdue Reminders: Off')),
+                ?AppStrings.of(context).format('Overdue Reminders: On ({days} days)',{'days':p.frequencyDays})
+                :AppStrings.of(context).tr('Overdue Reminders: Off'))),
             if(!p.automaticGlobalEnabled)
               const LocalizedUiText('Automatic sending is disabled on the server.',
                 style:TextStyle(color:AppColors.placeholder,fontSize:12)),
