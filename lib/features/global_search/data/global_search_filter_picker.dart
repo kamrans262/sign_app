@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
+import 'package:sign2digital/features/clients/presentation/widgets/sign2digital_status_badge.dart';
 
 import '../../../core/services/active_company_session.dart';
 import '../../../core/services/sign_api_client.dart';
@@ -113,14 +115,14 @@ class _SearchRecordPickerState extends State<_SearchRecordPicker> {
         style: const TextStyle(fontFamily: 'Inter', fontSize: 14,
           color: AppColors.dark),
         decoration: InputDecoration(
-          hintText: _isClient ? 'Find client by name' : 'Find job by title',
+          hintText: AppStrings.of(context).tr(_isClient ? 'Find client by name' : 'Find job by title'),
           prefixIcon: const Icon(Icons.search, color: AppColors.primary),
           border: const OutlineInputBorder(),
           counterText: '',
         ),
       ),
       ListTile(
-        title: Text(_isClient ? 'All clients' : 'All jobs'),
+        title: Text(AppStrings.of(context).tr(_isClient ? 'All clients' : 'All jobs')),
         onTap: () => Navigator.of(context).pop(
           _RecordChoice('', _isClient ? 'All clients' : 'All jobs')),
       ),
@@ -130,8 +132,8 @@ class _SearchRecordPickerState extends State<_SearchRecordPicker> {
       else if (_error != null)
         TextButton(onPressed: _fetch, child: Text('$_error. Retry'))
       else if (_records.isEmpty)
-        const Padding(padding: EdgeInsets.all(24),
-          child: Center(child: Text('No matching records')))
+        Padding(padding: const EdgeInsets.all(24),
+          child: Center(child: Text(AppStrings.of(context).tr('No matching records'))))
       else
         for (final record in _records)
           ListTile(
@@ -146,7 +148,7 @@ class _SearchRecordPickerState extends State<_SearchRecordPicker> {
       if (_hasMore)
         TextButton(
           onPressed: _paging ? null : () => _fetch(more: true),
-          child: Text(_paging ? 'Loading…' : 'Load more'),
+          child: Text(AppStrings.of(context).tr(_paging ? 'Loading…' : 'Load more')),
         ),
     ],
   );
@@ -254,7 +256,7 @@ abstract final class GlobalSearchFilterPicker {
               IconData icon) => ListTile(
             contentPadding: EdgeInsets.zero,
             leading: Icon(icon, color: AppColors.primary),
-            title: Text(label, style: const TextStyle(
+            title: Text(AppStrings.of(sheet).tr(label), style: const TextStyle(
               fontFamily: 'Inter', fontSize: 14)),
             subtitle: Text(value, maxLines: 1,
               overflow: TextOverflow.ellipsis),
@@ -311,8 +313,9 @@ abstract final class GlobalSearchFilterPicker {
                   labelText: 'Document type', border: OutlineInputBorder()),
                 items: [for (final value in documentTypes)
                   DropdownMenuItem(value: value,
-                    child: Text(value.isEmpty ? 'All document types'
-                      : value.replaceAll('_', ' ')))],
+                    child: Text(value.isEmpty
+                      ? AppStrings.of(sheet).tr('All document types')
+                      : _displayFilter(sheet, value)))],
                 onChanged: (value) => update(() => kind = value ?? ''),
               ),
               const SizedBox(height: 12),
@@ -324,8 +327,9 @@ abstract final class GlobalSearchFilterPicker {
                   labelText: 'Status', border: OutlineInputBorder()),
                 items: [for (final value in statuses)
                   DropdownMenuItem(value: value,
-                    child: Text(value.isEmpty ? 'All statuses'
-                      : value.replaceAll('_', ' ')))],
+                    child: Text(value.isEmpty
+                      ? AppStrings.of(sheet).tr('All statuses')
+                      : _displayFilter(sheet, value)))],
                 onChanged: (value) => update(() => status = value ?? ''),
               ),
               const SizedBox(height: 12),
@@ -336,7 +340,7 @@ abstract final class GlobalSearchFilterPicker {
                   key: const Key('search-clear-filters'),
                   onPressed: () => Navigator.of(sheet).pop(
                     _SelectedFilters(const GlobalSearchFilters(), companyId)),
-                  child: const Text('Clear filters')),
+                  child: Text(AppStrings.of(sheet).tr('Clear filters'))),
                 const Spacer(),
                 FilledButton(
                   key: const Key('search-apply-filters'),
@@ -346,7 +350,7 @@ abstract final class GlobalSearchFilterPicker {
                       documentType: kind, status: status,
                       dateFrom: from.trim(), dateTo: to.trim(),
                     ), companyId)),
-                  child: const Text('Apply filters')),
+                  child: Text(AppStrings.of(sheet).tr('Apply filters'))),
               ]),
             ],
           );
@@ -371,4 +375,14 @@ abstract final class GlobalSearchFilterPicker {
       }
       return filters;
   }
+}
+
+/// Keep the original English spelling and raw filter codes.
+String _displayFilter(BuildContext context, String value) {
+  final strings = AppStrings.of(context);
+  final original = value.replaceAll('_', ' ');
+  if (strings.locale.languageCode == 'en') return original;
+  final label = Sign2DigitalStatusBadge.displayLabel(value);
+  final translated = strings.tr(label);
+  return translated == label ? original : translated;
 }

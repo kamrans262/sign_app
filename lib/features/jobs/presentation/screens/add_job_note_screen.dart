@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -68,7 +69,7 @@ class _AddJobNoteScreenState extends State<AddJobNoteScreen> {
 
   void _message(String value) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(value)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppStrings.of(context).tr(value))));
   }
 
   Future<void> _record() async {
@@ -197,7 +198,7 @@ class _AddJobNoteScreenState extends State<AddJobNoteScreen> {
                       ? 'Record Voice Note' : 'Replace Recording'),
                 ),
                 if (_audioPath != null)
-                  const Text('Audio recorded locally and ready to attach.',
+                  const LocalizedUiText('Audio recorded locally and ready to attach.',
                     key: Key('job-note-audio-ready'),
                     style: TextStyle(color: AppColors.primary)),
               ],

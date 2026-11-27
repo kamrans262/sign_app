@@ -1,0 +1,5 @@
+"NSMicrophoneUsageDescription" = "Registrare i dettagli dettati per compilare il modulo di creazione intervento.";
+"NSCameraUsageDescription" = "Scattare foto dell’avanzamento dell’intervento con la fotocamera.";
+"NSContactsUsageDescription" = "Leggere i contatti selezionati per la verifica prima di importarli nella tua azienda Sign2Digital.";
+"NSPhotoLibraryUsageDescription" = "Scegliere foto dell’intervento dalla libreria fotografica.";
+"NSLocationWhenInUseUsageDescription" = "Sign2Digital usa un selettore di file e foto per allegare foto e documenti ai record aziendali. L’accesso alla posizione non è necessario e può essere negato.";

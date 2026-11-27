@@ -1,5 +1,7 @@
 import '../../../support/presentation/widgets/support_ai_prompt_hint.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_display_formats.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 
@@ -110,17 +112,12 @@ class _AddDepositScreenState extends State<AddDepositScreen> {
     super.dispose();
   }
 
-  static String _dateLabel(DateTime date) {
-    const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December',
-    ];
-    return '${months[date.month - 1]} ${date.day}, ${date.year}';
-  }
+  String _dateLabel(DateTime date) =>
+      AppDisplayFormats.longDate(context, date);
 
   void _notice(String message) {
     if (!mounted) { return; }
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppStrings.of(context).tr(message))));
   }
 
   static bool _isCustomMethod(String value) {

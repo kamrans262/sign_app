@@ -182,7 +182,7 @@ class _TimeLabourScreenState extends State<TimeLabourScreen> {
                 )),
               Expanded(child: ListView(children: [
                 ListTile(key: const Key('labour-job-all'),
-                  title: const Text('All Jobs'),
+                  title: const LocalizedUiText('All Jobs'),
                   selected: _jobId == null,
                   onTap: () => Navigator.of(sheet).pop('')),
                 for (final job in _jobs.where((item) =>
@@ -334,7 +334,7 @@ class _TimeLabourScreenState extends State<TimeLabourScreen> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Could not save the time entry.')));
+          content: LocalizedUiText('Could not save the time entry.')));
       }
     }
   }

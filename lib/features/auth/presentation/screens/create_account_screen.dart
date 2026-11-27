@@ -133,7 +133,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Unable to prepare the local demo profile.'),
+          content: LocalizedUiText('Unable to prepare the local demo profile.'),
         ),
       );
     } finally {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_checkbox.dart';
@@ -36,7 +37,7 @@ class SubscriptionFeatureList extends StatelessWidget {
             )),
             const SizedBox(width: 10),
             Expanded(child: Text(
-              items[i].label,
+              AppStrings.of(context).tr(items[i].label),
               style: const TextStyle(
                 fontFamily: 'Inter',
                 fontSize: 14,

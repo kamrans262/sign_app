@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 
@@ -84,7 +85,7 @@ class _AddPhotosScreenState extends State<AddPhotosScreen> {
 
   void _message(String message) {
     ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
+        .showSnackBar(SnackBar(content: Text(AppStrings.of(context).tr(message))));
   }
 
   Future<void> _choose({required bool camera}) async {
@@ -143,8 +144,8 @@ class _AddPhotosScreenState extends State<AddPhotosScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
-          title: const Text('Discard unsaved photo?'),
-          content: const Text(
+          title: const LocalizedUiText('Discard unsaved photo?'),
+          content: const LocalizedUiText(
             'Your selected photo and caption have not been saved.',
           ),
           actions: [

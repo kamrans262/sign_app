@@ -68,7 +68,7 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
     final approved = await showDialog<String>(
       context: context,
       builder: (dialog) => Sign2DigitalApprovedConfirmation(
-        title: const Text('Deactivate Account?'),
+        title: const LocalizedUiText('Deactivate Account?'),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
           const Text('Deactivation disables sign-in and revokes active sessions. '
             'It does not delete company records or signed documents. '
@@ -88,11 +88,11 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialog).pop(),
-            child: const Text('Keep Account')),
+            child: const LocalizedUiText('Keep Account')),
           TextButton(
             key: const Key('m22-privacy-confirm'),
             onPressed: () => Navigator.of(dialog).pop(password.text),
-            child: const Text('Deactivate')),
+            child: const LocalizedUiText('Deactivate')),
         ],
       ),
     );
@@ -137,7 +137,7 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
       context: context,
       builder: (dialog) => StatefulBuilder(
         builder: (context, refresh) => Sign2DigitalApprovedConfirmation(
-          title: const Text('Permanently Delete Account?'),
+          title: const LocalizedUiText('Permanently Delete Account?'),
           content: SingleChildScrollView(child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -170,7 +170,7 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
           )),
           actions: [
             TextButton(onPressed: () => Navigator.of(dialog).pop(),
-              child: const Text('Keep Account')),
+              child: const LocalizedUiText('Keep Account')),
             TextButton(
               key: const Key('m22-delete-confirm'),
               onPressed: confirmation == 'DELETE' && password.isNotEmpty
@@ -229,7 +229,7 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
               Text(_message!, key: const Key('m22-privacy-message'),
                 style: const TextStyle(color: AppColors.secondaryText)),
             ],
-            const Text('Your Account Data',
+            const LocalizedUiText('Your Account Data',
               style: TextStyle(fontFamily: 'Inter', fontSize: 20,
                 fontWeight: FontWeight.w600, color: AppColors.dark)),
             const SizedBox(height: 12),
@@ -249,7 +249,7 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
               onPressed: _export,
             ),
             const SizedBox(height: 28),
-            const Text('Account Deactivation',
+            const LocalizedUiText('Account Deactivation',
               style: TextStyle(fontFamily: 'Inter', fontSize: 20,
                 fontWeight: FontWeight.w600, color: AppColors.dark)),
             const SizedBox(height: 10),
@@ -269,7 +269,7 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
               onPressed: _deactivate,
             ),
             const SizedBox(height: 28),
-            const Text('Delete Personal Account',
+            const LocalizedUiText('Delete Personal Account',
               style: TextStyle(fontFamily: 'Inter', fontSize: 20,
                 fontWeight: FontWeight.w600, color: AppColors.dark)),
             const SizedBox(height: 10),

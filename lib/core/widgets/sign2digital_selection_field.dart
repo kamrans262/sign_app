@@ -16,6 +16,7 @@ class Sign2DigitalSelectionField extends StatelessWidget {
     required this.hintText,
     required this.onTap,
     this.value,
+    this.translateValue = false,
     this.errorText,
     this.leadingIcon,
     this.leadingIconSize = 20,
@@ -28,6 +29,7 @@ class Sign2DigitalSelectionField extends StatelessWidget {
   final String hintText;
   final VoidCallback onTap;
   final String? value;
+  final bool translateValue;
   final String? errorText;
   final IconData? leadingIcon;
   final double leadingIconSize;
@@ -38,13 +40,16 @@ class Sign2DigitalSelectionField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final selected = value != null && value!.isNotEmpty;
+    final visibleValue = selected
+        ? (translateValue ? AppStrings.of(context).tr(value!) : value!)
+        : AppStrings.of(context).tr(hintText);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Semantics(
           button: true,
           label: AppStrings.of(context).tr(label),
-          value: selected ? value : AppStrings.of(context).tr(hintText),
+          value: visibleValue,
           child: Material(
             color: Colors.transparent,
             child: InkWell(
@@ -78,7 +83,7 @@ class Sign2DigitalSelectionField extends StatelessWidget {
                           Text(AppStrings.of(context).tr(label), style: AppTextStyles.fieldLabel),
                           const SizedBox(height: 5),
                           Text(
-                            selected ? value! : AppStrings.of(context).tr(hintText),
+                            visibleValue,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: selected

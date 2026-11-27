@@ -1,6 +1,8 @@
 import '../../../support/presentation/widgets/support_ai_prompt_hint.dart';
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_display_formats.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
@@ -125,14 +127,14 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     if (!mounted) return;
     final messenger = ScaffoldMessenger.of(context);
     messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(SnackBar(content: Text(message)));
+    messenger.showSnackBar(SnackBar(content: Text(AppStrings.of(context).tr(message))));
   }
 
   Future<bool> _confirmDiscard() async {
     if (!_dirty) return true;
     return await showDialog<bool>(context: context, builder: (dialog) => Sign2DigitalApprovedConfirmation(
-      title: const Text('Discard expense?'),
-      content: const Text('Your unsaved expense information will be lost.'),
+      title: const LocalizedUiText('Discard expense?'),
+      content: const LocalizedUiText('Your unsaved expense information will be lost.'),
       actions: [
         TextButton(onPressed: () => Navigator.of(dialog).pop(false),
           child: const LocalizedUiText('Keep editing')),
@@ -180,7 +182,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       builder: (sheet) => SafeArea(child: ListView(
         shrinkWrap: true, children: [
           for (final type in ExpenseCategory.values)
-            ListTile(key: Key('expense-type-${type.name}'), title: Text(type.label),
+            ListTile(key: Key('expense-type-${type.name}'), title: Text(AppStrings.of(sheet).tr(type.label)),
               selected: _category == type,
               trailing: _category == type
                   ? const Icon(Icons.check_circle_rounded,
@@ -205,11 +207,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     if (result != null && mounted) setState(() { _date = result; _error = null; });
   }
 
-  String _dateText(DateTime date) {
-    const months = ['January','February','March','April','May','June','July',
-      'August','September','October','November','December'];
-    return '${months[date.month-1]} ${date.day}, ${date.year}';
-  }
+  String _dateText(DateTime date) =>
+      AppDisplayFormats.longDate(context, date);
 
   Future<void> _addPhotos() async {
     if (_busy) return;
@@ -512,7 +511,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 key: const Key('expense-add-category'), label: 'Expense Type',
                 iconAsset: 'assets/icons/description.svg',
                 leadingIcon: Icons.donut_large_outlined, hintText: 'e.g, Material',
-                value: _category?.label,
+                translateValue: true, value: _category?.label,
                 trailing: const Icon(Icons.keyboard_arrow_down_rounded,
                   color: AppColors.secondaryText),
                 onTap: _chooseCategory),
@@ -652,7 +651,7 @@ class _ExpenseJobSearchContentState extends State<_ExpenseJobSearchContent> {
             itemBuilder: (context, index) {
               if (matches.isEmpty) {
                 return const ListTile(
-                  title: Text('No matching jobs',
+                  title: LocalizedUiText('No matching jobs',
                     style: TextStyle(color: AppColors.dark)),
                 );
               }

@@ -1,5 +1,6 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 
 import '../../../../core/services/active_company_session.dart';
@@ -100,7 +101,7 @@ class _EquipmentLoansScreenState extends State<EquipmentLoansScreen> {
 
   void _notice(String value){
     if(!mounted)return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(value)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppStrings.of(context).tr(value))));
   }
 
   Future<void> _create() async{
@@ -194,7 +195,7 @@ class _EquipmentLoansScreenState extends State<EquipmentLoansScreen> {
                     onPressed:_load,child:Text(_error!+' — Retry'))))
                 else if(visible.isEmpty)const SliverFillRemaining(
                   hasScrollBody:false,child:Center(
-                    child:Text('No matching equipment loans',
+                    child:LocalizedUiText('No matching equipment loans',
                       key:Key('equipment-loans-empty'),
                       style:TextStyle(color:AppColors.placeholder))))
                 else SliverPadding(

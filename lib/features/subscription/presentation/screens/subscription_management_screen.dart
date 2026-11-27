@@ -1,4 +1,5 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
@@ -105,7 +106,7 @@ class _SubscriptionManagementScreenState
     if (!mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+      ..showSnackBar(SnackBar(content: Text(AppStrings.of(context).tr(message))));
   }
 
   Future<void> _changePlan() async {
@@ -158,10 +159,10 @@ class _SubscriptionManagementScreenState
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
           child: Column(mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('Billing History', style: _sectionStyle),
+              const LocalizedUiText('Billing History', style: _sectionStyle),
               const SizedBox(height: 18),
               if (records.isEmpty)
-                const Text('No verified subscription invoices yet.',
+                const LocalizedUiText('No verified subscription invoices yet.',
                   key: Key('m23-no-billing-history'),
                   style: TextStyle(color: AppColors.placeholder))
               else
@@ -216,7 +217,7 @@ class _SubscriptionManagementScreenState
           if (data.freeDocumentLimit != null) ...[
             const SizedBox(height:12),
             _usageLine('Free documents remaining', data.freeDocumentsRemaining),
-            if (!data.enforcementEnabled) const Text(
+            if (!data.enforcementEnabled) const LocalizedUiText(
               'Subscription quotas are not enforced yet.',
               style: TextStyle(fontFamily:'Inter',fontSize:12,
                 color:AppColors.placeholder)),
@@ -268,7 +269,7 @@ class _SubscriptionManagementScreenState
     final approved = await showDialog<bool>(
       context: context,
       builder: (dialog) => Sign2DigitalApprovedConfirmation(
-        title: const Text('Cancel Subscription?'),
+        title: const LocalizedUiText('Cancel Subscription?'),
         content: const Text(
           'Cancellation will be requested for the end of your billing '
           'period. No cancellation is applied unless Stripe confirms it. '
@@ -277,12 +278,12 @@ class _SubscriptionManagementScreenState
           TextButton(
             key: const Key('subscription-keep-plan'),
             onPressed: () => Navigator.of(dialog).pop(false),
-            child: const Text('Keep Plan'),
+            child: const LocalizedUiText('Keep Plan'),
           ),
           TextButton(
             key: const Key('subscription-confirm-cancel'),
             onPressed: () => Navigator.of(dialog).pop(true),
-            child: const Text('Confirm Cancellation'),
+            child: const LocalizedUiText('Confirm Cancellation'),
           ),
         ],
       ),

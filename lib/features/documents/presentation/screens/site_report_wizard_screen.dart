@@ -1,5 +1,6 @@
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_display_formats.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
@@ -244,11 +245,8 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
     });
   }
 
-  String _dateText(DateTime value) {
-    const months = ['January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'];
-    return '${months[value.month - 1]} ${value.day}, ${value.year}';
-  }
+  String _dateText(DateTime value) =>
+      AppDisplayFormats.longDate(context, value);
 
   void _showStep(int value) {
     FocusManager.instance.primaryFocus?.unfocus();
@@ -576,7 +574,7 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
       final saveDraft = await showDialog<bool>(
         context: context,
         builder: (dialog) => Sign2DigitalApprovedConfirmation(
-          title: const Text('Report generation unavailable'),
+          title: const LocalizedUiText('Report generation unavailable'),
           content: const Text(
             'Report generation is not connected yet. '
             'You can save this report as a local draft instead.'),
@@ -588,7 +586,7 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
             TextButton(
               key: const Key('review-report-save-local-draft'),
               onPressed: () => Navigator.of(dialog).pop(true),
-              child: const Text('Save local draft'),
+              child: const LocalizedUiText('Save local draft'),
             ),
           ],
         ),
@@ -641,7 +639,7 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
         label: 'Report Title',
         iconAsset: 'assets/icons/description.svg',
         hintText: 'e.g, Site report',
-        value: _title == 'Custom Title' ? null : _title,
+        translateValue: true, value: _title == 'Custom Title' ? null : _title,
         trailing: const Icon(Icons.keyboard_arrow_down_rounded,
           color: AppColors.secondaryText),
         onTap: () => _pickOption(
@@ -693,7 +691,7 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
         iconAsset: 'assets/icons/cloud-upload-outlined.svg',
         leadingIcon: Icons.cloud_outlined,
         hintText: 'e.g, Sunny',
-        value: _weather,
+        translateValue: true, value: _weather,
         trailing: const Icon(Icons.keyboard_arrow_down_rounded,
           color: AppColors.secondaryText),
         onTap: () => _pickOption(
@@ -714,7 +712,7 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
         ),
       ],
       const SizedBox(height: 20),
-      const Text('Report Sections', style: AppTextStyles.fieldLabel),
+      const LocalizedUiText('Report Sections', style: AppTextStyles.fieldLabel),
       const SizedBox(height: 10),
       for (var i = 0; i < SiteReportSection.values.length; i++) ...[
         Row(children: [
@@ -762,7 +760,7 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
       if (_selectedSections.contains(SiteReportSection.siteProgress)) ...[
-        const Text('Site Programs', style: AppTextStyles.fieldLabel),
+        const LocalizedUiText('Site Programs', style: AppTextStyles.fieldLabel),
         const SizedBox(height: 10),
         Sign2DigitalOutlinedContainer(
           constraints: const BoxConstraints(minHeight: 80),
@@ -821,7 +819,7 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
                           width: 24, height: 24,
                         ),
                         const SizedBox(height: 8),
-                        const Text('Add Photo', style: AppTextStyles.outlinedButton),
+                        const LocalizedUiText('Add Photo', style: AppTextStyles.outlinedButton),
                       ],
                     ),
                   ),
@@ -863,7 +861,7 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
           label: 'Issues & Risks',
           hintText: 'e.g, Site report',
           iconAsset: 'assets/icons/description.svg',
-          value: _riskSelection,
+          translateValue: true, value: _riskSelection,
           trailing: const Icon(Icons.keyboard_arrow_down_rounded,
             color: AppColors.secondaryText),
           onTap: _selectRisk,
@@ -931,7 +929,7 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
       bottom: false,
       child: Column(children: [
         Sign2DigitalHeader(
-          title: _step == 2 ? 'Review Reports' : 'Site Reports',
+          translateTitle: true, title: _step == 2 ? 'Review Reports' : 'Site Reports',
           onBack: _back,
         ),
         Expanded(child: Center(child: ConstrainedBox(

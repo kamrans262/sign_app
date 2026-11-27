@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import '../../../company/presentation/screens/create_company_screen.dart';
@@ -195,7 +196,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
       if (mounted && MobileAuthRepository.shared.isSignedIn &&
           widget.companyRepository == null) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Unable to refresh companies. Check your connection and retry.'),
+          content: LocalizedUiText('Unable to refresh companies. Check your connection and retry.'),
         ));
       }
     }
@@ -289,7 +290,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
       selected: selectedIndex < 0 ? null : names[selectedIndex],
       icon: Icons.business_outlined,
       labelForOption: (option) =>
-          option == createOption ? 'Create Company' : option,
+          option == createOption ? AppStrings.of(context).tr('Create Company') : option,
       iconForOption: (option) => option == createOption
           ? Icons.add_business_outlined : Icons.business_outlined,
     );
@@ -319,7 +320,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
         final message = error is SignApiException
             ? error.message : 'Unable to switch companies.';
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
+          SnackBar(content: Text(AppStrings.of(context).tr(message))),
         );
         return;
       }
@@ -444,7 +445,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                                 color: AppColors.placeholder)),
                             const SizedBox(height: 5),
                             Text(
-                              company?.companyName ?? 'No company selected',
+                              company?.companyName ?? AppStrings.of(context).tr('No company selected'),
                               key: const Key('home-company-name'),
                               maxLines: 1, overflow: TextOverflow.ellipsis,
                               style: AppTextStyles.fieldLabel,
@@ -467,7 +468,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                 ),
                 IconButton(
                   key: const Key('home-refresh'),
-                  tooltip: 'Refresh dashboard',
+                  tooltip: AppStrings.of(context).tr('Refresh dashboard'),
                   onPressed: _reload,
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints.tightFor(
@@ -539,9 +540,9 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                     children: [
                       Text(widget.selectedQuote!.quoteNumber.isNotEmpty
                         ? widget.selectedQuote!.quoteNumber
-                        : 'Selected quote', style: AppTextStyles.fieldLabel),
+                        : AppStrings.of(context).tr('Selected quote'), style: AppTextStyles.fieldLabel),
                       const SizedBox(height: 10),
-                      const Text(
+                      const LocalizedUiText(
                         'Track the quote selected in this session.',
                         style: AppTextStyles.subtitle),
                       const SizedBox(height: 10),
@@ -646,13 +647,13 @@ class _MetricCard extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                   letterSpacing: -0.3, color: AppColors.dark)),
               const SizedBox(height: 8),
-              Text(item.title, maxLines: 2,
+              Text(AppStrings.of(context).tr(item.title), maxLines: 2,
                 style: const TextStyle(
                   fontFamily: 'Inter', fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: AppColors.dark)),
               const SizedBox(height: 5),
-              Text(item.hint, maxLines: 1,
+              Text(AppStrings.of(context).tr(item.hint), maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   fontFamily: 'Inter', fontSize: 11,
@@ -689,7 +690,7 @@ class _QuickActionCard extends StatelessWidget {
               child: Icon(item.icon, size: 20, color: AppColors.primary),
             ),
             const SizedBox(width: 9),
-            Expanded(child: Text(item.title,
+            Expanded(child: Text(AppStrings.of(context).tr(item.title),
               maxLines: 2, overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontFamily: 'Inter', fontSize: 12,
                 fontWeight: FontWeight.w600, color: AppColors.dark))),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/theme/sign2digital_motion.dart';
 
@@ -416,7 +417,7 @@ class _ClientsScreenState extends State<ClientsScreen> with WidgetsBindingObserv
     if (!mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+      ..showSnackBar(SnackBar(content: Text(AppStrings.of(context).tr(message))));
   }
 
   Future<void> _openHomeRoute(Widget screen) async {
@@ -981,9 +982,9 @@ class _ClientsContentState extends State<_ClientsContent> {
                   child: Padding(
                     padding: const EdgeInsets.all(24),
                     child: Text(
-                      _search.text.isEmpty
+                      AppStrings.of(context).tr(_search.text.isEmpty
                           ? 'No clients yet'
-                          : 'No clients match your search',
+                          : 'No clients match your search'),
                       style: AppTextStyles.subtitle,
                       textAlign: TextAlign.center,
                     ),
@@ -1049,7 +1050,7 @@ class _ClientsActionButton extends StatelessWidget {
           );
     final child = Center(
       child: Text(
-        label,
+        AppStrings.of(context).tr(label),
         maxLines: 2,
         textAlign: TextAlign.center,
         style: const TextStyle(

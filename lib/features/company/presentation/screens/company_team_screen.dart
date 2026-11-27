@@ -417,7 +417,7 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
                       fontFamily: 'Inter', fontSize: 16,
                       fontWeight: FontWeight.w600, color: AppColors.dark)),
                     const SizedBox(height: 10),
-                    const Text('Create reusable roles and assign permissions to your team.',
+                    const LocalizedUiText('Create reusable roles and assign permissions to your team.',
                       style: TextStyle(fontFamily: 'Inter', fontSize: 14,
                         color: AppColors.secondaryText)),
                     const SizedBox(height: 15),

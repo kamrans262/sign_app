@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/dashboard_colors.dart';
@@ -47,7 +48,7 @@ class SubscriptionManagementActionCard extends StatelessWidget {
                 Expanded(child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: const TextStyle(
+                    Text(AppStrings.of(context).tr(title), style: const TextStyle(
                       fontFamily: 'Inter',
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -55,7 +56,7 @@ class SubscriptionManagementActionCard extends StatelessWidget {
                       color: AppColors.dark,
                     )),
                     const SizedBox(height: 5),
-                    Text(subtitle, style: const TextStyle(
+                    Text(AppStrings.of(context).tr(subtitle), style: const TextStyle(
                       fontFamily: 'Inter',
                       fontSize: 13,
                       fontWeight: FontWeight.w500,

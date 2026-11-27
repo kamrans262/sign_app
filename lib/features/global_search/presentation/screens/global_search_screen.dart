@@ -2,6 +2,7 @@ import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/services/active_company_session.dart';
@@ -222,7 +223,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+      ..showSnackBar(SnackBar(content: Text(AppStrings.of(context).tr(message))));
   }
 
   Future<void> _open(GlobalSearchResult entry) async {
@@ -337,10 +338,10 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
                         key: const Key('global-search-filters'),
                         onPressed: _chooseFilters,
                         icon: const Icon(Icons.tune_rounded, size: 18),
-                        label: Text(_filters.active ? 'Filters applied' : 'Filters'),
+                        label: Text(AppStrings.of(context).tr(_filters.active ? 'Filters applied' : 'Filters')),
                       ),
                       const Spacer(),
-                      Text('Company #${ActiveCompanySession.companyId ?? 0}',
+                      Text(AppStrings.of(context).format('Company #{id}', {'id': ActiveCompanySession.companyId ?? 0}),
                         style: const TextStyle(fontFamily: 'Inter', fontSize: 12,
                           color: AppColors.placeholder)),
                     ]),
@@ -365,7 +366,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Flexible(child: Text(
-                      'Results (${_loading ? '…' : total})',
+                      AppStrings.of(context).format('Results ({count})', {'count': _loading ? '…' : total}),
                       key: const Key('global-search-count'),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -381,9 +382,9 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
                           ? null : (_isRemote
                             ? (_hasMore && !_paging ? _loadMore : null)
                             : () => setState(() => _seeAll = !_seeAll)),
-                      child: Text(_isRemote
+                      child: Text(AppStrings.of(context).tr(_isRemote
                         ? (_paging ? 'Loading…' : (_hasMore ? 'Load more' : 'All shown'))
-                        : (_seeAll ? 'Show less' : 'See all'),
+                        : (_seeAll ? 'Show less' : 'See all')),
                         style: const TextStyle(fontFamily: 'Inter',
                           fontSize: 14, fontWeight: FontWeight.w500,
                           color: AppColors.primary)),
@@ -406,9 +407,9 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
                 SliverFillRemaining(
                   hasScrollBody: false,
                   child: Center(child: Text(
-                    _search.text.trim().isEmpty && !_filters.active
+                    AppStrings.of(context).tr(_search.text.trim().isEmpty && !_filters.active
                       ? 'No records available to search'
-                      : 'No results found',
+                      : 'No results found'),
                     key: const Key('global-search-empty'),
                     textAlign: TextAlign.center,
                     style: const TextStyle(

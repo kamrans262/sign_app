@@ -367,7 +367,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
                           } catch (_) {
                             if (!sheetContext.mounted) return;
                             ScaffoldMessenger.of(sheetContext).showSnackBar(
-                              const SnackBar(content: Text(
+                              const SnackBar(content: LocalizedUiText(
                                 'Could not open this signed PDF.')),
                             );
                           }

@@ -3,6 +3,8 @@ import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'dart:io';
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_display_formats.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -125,19 +127,15 @@ class _GenerateAiDocumentScreenState extends State<GenerateAiDocumentScreen> {
     super.dispose();
   }
 
-  static const _months = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December',
-  ];
 
-  static String _dateText(DateTime value) =>
-      '${_months[value.month - 1]} ${value.day}, ${value.year}';
+  String _dateText(DateTime value) =>
+      AppDisplayFormats.longDate(context, value);
 
   void _notice(String message) {
     if (!mounted) { return; }
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+      ..showSnackBar(SnackBar(content: Text(AppStrings.of(context).tr(message))));
   }
 
   Future<void> _chooseDate() async {
@@ -218,13 +216,13 @@ class _GenerateAiDocumentScreenState extends State<GenerateAiDocumentScreen> {
       if(!mounted||transcript.isEmpty)return;
       final accepted=await showDialog<bool>(context:context,
         builder:(dialog)=>Sign2DigitalApprovedConfirmation(
-          title:const Text('Use dictated document notes?'),
+          title:const LocalizedUiText('Use dictated document notes?'),
           content:Text(transcript),
           actions:[
             TextButton(onPressed:()=>Navigator.pop(dialog,false),
-              child:const Text('Keep current notes')),
+              child:const LocalizedUiText('Keep current notes')),
             TextButton(onPressed:()=>Navigator.pop(dialog,true),
-              child:const Text('Use transcript')),
+              child:const LocalizedUiText('Use transcript')),
           ]));
       if(accepted==true&&mounted){
         setState((){
@@ -274,7 +272,7 @@ class _GenerateAiDocumentScreenState extends State<GenerateAiDocumentScreen> {
       final approved = await showDialog<bool>(
         context: context,
         builder: (dialog) => Sign2DigitalApprovedConfirmation(
-          title: const Text('Use AI suggestions?'),
+          title: const LocalizedUiText('Use AI suggestions?'),
           content: Text([
             if (canFillDate) 'Document Date: ${_dateText(suggestedDate)}',
             if (canFillText) 'Additional instruction: $suggestedText',
@@ -283,12 +281,12 @@ class _GenerateAiDocumentScreenState extends State<GenerateAiDocumentScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialog).pop(false),
-              child: const Text('Keep my entries'),
+              child: const LocalizedUiText('Keep my entries'),
             ),
             TextButton(
               key: const Key('generate-ai-accept-voice'),
               onPressed: () => Navigator.of(dialog).pop(true),
-              child: const Text('Apply suggestions'),
+              child: const LocalizedUiText('Apply suggestions'),
             ),
           ],
         ),
@@ -351,7 +349,7 @@ class _GenerateAiDocumentScreenState extends State<GenerateAiDocumentScreen> {
     if(!mounted)throw StateError('Editor is closed.');
     final approved=await showDialog<bool>(context:context,
       builder:(dialog)=>Sign2DigitalApprovedConfirmation(
-        title:const Text('Review Document Suggestion'),
+        title:const LocalizedUiText('Review Document Suggestion'),
         content:SizedBox(height:240,child:SingleChildScrollView(
           child:Text(suggestion.title+'\n\n'+
             suggestion.blocks.map((b)=>b.text).join('\n\n')))),
@@ -378,7 +376,7 @@ class _GenerateAiDocumentScreenState extends State<GenerateAiDocumentScreen> {
       final openNotes = await showDialog<bool>(
         context: context,
         builder: (dialog) => Sign2DigitalApprovedConfirmation(
-          title: const Text('AI document generation not connected'),
+          title: const LocalizedUiText('AI document generation not connected'),
           content: const Text(
             'This six-section document form has no connected AI generator. '
             'The existing Job Notes → Convert Document workflow can prepare '

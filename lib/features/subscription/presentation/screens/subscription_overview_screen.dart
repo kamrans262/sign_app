@@ -1,5 +1,6 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 
 import '../../../../core/services/active_company_session.dart';
 import '../../../auth/data/mobile_auth_repository.dart';
@@ -187,12 +188,12 @@ class _SubscriptionOverviewScreenState
                       style: AppTextStyles.subtitle,
                     ),
                     if (!_overview!.enforcementEnabled)
-                      const Text('Subscription limits are not active yet.',
+                      const LocalizedUiText('Subscription limits are not active yet.',
                         key: Key('m23-enforcement-disabled'),
                         style: AppTextStyles.subtitle),
                   ],
                   const SizedBox(height: 20),
-                  const Text('Plan Features', style: _sectionStyle),
+                  const LocalizedUiText('Plan Features', style: _sectionStyle),
                   const SizedBox(height: 20),
                   if (_overview!.features == null)
                     Text(
@@ -223,7 +224,7 @@ class _SubscriptionOverviewScreenState
                         padding: EdgeInsets.zero,
                         minimumSize: const Size(0, 40),
                       ),
-                      child: const Text('View Details',
+                      child: const LocalizedUiText('View Details',
                         style: TextStyle(
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w500,

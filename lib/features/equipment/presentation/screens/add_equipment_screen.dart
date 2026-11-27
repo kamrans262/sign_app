@@ -2,6 +2,8 @@ import '../../../support/presentation/widgets/support_ai_prompt_hint.dart';
 import '../../../../core/widgets/sign2digital_form_dialog.dart';
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_display_formats.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
@@ -89,15 +91,12 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
     super.dispose();
   }
 
-  static String _date(DateTime value) {
-    const months = ['January','February','March','April','May','June',
-      'July','August','September','October','November','December'];
-    return '${months[value.month - 1]} ${value.day}, ${value.year}';
-  }
+  String _date(DateTime value) =>
+      AppDisplayFormats.longDate(context, value);
 
   void _notice(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppStrings.of(context).tr(message))));
   }
 
   Future<String?> _customValue(String title) async {
@@ -175,7 +174,7 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
           for (final category in choices)
             ListTile(
               key: Key('equipment-category-${category.toLowerCase()}'),
-              title: Text(category),
+              title: Text(AppStrings.of(sheet).tr(category)),
               selected: _category == category,
               trailing: _category == category
                   ? const Icon(Icons.check_circle_rounded,
@@ -303,7 +302,7 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
       return await showDialog<String>(
         context: parent,
         builder: (dialog) => Sign2DigitalFormDialog(
-          title: const Text('Connect Equipment AI'),
+          title: const LocalizedUiText('Connect Equipment AI'),
           content: Column(mainAxisSize: MainAxisSize.min, children: [
             const Text('Enter a temporary OpenAI API key to process your '
               'recording. Audio is transmitted to OpenAI; API charges may apply.'),
@@ -319,7 +318,7 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
             TextButton(
               key: const Key('equipment-ai-extract'),
               onPressed: () => Navigator.pop(dialog, controller.text.trim()),
-              child: const Text('Process recording')),
+              child: const LocalizedUiText('Process recording')),
           ]),
       );
     } finally {
@@ -332,16 +331,16 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
     final approved = await showDialog<bool>(
       context: context,
       builder: (dialog) => Sign2DigitalApprovedConfirmation(
-        title: const Text('Use extracted equipment details?'),
+        title: const LocalizedUiText('Use extracted equipment details?'),
         content: const Text('Only empty text fields and missing selections '
           'will be filled. Review and correct every field before saving.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(dialog, false),
-            child: const Text('Keep my entries')),
+            child: const LocalizedUiText('Keep my entries')),
           TextButton(
             key: const Key('equipment-voice-apply'),
             onPressed: () => Navigator.pop(dialog, true),
-            child: const Text('Apply suggestions')),
+            child: const LocalizedUiText('Apply suggestions')),
         ]),
     );
     if (approved != true || !mounted) return;
@@ -465,7 +464,7 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
               key: const Key('equipment-form-category'),
               label: 'Category', leadingIcon: Icons.category_outlined,
               iconAsset: 'assets/icons/description.svg',
-              hintText: 'e.g, Mini tractor', value: _category,
+              hintText: 'e.g, Mini tractor', translateValue: true, value: _category,
               onTap: _chooseCategory,
               trailing: const Icon(Icons.keyboard_arrow_down_rounded,
                 color: AppColors.secondaryText)),
@@ -502,7 +501,7 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
               key: const Key('equipment-form-status'),
               label: 'Status', leadingIcon: Icons.adjust_outlined,
               iconAsset: 'assets/icons/description.svg',
-              hintText: 'Available', value: _status.label,
+              hintText: 'Available', translateValue: true, value: _status.label,
               onTap: _pickStatus),
             const SizedBox(height: 20),
             Sign2DigitalInputField(

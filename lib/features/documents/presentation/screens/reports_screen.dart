@@ -189,13 +189,13 @@ class _ReportsScreenState extends State<ReportsScreen> {
       await _load();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Site report saved as a local draft.'),
+          content: LocalizedUiText('Site report saved as a local draft.'),
         ));
       }
     } on ArgumentError {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Unable to save the site report draft.'),
+          content: LocalizedUiText('Unable to save the site report draft.'),
         ));
       }
     }
@@ -311,7 +311,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
       context: context,
       builder: (sheet) => SafeArea(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          const ListTile(title: Text('Choose report type')),
+          const ListTile(title: LocalizedUiText('Choose report type')),
           ListTile(
             key: const Key('create-site-report'),
             leading: const Icon(Icons.description_outlined),
@@ -327,7 +327,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
           ListTile(
             key: const Key('create-work-acceptance'),
             leading: const Icon(Icons.fact_check_outlined),
-            title: const Text('Work acceptance'),
+            title: const LocalizedUiText('Work acceptance'),
             onTap: () => Navigator.of(sheet).pop(ReportKind.workAcceptance),
           ),
         ]),

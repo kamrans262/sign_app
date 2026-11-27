@@ -202,7 +202,7 @@ class _JobNotesScreenState extends State<JobNotesScreen> {
               ],
               if (note.type != JobNoteType.text && note.audioPath == null) ...[
                 const SizedBox(height: 12),
-                const Text('No playable audio is attached to this demo note.'),
+                const LocalizedUiText('No playable audio is attached to this demo note.'),
               ],
             ],
           ),

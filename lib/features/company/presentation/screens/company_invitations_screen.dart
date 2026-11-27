@@ -84,7 +84,7 @@ class _CompanyInvitationsScreenState extends State<CompanyInvitationsScreen> {
                   fontFamily: 'Inter', fontSize: 16, fontWeight: FontWeight.w600,
                   color: AppColors.dark)),
                 const SizedBox(height: 10),
-                const Text('Enter the code sent to your registered email address.',
+                const LocalizedUiText('Enter the code sent to your registered email address.',
                   style: TextStyle(fontFamily: 'Inter', fontSize: 13,
                     color: AppColors.secondaryText)),
                 const SizedBox(height: 15),

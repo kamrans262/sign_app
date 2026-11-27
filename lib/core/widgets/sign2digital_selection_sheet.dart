@@ -74,13 +74,13 @@ class Sign2DigitalSelectionSheet {
                 Expanded(child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: const TextStyle(
+                    Text(AppStrings.of(sheet).tr(title), style: const TextStyle(
                       fontFamily: 'Inter', fontSize: 18,
                       fontWeight: FontWeight.w600, letterSpacing: -0.3,
                       color: AppColors.dark,
                     )),
                     const SizedBox(height: 4),
-                    Text(subtitle ?? AppStrings.of(sheet).tr('Select an option'), style: const TextStyle(
+                    Text(AppStrings.of(sheet).tr(subtitle ?? 'Select an option'), style: const TextStyle(
                       fontFamily: 'Inter', fontSize: 12,
                       fontWeight: FontWeight.w400, letterSpacing: -0.3,
                       color: AppColors.dark,
@@ -138,6 +138,7 @@ class Sign2DigitalSelectionSheet {
     IconData icon = Icons.tune_rounded,
     String? subtitle,
     String Function(String)? labelForOption,
+    bool translateOptions = false,
     IconData? Function(String)? iconForOption,
     Key Function(String)? keyForOption,
   }) => showCustom<String>(
@@ -158,6 +159,8 @@ class Sign2DigitalSelectionSheet {
         final option = options[index];
         final isSelected = option == selected;
         final optionIcon = iconForOption?.call(option);
+        final optionLabel = labelForOption?.call(option) ??
+            (translateOptions ? AppStrings.of(sheet).tr(option) : option);
         return Semantics(
           selected: isSelected,
           button: true,
@@ -176,11 +179,11 @@ class Sign2DigitalSelectionSheet {
                   if (optionIcon != null) ...[
                     Icon(optionIcon, size: 20,
                       color: isSelected ? AppColors.primary : AppColors.dark,
-                      semanticLabel: '${labelForOption?.call(option) ?? option} icon'),
+                      semanticLabel: '$optionLabel icon'),
                     const SizedBox(width: 12),
                   ],
                   Expanded(child: Text(
-                    labelForOption?.call(option) ?? option,
+                    optionLabel,
                     style: TextStyle(
                       fontFamily: 'Inter', fontSize: 14,
                       fontWeight: isSelected

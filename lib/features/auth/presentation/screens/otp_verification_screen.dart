@@ -86,7 +86,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       return;
     }
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Verification is not connected yet.')),
+      const SnackBar(content: LocalizedUiText('Verification is not connected yet.')),
     );
   }
 
@@ -94,7 +94,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     if (_secondsRemaining != 0 || _resendBusy) return;
     if (widget.onResend == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Resending codes is not connected yet.')),
+        const SnackBar(content: LocalizedUiText('Resending codes is not connected yet.')),
       );
       return;
     }

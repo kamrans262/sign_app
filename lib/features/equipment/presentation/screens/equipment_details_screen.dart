@@ -3,6 +3,7 @@ import '../../../../core/widgets/sign2digital_form_dialog.dart';
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import '../../../../core/services/active_company_session.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import 'package:flutter/services.dart';
 
@@ -62,7 +63,7 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
 
   void _notice(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppStrings.of(context).tr(message))));
   }
 
   Future<void> _copy() async {
@@ -130,7 +131,7 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
     final items = _record.usage.toList()
       ..sort((a, b) => b.date.compareTo(a.date));
     if (items.isEmpty) {
-      return const Text('No usage has been recorded yet.',
+      return const LocalizedUiText('No usage has been recorded yet.',
         key: Key('equipment-usage-empty'),
         style: TextStyle(color: AppColors.placeholder));
     }
@@ -155,7 +156,7 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
     final items = _record.maintenance.toList()
       ..sort((a, b) => b.date.compareTo(a.date));
     if (items.isEmpty) {
-      return const Text('No maintenance has been scheduled yet.',
+      return const LocalizedUiText('No maintenance has been scheduled yet.',
         key: Key('equipment-maintenance-empty'),
         style: TextStyle(color: AppColors.placeholder));
     }
@@ -177,7 +178,7 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
     final events = _record.history.toList()
       ..sort((a, b) => b.date.compareTo(a.date));
     if (events.isEmpty) {
-      return const Text('No recorded equipment history yet.',
+      return const LocalizedUiText('No recorded equipment history yet.',
         key: Key('equipment-history-empty'),
         style: TextStyle(color: AppColors.placeholder));
     }
@@ -231,7 +232,7 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
         context: context,
         builder: (dialog) => StatefulBuilder(
           builder: (context, refresh) => Sign2DigitalFormDialog(
-            title: const Text('Log Equipment Usage'),
+            title: const LocalizedUiText('Log Equipment Usage'),
             content: SingleChildScrollView(child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -276,7 +277,7 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
                     id: 'usage-${DateTime.now().microsecondsSinceEpoch}',
                     date: day, hours: value, job: job.text.trim(),
                     notes: notes.text.trim()));
-                }, child: const Text('Save Usage')),
+                }, child: const LocalizedUiText('Save Usage')),
             ],
           ),
         ),
@@ -310,7 +311,7 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
       context: context,
       builder: (dialog) => StatefulBuilder(
         builder: (context, refresh) => Sign2DigitalFormDialog(
-          title: const Text('Schedule Maintenance'),
+          title: const LocalizedUiText('Schedule Maintenance'),
           content: SingleChildScrollView(child: Column(
             mainAxisSize: MainAxisSize.min, children: [
               Sign2DigitalInputField(
@@ -327,7 +328,7 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
                   if (selected != null) refresh(() => day = selected);
                 }),
               CheckboxListTile(
-                title: const Text('Already completed'),
+                title: const LocalizedUiText('Already completed'),
                 value: completed,
                 onChanged: (v) => refresh(() => completed = v ?? false)),
             ])),
@@ -342,7 +343,7 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
                   id: 'maintenance-${DateTime.now().microsecondsSinceEpoch}',
                   date: day, description: description.text.trim(),
                   completed: completed));
-              }, child: const Text('Save Maintenance')),
+              }, child: const LocalizedUiText('Save Maintenance')),
           ],
         ),
       ),

@@ -1,4 +1,5 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
@@ -92,7 +93,7 @@ class _SecurityAccessScreenState extends State<SecurityAccessScreen> {
     }
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(text)));
+      ..showSnackBar(SnackBar(content: Text(AppStrings.of(context).tr(text))));
   }
 
   bool _hasPassword() {
@@ -343,7 +344,7 @@ class _SecurityAccessScreenState extends State<SecurityAccessScreen> {
                   Navigator.of(sheet).pop();
                   _revokeSession(session, fromAll: fromAll);
                 },
-                child: const Text('Sign Out This Device',
+                child: const LocalizedUiText('Sign Out This Device',
                   style: TextStyle(color: Color(0xFFFF1B23))),
               ),
             ],
@@ -385,7 +386,7 @@ class _SecurityAccessScreenState extends State<SecurityAccessScreen> {
       backgroundColor: AppColors.white,
       resizeToAvoidBottomInset: true,
       body: SafeArea(bottom: false, child: Column(children: [
-        const Sign2DigitalHeader(title: 'Security'),
+        const Sign2DigitalHeader(translateTitle: true, title: 'Security'),
         Expanded(child: Center(child: ConstrainedBox(
           constraints: BoxConstraints(maxWidth:
             MediaQuery.orientationOf(context) == Orientation.landscape
@@ -510,7 +511,7 @@ class _SecurityAccessScreenState extends State<SecurityAccessScreen> {
                       padding: EdgeInsets.zero,
                       minimumSize: const Size(0, 36),
                     ),
-                    child: const Text('View all',
+                    child: const LocalizedUiText('View all',
                       style: TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 14,
@@ -521,10 +522,10 @@ class _SecurityAccessScreenState extends State<SecurityAccessScreen> {
                 ]),
                 const SizedBox(height: 10),
                 if (snapshot.sessions == null)
-                  const Text('Active sessions are unavailable.',
+                  const LocalizedUiText('Active sessions are unavailable.',
                     style: TextStyle(color: AppColors.placeholder))
                 else if (snapshot.sessions!.isEmpty)
-                  const Text('No active sessions were provided.',
+                  const LocalizedUiText('No active sessions were provided.',
                     style: TextStyle(color: AppColors.placeholder))
                 else
                   for (var i = 0; i < snapshot.sessions!.length; i++) ...[
@@ -597,10 +598,10 @@ class _SecuritySessionsScreen extends StatelessWidget {
               const SizedBox(height: 10),
             ],
             if (sessions == null)
-              const Text('Active sessions are unavailable.',
+              const LocalizedUiText('Active sessions are unavailable.',
                 style: TextStyle(color: AppColors.placeholder))
             else if (sessions!.isEmpty)
-              const Text('No sessions provided.',
+              const LocalizedUiText('No sessions provided.',
                 style: TextStyle(color: AppColors.placeholder))
             else
               for (var i = 0; i < sessions!.length; i++) ...[

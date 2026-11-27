@@ -1,3 +1,4 @@
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
@@ -81,7 +82,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
     }
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(text)));
+      ..showSnackBar(SnackBar(content: Text(AppStrings.of(context).tr(text))));
   }
 
   Future<void> _persist(AppSettings next) async {
@@ -124,6 +125,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
     final choice = await Sign2DigitalSelectionSheet.show(
       context,
       title: label,
+      translateOptions: true,
       subtitle: 'Choose a ${label.toLowerCase()} option',
       options: values,
       selected: current,
@@ -162,6 +164,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
     key: key,
     label: title,
     value: value,
+    translateValue: true,
     hintText: value,
     iconAsset: '',
     leadingIcon: icon,
@@ -181,7 +184,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialog) => Sign2DigitalApprovedConfirmation(
-        title: const Text('Clear Cache?'),
+        title: const LocalizedUiText('Clear Cache?'),
         content: const Text(
           'Only disposable cached files will be deleted. '
           'Saved documents, account details, and unsynchronized '
@@ -195,7 +198,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
           TextButton(
             key: const Key('app-settings-cache-confirm'),
             onPressed: () => Navigator.of(dialog).pop(true),
-            child: const Text('Clear Cache'),
+            child: const LocalizedUiText('Clear Cache'),
           ),
         ],
       ),
@@ -238,7 +241,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: AppColors.white,
     body: SafeArea(bottom: false, child: Column(children: [
-      const Sign2DigitalHeader(title: 'Settings'),
+      const Sign2DigitalHeader(translateTitle: true, title: 'Settings', translateTitle: true),
       Expanded(child: Center(child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth:
             MediaQuery.orientationOf(context) == Orientation.landscape
@@ -257,7 +260,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                 onPressed: _load,
                 child: Text('$_error Tap to retry.'))
             else ...[
-              const Text('Default Settings', style: _heading),
+              const LocalizedUiText('Default Settings', style: _heading),
               const SizedBox(height: 20),
               _field(
                 key: const Key('app-settings-document-type'),
@@ -292,7 +295,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                 update: (v) => _settings.copyWith(units: v),
               ),
               const SizedBox(height: 20),
-              const Text('Data & Storage', style: _heading),
+              const LocalizedUiText('Data & Storage', style: _heading),
               const SizedBox(height: 20),
               ProfileNotificationRow(
                 key: const Key('app-settings-offline-mode'),

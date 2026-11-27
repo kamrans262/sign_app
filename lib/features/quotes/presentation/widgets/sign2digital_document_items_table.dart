@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 
 import '../../../../core/theme/app_colors.dart';
 
@@ -63,13 +64,13 @@ class Sign2DigitalDocumentItemsTable extends StatelessWidget {
         children: [
           TableRow(decoration: const BoxDecoration(color: AppColors.primary),
             children: [
-              _cell('Description', heading: true,
+              _cell(AppStrings.of(context).tr('Description'), heading: true,
                 description: true, narrow: narrow),
-              _cell('Qty', heading: true,
+              _cell(AppStrings.of(context).tr('Qty'), heading: true,
                 alignment: TextAlign.center, narrow: narrow),
-              _cell('Unit Price', heading: true,
+              _cell(AppStrings.of(context).tr('Unit Price'), heading: true,
                 alignment: TextAlign.center, narrow: narrow),
-              _cell('Total', heading: true, total: true,
+              _cell(AppStrings.of(context).tr('Total'), heading: true, total: true,
                 alignment: TextAlign.right, narrow: narrow),
             ]),
           for (var i = 0; i < items.length; i++)
@@ -104,7 +105,7 @@ class Sign2DigitalDocumentAmountRow extends StatelessWidget {
     padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
     color: highlight ? AppColors.primary : Colors.white,
     child: Row(children: [
-      Expanded(child: Text(label,
+      Expanded(child: Text(AppStrings.of(context).tr(label),
         style: TextStyle(fontFamily: 'Inter', fontSize: 12,
           color: highlight ? Colors.white : AppColors.placeholder))),
       const SizedBox(width: 12),

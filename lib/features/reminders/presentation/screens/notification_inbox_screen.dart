@@ -1,5 +1,6 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
@@ -128,7 +129,7 @@ class _NotificationInboxScreenState extends State<NotificationInboxScreen> {
                 ? Center(child: TextButton(
                     onPressed: _load, child: Text(_error!)))
                 : rows.isEmpty
-                  ? const Center(child: Text('No notifications',
+                  ? const Center(child: LocalizedUiText('No notifications',
                       style: TextStyle(fontFamily: 'Inter',
                           color: AppColors.placeholder)))
                   : RefreshIndicator(

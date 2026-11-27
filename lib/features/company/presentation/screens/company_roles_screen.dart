@@ -57,7 +57,7 @@ class _CompanyRoleEditorFormState extends State<_CompanyRoleEditorForm> {
     final value = _name.text.trim();
     if (value.length < 2 || value.length > 60) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Enter a role name of 2–60 characters.')));
+        content: LocalizedUiText('Enter a role name of 2–60 characters.')));
       return;
     }
     FocusManager.instance.primaryFocus?.unfocus();
@@ -263,7 +263,7 @@ class _CompanyRolesScreenState extends State<CompanyRolesScreen> {
                     fontFamily: 'Inter', fontSize: 18,
                     fontWeight: FontWeight.w600, color: AppColors.dark)),
                   const SizedBox(height: 10),
-                  const Text('Create reusable roles with View and Manage permissions. Changes to a role update access for every assigned member.',
+                  const LocalizedUiText('Create reusable roles with View and Manage permissions. Changes to a role update access for every assigned member.',
                     style: TextStyle(fontFamily: 'Inter', fontSize: 14,
                       color: AppColors.secondaryText)),
                   const SizedBox(height: 15),

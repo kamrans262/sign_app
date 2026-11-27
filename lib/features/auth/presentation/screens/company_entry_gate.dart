@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 
 import '../../../../core/services/active_company_session.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
@@ -116,11 +117,11 @@ class _CompanyEntryGateState extends State<CompanyEntryGate> {
               padding: const EdgeInsets.all(20),
               child: Column(crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text('You have been invited',
+                  const LocalizedUiText('You have been invited',
                     style: TextStyle(fontFamily: 'Inter', fontSize: 18,
                       fontWeight: FontWeight.w600, color: AppColors.dark)),
                   const SizedBox(height: 10),
-                  const Text('Join your existing company using the invitation code sent to your verified email. You do not need to create a company.',
+                  const LocalizedUiText('Join your existing company using the invitation code sent to your verified email. You do not need to create a company.',
                     style: TextStyle(fontFamily: 'Inter', fontSize: 14,
                       color: AppColors.dark)),
                   const SizedBox(height: 15),

@@ -2,6 +2,7 @@ import '../../../../core/navigation/sign2digital_navigation.dart';
 import '../../../../core/services/active_company_session.dart';
 import '../../../../core/widgets/sign2digital_subscription_gate.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import 'package:flutter/services.dart';
@@ -97,7 +98,7 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
     if (!mounted) { return; }
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+      ..showSnackBar(SnackBar(content: Text(AppStrings.of(context).tr(message))));
   }
 
   Widget _summary() => Row(
@@ -121,7 +122,7 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
               fontSize: 18, fontWeight: FontWeight.w600,
               color: AppColors.dark)),
           const SizedBox(height: 5),
-          Text('Client: ${_record.clientName}',
+          Text(AppStrings.of(context).format('Client: {name}', {'name': _record.clientName}),
             maxLines: 2, overflow: TextOverflow.ellipsis,
             style: const TextStyle(fontFamily: 'Inter', fontSize: 14,
               color: AppColors.placeholder)),

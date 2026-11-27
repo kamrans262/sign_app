@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
@@ -349,7 +350,7 @@ class _MeetingMinutesEditorScreenState extends State<MeetingMinutesEditorScreen>
             _field('Title', _title),
             ListTile(
               key: const Key('meeting-date'),
-              title: const Text('Meeting Date'),
+              title: const LocalizedUiText('Meeting Date'),
               subtitle: Text('${_date.year}-${_date.month.toString().padLeft(2,'0')}-${_date.day.toString().padLeft(2,'0')}'),
               trailing: const Icon(Icons.calendar_today_outlined),
               onTap: _pickDate,

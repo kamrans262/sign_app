@@ -1,6 +1,7 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import '../../../../core/services/active_company_session.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import 'package:file_picker/file_picker.dart';
 
@@ -162,7 +163,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
             children: [
               const Padding(
                 padding: EdgeInsets.fromLTRB(20, 8, 20, 8),
-                child: Text('Filter documents', style: TextStyle(
+                child: LocalizedUiText('Filter documents', style: TextStyle(
                   fontFamily: 'Inter', fontSize: 18,
                   fontWeight: FontWeight.w600,
                   color: AppColors.dark,
@@ -186,7 +187,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
               const Divider(),
               const Padding(
                 padding: EdgeInsets.fromLTRB(20, 8, 20, 8),
-                child: Text('Sort documents', style: TextStyle(
+                child: LocalizedUiText('Sort documents', style: TextStyle(
                   fontFamily: 'Inter', fontSize: 18,
                   fontWeight: FontWeight.w600,
                   color: AppColors.dark,
@@ -260,7 +261,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
             children: [
               const Padding(
                 padding: EdgeInsets.fromLTRB(20, 8, 20, 8),
-                child: Text('Document category', style: TextStyle(
+                child: LocalizedUiText('Document category', style: TextStyle(
                   fontFamily: 'Inter', fontSize: 18,
                   fontWeight: FontWeight.w600, color: AppColors.dark,
                 )),
@@ -287,13 +288,13 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Document uploaded securely.'),
+        content: LocalizedUiText('Document uploaded securely.'),
       ));
       await _load();
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Could not upload this document PDF.'),
+        content: LocalizedUiText('Could not upload this document PDF.'),
       ));
     }
   }
@@ -316,7 +317,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
       } catch (_) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Could not open document details.'),
+          content: LocalizedUiText('Could not open document details.'),
         ));
         return;
       }

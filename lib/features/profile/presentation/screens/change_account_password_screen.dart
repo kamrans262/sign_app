@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
 import '../../../../core/widgets/sign2digital_input_field.dart';
@@ -52,7 +53,7 @@ class _PasswordChangeState extends State<ChangeAccountPasswordScreen> {
           MediaQuery.orientationOf(context)==Orientation.landscape
               ? double.infinity : 720),
         child:ListView(padding:const EdgeInsets.all(20),children:[
-          const Text('Use upper and lower case letters, a number and a symbol.',
+          const LocalizedUiText('Use upper and lower case letters, a number and a symbol.',
             style:TextStyle(color:AppColors.placeholder)),
           const SizedBox(height:20),
           for(final entry in [

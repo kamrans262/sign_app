@@ -1,0 +1,5 @@
+"NSMicrophoneUsageDescription" = "Record spoken job details to fill the Create Job form.";
+"NSCameraUsageDescription" = "Capture job progress photos using the camera.";
+"NSContactsUsageDescription" = "Read the contacts you select for review before importing them into your Sign2Digital company.";
+"NSPhotoLibraryUsageDescription" = "Choose job photos from your photo library.";
+"NSLocationWhenInUseUsageDescription" = "Sign2Digital uses a file and photo picker to attach photos and documents to business records. Location access is not required for these features, and you can decline it.";

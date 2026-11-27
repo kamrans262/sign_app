@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 
@@ -110,7 +111,7 @@ class _CreateEquipmentLoanScreenState extends State<CreateEquipmentLoanScreen> {
           if(!_assets.any((item)=>
               item.status!=EquipmentStatus.maintenance&&
               item.currentLoanId==null))
-            const ListTile(title:Text('No equipment available to loan')),
+            const ListTile(title:LocalizedUiText('No equipment available to loan')),
         ]))));
     if(selected!=null&&mounted)setState((){
       _selectedAsset=selected;_error=null;
@@ -125,11 +126,11 @@ class _CreateEquipmentLoanScreenState extends State<CreateEquipmentLoanScreen> {
         mainAxisSize:MainAxisSize.min,children:[
           ListTile(
             key:const Key('equipment-loan-borrower-external'),
-            title:const Text('Other Person'),
+            title:const LocalizedUiText('Other Person'),
             onTap:()=>Navigator.pop(sheet,'external')),
           ListTile(
             key:const Key('equipment-loan-borrower-client'),
-            title:const Text('Existing Client'),
+            title:const LocalizedUiText('Existing Client'),
             onTap:()=>Navigator.pop(sheet,'client')),
         ])));
     if(selected!=null&&mounted)setState((){
@@ -193,7 +194,7 @@ class _CreateEquipmentLoanScreenState extends State<CreateEquipmentLoanScreen> {
 
   void _notice(String message){
     if(!mounted)return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppStrings.of(context).tr(message))));
   }
 
   Future<void> _voice() async{
@@ -217,14 +218,14 @@ class _CreateEquipmentLoanScreenState extends State<CreateEquipmentLoanScreen> {
             if(!mounted)return;
             final apply=await showDialog<bool>(context:context,
               builder:(dialog)=>Sign2DigitalApprovedConfirmation(
-                title:const Text('Use Suggested Loan Details?'),
+                title:const LocalizedUiText('Use Suggested Loan Details?'),
                 content:const Text('Only missing fields will be filled. '
                   'Review the borrower, item and dates before saving.'),
                 actions:[
                   TextButton(onPressed:()=>Navigator.pop(dialog,false),
-                    child:const Text('Keep My Entries')),
+                    child:const LocalizedUiText('Keep My Entries')),
                   TextButton(onPressed:()=>Navigator.pop(dialog,true),
-                    child:const Text('Apply Suggestions')),
+                    child:const LocalizedUiText('Apply Suggestions')),
                 ]));
             if(apply!=true||!mounted)return;
             setState((){
@@ -319,7 +320,7 @@ class _CreateEquipmentLoanScreenState extends State<CreateEquipmentLoanScreen> {
       resizeToAvoidBottomInset: true,
       body: SafeArea(child: Column(children: [
         Sign2DigitalHeader(
-          title: 'Equipment Loan',
+          translateTitle: true, title: 'Equipment Loan',
           onBack: () => Navigator.of(context).maybePop()),
         Expanded(child: Center(child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 720),

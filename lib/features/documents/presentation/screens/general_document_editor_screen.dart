@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 
@@ -84,7 +85,7 @@ class _GeneralDocumentEditorScreenState extends State<GeneralDocumentEditorScree
     if(!mounted)return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content:Text(text)));
+      ..showSnackBar(SnackBar(content: Text(AppStrings.of(context).tr(text))));
   }
   Future<void> _loadChoices() async{
     if(!MobileAuthRepository.shared.isSignedIn)return;
@@ -252,7 +253,7 @@ class _GeneralDocumentEditorScreenState extends State<GeneralDocumentEditorScree
         builder:(sheet)=>SafeArea(child:Padding(padding:const EdgeInsets.all(20),
           child:Column(mainAxisSize:MainAxisSize.min,
             crossAxisAlignment:CrossAxisAlignment.stretch,children:[
-            const Text('Review AI Suggestion',style:TextStyle(
+            const LocalizedUiText('Review AI Suggestion',style:TextStyle(
               fontFamily:'Inter',fontSize:18,fontWeight:FontWeight.w600)),
             const SizedBox(height:12),
             Text(draft.title,style:const TextStyle(fontFamily:'Inter')),

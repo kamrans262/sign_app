@@ -2,6 +2,7 @@ import '../../../../core/navigation/sign2digital_navigation.dart';
 import '../../../../core/services/active_company_session.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
@@ -86,7 +87,7 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
     if (!mounted) { return; }
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+      ..showSnackBar(SnackBar(content: Text(AppStrings.of(context).tr(message))));
   }
 
   Future<void> _copyJob() async {
@@ -112,7 +113,7 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
             style: const TextStyle(fontFamily: 'Inter', fontSize: 18,
               fontWeight: FontWeight.w600, color: AppColors.dark)),
           const SizedBox(height: 5),
-          Text('Client: ${_record.clientName}',
+          Text(AppStrings.of(context).format('Client: {name}', {'name': _record.clientName}),
             maxLines: 2, overflow: TextOverflow.ellipsis,
             style: const TextStyle(fontFamily: 'Inter', fontSize: 14,
               color: AppColors.placeholder)),
@@ -194,7 +195,7 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
                 ),
               ),
               Expanded(child: receipt.name.toLowerCase().endsWith('.pdf')
-                ? const Center(child: Text('PDF receipt: use Download or Share'))
+                ? const Center(child: LocalizedUiText('PDF receipt: use Download or Share'))
                 : InteractiveViewer(child: Image.memory(receipt.bytes,
                     fit: BoxFit.contain,
                     errorBuilder: (_, _, _) =>
@@ -270,7 +271,7 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
                 LocalizedUiText('No receipt attached',
                   style: TextStyle(fontFamily: 'Inter',
                     fontSize: 14, color: AppColors.placeholder)),
-                Text('Edit the deposit to add a receipt',
+                LocalizedUiText('Edit the deposit to add a receipt',
                   style: TextStyle(fontFamily: 'Inter',
                     fontSize: 12, color: AppColors.placeholder)),
               ],
@@ -361,7 +362,7 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
     if (events.isEmpty) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 20),
-        child: Text('No recorded deposit history is available.',
+        child: LocalizedUiText('No recorded deposit history is available.',
           key: Key('deposit-history-empty'),
           style: TextStyle(fontFamily: 'Inter', fontSize: 14,
             color: AppColors.placeholder)),

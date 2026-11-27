@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import 'package:printing/printing.dart';
 
@@ -104,7 +105,7 @@ class _GeneralDocumentDetailsScreenState
     if (!mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+      ..showSnackBar(SnackBar(content: Text(AppStrings.of(context).tr(message))));
   }
 
   Future<void> _reload() async {
@@ -542,7 +543,7 @@ class _GeneralDocumentDetailsScreenState
       future: _pdfPreviewFuture,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return const Text(
+          return const LocalizedUiText(
             'Unable to load this PDF preview. Verify the document or retry.',
             key: Key('general-document-preview-error'),
             style: TextStyle(fontFamily: 'Inter', color: AppColors.secondaryText));
@@ -555,14 +556,14 @@ class _GeneralDocumentDetailsScreenState
           children: [
             if (!data.official) const Padding(
               padding: EdgeInsets.only(bottom: 12),
-              child: Text('DRAFT / UNISSUED PDF PREVIEW — not an official document.',
+              child: LocalizedUiText('DRAFT / UNISSUED PDF PREVIEW — not an official document.',
                 key: Key('general-document-unissued-label'),
                 style: TextStyle(fontFamily:'Inter',fontSize:12,
                   color:AppColors.primary)),
             ),
             if (data.signed) const Padding(
               padding: EdgeInsets.only(bottom: 12),
-              child: Text('SIGNED PDF — verified customer signature and signing date.',
+              child: LocalizedUiText('SIGNED PDF — verified customer signature and signing date.',
                 key: Key('general-document-signed-label'),
                 style: TextStyle(fontFamily:'Inter',fontSize:12,
                   color:AppColors.primary)),

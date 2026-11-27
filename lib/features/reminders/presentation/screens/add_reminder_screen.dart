@@ -1,5 +1,7 @@
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_display_formats.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 
@@ -77,16 +79,14 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
     super.dispose();
   }
 
-  static String _dateText(DateTime value) {
-    const m = ['January','February','March','April','May','June','July',
-      'August','September','October','November','December'];
-    return '${m[value.month - 1]} ${value.day}, ${value.year}';
-  }
+  String _dateText(DateTime value) =>
+      AppDisplayFormats.longDate(context, value);
 
-  static String _timeText(TimeOfDay value) {
+  String _timeText(TimeOfDay value) {
     final hour = value.hour % 12 == 0 ? 12 : value.hour % 12;
-    return '$hour:${value.minute.toString().padLeft(2, '0')} '
-        '${value.hour < 12 ? 'AM' : 'PM'}';
+    return AppDisplayFormats.time(context, value,
+        english: '$hour:${value.minute.toString().padLeft(2, '0')} '
+            '${value.hour < 12 ? 'AM' : 'PM'}');
   }
 
   Future<void> _selectType() async {
@@ -105,7 +105,7 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
               trailing: _type == option
                   ? const Icon(Icons.check_circle_rounded,
                       color: AppColors.primary) : null,
-              title: Text(option.label),
+              title: Text(AppStrings.of(sheet).tr(option.label)),
               onTap: () => Navigator.pop(sheet, option)),
         ])),
     );
@@ -197,7 +197,7 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+      ..showSnackBar(SnackBar(content: Text(AppStrings.of(context).tr(message))));
   }
 
   Future<void> _applyVoice(ReminderVoiceSuggestion result) async {
@@ -228,16 +228,16 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
     final approved = await showDialog<bool>(
       context: context,
       builder: (dialog) => Sign2DigitalApprovedConfirmation(
-        title: const Text('Use extracted reminder details?'),
+        title: const LocalizedUiText('Use extracted reminder details?'),
         content: const Text('Fill only empty fields or missing selections. '
           'Existing entries stay unchanged. Please review before saving.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(dialog, false),
-            child: const Text('Keep my entries')),
+            child: const LocalizedUiText('Keep my entries')),
           TextButton(
             key: const Key('reminder-voice-apply'),
             onPressed: () => Navigator.pop(dialog, true),
-            child: const Text('Apply suggestions')),
+            child: const LocalizedUiText('Apply suggestions')),
         ],
       ),
     );
@@ -324,11 +324,11 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
       Expanded(child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: const [
-          Text('Send Notification', style: TextStyle(
+          LocalizedUiText('Send Notification', style: TextStyle(
             fontFamily: 'Inter', fontSize: 16,
             fontWeight: FontWeight.w600, color: AppColors.dark)),
           SizedBox(height: 5),
-          Text('Receive a push notification at the reminder time',
+          LocalizedUiText('Receive a push notification at the reminder time',
             style: TextStyle(fontFamily: 'Inter',
               fontSize: 12, color: AppColors.placeholder)),
         ],
@@ -372,7 +372,7 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
               key: const Key('reminder-type'), label: 'Type',
               iconAsset: 'assets/icons/description.svg',
               leadingIcon: Icons.category_outlined,
-              hintText: 'e.g. Invoice', value: _type?.label,
+              hintText: 'e.g. Invoice', translateValue: true, value: _type?.label,
               onTap: _selectType,
               trailing: const Icon(Icons.keyboard_arrow_down_rounded,
                 color: AppColors.secondaryText)),
@@ -423,7 +423,7 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
               CheckboxListTile(
                 key: const Key('reminder-completed'),
                 title: const LocalizedUiText('Completed'),
-                subtitle: const Text('Move this reminder into Completed'),
+                subtitle: const LocalizedUiText('Move this reminder into Completed'),
                 controlAffinity: ListTileControlAffinity.leading,
                 contentPadding: EdgeInsets.zero,
                 activeColor: AppColors.primary,

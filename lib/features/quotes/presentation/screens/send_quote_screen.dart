@@ -2,6 +2,7 @@ import '../../../../core/widgets/sign2digital_input_field.dart';
 import '../../../../core/widgets/sign2digital_form_dialog.dart';
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
@@ -165,7 +166,7 @@ class _SendQuoteScreenState extends State<SendQuoteScreen> {
 
   void _notify(String message) {
     if (!mounted) { return; }
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppStrings.of(context).tr(message))));
   }
 
   String get _pdfFilename {
@@ -400,8 +401,8 @@ class _SendQuoteScreenState extends State<SendQuoteScreen> {
     if (!mounted || choice == null) { return; }
     if (_messageEdited) {
       final replace = await showDialog<bool>(context: context, builder: (ctx) =>
-        Sign2DigitalApprovedConfirmation(title: const Text('Replace your message?'),
-          content: const Text('Your current message has been edited. Replacing it will discard those changes.'),
+        Sign2DigitalApprovedConfirmation(title: const LocalizedUiText('Replace your message?'),
+          content: const LocalizedUiText('Your current message has been edited. Replacing it will discard those changes.'),
           actions: [TextButton(onPressed: () => Navigator.pop(ctx, false), child: const LocalizedUiText('Keep')),
             TextButton(onPressed: () => Navigator.pop(ctx, true), child: const LocalizedUiText('Replace'))]));
       if (!mounted || replace != true) { return; }
@@ -897,9 +898,9 @@ class _SendQuoteScreenState extends State<SendQuoteScreen> {
         key: const Key('send-restore-attachment'),
         onPressed: () { setState(() => _sendDraft.pdfAttached = true);
           _saveSession(); _preparePdf(); },
-        icon: const Icon(Icons.add), label: const Text('Reattach Quote PDF')),
+        icon: const Icon(Icons.add), label: const LocalizedUiText('Reattach Quote PDF')),
       if (_pdfError != null && _sendDraft.pdfAttached)
-        TextButton(onPressed: _preparePdf, child: const Text('Retry PDF generation')),
+        TextButton(onPressed: _preparePdf, child: const LocalizedUiText('Retry PDF generation')),
     ]));
 
   Widget _linkBox() {
@@ -930,7 +931,7 @@ class _SendQuoteScreenState extends State<SendQuoteScreen> {
               TextButton(
                 key: const Key('send-retry-secure-link'),
                 onPressed: () => _ensureSecureLink(force: true),
-                child: const Text('Retry secure link'),
+                child: const LocalizedUiText('Retry secure link'),
               ),
             ],
           ])),
@@ -967,7 +968,7 @@ class _SendQuoteScreenState extends State<SendQuoteScreen> {
             onSubmitVerifiedSignature: widget.onSubmitVerifiedSignature,
           )),
         ),
-        child: const Text('View document status'),
+        child: const LocalizedUiText('View document status'),
       )),
     ]);
 

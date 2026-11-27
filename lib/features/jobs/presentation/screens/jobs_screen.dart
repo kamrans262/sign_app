@@ -138,7 +138,7 @@ class _JobsScreenState extends State<JobsScreen> {
         await _loadStandalone();
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Job saved to your company.'),
+          content: LocalizedUiText('Job saved to your company.'),
         ));
       } catch (error) {
         if (!mounted) return;

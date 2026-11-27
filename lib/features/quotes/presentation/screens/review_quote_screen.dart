@@ -6,6 +6,7 @@ import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 import '../../../documents/data/remote_document_repository.dart';
 import '../../../documents/presentation/screens/document_details_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../documents/data/document_activity_session.dart';
 
@@ -65,7 +66,7 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
     }
     final messenger = ScaffoldMessenger.of(context);
     messenger.removeCurrentSnackBar();
-    messenger.showSnackBar(SnackBar(content: Text(message)));
+    messenger.showSnackBar(SnackBar(content: Text(AppStrings.of(context).tr(message))));
   }
 
   /// Dialog fields manage their own TextFormField controllers. Avoid disposing
@@ -182,7 +183,7 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
                 label: Text('Valid until: ${validUntil == null ? 'Not set' : _dateText(validUntil!)}'),
               ),
               const Divider(),
-              const Text('Optional payment account (QR only when complete)'),
+              const LocalizedUiText('Optional payment account (QR only when complete)'),
               Padding(
                 padding: const EdgeInsets.only(bottom: 10),
                 child: Sign2DigitalInputField(
@@ -342,7 +343,7 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
           TextButton(
             key: const Key('quote-take-me-to-document'),
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('Take Me to Document'),
+            child: const LocalizedUiText('Take Me to Document'),
           ),
         ],
       ),
@@ -577,7 +578,7 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
           ),
           if (!_draft.allItemPricesValid) ...[
             const SizedBox(height: 8),
-            const Text('Pricing incomplete — resolve amber fields before approval.',
+            const LocalizedUiText('Pricing incomplete — resolve amber fields before approval.',
               style: TextStyle(fontFamily: 'Inter', fontSize: 12,
                   color: Color(0xFFE6A23C))),
           ],

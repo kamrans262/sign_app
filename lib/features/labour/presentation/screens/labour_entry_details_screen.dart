@@ -1,5 +1,6 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 import 'package:flutter/services.dart';
@@ -118,7 +119,7 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
     if (!mounted) { return; }
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+      ..showSnackBar(SnackBar(content: Text(AppStrings.of(context).tr(message))));
   }
 
   Future<void> _copyJob() async {
@@ -293,7 +294,7 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
     if (photos.isEmpty) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 20),
-        child: Text('No photos attached to this labour entry.',
+        child: LocalizedUiText('No photos attached to this labour entry.',
           key: Key('labour-detail-photos-empty'),
           style: TextStyle(
             fontFamily: 'Inter', fontSize: 14,
@@ -358,7 +359,7 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
     if (events.isEmpty) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 20),
-        child: Text('No recorded labour history is available.',
+        child: LocalizedUiText('No recorded labour history is available.',
           key: Key('labour-detail-history-empty'),
           style: TextStyle(
             fontFamily: 'Inter', fontSize: 14,

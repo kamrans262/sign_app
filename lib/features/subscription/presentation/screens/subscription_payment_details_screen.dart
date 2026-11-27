@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -67,7 +68,7 @@ class _SubscriptionPaymentDetailsScreenState
         setState(()=>_working=false);
         final confirm=await showDialog<bool>(context:context,
           builder:(dialog)=>Sign2DigitalApprovedConfirmation(
-            title:const Text('Confirm Plan Change'),
+            title:const LocalizedUiText('Confirm Plan Change'),
             content:Text('Estimated upcoming invoice: $currency '
                 '${(amount/100).toStringAsFixed(2)}. '
                 'Proration for this plan change is disabled. '
@@ -75,10 +76,10 @@ class _SubscriptionPaymentDetailsScreenState
                 'any amount actually due is determined by Stripe.'),
             actions:[
               TextButton(onPressed:()=>Navigator.of(dialog).pop(false),
-                child:const Text('Keep Current Plan')),
+                child:const LocalizedUiText('Keep Current Plan')),
               TextButton(key:const Key('m23-confirm-plan-change'),
                 onPressed:()=>Navigator.of(dialog).pop(true),
-                child:const Text('Confirm Change')),
+                child:const LocalizedUiText('Confirm Change')),
             ],
           ),
         );
@@ -159,7 +160,7 @@ class _SubscriptionPaymentDetailsScreenState
                 padding:const EdgeInsets.all(20),
                 child:Column(crossAxisAlignment:CrossAxisAlignment.start,
                   children:[
-                    const Text('Selected Plan',style:TextStyle(
+                    const LocalizedUiText('Selected Plan',style:TextStyle(
                       fontFamily:'Inter',fontWeight:FontWeight.w700,
                       fontSize:18,color:AppColors.dark)),
                     const SizedBox(height:14),
@@ -225,7 +226,7 @@ class _SubscriptionPaymentDetailsScreenState
                 TextButton(
                   key:const Key('m23-verify-checkout'),
                   onPressed:_working?null:_verify,
-                  child:const Text('Verify Payment Status'),
+                  child:const LocalizedUiText('Verify Payment Status'),
                 ),
               ],
             ],

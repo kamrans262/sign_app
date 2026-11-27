@@ -4,6 +4,7 @@ import '../../../company/data/remote_company_repository.dart';
 import '../../../../core/widgets/sign2digital_subscription_gate.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import 'package:flutter/services.dart';
@@ -117,8 +118,8 @@ class _AddendumApprovalConfirmationState
       Text(widget.draft.description),
       if (widget.draft.hasPricedWork) ...[
         const SizedBox(height: 8),
-        Text('Additional work: ${widget.draft.additionalWork}'),
-        Text('Quantity: ${widget.draft.quantity}'),
+        Text(AppStrings.of(context).format('Additional work: {value}', {'value': widget.draft.additionalWork})),
+        Text(AppStrings.of(context).format('Quantity: {value}', {'value': widget.draft.quantity})),
       ],
       const SizedBox(height: 8),
       Text('Total: ${quoteMoney(
@@ -128,7 +129,7 @@ class _AddendumApprovalConfirmationState
         contentPadding: EdgeInsets.zero,
         value: _confirmed,
         activeColor: AppColors.primary,
-        title: const Text(
+        title: const LocalizedUiText(
           'I reviewed and approve this exact separate addendum.',
           style: TextStyle(fontFamily: 'Inter', fontSize: 13)),
         onChanged: (checked) =>
@@ -216,7 +217,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
     if (!mounted) { return; }
     final messenger = ScaffoldMessenger.of(context);
     messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(SnackBar(content: Text(value)));
+    messenger.showSnackBar(SnackBar(content: Text(AppStrings.of(context).tr(value))));
   }
 
   bool get _signed => _record?.status.toLowerCase() == 'signed';
@@ -532,8 +533,8 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600,
               color: AppColors.dark)),
           const SizedBox(height: 10),
-          Text('Addendum: ${draft.number}'),
-          Text('Original document: ${source.number}'),
+          Text(AppStrings.of(context).format('Addendum: {value}', {'value': draft.number})),
+          Text(AppStrings.of(context).format('Original document: {value}', {'value': source.number})),
           Text(
             response.emailTransportAccepted
                 ? 'Status: Email sent (awaiting signature)'
@@ -591,7 +592,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('Replace Unsent Link?',
+            const LocalizedUiText('Replace Unsent Link?',
               style: TextStyle(fontFamily: 'Inter', fontSize: 18,
                 fontWeight: FontWeight.w600, color: AppColors.dark)),
             const SizedBox(height: 12),
@@ -1107,7 +1108,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
           ListTile(
           key: const Key('document-copy-reference'),
           leading: const Icon(Icons.copy_outlined),
-          title: const Text('Copy document reference'),
+          title: const LocalizedUiText('Copy document reference'),
           onTap: () async {
             Navigator.pop(sheet);
             await Clipboard.setData(ClipboardData(text: record.number));
@@ -1483,7 +1484,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
     if (_needsReadOnlyQuotePreview(record)) {
       final quote = record.quote;
       if (quote == null) {
-        return const Text(
+        return const LocalizedUiText(
           'The saved quote preview is unavailable for this account.',
           key: Key('document-quote-preview-unavailable'),
           style: _label,
@@ -1517,7 +1518,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
     }
     if (_signed && !record.demoOnly &&
         (!record.verifiedSignedPdfAvailable || widget.loadSignedPdf == null)) {
-      return const Text(
+      return const LocalizedUiText(
         'The verified signed document is not available yet.',
         key: Key('document-signed-pdf-unavailable'),
         style: _label,
@@ -1556,7 +1557,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
             if (record.demoOnly)
               const Padding(
                 padding: EdgeInsets.only(bottom: 12),
-                child: Text(
+                child: LocalizedUiText(
                   'DEMO PDF — not a verified signed document.',
                   style: TextStyle(fontFamily: 'Inter', fontSize: 12,
                     color: AppColors.primary),
@@ -1679,7 +1680,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
               ? const Center(child: CircularProgressIndicator(
                   key: Key('document-details-loading')))
               : _denied
-                  ? const Center(child: Text('Permission denied for this document.'))
+                  ? const Center(child: LocalizedUiText('Permission denied for this document.'))
                   : _loadError != null
                       ? Center(child: TextButton(
                           key: const Key('document-details-retry'),

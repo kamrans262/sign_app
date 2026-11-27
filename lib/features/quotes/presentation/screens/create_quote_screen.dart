@@ -3,6 +3,7 @@ import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -85,7 +86,7 @@ class _CreateQuoteScreenState extends State<CreateQuoteScreen> {
     }
     final messenger = ScaffoldMessenger.of(context);
     messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(SnackBar(content: Text(message)));
+    messenger.showSnackBar(SnackBar(content: Text(AppStrings.of(context).tr(message))));
   }
 
   void _select(QuoteInputMethod method) {
@@ -438,7 +439,7 @@ class _CreateQuoteScreenState extends State<CreateQuoteScreen> {
                         if (_method == QuoteInputMethod.voice &&
                             _savedAudioPath != null) ...[
                           const SizedBox(height: 14),
-                          const Text(
+                          const LocalizedUiText(
                             'Voice recording saved locally',
                             style: AppTextStyles.fieldHint,
                           ),
@@ -460,7 +461,7 @@ class _CreateQuoteScreenState extends State<CreateQuoteScreen> {
                                       const SizedBox(
                                         height: 180,
                                         child: Center(
-                                          child: Text(
+                                          child: LocalizedUiText(
                                             'Unable to preview this image',
                                           ),
                                         ),

@@ -1,5 +1,6 @@
 import '../../../../core/widgets/sign2digital_form_dialog.dart';
 import '../../../../core/navigation/sign2digital_navigation.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import 'package:image_picker/image_picker.dart';
@@ -100,7 +101,7 @@ class _HelpSupportState extends State<HelpSupportScreen> {
                   color:AppColors.white,size:20),
               ),
               const SizedBox(height:20),
-              const Text('Help Center',style:TextStyle(fontFamily:'Inter',
+              const LocalizedUiText('Help Center',style:TextStyle(fontFamily:'Inter',
                 fontSize:20,fontWeight:FontWeight.w600,color:AppColors.dark)),
               const SizedBox(height:10),
               if(loading)
@@ -112,7 +113,7 @@ class _HelpSupportState extends State<HelpSupportScreen> {
               else ...[
                 if(faqs.isEmpty)
                   const Padding(padding:EdgeInsets.all(12),
-                    child:Text('No help articles are published yet.',
+                    child:LocalizedUiText('No help articles are published yet.',
                       style:TextStyle(color:AppColors.placeholder))),
                 for(final faq in faqs)
                   Card(margin:const EdgeInsets.only(bottom:12),
@@ -126,12 +127,12 @@ class _HelpSupportState extends State<HelpSupportScreen> {
                             fontFamily:'Inter',color:AppColors.secondaryText))))],
                     )),
                 const SizedBox(height:22),
-                Text('My Tickets (${tickets.length})',
+                Text(AppStrings.of(context).format('My Tickets ({count})', {'count': tickets.length}),
                   style:const TextStyle(fontFamily:'Inter',
                     fontSize:20,fontWeight:FontWeight.w600,color:AppColors.dark)),
                 const SizedBox(height:10),
                 if(tickets.isEmpty)
-                  const Text('No support tickets yet.',
+                  const LocalizedUiText('No support tickets yet.',
                     style:TextStyle(color:AppColors.placeholder)),
                 for(final ticket in tickets)
                   Card(margin:const EdgeInsets.only(bottom:12),child:ListTile(
@@ -206,7 +207,7 @@ class _NewTicketState extends State<NewSupportTicketScreen> {
           // The ticket remains committed. Do not retry creation or lose details.
           if(mounted){
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content:Text('Ticket created, but the attachment was not uploaded.')));
+              content:LocalizedUiText('Ticket created, but the attachment was not uploaded.')));
           }
         }
       }
@@ -352,7 +353,7 @@ class _TicketDetailState extends State<SupportTicketDetailsScreen> {
           Sign2DigitalFormDialog(
             content: Image.memory(bytes, fit: BoxFit.contain,
               errorBuilder: (context, error, stackTrace) =>
-                const Text('Could not display this attachment.')),
+                const LocalizedUiText('Could not display this attachment.')),
             actions: [TextButton(
               onPressed: () => Navigator.of(dialog).pop(),
               child: const LocalizedUiText('Close'))],
@@ -372,7 +373,7 @@ class _TicketDetailState extends State<SupportTicketDetailsScreen> {
   Widget build(BuildContext context)=>Scaffold(
     backgroundColor:AppColors.white,
     body:SafeArea(child:Column(children:[
-      const Sign2DigitalHeader(title:'Support Ticket'),
+      const Sign2DigitalHeader(translateTitle: true, title:'Support Ticket'),
       Expanded(child:Center(child:ConstrainedBox(
         constraints:BoxConstraints(maxWidth:
           MediaQuery.orientationOf(context)==Orientation.landscape
@@ -392,7 +393,7 @@ class _TicketDetailState extends State<SupportTicketDetailsScreen> {
               const SizedBox(height:10),
               Text(data!.ticket.description),
               const Divider(height:32),
-              const Text('Conversation',style:TextStyle(fontFamily:'Inter',
+              const LocalizedUiText('Conversation',style:TextStyle(fontFamily:'Inter',
                 fontWeight:FontWeight.w600)),
               for(final entry in data!.replies)
                 Card(child:ListTile(

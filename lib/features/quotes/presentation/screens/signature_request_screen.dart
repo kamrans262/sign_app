@@ -1,5 +1,6 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -158,7 +159,7 @@ class _SignatureRequestScreenState extends State<SignatureRequestScreen> with Wi
     // Replace an earlier notice instead of queuing it behind a 4-second snackbar.
     // This matters when users tap Copy Link then Resend in quick succession.
     messenger.removeCurrentSnackBar();
-    messenger.showSnackBar(SnackBar(content: Text(text)));
+    messenger.showSnackBar(SnackBar(content: Text(AppStrings.of(context).tr(text))));
   }
 
   TextStyle _type(double size, {Color color = AppColors.dark,
@@ -491,7 +492,7 @@ class _SignatureRequestScreenState extends State<SignatureRequestScreen> with Wi
               LocalizedUiText('Send Automatic Reminders',
                 style: _type(14, weight: FontWeight.w600)),
               const SizedBox(height: 5),
-              Text('Remind me every 3 days until signed',
+              LocalizedUiText('Remind me every 3 days until signed',
                 style: _type(12, color: AppColors.placeholder,
                   weight: FontWeight.w400)),
             ],
@@ -589,7 +590,7 @@ class _SignatureRequestScreenState extends State<SignatureRequestScreen> with Wi
           child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 700),
             child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               if (_tracking.quoteId != _quote.id) ...[
-                Text('Document data does not match this quote.',
+                LocalizedUiText('Document data does not match this quote.',
                   style: _type(13, color: Colors.red)),
                 const SizedBox(height: 12),
               ],

@@ -311,7 +311,7 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
     if (!MobileAuthRepository.shared.isSignedIn &&
         widget.aiClient == null && widget.voiceSuggestionsLoader == null) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Sign in to use AI company creation.'),
+        content: LocalizedUiText('Sign in to use AI company creation.'),
       ));
       return;
     }
@@ -505,7 +505,7 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
                                   Align(alignment: Alignment.centerRight,
                                     child: TextButton(
                                       onPressed: _saving ? null : () => _removeExistingFile('logo'),
-                                      child: const Text('Remove saved logo'),
+                                      child: const LocalizedUiText('Remove saved logo'),
                                     )),
                                 ],
                                 const SizedBox(height: 16),
@@ -604,7 +604,7 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
                                   Align(alignment: Alignment.centerRight,
                                     child: TextButton(
                                       onPressed: _saving ? null : () => _removeExistingFile('terms'),
-                                      child: const Text('Remove saved PDF'),
+                                      child: const LocalizedUiText('Remove saved PDF'),
                                     )),
                                 ],
                                 const SizedBox(height: 25),

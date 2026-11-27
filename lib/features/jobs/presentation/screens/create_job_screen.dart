@@ -1,6 +1,7 @@
 import '../../../support/presentation/widgets/support_ai_prompt_hint.dart';
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_display_formats.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -109,7 +110,7 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
     } catch (_) {
       if (!mounted || ActiveCompanySession.companyId != company) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Unable to load company team members.'),
+        content: LocalizedUiText('Unable to load company team members.'),
       ));
     }
   }
@@ -158,23 +159,8 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
     super.dispose();
   }
 
-  static String _formatDate(DateTime date) {
-    const months = <String>[
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
-    ];
-    return '${months[date.month - 1]} ${date.day}, ${date.year}';
-  }
+  String _formatDate(DateTime date) =>
+      AppDisplayFormats.longDate(context, date);
 
   Future<void> _selectClient() async {
     FocusManager.instance.primaryFocus?.unfocus();

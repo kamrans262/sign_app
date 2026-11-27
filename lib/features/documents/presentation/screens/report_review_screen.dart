@@ -2,6 +2,7 @@ import '../../../../core/navigation/sign2digital_navigation.dart';
 import '../../../../core/services/active_company_session.dart';
 import '../../../../core/widgets/sign2digital_subscription_gate.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 
@@ -74,7 +75,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
   void _notify(String message) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)));
+        SnackBar(content: Text(AppStrings.of(context).tr(message))));
   }
 
   Future<bool> _confirm(String title, String message) async {
@@ -311,7 +312,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
       backgroundColor: AppColors.white,
       body: SafeArea(
         child: Column(children: [
-          Sign2DigitalHeader(title: 'Review Reports'),
+          Sign2DigitalHeader(translateTitle: true, title: 'Review Reports'),
           Expanded(child: Center(child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 720),
             child: ListView(

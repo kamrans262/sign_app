@@ -1,6 +1,8 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import '../../../../core/services/active_company_session.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import 'package:printing/printing.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -108,7 +110,7 @@ class _WorkAcceptanceScreenState extends State<WorkAcceptanceScreen> {
     if (!mounted) return;
     final messenger = ScaffoldMessenger.of(context);
     messenger.removeCurrentSnackBar();
-    messenger.showSnackBar(SnackBar(content: Text(message)));
+    messenger.showSnackBar(SnackBar(content: Text(AppStrings.of(context).tr(message))));
   }
 
   Future<bool> _confirm(String heading,String message) async {
@@ -357,7 +359,7 @@ class _WorkAcceptanceScreenState extends State<WorkAcceptanceScreen> {
                 if (const ['accepted', 'accepted_with_reservations']
                     .contains(_report.status.toLowerCase()) &&
                     _hasVerifiedSignature) ...[
-                  const Text('Client Signature', style: TextStyle(
+                  const LocalizedUiText('Client Signature', style: TextStyle(
                     fontFamily: 'Inter', fontSize: 18,
                     fontWeight: FontWeight.w600, color: AppColors.dark,
                   )),
@@ -460,7 +462,7 @@ class _AcceptanceApprovedScreenState
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Unable to open the approved PDF.'),
+        content: LocalizedUiText('Unable to open the approved PDF.'),
       ));
     }
   }
@@ -481,7 +483,7 @@ class _AcceptanceApprovedScreenState
               children: [
                 const Center(child: Sign2DigitalAnimatedSuccess()),
                 const SizedBox(height: 20),
-                const Text('Work Acceptance Approved!',
+                const LocalizedUiText('Work Acceptance Approved!',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontFamily: 'Inter', fontSize: 24,
                     fontWeight: FontWeight.w700, color: AppColors.dark)),
@@ -519,7 +521,7 @@ class _AcceptanceApprovedScreenState
                             Icon(Icons.picture_as_pdf_outlined,
                               color: AppColors.primary, size: 20),
                             SizedBox(width: 8),
-                            Text('View Approved PDF',
+                            LocalizedUiText('View Approved PDF',
                               style: TextStyle(fontFamily: 'Inter',
                                 fontWeight: FontWeight.w600,
                                 color: AppColors.primary)),
@@ -531,7 +533,7 @@ class _AcceptanceApprovedScreenState
                 ),
                 if (_sent) ...[
                   const SizedBox(height: 16),
-                  const Text('Signing request sent to the customer.',
+                  const LocalizedUiText('Signing request sent to the customer.',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontFamily: 'Inter',
                       color: AppColors.primary)),

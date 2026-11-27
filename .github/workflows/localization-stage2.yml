@@ -1,0 +1,46 @@
+name: Sign2Digital localisation QA
+on:
+  push:
+    branches: [fix/m20-android-live-reminder-integration-2026-11-06]
+    paths:
+      - 'lib/core/localization/**'
+      - 'lib/core/widgets/**'
+      - 'lib/features/**'
+      - 'test/core/localization/**'
+      - 'ios/Runner/**'
+      - 'ios/Runner.xcodeproj/project.pbxproj'
+      - 'pubspec.yaml'
+      - '.github/workflows/localization-stage2.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: sign2digital-localisation-qa
+  cancel-in-progress: true
+jobs:
+  localization:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Analyze without treating SDK deprecation notices as errors
+        run: flutter analyze --no-pub --no-fatal-infos --no-fatal-warnings
+      - name: Language and profile regression
+        run: flutter test --no-pub test/core/localization test/features/profile/profile_preferences_screen_test.dart
+      - name: Check native language declarations
+        run: |
+          python3 - <<'PY'
+          import plistlib, pathlib, re
+          root = pathlib.Path('ios/Runner')
+          info = plistlib.loads((root / 'Info.plist').read_bytes())
+          assert info['CFBundleLocalizations'] == ['en','fr','de','it']
+          keys = {'NSMicrophoneUsageDescription','NSCameraUsageDescription','NSContactsUsageDescription','NSPhotoLibraryUsageDescription','NSLocationWhenInUseUsageDescription'}
+          for language in info['CFBundleLocalizations']:
+              data = (root / (language + '.lproj') / 'InfoPlist.strings').read_text()
+              assert keys == set(re.findall(r'^"([^"]+)"\s*=', data, re.M)), language
+          PY

@@ -1,0 +1,5 @@
+"NSMicrophoneUsageDescription" = "Gesprochene Auftragsdetails aufnehmen, um das Formular zur Auftragserstellung auszufüllen.";
+"NSCameraUsageDescription" = "Fotos des Auftragsfortschritts mit der Kamera aufnehmen.";
+"NSContactsUsageDescription" = "Ausgewählte Kontakte zur Prüfung lesen, bevor sie in Ihre Sign2Digital-Firma importiert werden.";
+"NSPhotoLibraryUsageDescription" = "Auftragsfotos aus Ihrer Fotomediathek auswählen.";
+"NSLocationWhenInUseUsageDescription" = "Sign2Digital verwendet eine Datei- und Fotoauswahl, um Fotos und Dokumente an Geschäftsunterlagen anzuhängen. Der Standortzugriff ist dafür nicht erforderlich und kann abgelehnt werden.";

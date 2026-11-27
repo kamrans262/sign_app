@@ -127,7 +127,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Unable to access photos on this device.')));
+        content: LocalizedUiText('Unable to access photos on this device.')));
     }
   }
 
@@ -180,7 +180,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           TextButton(
             key: const Key('profile-title-custom-save'),
             onPressed: () => Navigator.of(dialog).pop(draftTitle.trim()),
-            child: const Text('Use Title'),
+            child: const LocalizedUiText('Use Title'),
           ),
         ],
       ),
@@ -261,7 +261,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     backgroundColor: AppColors.white,
     resizeToAvoidBottomInset: true,
     body: SafeArea(bottom: false, child: Column(children: [
-      const Sign2DigitalHeader(title: 'Profile'),
+      const Sign2DigitalHeader(translateTitle: true, title: 'Profile'),
       Expanded(child: Center(child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth:
             MediaQuery.orientationOf(context) == Orientation.landscape
@@ -313,7 +313,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   foregroundColor: AppColors.primary,
                 ),
-                child: const Text('Change Photo', style: TextStyle(
+                child: const LocalizedUiText('Change Photo', style: TextStyle(
                   fontFamily: 'Inter', fontSize: 14,
                   fontWeight: FontWeight.w500,
                   letterSpacing: -0.3,
@@ -322,7 +322,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               if (_photo != null)
                 TextButton(key: const Key('m22-remove-photo'),
                   onPressed: _removePhotoDraft,
-                  child: const Text('Remove Photo')),
+                  child: const LocalizedUiText('Remove Photo')),
             ])),
             const SizedBox(height: 25),
             Form(

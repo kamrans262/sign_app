@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 
 import '../theme/app_colors.dart';
 import 'sign2digital_outlined_container.dart';
@@ -34,7 +35,7 @@ class Sign2DigitalInformationTable extends StatelessWidget {
           .clamp(100.0, 180.0).toDouble();
       return Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
         SizedBox(width: labelWidth, child: Text(
-          entry.label, softWrap: true, style: _label)),
+          AppStrings.of(context).tr(entry.label), softWrap: true, style: _label)),
         const SizedBox(width: 10),
         Expanded(child: Row(children: [
           Expanded(child: Align(
@@ -48,7 +49,7 @@ class Sign2DigitalInformationTable extends StatelessWidget {
           if (entry.onCopy != null)
             IconButton(
               key: const Key('information-row-copy'),
-              tooltip: 'Copy job',
+              tooltip: AppStrings.of(context).tr('Copy job'),
               visualDensity: VisualDensity.compact,
               onPressed: entry.onCopy,
               icon: const Icon(Icons.copy_all_outlined,
@@ -69,7 +70,7 @@ class Sign2DigitalInformationTable extends StatelessWidget {
           if (heading != null) ...[
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-              child: Text(heading!, style: const TextStyle(
+              child: Text(AppStrings.of(context).tr(heading!), style: const TextStyle(
                 fontFamily: 'Inter', fontSize: 20,
                 fontWeight: FontWeight.w600, color: AppColors.dark,
               )),

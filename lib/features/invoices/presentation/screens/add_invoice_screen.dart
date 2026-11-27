@@ -1,6 +1,8 @@
 import '../../../support/presentation/widgets/support_ai_prompt_hint.dart';
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_display_formats.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import '../../../../core/widgets/sign2digital_confirmation_dialog.dart';
@@ -179,18 +181,16 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
     super.dispose();
   }
 
-  static String _dateLabel(DateTime day) {
-    const months = ['January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'];
-    return '${months[day.month - 1]} ${day.day}, ${day.year}';
-  }
+  String _dateLabel(DateTime day) =>
+      AppDisplayFormats.longDate(context, day);
 
-  String _money(int? minor) => quoteMoney(minor, widget.currency);
+  String _money(int? minor) => AppDisplayFormats.money(context, minor,
+      widget.currency, english: quoteMoney(minor, widget.currency));
 
   void _notice(String value) {
     if (!mounted) { return; }
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(value)));
+      SnackBar(content: Text(AppStrings.of(context).tr(value))));
   }
 
   Future<void> _chooseInvoiceItemAction() async {
@@ -239,7 +239,7 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
           for(final type in const ['final','deposit'])
             ListTile(
               key:Key('invoice-type-$type'),
-              title:Text(type=='final'?'Final Invoice':'Deposit Invoice'),
+              title: Text(AppStrings.of(sheet).tr(type == 'final' ? 'Final Invoice' : 'Deposit Invoice')),
               trailing:_invoiceType==type?
                 const Icon(Icons.check_circle_rounded,color:AppColors.primary)
                 :null,
@@ -836,7 +836,7 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
               style: TextButton.styleFrom(
                 foregroundColor: AppColors.primary,
               ),
-              child: const Text('Import / Type',
+              child: const LocalizedUiText('Import / Type',
                 style: TextStyle(fontFamily: 'Inter',
                   color: AppColors.primary, fontSize: 14)),
             )),
@@ -847,7 +847,7 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
               foregroundColor: AppColors.primary,
             ),
             icon: const Icon(Icons.add, color: AppColors.primary),
-            label: const Text('Add item',
+            label: const LocalizedUiText('Add item',
               style: TextStyle(fontFamily: 'Inter', fontSize: 14,
                 fontWeight: FontWeight.w600, color: AppColors.primary)),
           )),
@@ -859,7 +859,7 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
           style: TextStyle(fontFamily: 'Inter', fontSize: 12,
             color: AppColors.secondaryText)),
       if (_items.any((item) => item.totalMinor == null))
-        const Text('Unpriced items must be completed before creating.',
+        const LocalizedUiText('Unpriced items must be completed before creating.',
           key: Key('invoice-unpriced-notice'),
           style: TextStyle(fontFamily: 'Inter', fontSize: 12,
             color: AppColors.placeholder)),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/services/active_company_session.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
@@ -74,7 +75,7 @@ class _EquipmentLoanDetailsScreenState
     if(!mounted)return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content:Text(message)));
+      ..showSnackBar(SnackBar(content: Text(AppStrings.of(context).tr(message))));
   }
 
   Future<void> _extend() async{
@@ -86,14 +87,14 @@ class _EquipmentLoanDetailsScreenState
     if(date==null||!mounted)return;
     final confirm=await showDialog<bool>(
       context:context,builder:(dialog)=>Sign2DigitalApprovedConfirmation(
-        title:const Text('Extend Return Date?'),
+        title:const LocalizedUiText('Extend Return Date?'),
         content:Text('Change expected return from '+
           _date(_record.expectedReturnDate)+' to '+_date(date)+'?'),
         actions:[
           TextButton(onPressed:()=>Navigator.pop(dialog,false),
             child:const LocalizedUiText('Cancel')),
           TextButton(onPressed:()=>Navigator.pop(dialog,true),
-            child:const Text('Confirm Extension')),
+            child:const LocalizedUiText('Confirm Extension')),
         ]));
     if(confirm!=true||!mounted)return;
     setState(()=>_busy=true);
@@ -122,7 +123,7 @@ class _EquipmentLoanDetailsScreenState
     if(day==null||!mounted)return;
     final confirm=await showDialog<bool>(
       context:context,builder:(dialog)=>Sign2DigitalApprovedConfirmation(
-        title:const Text('Mark Equipment Returned?'),
+        title:const LocalizedUiText('Mark Equipment Returned?'),
         content:Text('Confirm that '+_record.equipmentName+
           ' was returned by '+_record.borrowerName+
           ' on '+_date(day)+'? This creates a permanent history event.'),
@@ -130,7 +131,7 @@ class _EquipmentLoanDetailsScreenState
           TextButton(onPressed:()=>Navigator.pop(dialog,false),
             child:const LocalizedUiText('Cancel')),
           TextButton(onPressed:()=>Navigator.pop(dialog,true),
-            child:const Text('Mark Returned')),
+            child:const LocalizedUiText('Mark Returned')),
         ]));
     if(confirm!=true||!mounted)return;
     setState(()=>_busy=true);
@@ -155,7 +156,7 @@ class _EquipmentLoanDetailsScreenState
     return Scaffold(
       backgroundColor:AppColors.white,
       body:SafeArea(child:Column(children:[
-        Sign2DigitalHeader(title:'Equipment Loan Details',
+        Sign2DigitalHeader(translateTitle: true, title:'Equipment Loan Details',
           onBack:()=>Navigator.of(context).maybePop()),
         Expanded(child:Center(child:ConstrainedBox(
           constraints:const BoxConstraints(maxWidth:720),
@@ -226,12 +227,12 @@ class _EquipmentLoanDetailsScreenState
                 loan:r,repository:widget.repository,
                 onLoanUpdated:_load),
               const SizedBox(height:22),
-              const Text('Loan History',style:TextStyle(
+              const LocalizedUiText('Loan History',style:TextStyle(
                 fontFamily:'Inter',fontSize:17,
                 fontWeight:FontWeight.w600,color:AppColors.dark)),
               const SizedBox(height:10),
               if(r.events.isEmpty)
-                const Text('No recorded loan events.',
+                const LocalizedUiText('No recorded loan events.',
                   key:Key('equipment-loan-history-empty'),
                   style:TextStyle(color:AppColors.placeholder))
               else for(final event in r.events)
@@ -253,7 +254,7 @@ class _EquipmentLoanDetailsScreenState
               TextButton.icon(
                 onPressed:_loading?_load:_load,
                 icon:const Icon(Icons.refresh),
-                label:const Text('Refresh Loan Details')),
+                label:const LocalizedUiText('Refresh Loan Details')),
             ],
           )))),
       ])),

@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import 'package:flutter/rendering.dart';
 
@@ -100,7 +101,7 @@ class _AddSignatureScreenState extends State<AddSignatureScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(text)));
+      ..showSnackBar(SnackBar(content: Text(AppStrings.of(context).tr(text))));
   }
 
   void _select(QuoteSignatureMethod method) {
@@ -255,10 +256,10 @@ class _AddSignatureScreenState extends State<AddSignatureScreen> {
               key: _uploadCaptureKey,
               child: Image.memory(_draft.uploadBytes!,
                 fit: BoxFit.contain, gaplessPlayback: true,
-                errorBuilder: (_, _, _) => const Text('Image unavailable')),
+                errorBuilder: (_, _, _) => const LocalizedUiText('Image unavailable')),
             )),
           )),
-          TextButton(onPressed: _chooseUpload, child: const Text('Replace image')),
+          TextButton(onPressed: _chooseUpload, child: const LocalizedUiText('Replace image')),
         ]));
 
   Widget _clearButton() => Sign2DigitalSignatureClearButton(

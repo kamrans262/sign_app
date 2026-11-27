@@ -1,5 +1,6 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 
@@ -119,7 +120,7 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
     if (!mounted) return;
     final messenger = ScaffoldMessenger.of(context);
     messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(SnackBar(content: Text(message)));
+    messenger.showSnackBar(SnackBar(content: Text(AppStrings.of(context).tr(message))));
   }
 
   static String _shortDate(DateTime date) {
@@ -246,7 +247,7 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
               Icon(Icons.cloud_upload_outlined,
                 color: AppColors.primary, size: 28),
               SizedBox(height: 8),
-              Text('Add Photo', style: TextStyle(
+              LocalizedUiText('Add Photo', style: TextStyle(
                 fontFamily: 'Inter', fontSize: 16, color: AppColors.dark)),
               SizedBox(height: 5),
               Text('Add receipt photos by editing this expense',

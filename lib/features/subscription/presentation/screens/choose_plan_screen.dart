@@ -1,5 +1,7 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 
 import '../../../auth/data/mobile_auth_repository.dart';
 import '../../data/remote_subscription_repository.dart';
@@ -120,7 +122,7 @@ class _ChoosePlanScreenState extends State<ChoosePlanScreen> {
   void _notice(String text) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(text)));
+      ..showSnackBar(SnackBar(content: Text(AppStrings.of(context).tr(text))));
   }
 
   void _continue() {
@@ -209,7 +211,7 @@ class _ChoosePlanScreenState extends State<ChoosePlanScreen> {
                 else if (option == null)
                   const Padding(
                     padding: EdgeInsets.all(20),
-                    child: Text(
+                    child: LocalizedUiText(
                       'There is no configured plan for this billing period.',
                       style: TextStyle(
                         fontFamily: 'Inter',
@@ -342,7 +344,7 @@ class _ChoosePlanScreenState extends State<ChoosePlanScreen> {
             ),
           ),
           const SizedBox(height: 25),
-          const Text('Plan Features', style: _sectionStyle),
+          const LocalizedUiText('Plan Features', style: _sectionStyle),
           const SizedBox(height: 15),
           SubscriptionFeatureList(
             items: [

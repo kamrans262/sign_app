@@ -1,5 +1,7 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
@@ -134,7 +136,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(text)));
+      ..showSnackBar(SnackBar(content: Text(AppStrings.of(context).tr(text))));
   }
 
   Future<void> _edit(ReminderRecord? original) async {
@@ -247,7 +249,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
                       child: Text('$_error. Tap to retry.'))))
                 else if (visible.isEmpty)
                   const SliverFillRemaining(hasScrollBody: false,
-                    child: Center(child: Text('No reminders found',
+                    child: Center(child: LocalizedUiText('No reminders found',
                       key: Key('reminders-empty'),
                       style: TextStyle(fontFamily: 'Inter',
                         color: AppColors.placeholder))))
