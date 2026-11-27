@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:sign2digital/features/deposits/domain/deposit_record.dart';
 import 'package:sign2digital/features/invoices/domain/invoice_record.dart';
 import 'package:sign2digital/features/invoices/presentation/screens/add_invoice_screen.dart';
@@ -97,6 +98,8 @@ Future<void> _launch(WidgetTester tester, AddInvoiceScreen screen) async {
 }
 
 void main() {
+  // Date symbols are preloaded in lib/main.dart; widget tests skip app startup.
+  setUpAll(() async => initializeDateFormatting());
   test('Line items use minor units, VAT rounds and deposits reduce due', () {
     final items = [
       const InvoiceLineItem(

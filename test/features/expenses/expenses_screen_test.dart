@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:sign2digital/core/widgets/sign2digital_bottom_navigation_bar.dart';
 import 'package:sign2digital/core/widgets/sign2digital_dashboard_header.dart';
 import 'package:sign2digital/features/clients/presentation/screens/clients_screen.dart';
@@ -41,6 +42,8 @@ ExpenseRecord example(String id, ExpenseStatus status, double amount,
 );
 
 void main() {
+  // Date symbols are preloaded in lib/main.dart; widget tests skip app startup.
+  setUpAll(() async => initializeDateFormatting());
   setUp(DemoExpenseRepository.clearDrafts);
 
   test('demo data is typed and has four unique expenses', () async {
