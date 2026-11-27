@@ -4,6 +4,7 @@ import 'package:pdf/widgets.dart' as pw;
 
 import '../../quotes/domain/quote_review_models.dart';
 import '../domain/invoice_record.dart';
+import '../../quotes/services/quote_pdf_locale.dart';
 
 /// Invoice-specific document backed by the same PDF package as Quote PDF.
 /// Never prints Figma placeholder amounts as if they were confirmed records.
@@ -11,6 +12,8 @@ class Sign2DigitalInvoicePdfBuilder {
   const Sign2DigitalInvoicePdfBuilder();
 
   Future<Uint8List> build(InvoiceRecord invoice) async {
+    final language = QuotePdfLocale.selectedCode();
+    String tr(String english) => QuotePdfLocale.tr(english, language);
     // Reuse Quote PDF's bundled Inter font so CHF values and Unicode
     // placeholders are rendered rather than lost in Helvetica fallback.
     pw.Font? inter;
@@ -42,9 +45,7 @@ class Sign2DigitalInvoicePdfBuilder {
     pw.TextStyle style(double size, {bool bold = false, PdfColor? color}) =>
         pw.TextStyle(fontSize: size, color: color ?? dark,
           fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal);
-    String date(DateTime? d) => d == null ? 'Not recorded'
-        : '${d.day.toString().padLeft(2, '0')}/'
-          '${d.month.toString().padLeft(2, '0')}/${d.year}';
+    String date(DateTime? d) => d == null ? tr('Not recorded') : QuotePdfLocale.date(d, language);
     String money(int? minor) => quoteMoney(minor, invoice.currency);
 
     final payment = invoice.payment ??
@@ -82,7 +83,7 @@ class Sign2DigitalInvoicePdfBuilder {
                     pw.Text('Sign2Digital', style: style(18, bold: true)),
                   pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.end,
                     children: [
-                      pw.Text('Invoice', style: style(18, bold: true)),
+                      pw.Text(tr('Invoice'), style: style(18, bold: true)),
                       pw.SizedBox(height: 6),
                       pw.Text(invoice.number, style: style(12, color: grey)),
                     ]),
@@ -94,7 +95,7 @@ class Sign2DigitalInvoicePdfBuilder {
                   pw.Expanded(child: pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
-                      pw.Text('Bill To:', style: style(14, bold: true)),
+                      pw.Text(tr('Bill To:'), style: style(14, bold: true)),
                       pw.SizedBox(height: 8),
                       for (final text in [
                         invoice.clientName, invoice.billingAddress,
@@ -110,8 +111,8 @@ class Sign2DigitalInvoicePdfBuilder {
                     crossAxisAlignment: pw.CrossAxisAlignment.stretch,
                     children: [
                       for (final entry in <(String, String)>[
-                        ('Date:', date(invoice.date)),
-                        ('Due Date:', date(invoice.dueDate)),
+                        (tr('Date:'), date(invoice.date)),
+                        (tr('Due Date:'), date(invoice.dueDate)),
                       ]) ...[
                         pw.Row(children: [
                           pw.SizedBox(width: 72, child: pw.Text(entry.$1,
@@ -129,8 +130,8 @@ class Sign2DigitalInvoicePdfBuilder {
                 ],
               ),
               pw.SizedBox(height: 10),
-              pw.Text('Project: ${invoice.project}', style: style(11)),
-              pw.Text('Status: ${invoice.status.label}', style: style(11)),
+              pw.Text('${tr('Project:')} ${invoice.project}', style: style(11)),
+              pw.Text('${tr('Status:')} ${tr(invoice.status.label)}', style: style(11)),
               if (invoice.iban.trim().isNotEmpty)
                 pw.Text('IBAN: ${invoice.iban}', style: style(11)),
               pw.SizedBox(height: 6),
@@ -139,9 +140,9 @@ class Sign2DigitalInvoicePdfBuilder {
         ),
         pw.SizedBox(height: 12),
         pw.TableHelper.fromTextArray(
-          headers: const ['Description', 'Qty', 'Unit Price', 'Total'],
+          headers: [tr('Description'), tr('Qty'), tr('Unit Price'), tr('Total')],
           data: invoice.items.isEmpty
-              ? [['No itemized lines recorded', '-', '-', '-']]
+              ? [[tr('No itemized lines recorded'), '-', '-', '-']]
               : invoice.items.map((item) => [
                   item.description, '${item.quantity}',
                   money(item.unitPriceMinor), money(item.totalMinor),
@@ -162,16 +163,16 @@ class Sign2DigitalInvoicePdfBuilder {
         ),
         pw.SizedBox(height: 12),
         for (final entry in <(String, String)>[
-          ('Subtotal', money(invoice.subtotalMinor)),
-          ('VAT (${(invoice.vatBasisPoints / 100).toStringAsFixed(2)}%)',
+          (tr('Subtotal'), money(invoice.subtotalMinor)),
+          ('${tr('VAT')} (${(invoice.vatBasisPoints / 100).toStringAsFixed(2)}%)',
             money(invoice.vatMinor)),
-          ('Total', invoice.formattedAmount),
-          ('Deposit paid', money(invoice.depositPaidMinor)),
-          ('Received via recorded payments',
+          (tr('Total'), invoice.formattedAmount),
+          (tr('Deposit paid'), money(invoice.depositPaidMinor)),
+          (tr('Received via recorded payments'),
             money(invoice.payments.isEmpty ? null : invoice.receivedMinor)),
-          ('Amount due', money(invoice.amountDueMinor)),
+          (tr('Amount due'), money(invoice.amountDueMinor)),
         ]) pw.Container(
-          color: entry.$1 == 'Total' ? blue : PdfColors.white,
+          color: entry.$1 == tr('Total') ? blue : PdfColors.white,
           padding: const pw.EdgeInsets.symmetric(
             vertical: 7, horizontal: 9),
           child: pw.Row(
@@ -180,15 +181,15 @@ class Sign2DigitalInvoicePdfBuilder {
               pw.SizedBox(width: 170,
                 child: pw.Text(entry.$1,
                   textAlign: pw.TextAlign.right,
-                  style: style(entry.$1 == 'Total' ? 12 : 10,
-                    color: entry.$1 == 'Total' ? PdfColors.white : grey,
-                    bold: entry.$1 == 'Total'))),
+                  style: style(entry.$1 == tr('Total') ? 12 : 10,
+                    color: entry.$1 == tr('Total') ? PdfColors.white : grey,
+                    bold: entry.$1 == tr('Total')))),
               pw.SizedBox(width: 110,
                 child: pw.Text(entry.$2,
                   textAlign: pw.TextAlign.right,
-                  style: style(entry.$1 == 'Total' ? 12 : 10,
-                    color: entry.$1 == 'Total' ? PdfColors.white : dark,
-                    bold: entry.$1 == 'Total'))),
+                  style: style(entry.$1 == tr('Total') ? 12 : 10,
+                    color: entry.$1 == tr('Total') ? PdfColors.white : dark,
+                    bold: entry.$1 == tr('Total')))),
             ],
           ),
         ),
@@ -201,10 +202,10 @@ class Sign2DigitalInvoicePdfBuilder {
           child: pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Text('Payment Details', style: style(14, bold: true)),
+              pw.Text(tr('Payment Details'), style: style(14, bold: true)),
               pw.SizedBox(height: 5),
               pw.Text(qrPayload == null
-                ? 'Payment QR unavailable' : 'Scan to Pay',
+                ? tr('Payment QR unavailable') : tr('Scan to Pay'),
                 style: style(11)),
               pw.SizedBox(height: 12),
               if (qrPayload != null)
@@ -212,33 +213,32 @@ class Sign2DigitalInvoicePdfBuilder {
                   barcode: pw.Barcode.qrCode(),
                   data: qrPayload, width: 92, height: 92),
               if (qrPayload == null)
-                pw.Text('A validated Swiss payee address, IBAN and amount '
-                  'are required for a scannable payment QR.',
+                pw.Text(tr('A validated Swiss payee address, IBAN and amount are required for a scannable payment QR.'),
                   style: style(10, color: grey)),
               if (invoice.iban.trim().isNotEmpty)
-                pw.Text('Account / payable to: ${invoice.iban}',
+                pw.Text('${tr('Account / payable to')}: ${invoice.iban}',
                   style: style(10)),
               if (invoice.payment != null &&
                   invoice.payment!.accountHolder.trim().isNotEmpty)
-                pw.Text('Company: ${invoice.payment!.accountHolder}',
+                pw.Text('${tr('Company Name')}: ${invoice.payment!.accountHolder}',
                   style: style(10)),
-              pw.Text('Payable amount: ${money(invoice.amountDueMinor)}',
+              pw.Text('${tr('Payable amount')}: ${money(invoice.amountDueMinor)}',
                 style: style(10)),
-              pw.Text('Currency: ${invoice.currency}', style: style(10)),
+              pw.Text('${tr('Currency')}: ${invoice.currency}', style: style(10)),
             ],
           ),
         ),
         pw.SizedBox(height: 20),
-        pw.Text('General Terms & Conditions',
+        pw.Text(tr('General Terms & Conditions'),
           style: style(15, bold: true)),
         pw.SizedBox(height: 10),
         pw.Text(invoice.terms.trim().isEmpty
-          ? 'No terms and conditions have been provided.'
+          ? tr('No terms and conditions have been provided.')
           : invoice.terms,
           style: style(11, color: grey)),
         if (invoice.notes.trim().isNotEmpty) ...[
           pw.SizedBox(height: 20),
-          pw.Text('Notes', style: style(12, bold: true)),
+          pw.Text(tr('Notes'), style: style(12, bold: true)),
           pw.Text(invoice.notes, style: style(11)),
         ],
       ],
