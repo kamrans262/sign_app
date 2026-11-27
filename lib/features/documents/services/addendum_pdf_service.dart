@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
@@ -26,7 +27,17 @@ class AddendumPdfService {
     if (total == null || subtotal == null || vat == null) {
       throw const FormatException('Addendum prices have not been verified.');
     }
-    final pdf = pw.Document();
+    // Match the existing quotation font for accented French, German and
+    // Italian labels. Keep the document unsigned and its source immutable.
+    pw.Font? inter;
+    try {
+      inter = pw.Font.ttf(await rootBundle.load('assets/fonts/Inter-Variable.ttf'));
+    } catch (_) {
+      // Preserve the existing PDF fallback if the font asset is unavailable.
+    }
+    final pdf = pw.Document(
+      theme: inter == null ? null : pw.ThemeData.withFont(base: inter, bold: inter),
+    );
     final primary = PdfColor.fromHex('#166282');
     final ink = PdfColor.fromHex('#122536');
     pw.Widget detail(String label, String value) => pw.Padding(
