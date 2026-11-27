@@ -2,6 +2,9 @@
 // Option values, user-written strings, IDs and API data remain unchanged.
 const modalUiStrings = <String, Map<String, String>>{
   'fr': {
+    "Status: Email sent (awaiting signature)": "Statut : e-mail envoyé (signature en attente)",
+    "Status: {status}": "Statut : {status}",
+    "Link ready (not emailed)": "Lien prêt (non envoyé par e-mail)",
     "Add invoice item": "Ajouter un article à la facture",
     "Edit invoice item": "Modifier l’article de facture",
     "Enter a description, valid quantity and price.": "Saisissez une description, une quantité et un prix valides.",
@@ -148,6 +151,9 @@ const modalUiStrings = <String, Map<String, String>>{
     "Retry": "Réessayer",
   },
   'de': {
+    "Status: Email sent (awaiting signature)": "Status: E-Mail gesendet (Unterschrift ausstehend)",
+    "Status: {status}": "Status: {status}",
+    "Link ready (not emailed)": "Link bereit (nicht per E-Mail versendet)",
     "Add invoice item": "Rechnungsposition hinzufügen",
     "Edit invoice item": "Rechnungsposition bearbeiten",
     "Enter a description, valid quantity and price.": "Beschreibung, gültige Menge und Preis eingeben.",
@@ -294,6 +300,9 @@ const modalUiStrings = <String, Map<String, String>>{
     "Retry": "Erneut versuchen",
   },
   'it': {
+    "Status: Email sent (awaiting signature)": "Stato: email inviata (firma in attesa)",
+    "Status: {status}": "Stato: {status}",
+    "Link ready (not emailed)": "Link pronto (email non inviata)",
     "Add invoice item": "Aggiungi voce alla fattura",
     "Edit invoice item": "Modifica voce fattura",
     "Enter a description, valid quantity and price.": "Inserisci descrizione, quantità e prezzo validi.",

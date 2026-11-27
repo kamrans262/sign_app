@@ -123,8 +123,8 @@ class _AddendumApprovalConfirmationState
         Text(AppStrings.of(context).format('Quantity: {value}', {'value': widget.draft.quantity})),
       ],
       const SizedBox(height: 8),
-      Text('Total: ${quoteMoney(
-        widget.draft.totalMinor, widget.draft.currency)}'),
+      Text(AppStrings.of(context).format('Total: {amount}', {'amount': quoteMoney(
+        widget.draft.totalMinor, widget.draft.currency)})),
       const SizedBox(height: 12),
       CheckboxListTile(
         contentPadding: EdgeInsets.zero,
@@ -538,8 +538,8 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
           Text(AppStrings.of(context).format('Original document: {value}', {'value': source.number})),
           Text(
             response.emailTransportAccepted
-                ? 'Status: Email sent (awaiting signature)'
-                : 'Status: ${response.confirmedSentAt == null ? 'Link ready (not emailed)' : response.status}',
+                ? AppStrings.of(context).tr('Status: Email sent (awaiting signature)')
+                : AppStrings.of(context).format('Status: {status}', {'status': AppStrings.of(context).tr(response.confirmedSentAt == null ? 'Link ready (not emailed)' : response.status)}),
             key: const Key('addendum-signature-request-status')),
           const SizedBox(height: 10),
           const LocalizedUiText('The customer must sign the separate addendum. '
