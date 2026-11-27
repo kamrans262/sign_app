@@ -264,8 +264,7 @@ class _ProfilePreferencesScreenState extends State<ProfilePreferencesScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                tr('Available help articles follow this choice. '
-                   'Notification templates currently support English and French.'),
+                tr('Your interface language updates immediately. Save Preferences to synchronize notification language with your account.'),
                 style: const TextStyle(fontFamily: 'Inter', fontSize: 12,
                   color: AppColors.secondaryText),
               ),
