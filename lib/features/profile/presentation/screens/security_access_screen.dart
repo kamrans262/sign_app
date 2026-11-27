@@ -331,9 +331,9 @@ class _SecurityAccessScreenState extends State<SecurityAccessScreen> {
             Text(session.agentAndLastSeen, style: const TextStyle(
               fontFamily: 'Inter', color: AppColors.placeholder)),
             const SizedBox(height: 20),
-            Text(session.isCurrent
+            Text(AppStrings.of(sheet).tr(session.isCurrent
                 ? 'This is the current device.'
-                : 'Session actions require verified account authentication.',
+                : 'Session actions require verified account authentication.'),
               style: const TextStyle(
                 fontFamily: 'Inter', color: AppColors.placeholder)),
             if (!session.isCurrent) ...[

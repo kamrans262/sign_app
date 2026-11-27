@@ -1,3 +1,4 @@
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 
@@ -200,7 +201,7 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
               for (final permission in permissionOptions)
                 CheckboxListTile(
                   key: Key('team-permission-$permission'),
-                  title: Text(CompanyTeamScreen.permissionLabel(permission),
+                  title: Text(AppStrings.of(context).permissionLabel(CompanyTeamScreen.permissionLabel(permission)),
                     style: const TextStyle(fontFamily: 'Inter', fontSize: 14,
                       color: AppColors.dark)),
                   activeColor: AppColors.primary,

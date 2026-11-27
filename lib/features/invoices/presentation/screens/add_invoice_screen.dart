@@ -518,7 +518,7 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(index == null ? 'Add invoice item' : 'Edit invoice item',
+                  Text(AppStrings.of(sheet).tr(index == null ? 'Add invoice item' : 'Edit invoice item'),
                     style: const TextStyle(fontFamily: 'Inter',
                       fontSize: 18, color: AppColors.dark,
                       fontWeight: FontWeight.w600)),
@@ -527,14 +527,14 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
                     key: const Key('invoice-item-description'),
                     initialValue: description,
                     onChanged: (value) => description = value,
-                    decoration: const InputDecoration(labelText: 'Description')),
+                    decoration: InputDecoration(labelText: AppStrings.of(sheet).tr('Description'))),
                   const SizedBox(height: 10),
                   TextFormField(
                     key: const Key('invoice-item-quantity'),
                     initialValue: quantity,
                     onChanged: (value) => quantity = value,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'Quantity')),
+                    decoration: InputDecoration(labelText: AppStrings.of(sheet).tr('Quantity'))),
                   const SizedBox(height: 10),
                   TextFormField(
                     key: const Key('invoice-item-unit-price'),
@@ -543,11 +543,11 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true),
                     decoration: InputDecoration(
-                      labelText: 'Unit Price (${widget.currency})',
-                      hintText: 'Leave blank if not priced')),
+                      labelText: AppStrings.of(sheet).format('Unit Price ({currency})', {'currency': widget.currency}),
+                      hintText: AppStrings.of(sheet).tr('Leave blank if not priced'))),
                   if (error != null) ...[
                     const SizedBox(height: 10),
-                    Text(error!, style:
+                    Text(AppStrings.of(sheet).tr(error!), style:
                       const TextStyle(color: Color(0xFFB42318))),
                   ],
                   const SizedBox(height: 15),

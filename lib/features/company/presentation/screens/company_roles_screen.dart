@@ -1,3 +1,4 @@
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 
@@ -86,7 +87,7 @@ class _CompanyRoleEditorFormState extends State<_CompanyRoleEditorForm> {
           for (final key in _keys)
             CheckboxListTile(
               key: Key('custom-role-permission-$key'),
-              title: Text(CompanyTeamScreen.permissionLabel(key),
+              title: Text(AppStrings.of(context).permissionLabel(CompanyTeamScreen.permissionLabel(key)),
                 style: const TextStyle(fontFamily: 'Inter',
                   fontSize: 14, color: AppColors.dark)),
               activeColor: AppColors.primary,

@@ -29,6 +29,15 @@ class AppStrings {
             ? (values[match[1]]?.toString() ?? '')
             : match[0]!);
 
+  /// Presentation-only formatting for canonical permission keys; no stored
+  /// roles, access checks or service permissions are changed.
+  String permissionLabel(String english) {
+    final separator = english.indexOf(' - ');
+    if (separator < 0) return tr(english);
+    return '${tr(english.substring(0, separator))} - '
+        '${tr(english.substring(separator + 3))}';
+  }
+
   String tabLabel(String english) {
     final label = tr(english);
     return switch (locale.languageCode) {

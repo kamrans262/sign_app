@@ -1,3 +1,4 @@
+import 'package:sign2digital/core/localization/app_strings.dart';
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'dart:math' as math;
 
@@ -356,7 +357,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
                         key: Key('signed-job-document-${file.documentId}'),
                         leading: const Icon(Icons.picture_as_pdf_outlined),
                         title: Text(file.quoteNumber),
-                        subtitle: Text('Signed ${file.signedAt.toLocal()}'),
+                        subtitle: Text(AppStrings.of(sheetContext).format('Signed {date}', {'date': file.signedAt.toLocal()})),
                         onTap: () async {
                           try {
                             final bytes = await SignedQuoteFileStore.shared.read(file);

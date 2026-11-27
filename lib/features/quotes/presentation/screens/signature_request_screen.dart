@@ -255,8 +255,7 @@ class _SignatureRequestScreenState extends State<SignatureRequestScreen> with Wi
     final choice = await Sign2DigitalSelectionSheet.show(
       context,
       title: 'Resend signature request?',
-      subtitle: 'Email another signing request to ${_quote.clientName}? '
-          'The previous link will stop working.',
+      subtitle: AppStrings.of(context).format('Email another signing request to {client}? The previous link will stop working.', {'client': _quote.clientName}),
       icon: Icons.mail_outline,
       options: const ['Resend Request'],
       iconForOption: (_) => Icons.send_outlined,

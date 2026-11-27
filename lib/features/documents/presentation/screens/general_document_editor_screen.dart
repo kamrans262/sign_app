@@ -159,10 +159,10 @@ class _GeneralDocumentEditorScreenState extends State<GeneralDocumentEditorScree
     showSign2DigitalBottomSheet<String>(context:context,showDragHandle:true,
       builder:(sheet)=>SafeArea(child:Column(mainAxisSize:MainAxisSize.min,children:[
         Padding(padding:const EdgeInsets.all(16),
-          child:Text(title,style:const TextStyle(fontFamily:'Inter',
+          child:Text(AppStrings.of(sheet).tr(title),style:const TextStyle(fontFamily:'Inter',
             fontWeight:FontWeight.w600,fontSize:16))),
         for(final entry in options.entries)ListTile(
-          title:Text(entry.value),onTap:()=>Navigator.pop(sheet,entry.key)),
+          title:Text(AppStrings.of(sheet).tr(entry.value)),onTap:()=>Navigator.pop(sheet,entry.key)),
       ])));
 
   Future<void> _pickClient() async{
