@@ -50,14 +50,14 @@ abstract final class Sign2DigitalConfirmationDialog {
             Row(children: [
               Expanded(child: Sign2DigitalOutlinedButton(
                 key: cancelKey,
-                label: cancelLabel,
+                label: AppStrings.of(dialog).tr(cancelLabel),
                 primaryOutline: true,
                 onPressed: () => Navigator.of(dialog).pop(false),
               )),
               const SizedBox(width: 15),
               Expanded(child: Sign2DigitalPrimaryButton(
                 key: confirmKey,
-                label: confirmLabel,
+                label: AppStrings.of(dialog).tr(confirmLabel),
                 compactLabel: true,
                 onPressed: () => Navigator.of(dialog).pop(true),
               )),

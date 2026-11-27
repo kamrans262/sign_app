@@ -138,7 +138,7 @@ class Sign2DigitalSelectionSheet {
     IconData icon = Icons.tune_rounded,
     String? subtitle,
     String Function(String)? labelForOption,
-    bool translateOptions = false,
+    bool translateOptions = true,
     IconData? Function(String)? iconForOption,
     Key Function(String)? keyForOption,
   }) => showCustom<String>(
@@ -159,8 +159,9 @@ class Sign2DigitalSelectionSheet {
         final option = options[index];
         final isSelected = option == selected;
         final optionIcon = iconForOption?.call(option);
-        final optionLabel = labelForOption?.call(option) ??
-            (translateOptions ? AppStrings.of(sheet).tr(option) : option);
+        final originalLabel = labelForOption?.call(option) ?? option;
+        final optionLabel = translateOptions
+            ? AppStrings.of(sheet).tr(originalLabel) : originalLabel;
         return Semantics(
           selected: isSelected,
           button: true,

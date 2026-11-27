@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 import 'sign2digital_modal_surface.dart';
+import 'sign2digital_modal_copy.dart';
 import 'sign2digital_outlined_button.dart';
 import 'sign2digital_primary_button.dart';
 
@@ -111,7 +112,7 @@ class Sign2DigitalApprovedConfirmation extends StatelessWidget {
               decoration: TextDecoration.none,
             ),
             textAlign: TextAlign.center,
-            child: title,
+            child: Sign2DigitalModalCopy.render(context, title),
           ),
           const SizedBox(height: 8),
           ConstrainedBox(
@@ -126,7 +127,7 @@ class Sign2DigitalApprovedConfirmation extends StatelessWidget {
                   decoration: TextDecoration.none,
                 ),
                 textAlign: TextAlign.center,
-                child: content,
+                child: Sign2DigitalModalCopy.render(context, content),
               ),
             ),
           ),

@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 
 import 'app_language_controller.dart';
 import 'stage2_workflow_strings.dart';
+import 'modal_ui_strings.dart';
 
 /// Explicitly translate UI copy, never user-entered content, IDs or API values.
 /// Untranslated source labels keep their exact English text during migration.
@@ -17,6 +18,7 @@ class AppStrings {
       const AppStrings(Locale('en'));
 
   String tr(String english) =>
+      modalUiStrings[locale.languageCode]?[english] ??
       stage2WorkflowStrings[locale.languageCode]?[english] ??
       _translations[locale.languageCode]?[english] ?? english;
 
