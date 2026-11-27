@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/localization/app_language_controller.dart';
+import '../../../../core/localization/app_strings.dart';
+
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
@@ -11,15 +14,18 @@ import '../../data/profile_preferences_repository.dart';
 import '../widgets/profile_notification_row.dart';
 
 /// Profile & Settings -> Preferences.
-/// Values are saved on the device, never presented as OS permissions.
+/// Uses the existing preferences repository and a device-local UI language.
+/// Notification preferences are never presented as OS permissions.
 class ProfilePreferencesScreen extends StatefulWidget {
   const ProfilePreferencesScreen({
     super.key,
     this.repository = LocalProfilePreferencesRepository.shared,
     this.onNavigationSelected,
+    this.languageController,
   });
 
   final ProfilePreferencesRepository repository;
+  final AppLanguageController? languageController;
   final ValueChanged<int>? onNavigationSelected;
 
   @override
@@ -28,7 +34,11 @@ class ProfilePreferencesScreen extends StatefulWidget {
 }
 
 class _ProfilePreferencesScreenState extends State<ProfilePreferencesScreen> {
-  static const _languages = ['English', 'French', 'German', 'Italian'];
+  static const _languages = AppLanguages.names;
+  AppLanguageController get _language =>
+      widget.languageController ?? AppLanguageController.shared;
+  String _storedLanguage = 'English';
+  bool _languageSelected = false;
   static const _dateFormats = ['DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY-MM-DD'];
   static const _timeFormats = ['24 hours', '12 hours'];
   static const _timeZones = [
@@ -57,7 +67,16 @@ class _ProfilePreferencesScreenState extends State<ProfilePreferencesScreen> {
       if (!mounted) {
         return;
       }
-      setState(() { _draft = saved; _loading = false; });
+      setState(() {
+        _storedLanguage = _languages.contains(saved.language)
+            ? saved.language : 'English';
+        _languageSelected = false;
+        final locale = _language.effectiveLocale(
+          WidgetsBinding.instance.platformDispatcher.locales,
+        );
+        _draft = saved.copyWith(language: AppLanguages.nameFor(locale));
+        _loading = false;
+      });
     } catch (_) {
       if (!mounted) {
         return;
@@ -76,10 +95,13 @@ class _ProfilePreferencesScreenState extends State<ProfilePreferencesScreen> {
     required IconData icon,
     required ValueChanged<String> onPicked,
   }) async {
+    if (_saving) return;
+    final strings = AppStrings.of(context);
     final value = await Sign2DigitalSelectionSheet.show(
       context,
-      title: title,
-      subtitle: 'Choose a ${title.toLowerCase()} option',
+      title: strings.tr(title),
+      subtitle: strings.tr('Choose a ${title.toLowerCase()} option'),
+      labelForOption: strings.tr,
       options: options,
       selected: current,
       icon: icon,
@@ -96,7 +118,7 @@ class _ProfilePreferencesScreenState extends State<ProfilePreferencesScreen> {
         'preferences-option-${option.replaceAll('/', '-').replaceAll(' ', '-')}',
       ),
     );
-    if (mounted && value != null) {
+    if (mounted && !_saving && value != null) {
       setState(() => onPicked(value));
     }
   }
@@ -115,9 +137,23 @@ class _ProfilePreferencesScreenState extends State<ProfilePreferencesScreen> {
     }
     setState(() => _saving = true);
     try {
-      await widget.repository.save(_draft);
+      final selectedLanguage = _draft.language;
+      final shouldApplyLanguage = _languageSelected;
+      final savedLanguage = shouldApplyLanguage
+          ? selectedLanguage : _storedLanguage;
+      await widget.repository.save(_draft.copyWith(language: savedLanguage));
+      _storedLanguage = savedLanguage;
+      if (shouldApplyLanguage) {
+        try {
+          await _language.select(selectedLanguage);
+          _languageSelected = false;
+        } catch (_) {
+          if (mounted) _showMessage('Preferences saved, but the interface language could not be saved on this device. Try again.');
+          return;
+        }
+      }
       if (mounted) {
-        _showMessage('Preferences saved.');
+        _showMessage('Preferences saved.', locale: _language.value);
       }
     } catch (_) {
       if (mounted) {
@@ -130,10 +166,11 @@ class _ProfilePreferencesScreenState extends State<ProfilePreferencesScreen> {
     }
   }
 
-  void _showMessage(String message) {
+  void _showMessage(String message, {Locale? locale}) {
+    final strings = locale == null ? AppStrings.of(context) : AppStrings(locale);
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+      ..showSnackBar(SnackBar(content: Text(strings.tr(message))));
   }
 
   void _navigate(int index) {
@@ -161,9 +198,9 @@ class _ProfilePreferencesScreenState extends State<ProfilePreferencesScreen> {
     bool chevron = true,
   }) => Sign2DigitalSelectionField(
     key: key,
-    label: label,
-    value: displayValue ?? value,
-    hintText: displayValue ?? value,
+    label: AppStrings.of(context).tr(label),
+    value: AppStrings.of(context).tr(displayValue ?? value),
+    hintText: AppStrings.of(context).tr(displayValue ?? value),
     iconAsset: '',
     leadingIcon: icon,
     leadingIconSize: 24,
@@ -182,10 +219,12 @@ class _ProfilePreferencesScreenState extends State<ProfilePreferencesScreen> {
   );
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) {
+    final tr = AppStrings.of(context).tr;
+    return Scaffold(
     backgroundColor: AppColors.white,
     body: SafeArea(bottom: false, child: Column(children: [
-      const Sign2DigitalHeader(title: 'Preferences'),
+      Sign2DigitalHeader(title: tr('Preferences')),
       Expanded(child: Center(child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth:
             MediaQuery.orientationOf(context) == Orientation.landscape
@@ -202,7 +241,7 @@ class _ProfilePreferencesScreenState extends State<ProfilePreferencesScreen> {
               TextButton(
                 key: const Key('preferences-retry'),
                 onPressed: _load,
-                child: Text('$_error Tap to retry.'))
+                child: Text('${tr(_error!)} ${tr('Tap to retry.')}'))
             else ...[
               _selection(
                 key: const Key('preferences-language'),
@@ -211,14 +250,16 @@ class _ProfilePreferencesScreenState extends State<ProfilePreferencesScreen> {
                 icon: Icons.language_rounded,
                 options: _languages,
                 chevron: true,
-                onSelected: (value) =>
-                    _draft = _draft.copyWith(language: value),
+                onSelected: (value) {
+                  _languageSelected = true;
+                  _draft = _draft.copyWith(language: value);
+                },
               ),
               const SizedBox(height: 8),
-              const Text(
-                'Available help articles follow this choice. '
-                'Notification templates currently support English and French.',
-                style: TextStyle(fontFamily: 'Inter', fontSize: 12,
+              Text(
+                tr('Available help articles follow this choice. '
+                   'Notification templates currently support English and French.'),
+                style: const TextStyle(fontFamily: 'Inter', fontSize: 12,
                   color: AppColors.secondaryText),
               ),
               const SizedBox(height: 20),
@@ -254,7 +295,7 @@ class _ProfilePreferencesScreenState extends State<ProfilePreferencesScreen> {
                     _draft = _draft.copyWith(timeZone: value),
               ),
               const SizedBox(height: 20),
-              const Text('Notifications', style: TextStyle(
+              Text(tr('Notifications'), style: const TextStyle(
                 fontFamily: 'Inter',
                 fontSize: 18,
                 height: 1.0,
@@ -265,7 +306,8 @@ class _ProfilePreferencesScreenState extends State<ProfilePreferencesScreen> {
               const SizedBox(height: 10),
               ProfileNotificationRow(
                 key: const Key('preferences-push'),
-                title: 'Push Notification',
+                title: tr('Push Notification'),
+                description: tr('Receive important updates'),
                 enabled: _draft.pushNotifications,
                 onChanged: (value) => setState(() =>
                     _draft = _draft.copyWith(pushNotifications: value)),
@@ -273,8 +315,8 @@ class _ProfilePreferencesScreenState extends State<ProfilePreferencesScreen> {
               const SizedBox(height: 20),
               ProfileNotificationRow(
                 key: const Key('preferences-email'),
-                title: 'Email Notification',
-                description: 'Save your email preference for supported messages',
+                title: tr('Email Notification'),
+                description: tr('Save your email preference for supported messages'),
                 enabled: _draft.emailNotifications,
                 onChanged: (value) => setState(() =>
                     _draft = _draft.copyWith(emailNotifications: value)),
@@ -282,8 +324,8 @@ class _ProfilePreferencesScreenState extends State<ProfilePreferencesScreen> {
               const SizedBox(height: 20),
               ProfileNotificationRow(
                 key: const Key('preferences-sms'),
-                title: 'SMS Notification',
-                description: 'Unavailable until SMS delivery is configured',
+                title: tr('SMS Notification'),
+                description: tr('Unavailable until SMS delivery is configured'),
                 enabled: false,
                 onChanged: (_) => _showMessage(
                     'SMS notifications are unavailable until configured.'),
@@ -291,7 +333,7 @@ class _ProfilePreferencesScreenState extends State<ProfilePreferencesScreen> {
               const SizedBox(height: 45),
               Sign2DigitalPrimaryButton(
                 key: const Key('preferences-save'),
-                label: 'Save Preferences',
+                label: tr('Save Preferences'),
                 height: 48,
                 loading: _saving,
                 onPressed: _save,
@@ -306,4 +348,5 @@ class _ProfilePreferencesScreenState extends State<ProfilePreferencesScreen> {
       onSelected: _navigate,
     ),
   );
+  }
 }

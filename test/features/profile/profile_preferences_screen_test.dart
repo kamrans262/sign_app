@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sign2digital/core/localization/app_language_controller.dart';
 
 import 'package:sign2digital/core/widgets/sign2digital_bottom_navigation_bar.dart';
 import 'package:sign2digital/core/widgets/sign2digital_header.dart';
 import 'package:sign2digital/features/profile/data/profile_preferences_repository.dart';
 import 'package:sign2digital/features/profile/presentation/screens/profile_preferences_screen.dart';
 import 'package:sign2digital/features/profile/presentation/widgets/profile_notification_row.dart';
+
+AppLanguageController _testLanguage() => AppLanguageController(
+  readCode: () async => null,
+  writeCode: (_) async {},
+);
 
 class _PreferencesRepo implements ProfilePreferencesRepository {
   ProfilePreferences saved = const ProfilePreferences();
@@ -75,7 +81,7 @@ void main() {
   testWidgets('Renders shared fields, four selections and More bottom nav',
       (tester) async {
     await tester.pumpWidget(MaterialApp(
-      home: ProfilePreferencesScreen(repository: _PreferencesRepo()),
+      home: ProfilePreferencesScreen(repository: _PreferencesRepo(), languageController: _testLanguage()),
     ));
     await tester.pumpAndSettle();
     expect(find.byType(Sign2DigitalHeader), findsOneWidget);
@@ -105,12 +111,13 @@ void main() {
   testWidgets('Dropdowns save language, date, time and real time zone',
       (tester) async {
     final repo = _PreferencesRepo();
+    final language = _testLanguage();
     await tester.pumpWidget(MaterialApp(
       home: Scaffold(body: Builder(builder: (context) =>
         ElevatedButton(
           onPressed: () => Navigator.of(context).push<void>(
             MaterialPageRoute<void>(builder: (_) =>
-              ProfilePreferencesScreen(repository: repo))),
+              ProfilePreferencesScreen(repository: repo, languageController: language))),
           child: const Text('Open Preferences'),
         ),
       )),
@@ -147,7 +154,7 @@ void main() {
       (tester) async {
     final repo = _PreferencesRepo();
     await tester.pumpWidget(MaterialApp(
-      home: ProfilePreferencesScreen(repository: repo),
+      home: ProfilePreferencesScreen(repository: repo, languageController: _testLanguage()),
     ));
     await tester.pumpAndSettle();
     await _scrollTo(tester, const Key('preferences-push'));
@@ -188,7 +195,7 @@ void main() {
         ElevatedButton(
           onPressed: () => Navigator.of(context).push<void>(
             MaterialPageRoute<void>(builder: (_) =>
-              ProfilePreferencesScreen(repository: repo))),
+              ProfilePreferencesScreen(repository: repo, languageController: _testLanguage()))),
           child: const Text('Open Preferences'),
         ),
       )),
@@ -206,7 +213,7 @@ void main() {
       (tester) async {
     final repo = _PreferencesRepo()..failLoad = true;
     await tester.pumpWidget(MaterialApp(
-      home: ProfilePreferencesScreen(repository: repo),
+      home: ProfilePreferencesScreen(repository: repo, languageController: _testLanguage()),
     ));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('preferences-retry')), findsOneWidget);
@@ -236,7 +243,7 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
       final repo = _PreferencesRepo();
       await tester.pumpWidget(MaterialApp(
-        home: ProfilePreferencesScreen(repository: repo),
+        home: ProfilePreferencesScreen(repository: repo, languageController: _testLanguage()),
       ));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);

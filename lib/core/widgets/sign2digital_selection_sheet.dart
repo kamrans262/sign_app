@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../localization/app_strings.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_theme.dart';
 import '../theme/sign2digital_motion.dart';
@@ -79,7 +80,7 @@ class Sign2DigitalSelectionSheet {
                       color: AppColors.dark,
                     )),
                     const SizedBox(height: 4),
-                    Text(subtitle ?? 'Select an option', style: const TextStyle(
+                    Text(subtitle ?? AppStrings.of(sheet).tr('Select an option'), style: const TextStyle(
                       fontFamily: 'Inter', fontSize: 12,
                       fontWeight: FontWeight.w400, letterSpacing: -0.3,
                       color: AppColors.dark,
@@ -92,7 +93,7 @@ class Sign2DigitalSelectionSheet {
                   shape: const CircleBorder(),
                   child: IconButton(
                     key: const Key('selection-sheet-close'),
-                    tooltip: 'Close',
+                    tooltip: AppStrings.of(sheet).tr('Close'),
                     icon: const Icon(Icons.close_rounded, size: 18,
                       color: AppColors.primary),
                     constraints: const BoxConstraints(
@@ -143,7 +144,7 @@ class Sign2DigitalSelectionSheet {
     context: context,
     title: title,
     icon: icon,
-    subtitle: subtitle ?? 'Select an option',
+    subtitle: subtitle ?? AppStrings.of(context).tr('Select an option'),
     builder: (sheet) => ListView.separated(
       key: const Key('selection-sheet-options'),
       padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),

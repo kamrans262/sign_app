@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/localization/app_strings.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/navigation/sign2digital_navigation.dart';
@@ -214,7 +215,7 @@ class MoreScreen extends StatelessWidget {
             child: Row(children: [
               Icon(icon, color: AppColors.primary, size: 24),
               const SizedBox(width: 15),
-              Expanded(child: Text(title,
+              Expanded(child: Text(AppStrings.of(context).tr(title),
                 style: const TextStyle(fontFamily: 'Inter',
                   fontSize: 16, fontWeight: FontWeight.w600,
                   color: AppColors.dark))),

@@ -1,5 +1,6 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/localization/app_strings.dart';
 
 import '../../../../core/assets/dashboard_assets.dart';
 import '../../../../core/services/profile_photo_session.dart';
@@ -124,7 +125,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(
-        content: Text('$action is not connected yet.')));
+        content: Text(AppStrings.of(context).tr('$action is not connected yet.'))));
   }
 
   void _navigate(int index) {
@@ -152,6 +153,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final account = _account;
+    final tr = AppStrings.of(context).tr;
     return Scaffold(
       backgroundColor: AppColors.white,
       body: SafeArea(bottom: false, child: Column(children: [
@@ -178,31 +180,31 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                   Center(child: TextButton(
                     key: const Key('profile-settings-retry'),
                     onPressed: _load,
-                    child: Text('$_error Tap to retry.')))
+                    child: Text('${tr(_error!)} ${tr('Tap to retry.')}')))
                 else ...[
                   _profileCard(account),
                   const SizedBox(height: 20),
                   ProfileSettingsActionCard(
                     key: const Key('profile-action-personal'),
                     icon: Icons.manage_accounts_outlined,
-                    title: 'Personal Information',
-                    subtitle: 'Name, email, phone and photo',
+                    title: tr('Personal Information'),
+                    subtitle: tr('Name, email, phone and photo'),
                     onTap: _edit,
                   ),
                   const SizedBox(height: 20),
                   ProfileSettingsActionCard(
                     key: const Key('profile-action-business'),
                     icon: Icons.info_outline_rounded,
-                    title: 'Business Information',
-                    subtitle: 'Company, address and tax details',
+                    title: tr('Business Information'),
+                    subtitle: tr('Company, address and tax details'),
                     onTap: _business,
                   ),
                   const SizedBox(height: 20),
                   ProfileSettingsActionCard(
                     key: const Key('profile-action-preferences'),
                     icon: Icons.tune_rounded,
-                    title: 'Preferences',
-                    subtitle: 'Language, data, time and notification',
+                    title: tr('Preferences'),
+                    subtitle: tr('Language, data, time and notification'),
                     onTap: () {
                       final callback = widget.onPreferences;
                       if (callback != null) {
@@ -222,8 +224,8 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                   ProfileSettingsActionCard(
                     key: const Key('profile-action-security'),
                     icon: Icons.shield_outlined,
-                    title: 'Security & Access',
-                    subtitle: 'Password, and active sessions',
+                    title: tr('Security & Access'),
+                    subtitle: tr('Password, and active sessions'),
                     onTap: () {
                       final callback = widget.onSecurity;
                       if (callback != null) {
@@ -243,8 +245,8 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                   ProfileSettingsActionCard(
                     key: const Key('profile-action-app-settings'),
                     icon: Icons.settings_outlined,
-                    title: 'App Settings',
-                    subtitle: 'Appearance, units and default',
+                    title: tr('App Settings'),
+                    subtitle: tr('Appearance, units and default'),
                     onTap: () {
                       final callback = widget.onAppSettings;
                       if (callback != null) {
@@ -265,24 +267,24 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                     ProfileSettingsActionCard(
                       key: const Key('profile-action-privacy-data'),
                       icon: Icons.privacy_tip_outlined,
-                      title: 'Privacy & Data',
-                      subtitle: 'Personal data and account access',
+                      title: tr('Privacy & Data'),
+                      subtitle: tr('Personal data and account access'),
                       onTap: () => _open(const PrivacyDataScreen()),
                     ),
                     const SizedBox(height: 20),
                     ProfileSettingsActionCard(
                       key: const Key('profile-action-help-support'),
                       icon: Icons.help_outline_rounded,
-                      title: 'Help & Support',
-                      subtitle: 'FAQs, support tickets and report a problem',
+                      title: tr('Help & Support'),
+                      subtitle: tr('FAQs, support tickets and report a problem'),
                       onTap: () => _open(const HelpSupportScreen()),
                     ),
                     const SizedBox(height: 20),
                     ProfileSettingsActionCard(
                       key: const Key('profile-action-sign-out'),
                       icon: Icons.logout_outlined,
-                      title: 'Sign Out',
-                      subtitle: 'Securely close this device session',
+                      title: tr('Sign Out'),
+                      subtitle: tr('Securely close this device session'),
                       onTap: _signOut,
                     ),
                   ],
@@ -351,7 +353,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
             alignment: Alignment.topRight,
             child: IconButton(
               key: const Key('profile-edit'),
-              tooltip: 'Edit profile',
+              tooltip: AppStrings.of(context).tr('Edit profile'),
               onPressed: _edit,
               icon: const Icon(Icons.edit_outlined,
                 color: AppColors.primary, size: 24),
@@ -360,9 +362,9 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
         ]),
         if (account == null) ...[
           const SizedBox(height: 8),
-          const Text('Demo preview · No account profile is connected.',
-            key: Key('profile-demo-notice'),
-            style: TextStyle(
+          Text(AppStrings.of(context).tr('Demo preview · No account profile is connected.'),
+            key: const Key('profile-demo-notice'),
+            style: const TextStyle(
               fontFamily: 'Inter', fontSize: 11,
               color: AppColors.placeholder)),
         ],

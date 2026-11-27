@@ -4,12 +4,15 @@ import 'features/auth/presentation/screens/company_entry_gate.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform;
 
 import 'core/theme/app_theme.dart';
+import 'core/localization/app_language_controller.dart';
+import 'core/localization/app_strings.dart';
 import 'features/profile/data/app_settings_repository.dart';
 import 'features/auth/data/mobile_auth_repository.dart';
 import 'features/auth/presentation/screens/mobile_auth_gateway.dart';
@@ -60,6 +63,7 @@ Future<void> main() async {
   } catch (_) {
     // A damaged local settings file must never prevent app startup.
   }
+  await AppLanguageController.shared.restore();
   bool? initiallySignedIn;
   if (mobileNativeSplash) {
     try {
@@ -102,7 +106,17 @@ class Sign2DigitalApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ValueListenableBuilder<AppSettings>(
       valueListenable: AppSettingsSession.current,
-      builder: (context, settings, child) => MaterialApp(
+      builder: (context, settings, child) => ValueListenableBuilder<Locale?>(
+        valueListenable: AppLanguageController.shared,
+        builder: (context, locale, child) => MaterialApp(
+        locale: locale,
+        supportedLocales: AppLanguages.supportedLocales,
+        localizationsDelegates: const [
+          AppStrings.delegate,
+          ...GlobalMaterialLocalizations.delegates,
+        ],
+        localeListResolutionCallback: (preferred, supported) =>
+            AppLanguages.resolve(preferred ?? const []),
         navigatorKey: M20PushCoordinator.navigatorKey,
       title: 'Sign2Digital',
       debugShowCheckedModeBanner: false,
@@ -125,7 +139,7 @@ class Sign2DigitalApp extends StatelessWidget {
               : initiallySignedIn!
                   ? const CompanyEntryGate()
                   : const MobileAuthGateway(),
-    ));
+    )));
   }
 }
 

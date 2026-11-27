@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../assets/dashboard_assets.dart';
+import '../localization/app_strings.dart';
 import '../theme/app_colors.dart';
 import '../navigation/sign2digital_navigation.dart';
 import '../services/active_company_session.dart';
@@ -27,6 +28,7 @@ class Sign2DigitalBottomNavigationBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppStrings.of(context);
     return ValueListenableBuilder<CompanyAccess?>(
       valueListenable: ActiveCompanySession.access,
       builder: (context, currentAccess, child) {
@@ -54,7 +56,7 @@ class Sign2DigitalBottomNavigationBar extends StatelessWidget {
                 child: Semantics(
                   selected: active,
                   button: true,
-                  label: '${labels[index]} tab',
+                  label: strings.tabLabel(labels[index]),
                   child: InkWell(
                     key: Key('dashboard-tab-$index'),
                     borderRadius: BorderRadius.circular(10),
@@ -80,7 +82,7 @@ class Sign2DigitalBottomNavigationBar extends StatelessWidget {
                                 color,
                                 BlendMode.srcIn,
                               ),
-                              semanticsLabel: labels[index],
+                              semanticsLabel: strings.tr(labels[index]),
                             )
                           else
                             Icon(
@@ -92,7 +94,7 @@ class Sign2DigitalBottomNavigationBar extends StatelessWidget {
                           FittedBox(
                             fit: BoxFit.scaleDown,
                             child: Text(
-                              labels[index],
+                              strings.tr(labels[index]),
                               maxLines: 1,
                               style: TextStyle(
                                 fontFamily: 'Inter',
