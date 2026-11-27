@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sign2digital/core/services/active_company_session.dart';
 import 'package:sign2digital/features/clients/presentation/screens/more_screen.dart';
 
 void main() {
   testWidgets('More displays exactly the eleven real product modules',
       (tester) async {
+    // Subscription is owner-only: test the owner menu, not an anonymous tenant.
+    ActiveCompanySession.setVerified(1, role: 'owner', permissions: const []);
+    addTearDown(ActiveCompanySession.clear);
     tester.view.physicalSize = const Size(430, 932);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);

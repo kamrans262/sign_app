@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:sign2digital/core/widgets/sign2digital_bottom_navigation_bar.dart';
 import 'package:sign2digital/core/widgets/sign2digital_dashboard_header.dart';
 import 'package:sign2digital/features/clients/presentation/widgets/sign2digital_status_badge.dart';
@@ -20,6 +21,7 @@ class _FakeReportRepository implements DocumentRepository {
 }
 
 void main() {
+  setUpAll(() async => initializeDateFormatting());
   setUp(DemoReportDraftSession.clear);
 
   test('sample reports have unique identifiers and real report categories', () async {

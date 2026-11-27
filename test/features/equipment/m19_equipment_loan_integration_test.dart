@@ -213,7 +213,9 @@ void main(){
     expect(find.byKey(const Key('equipment-loan-detail-status')),findsOneWidget);
     await tester.scrollUntilVisible(
       find.byKey(const Key('equipment-loan-return-action')),180,
-      scrollable:find.byType(Scrollable).first);
+      scrollable:find.descendant(
+        of:find.byKey(const Key('equipment-loan-details-scroll')),
+        matching:find.byType(Scrollable)).first);
     await tester.tap(find.byKey(const Key('equipment-loan-return-action')));
     await tester.pumpAndSettle();
     // Date picker deliberately requires explicit staff confirmation.

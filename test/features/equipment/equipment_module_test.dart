@@ -103,7 +103,8 @@ void main() {
     expect(find.text('Other'), findsOneWidget);
     await tester.tap(find.byKey(const Key('equipment-custom-name')));
     await tester.pumpAndSettle();
-    expect(find.text('Enter Equipment Name'), findsOneWidget);
+    // Existing dialog includes a title and input hint with the same copy.
+    expect(find.text('Enter Equipment Name'), findsNWidgets(2));
     expect(find.text('Equipment Name'), findsOneWidget);
     await tester.enterText(find.descendant(
       of: find.byKey(const Key('equipment-custom-value')),
@@ -117,7 +118,7 @@ void main() {
     expect(find.byKey(const Key('equipment-custom-value')), findsNothing);
     await tester.tap(find.byKey(const Key('equipment-category-other')));
     await tester.pumpAndSettle();
-    expect(find.text('Enter Category'), findsOneWidget);
+    expect(find.text('Enter Category'), findsNWidgets(2));
     expect(find.text('Category'), findsWidgets);
     await tester.enterText(find.descendant(
       of: find.byKey(const Key('equipment-custom-value')),
