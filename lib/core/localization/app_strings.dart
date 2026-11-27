@@ -66,6 +66,11 @@ class _AppStringsDelegate extends LocalizationsDelegate<AppStrings> {
 
 const _translations = <String, Map<String, String>>{
   'fr': {
+    "Upload your general terms, PDF up to 2 megabytes": "Téléversez vos conditions générales, PDF de 2 Mo maximum",
+    "Upload your logo. PNG, JPG or SVG, maximum 2 megabytes": "Téléversez votre logo. PNG, JPG ou SVG, 2 Mo maximum",
+    "Notes icon": "Icône de notes",
+    "Six-digit verification code": "Code de vérification à six chiffres",
+    "{count} of 6 digits entered": "{count} chiffres sur 6 saisis",
     "How do I create a quote for an existing job?": "Comment créer un devis pour une intervention existante ?",
     "Can I create an expense using AI Voice?": "Puis-je créer une dépense avec la voix IA ?",
     "Where can I find signed documents?": "Où trouver les documents signés ?",
@@ -1685,6 +1690,11 @@ const _translations = <String, Map<String, String>>{
     'Record {amount} as already refunded? This does not initiate a bank transfer.': 'Enregistrer {amount} comme déjà remboursé ? Aucun virement bancaire ne sera initié.',
   },
   'de': {
+    "Upload your general terms, PDF up to 2 megabytes": "Allgemeine Geschäftsbedingungen hochladen, PDF bis 2 MB",
+    "Upload your logo. PNG, JPG or SVG, maximum 2 megabytes": "Logo hochladen. PNG, JPG oder SVG, maximal 2 MB",
+    "Notes icon": "Notizsymbol",
+    "Six-digit verification code": "Sechsstelliger Bestätigungscode",
+    "{count} of 6 digits entered": "{count} von 6 Ziffern eingegeben",
     "How do I create a quote for an existing job?": "Wie erstelle ich ein Angebot für einen bestehenden Auftrag?",
     "Can I create an expense using AI Voice?": "Kann ich eine Ausgabe per KI-Spracheingabe erfassen?",
     "Where can I find signed documents?": "Wo finde ich unterschriebene Dokumente?",
@@ -3304,6 +3314,11 @@ const _translations = <String, Map<String, String>>{
     'Record {amount} as already refunded? This does not initiate a bank transfer.': '{amount} als bereits erstattet erfassen? Dadurch wird keine Banküberweisung ausgelöst.',
   },
   'it': {
+    "Upload your general terms, PDF up to 2 megabytes": "Carica le condizioni generali, PDF fino a 2 MB",
+    "Upload your logo. PNG, JPG or SVG, maximum 2 megabytes": "Carica il logo. PNG, JPG o SVG, massimo 2 MB",
+    "Notes icon": "Icona note",
+    "Six-digit verification code": "Codice di verifica a sei cifre",
+    "{count} of 6 digits entered": "{count} cifre su 6 inserite",
     "How do I create a quote for an existing job?": "Come creo un preventivo per un lavoro esistente?",
     "Can I create an expense using AI Voice?": "Posso creare una spesa con la voce IA?",
     "Where can I find signed documents?": "Dove trovo i documenti firmati?",

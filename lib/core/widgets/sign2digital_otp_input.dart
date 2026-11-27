@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../localization/app_strings.dart';
 
 import '../theme/app_colors.dart';
 
@@ -78,8 +79,8 @@ class _Sign2DigitalOtpInputState extends State<Sign2DigitalOtpInput> {
         return Semantics(
           container: true,
           textField: true,
-          label: 'Six-digit verification code',
-          value: '${_code.length} of 6 digits entered',
+          label: AppStrings.of(context).tr('Six-digit verification code'),
+          value: AppStrings.of(context).format('{count} of 6 digits entered', {'count': _code.length}),
           onTap: _focusInput,
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,

@@ -34,7 +34,7 @@ class Sign2DigitalMultilineField extends StatelessWidget {
               iconAsset,
               width: 20,
               height: 20,
-              semanticsLabel: 'Notes icon',
+              semanticsLabel: AppStrings.of(context).tr('Notes icon'),
             ),
           ),
           const SizedBox(width: 15),

@@ -101,7 +101,7 @@ class _Sign2DigitalImageUploadState extends State<Sign2DigitalImageUpload> {
       children: [
         Semantics(
           button: true,
-          label: 'Upload your logo. PNG, JPG or SVG, maximum 2 megabytes',
+          label: AppStrings.of(context).tr('Upload your logo. PNG, JPG or SVG, maximum 2 megabytes'),
           child: InkWell(
             key: const Key('company-logo-upload'),
             onTap: _pick,

@@ -59,7 +59,7 @@ class _Sign2DigitalDocumentUploadState
       children: [
         Semantics(
           button: true,
-          label: 'Upload your general terms, PDF up to 2 megabytes',
+          label: AppStrings.of(context).tr('Upload your general terms, PDF up to 2 megabytes'),
           child: InkWell(
             key: const Key('terms-pdf-upload'),
             onTap: _pick,
