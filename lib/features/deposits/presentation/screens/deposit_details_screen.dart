@@ -408,14 +408,14 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
               child: Icon(icon, size: 26, color: AppColors.primary),
             ),
             const SizedBox(height: 15),
-            Text(title,
+            LocalizedUiText(title,
               key: const Key('deposit-confirm-heading'),
               textAlign: TextAlign.center,
               style: const TextStyle(fontFamily: 'Inter', fontSize: 18,
                 fontWeight: FontWeight.w600, color: AppColors.dark,
                 decoration: TextDecoration.none)),
             const SizedBox(height: 5),
-            Text(description,
+            LocalizedUiText(description,
               textAlign: TextAlign.center,
               style: const TextStyle(fontFamily: 'Inter', fontSize: 14,
                 fontWeight: FontWeight.w500, color: AppColors.placeholder,
@@ -447,7 +447,7 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
     if (_busy || _record.status!=DepositStatus.pending) { return; }
     final yes = await _confirmAction(
       title: 'Delete Deposit',
-      description: 'Delete ${_record.formattedAmount} for ${_record.title}? This action cannot be undone.',
+      description: AppStrings.of(context).format('Delete {amount} for {title}? This action cannot be undone.', {'amount': _record.formattedAmount, 'title': _record.title}),
       confirmLabel: 'Delete',
       icon: Icons.delete_outline,
       confirmKey: const Key('deposit-confirm-delete'),
@@ -469,7 +469,7 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
     if (_busy || _record.status != DepositStatus.pending) { return; }
     final yes = await _confirmAction(
       title: 'Mark as Received',
-      description: 'Confirm that ${_record.formattedAmount} was received outside Sign2Digital. No card or bank charge will be made.',
+      description: AppStrings.of(context).format('Confirm that {amount} was received outside Sign2Digital. No card or bank charge will be made.', {'amount': _record.formattedAmount}),
       confirmLabel: 'Mark Received',
       icon: Icons.fact_check_outlined,
       confirmKey: const Key('deposit-confirm-receive'),
@@ -495,7 +495,7 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
     if (_busy || _record.status != DepositStatus.received) { return; }
     final yes = await _confirmAction(
       title: 'Refund Deposit',
-      description: 'Record ${_record.formattedAmount} as already refunded? This does not initiate a bank transfer.',
+      description: AppStrings.of(context).format('Record {amount} as already refunded? This does not initiate a bank transfer.', {'amount': _record.formattedAmount}),
       confirmLabel: 'Refund',
       icon: Icons.assignment_return_outlined,
       confirmKey: const Key('deposit-confirm-refund'),

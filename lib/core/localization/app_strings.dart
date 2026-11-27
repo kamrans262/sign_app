@@ -1629,6 +1629,9 @@ const _translations = <String, Map<String, String>>{
     'The email was accepted by the sending service. Inbox delivery is not yet confirmed.': 'L’e-mail a été accepté par le service d’envoi. La réception n’est pas encore confirmée.',
     'Secure link copied. Copying does not confirm delivery.': 'Lien sécurisé copié. La copie ne confirme pas la réception.',
     'An active signing link was created but not emailed. Replacing it will invalidate that old link and email a new secure link to the original verified customer.': 'Un lien de signature actif a été créé mais non envoyé. Le remplacer invalidera l’ancien lien et enverra un nouveau lien sécurisé au client vérifié d’origine.',
+    'Delete {amount} for {title}? This action cannot be undone.': 'Supprimer {amount} pour {title} ? Cette action est irréversible.',
+    'Confirm that {amount} was received outside Sign2Digital. No card or bank charge will be made.': 'Confirmez la réception de {amount} en dehors de Sign2Digital. Aucun débit bancaire ou de carte ne sera effectué.',
+    'Record {amount} as already refunded? This does not initiate a bank transfer.': 'Enregistrer {amount} comme déjà remboursé ? Aucun virement bancaire ne sera initié.',
   },
   'de': {
     'Receive important updates': 'Wichtige Mitteilungen erhalten',
@@ -3207,6 +3210,9 @@ const _translations = <String, Map<String, String>>{
     'The email was accepted by the sending service. Inbox delivery is not yet confirmed.': 'Die E-Mail wurde vom Versanddienst angenommen. Die Zustellung ist noch nicht bestätigt.',
     'Secure link copied. Copying does not confirm delivery.': 'Sicherer Link kopiert. Das Kopieren bestätigt keine Zustellung.',
     'An active signing link was created but not emailed. Replacing it will invalidate that old link and email a new secure link to the original verified customer.': 'Ein aktiver Signaturlink wurde erstellt, aber nicht versendet. Beim Ersetzen wird der alte Link ungültig und ein neuer sicherer Link an den ursprünglich verifizierten Kunden gesendet.',
+    'Delete {amount} for {title}? This action cannot be undone.': '{amount} für {title} löschen? Diese Aktion kann nicht rückgängig gemacht werden.',
+    'Confirm that {amount} was received outside Sign2Digital. No card or bank charge will be made.': 'Bestätigen Sie den Erhalt von {amount} ausserhalb von Sign2Digital. Es erfolgt keine Karten- oder Bankbelastung.',
+    'Record {amount} as already refunded? This does not initiate a bank transfer.': '{amount} als bereits erstattet erfassen? Dadurch wird keine Banküberweisung ausgelöst.',
   },
   'it': {
     'Receive important updates': 'Ricevi aggiornamenti importanti',
@@ -4785,5 +4791,8 @@ const _translations = <String, Map<String, String>>{
     'The email was accepted by the sending service. Inbox delivery is not yet confirmed.': 'L’e-mail è stata accettata dal servizio di invio. La consegna non è ancora confermata.',
     'Secure link copied. Copying does not confirm delivery.': 'Link sicuro copiato. La copia non conferma la consegna.',
     'An active signing link was created but not emailed. Replacing it will invalidate that old link and email a new secure link to the original verified customer.': 'Un link di firma attivo è stato creato ma non inviato. Sostituirlo invaliderà il vecchio link e invierà un nuovo link sicuro al cliente verificato originale.',
+    'Delete {amount} for {title}? This action cannot be undone.': 'Eliminare {amount} per {title}? Questa azione è irreversibile.',
+    'Confirm that {amount} was received outside Sign2Digital. No card or bank charge will be made.': 'Conferma la ricezione di {amount} al di fuori di Sign2Digital. Non verrà effettuato alcun addebito bancario o su carta.',
+    'Record {amount} as already refunded? This does not initiate a bank transfer.': 'Registrare {amount} come già rimborsato? Non verrà avviato alcun bonifico.',
   },
 };

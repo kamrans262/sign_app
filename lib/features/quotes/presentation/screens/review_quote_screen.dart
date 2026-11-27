@@ -181,7 +181,7 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
                   }
                 },
                 icon: const Icon(Icons.event_available_outlined),
-                label: Text('Valid until: ${validUntil == null ? 'Not set' : _dateText(validUntil!)}'),
+                label: Text(AppStrings.of(context).format('Valid until: {date}', {'date': validUntil == null ? AppStrings.of(context).tr('Not set') : _dateText(validUntil!)})),
               ),
               const Divider(),
               const LocalizedUiText('Optional payment account (QR only when complete)'),
@@ -559,9 +559,9 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
           _pricingRow('Subtotal', _draft.subtotalMinor == null
               ? '${quoteMoney(_draft.validSubtotalMinor, _draft.currency)} (partial)'
               : quoteMoney(_draft.subtotalMinor, _draft.currency)),
-          _pricingRow('VAT (${quotePercentText(_draft.vatBasisPoints)}%)',
+          _pricingRow(AppStrings.of(context).format('VAT ({rate}%)', {'rate': quotePercentText(_draft.vatBasisPoints)}),
               quoteMoney(_draft.vatMinor, _draft.currency)),
-          _pricingRow('Deposit (${quotePercentText(_draft.depositBasisPoints)}%)',
+          _pricingRow(AppStrings.of(context).format('Deposit ({rate}%)', {'rate': quotePercentText(_draft.depositBasisPoints)}),
               quoteMoney(_draft.depositMinor, _draft.currency)),
           Container(
             key: const Key('quote-grand-total'),
