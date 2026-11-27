@@ -53,3 +53,6 @@ requires an explicit backup and the user's deployment authorization.
 Run the existing Laravel regression suite and check published notification
 revisions on staging before using `php artisan migrate --force` live.
 Preserve older signed PDF snapshots and admin-edited template revisions.
+
+## Stage 4 shared sheet and popup localization correction
+Selected language now applies to shared selection option labels, approved confirmation titles and content, existing form dialogs and selected custom invoice/equipment/country/addenda/AI sheets. The underlying option identifiers, callbacks, keys, state, existing layout and Apple platform configuration remain untouched. Test with `flutter test test/core/localization/modal_localization_test.dart`, then verify each module's dialogs on a real device. Dynamic user-entered text is not automatically translated.
