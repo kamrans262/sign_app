@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import '../localization/app_language_controller.dart';
+import 'package:flutter/widgets.dart';
 
 import 'package:http/http.dart' as http;
 
@@ -342,6 +344,10 @@ class SignApiClient {
   }) async {
     final headers = <String, String>{
       'Accept': 'application/json',
+      'Accept-Language': AppLanguageController.shared.effectiveLocale(
+        WidgetsBinding.instance.platformDispatcher.locales).languageCode,
+      'X-App-Language': AppLanguageController.shared.effectiveLocale(
+        WidgetsBinding.instance.platformDispatcher.locales).languageCode,
     };
     if (authenticated) {
       final token = await _tokenProvider?.call();
