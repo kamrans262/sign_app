@@ -3,6 +3,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import '../domain/quote_review_models.dart';
+import 'quote_pdf_locale.dart';
 
 /// Builds a real A4 document from exactly the same draft used by Quote Preview.
 /// No mobile scaffold, device chrome, or action buttons are printed.
@@ -11,6 +12,8 @@ class Sign2DigitalQuotePdfBuilder {
 
   Future<Uint8List> build(QuoteReviewDraft source) async {
     final quote = source.copy();
+    final language = QuotePdfLocale.selectedCode();
+    String tr(String english) => QuotePdfLocale.tr(english, language);
     final logoData = await rootBundle.load('assets/header_logo.png');
     final logo = pw.MemoryImage(logoData.buffer.asUint8List(
       logoData.offsetInBytes, logoData.lengthInBytes));
@@ -33,9 +36,7 @@ class Sign2DigitalQuotePdfBuilder {
     final ink = PdfColor.fromHex('#122536');
     final grey = PdfColor.fromHex('#8A9AA8');
     final rule = PdfColor.fromHex('#E4EAF0');
-    String formatDate(DateTime? value) => value == null
-        ? 'Not specified'
-        : '${value.day.toString().padLeft(2, '0')}/${value.month.toString().padLeft(2, '0')}/${value.year}';
+    String formatDate(DateTime? value) => QuotePdfLocale.date(value, language);
     pw.TextStyle style(double size, {PdfColor? color, bool bold = false}) =>
         pw.TextStyle(fontSize: size, color: color ?? ink,
           fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal);
@@ -94,9 +95,9 @@ class Sign2DigitalQuotePdfBuilder {
                   pw.Image(logo, width: 132, height: 43, fit: pw.BoxFit.contain),
                   pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.end,
                     children: [
-                      pw.Text('Quote', style: style(18, bold: true)),
+                      pw.Text(tr('Quote'), style: style(18, bold: true)),
                       pw.SizedBox(height: 6),
-                      pw.Text(quote.quoteNumber.isEmpty ? 'Unnumbered draft'
+                      pw.Text(quote.quoteNumber.isEmpty ? tr('Unnumbered draft')
                           : quote.quoteNumber, style: style(12, color: grey)),
                     ]),
                 ]),
@@ -106,7 +107,7 @@ class Sign2DigitalQuotePdfBuilder {
                   pw.Expanded(child: pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
-                      pw.Text('Bill To:', style: style(14, bold: true)),
+                      pw.Text(tr('Bill To:'), style: style(14, bold: true)),
                       pw.SizedBox(height: 8),
                       for (final value in <String>[
                         quote.clientName, quote.billingAddress,
@@ -120,9 +121,9 @@ class Sign2DigitalQuotePdfBuilder {
                   pw.SizedBox(width: 156, child: pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.stretch,
                     children: [
-                      quoteDateRow('Date:', formatDate(quote.date)),
+                      quoteDateRow(tr('Date:'), formatDate(quote.date)),
                       pw.SizedBox(height: 8),
-                      quoteDateRow('Valid Until:', formatDate(quote.validUntil)),
+                      quoteDateRow(tr('Valid Until:'), formatDate(quote.validUntil)),
                     ],
                   )),
                 ]),
@@ -131,7 +132,7 @@ class Sign2DigitalQuotePdfBuilder {
         ),
         pw.SizedBox(height: 12),
         pw.TableHelper.fromTextArray(
-                headers: const ['Description', 'Qty', 'Unit Price', 'Total'],
+                headers: [tr('Description'), tr('Qty'), tr('Unit Price'), tr('Total')],
                 data: quote.items.map((item) => <String>[
                   quoteWorkItemDocumentText(item),
                   item.quantity.isEmpty ? '-' : item.quantity,
@@ -154,15 +155,15 @@ class Sign2DigitalQuotePdfBuilder {
               ),
         pw.SizedBox(height: 12),
         if (!quote.allItemPricesValid)
-                pw.Text('Pricing incomplete - unresolved work item prices.',
+                pw.Text(tr('Pricing incomplete - unresolved work item prices.'),
                   style: style(10, color: PdfColor.fromHex('#E6A23C'))),
-              lineAmount('Subtotal', quoteMoney(quote.subtotalMinor, quote.currency)),
-              lineAmount('Tax (${quotePercentText(quote.vatBasisPoints)}%)',
+              lineAmount(tr('Subtotal'), quoteMoney(quote.subtotalMinor, quote.currency)),
+              lineAmount('${tr('Tax')} (${quotePercentText(quote.vatBasisPoints)}%)',
                 quoteMoney(quote.vatMinor, quote.currency)),
-              lineAmount('Total', quoteMoney(quote.totalMinor, quote.currency), total: true),
-              lineAmount('Deposit due (${quotePercentText(quote.depositBasisPoints)}%)',
+              lineAmount(tr('Total'), quoteMoney(quote.totalMinor, quote.currency), total: true),
+              lineAmount('${tr('Deposit due')} (${quotePercentText(quote.depositBasisPoints)}%)',
                 quoteMoney(quote.depositMinor, quote.currency)),
-              lineAmount('Remaining after deposit',
+              lineAmount(tr('Remaining after deposit'),
                 quoteMoney(quote.remainingAfterDepositMinor, quote.currency)),
         pw.SizedBox(height: 65),
         // The tiny link annotation marks only the signature row and page.
@@ -179,7 +180,7 @@ class Sign2DigitalQuotePdfBuilder {
           ),
           pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
             children: [
-              for (final label in const ['Customer Signature', 'Date'])
+              for (final label in [tr('Customer Signature'), tr('Date')])
                 pw.SizedBox(width: 138, child: pw.Column(
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
@@ -199,9 +200,9 @@ class Sign2DigitalQuotePdfBuilder {
           ),
           child: pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Text('Payment Details', style: style(14, bold: true)),
+              pw.Text(tr('Payment Details'), style: style(14, bold: true)),
               pw.SizedBox(height: 5),
-              pw.Text(qrPayload == null ? 'Payment QR unavailable' : 'Scan to Pay',
+              pw.Text(qrPayload == null ? tr('Payment QR unavailable') : tr('Scan to Pay'),
                 style: style(12)),
               pw.SizedBox(height: 16),
               if (qrPayload != null) pw.Row(
@@ -214,13 +215,13 @@ class Sign2DigitalQuotePdfBuilder {
                   pw.Expanded(child: pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
-                      pw.Text('Account / payable to', style: style(10, bold: true)),
+                      pw.Text(tr('Account / payable to'), style: style(10, bold: true)),
                       pw.Text(quote.payment!.iban, style: style(10, color: grey)),
                       pw.SizedBox(height: 5),
-                      pw.Text('Company Name', style: style(10, bold: true)),
+                      pw.Text(tr('Company Name'), style: style(10, bold: true)),
                       pw.Text(quote.payment!.accountHolder, style: style(10, color: grey)),
                       pw.SizedBox(height: 5),
-                      pw.Text('Amount', style: style(10, bold: true)),
+                      pw.Text(tr('Amount'), style: style(10, bold: true)),
                       pw.Text(quoteMoney(quote.totalMinor, quote.currency),
                           style: style(10, color: grey)),
                     ]),
@@ -229,38 +230,37 @@ class Sign2DigitalQuotePdfBuilder {
               else pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
-                  pw.Text('A valid Swiss payment account, address and payable amount '
-                    'are required before a payment QR can be displayed.',
+                  pw.Text(tr('A valid Swiss payment account, address and payable amount are required before a payment QR can be displayed.'),
                     style: style(10, color: grey)),
                   pw.SizedBox(height: 12),
                   if (quote.payment != null &&
                       quote.payment!.iban.trim().isNotEmpty) ...[
-                    pw.Text('Account / payable to', style: style(10, bold: true)),
+                    pw.Text(tr('Account / payable to'), style: style(10, bold: true)),
                     pw.Text(quote.payment!.iban, style: style(10, color: grey)),
                     pw.SizedBox(height: 5),
                   ],
                   if (quote.payment != null &&
                       quote.payment!.accountHolder.trim().isNotEmpty) ...[
-                    pw.Text('Company Name', style: style(10, bold: true)),
+                    pw.Text(tr('Company Name'), style: style(10, bold: true)),
                     pw.Text(quote.payment!.accountHolder,
                       style: style(10, color: grey)),
                     pw.SizedBox(height: 5),
                   ],
-                  pw.Text('Payable amount', style: style(10, bold: true)),
+                  pw.Text(tr('Payable amount'), style: style(10, bold: true)),
                   pw.Text(quoteMoney(quote.totalMinor, quote.currency),
                     style: style(10, color: grey)),
                   pw.SizedBox(height: 5),
-                  pw.Text('Currency', style: style(10, bold: true)),
+                  pw.Text(tr('Currency'), style: style(10, bold: true)),
                   pw.Text(quote.currency, style: style(10, color: grey)),
                 ],
               ),
             ]),
         ),
         pw.SizedBox(height: 20),
-        pw.Text('General Terms & Conditions', style: style(15, bold: true)),
+        pw.Text(tr('General Terms & Conditions'), style: style(15, bold: true)),
         pw.SizedBox(height: 12),
         pw.Text(quote.terms.trim().isEmpty ?
-            'No terms and conditions have been provided.' : quote.terms,
+            tr('No terms and conditions have been provided.') : quote.terms,
             style: style(12, color: grey)),
       ],
     ));
