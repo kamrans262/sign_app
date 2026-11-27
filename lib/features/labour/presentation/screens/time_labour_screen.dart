@@ -1,3 +1,4 @@
+import 'package:sign2digital/core/localization/app_strings.dart';
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
@@ -217,7 +218,7 @@ class _TimeLabourScreenState extends State<TimeLabourScreen> {
           for (final option in LabourSort.values)
             ListTile(
               key: Key('labour-sort-${option.name}'),
-              title: Text(option.label),
+              title: Text(AppStrings.of(sheet).tr(option.label)),
               trailing: _sort == option
                   ? const Icon(Icons.check, color: AppColors.primary) : null,
               onTap: () => Navigator.of(sheet).pop(option),

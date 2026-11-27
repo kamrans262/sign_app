@@ -1,3 +1,4 @@
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
@@ -147,7 +148,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
           for (final sort in InvoiceSort.values)
             ListTile(
               key: Key('invoice-sort-${sort.name}'),
-              title: Text(sort.label),
+              title: Text(AppStrings.of(sheet).tr(sort.label)),
               trailing: _sort == sort
                   ? const Icon(Icons.check, color: AppColors.primary) : null,
               onTap: () => Navigator.of(sheet).pop(sort),

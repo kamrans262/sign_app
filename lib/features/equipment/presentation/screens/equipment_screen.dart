@@ -1,3 +1,4 @@
+import 'package:sign2digital/core/localization/app_strings.dart';
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
@@ -117,7 +118,7 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
           for (final option in EquipmentSort.values)
             ListTile(
               key: Key('equipment-sort-${option.name}'),
-              title: Text(option.label),
+              title: Text(AppStrings.of(sheet).tr(option.label)),
               trailing: _sort == option
                   ? const Icon(Icons.check, color: AppColors.primary) : null,
               onTap: () => Navigator.of(sheet).pop(option),

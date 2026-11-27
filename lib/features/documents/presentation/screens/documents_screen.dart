@@ -1,3 +1,4 @@
+import 'package:sign2digital/core/localization/app_strings.dart';
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import '../../../../core/services/active_company_session.dart';
 import 'package:flutter/material.dart';
@@ -272,7 +273,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                 DocumentCategory.contacts, DocumentCategory.other,
               ])
                 ListTile(
-                  title: Text(category.name),
+                  title: Text(AppStrings.of(sheet).tr(category.name)),
                   onTap: () => Navigator.pop(sheet, category),
                 ),
             ],

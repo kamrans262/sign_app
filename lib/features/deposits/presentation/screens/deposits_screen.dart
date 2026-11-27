@@ -1,3 +1,4 @@
+import 'package:sign2digital/core/localization/app_strings.dart';
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
@@ -148,7 +149,7 @@ class _DepositsScreenState extends State<DepositsScreen> {
           for (final sort in DepositSort.values)
             ListTile(
               key: Key('deposit-sort-${sort.name}'),
-              title: Text(sort.label),
+              title: Text(AppStrings.of(sheet).tr(sort.label)),
               trailing: _sort == sort
                   ? const Icon(Icons.check, color: AppColors.primary) : null,
               onTap: () => Navigator.of(sheet).pop(sort),
