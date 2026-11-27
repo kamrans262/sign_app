@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
@@ -89,15 +90,15 @@ class _TwoFactorSetupScreenState extends State<TwoFactorSetupScreen> {
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: AppColors.white,
     body: SafeArea(child: Column(children: [
-      const Sign2DigitalHeader(title: 'Set Up Authenticator'),
+      const Sign2DigitalHeader(translateTitle: true, title: 'Set Up Authenticator'),
       Expanded(child: Center(child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 520),
         child: ListView(padding: const EdgeInsets.fromLTRB(20, 15, 20, 25),
           children: [
-            const Text('Add Extra Account Protection',
+            const LocalizedUiText('Add Extra Account Protection',
                 textAlign: TextAlign.center, style: AppTextStyles.heading),
             const SizedBox(height: 10),
-            const Text(
+            const LocalizedUiText(
               'Scan this QR code with Google Authenticator, Microsoft '
               'Authenticator or any compatible authenticator app.',
               textAlign: TextAlign.center, style: AppTextStyles.subtitle),
@@ -121,7 +122,7 @@ class _TwoFactorSetupScreenState extends State<TwoFactorSetupScreen> {
                 ),
               )),
               const SizedBox(height: 15),
-              const Text('Alternatively, enter this setup key manually:',
+              const LocalizedUiText('Alternatively, enter this setup key manually:',
                   textAlign: TextAlign.center,
                   style: AppTextStyles.subtitle),
               const SizedBox(height: 8),
@@ -135,7 +136,7 @@ class _TwoFactorSetupScreenState extends State<TwoFactorSetupScreen> {
                   ClipboardData(text: _enrollment!.secret)),
                 icon: const Icon(Icons.copy_outlined,
                   color: AppColors.primary),
-                label: const Text('Copy Setup Key'),
+                label: const LocalizedUiText('Copy Setup Key'),
               ),
               const SizedBox(height: 15),
               Sign2DigitalInputField(
@@ -163,7 +164,7 @@ class _TwoFactorSetupScreenState extends State<TwoFactorSetupScreen> {
             ],
             if (_error != null) ...[
               const SizedBox(height: 12),
-              Text(_error!, key: const Key('m24-setup-error'),
+              LocalizedUiText(_error!, key: const Key('m24-setup-error'),
                   style: const TextStyle(color: Color(0xFFB42318))),
             ],
           ],
@@ -182,17 +183,17 @@ class TwoFactorRecoveryCodesScreen extends StatelessWidget {
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: AppColors.white,
     body: SafeArea(child: Column(children: [
-      const Sign2DigitalHeader(title: 'Recovery Codes'),
+      const Sign2DigitalHeader(translateTitle: true, title: 'Recovery Codes'),
       Expanded(child: Center(child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 520),
         child: ListView(padding: const EdgeInsets.all(20), children: [
           const Icon(Icons.shield_outlined,
               color: AppColors.primary, size: 44),
           const SizedBox(height: 15),
-          const Text('Save Your Recovery Codes',
+          const LocalizedUiText('Save Your Recovery Codes',
               textAlign: TextAlign.center, style: AppTextStyles.heading),
           const SizedBox(height: 10),
-          const Text(
+          const LocalizedUiText(
             'These codes can restore access if you lose your authenticator '
             'device. Each code works only once. Store them somewhere safe. '
             'They will not be displayed again.',

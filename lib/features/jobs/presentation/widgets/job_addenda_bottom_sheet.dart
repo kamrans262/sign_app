@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_outlined_container.dart';
@@ -176,7 +177,7 @@ class _JobAddendaBottomSheetState extends State<JobAddendaBottomSheet> {
             Expanded(child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Job Addenda', style: TextStyle(
+                const LocalizedUiText('Job Addenda', style: TextStyle(
                   fontFamily: 'Inter', fontSize: 18,
                   fontWeight: FontWeight.w600, color: AppColors.dark)),
                 Text(widget.jobReference, style: const TextStyle(
@@ -205,7 +206,7 @@ class _JobAddendaBottomSheetState extends State<JobAddendaBottomSheet> {
                       _section('View Addenda',
                           'Addenda belonging to this job'),
                       if (_addenda.isEmpty)
-                        const Text('No addenda created for this job.',
+                        const LocalizedUiText('No addenda created for this job.',
                           style: TextStyle(fontFamily: 'Inter', fontSize: 13,
                             color: AppColors.secondaryText)),
                       for (final entry in _addenda)
@@ -220,7 +221,7 @@ class _JobAddendaBottomSheetState extends State<JobAddendaBottomSheet> {
                       _section('Quotes Without Addenda',
                           'Choose a quotation to create an addendum'),
                       if (_available.isEmpty)
-                        const Text('No quotations without addenda.',
+                        const LocalizedUiText('No quotations without addenda.',
                           style: TextStyle(fontFamily: 'Inter', fontSize: 13,
                             color: AppColors.secondaryText)),
                       for (final entry in _available)
@@ -235,7 +236,7 @@ class _JobAddendaBottomSheetState extends State<JobAddendaBottomSheet> {
                           onTap: !widget.canCreate ? null : () {
                             if (widget.live && entry.signed == null) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text(
+                                const SnackBar(content: LocalizedUiText(
                                   'A verified signed quotation is required '
                                   'before creating an addendum.')));
                               return;

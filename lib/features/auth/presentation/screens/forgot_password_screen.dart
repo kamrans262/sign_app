@@ -58,7 +58,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('UI preview only - no reset code was sent.'),
+        content: LocalizedUiText('UI preview only - no reset code was sent.'),
       ),
     );
   }

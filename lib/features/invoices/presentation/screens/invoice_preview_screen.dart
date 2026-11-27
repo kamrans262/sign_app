@@ -108,7 +108,7 @@ class _InvoicePreviewScreenState extends State<InvoicePreviewScreen> {
     if (!mounted) { return; }
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(text)));
+      ..showSnackBar(SnackBar(content: LocalizedUiText(text)));
   }
 
   Future<void> _addPhoto() async {

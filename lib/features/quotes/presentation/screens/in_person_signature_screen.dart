@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
@@ -92,7 +93,7 @@ class _InPersonSignatureScreenState extends State<InPersonSignatureScreen> {
     if (!mounted) return;
     final messenger = ScaffoldMessenger.of(context);
     messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(SnackBar(content: Text(message)));
+    messenger.showSnackBar(SnackBar(content: LocalizedUiText(message)));
   }
 
   Offset _normal(Offset point, Size size) => Offset(

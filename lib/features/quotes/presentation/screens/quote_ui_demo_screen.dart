@@ -1,5 +1,6 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
@@ -155,7 +156,7 @@ class QuoteUiDemoScreen extends StatelessWidget {
                           color: const Color(0xFFE3ECF0),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Text(
+                        child: const LocalizedUiText(
                           'UI DEMO ONLY — Fictional company, prices, '
                           'statuses and signing data. Nothing is sent or '
                           'legally signed.',

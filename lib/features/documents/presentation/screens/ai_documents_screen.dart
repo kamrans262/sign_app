@@ -87,7 +87,7 @@ class _AiDocumentsScreenState extends State<AiDocumentsScreen> {
     if (!mounted) { return; }
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+      ..showSnackBar(SnackBar(content: LocalizedUiText(message)));
   }
 
   void _navigation(int index) {
@@ -118,13 +118,13 @@ class _AiDocumentsScreenState extends State<AiDocumentsScreen> {
             ListTile(
               key: const Key('ai-documents-create-general'),
               title: const LocalizedUiText('General Document'),
-              subtitle: const Text('Business letter, statement, acceptance or custom draft'),
+              subtitle: const LocalizedUiText('Business letter, statement, acceptance or custom draft'),
               onTap: () => Navigator.pop(sheet, 'general'),
             ),
             ListTile(
               key: const Key('ai-documents-create-project'),
               title: const LocalizedUiText('Project Document'),
-              subtitle: const Text('Use the existing job and sections workflow'),
+              subtitle: const LocalizedUiText('Use the existing job and sections workflow'),
               onTap: () => Navigator.pop(sheet, 'project'),
             ),
           ],

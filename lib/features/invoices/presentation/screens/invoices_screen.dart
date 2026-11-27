@@ -163,7 +163,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
   void _notice(String message) {
     if (!mounted) { return; }
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)));
+      SnackBar(content: LocalizedUiText(message)));
   }
 
   Future<void> _open(InvoiceRecord invoice) async {

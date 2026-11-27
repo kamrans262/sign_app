@@ -155,7 +155,7 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
     if (!mounted) return;
     final messenger = ScaffoldMessenger.of(context);
     messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(SnackBar(content: Text(message)));
+    messenger.showSnackBar(SnackBar(content: LocalizedUiText(message)));
   }
 
   AddendumDraft _draft() => AddendumDraft(
@@ -228,7 +228,7 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
             '${quoteMoney(draft.vatMinor, 'CHF')}'),
           Text('Total: ${quoteMoney(draft.totalMinor, 'CHF')}'),
           const SizedBox(height: 10),
-          const Text('Unsigned draft — customer approval has not been requested.'),
+          const LocalizedUiText('Unsigned draft — customer approval has not been requested.'),
           const SizedBox(height: 14),
           Sign2DigitalPrimaryButton(
             key: const Key('addendum-review-close'),

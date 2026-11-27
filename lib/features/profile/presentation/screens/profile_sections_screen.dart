@@ -1,5 +1,7 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
@@ -66,7 +68,7 @@ class ProfileBusinessInformationScreen extends StatelessWidget {
               // An offline response is not evidence that the company was
               // deleted. Keep the business details untouched and offer retry.
               return ListView(padding: const EdgeInsets.all(20), children: [
-                const Text('Unable to load company information. Check your connection and retry.',
+                const LocalizedUiText('Unable to load company information. Check your connection and retry.',
                   key: Key('company-load-error'),
                   style: TextStyle(fontFamily: 'Inter',
                     fontSize: 14, color: AppColors.placeholder)),
@@ -84,7 +86,7 @@ class ProfileBusinessInformationScreen extends StatelessWidget {
             final company = snapshot.data;
             if (company == null) {
               return ListView(padding: const EdgeInsets.all(20), children: [
-                const Text('No company has been created for this session.',
+                const LocalizedUiText('No company has been created for this session.',
                   style: TextStyle(fontFamily: 'Inter',
                     fontSize: 14, color: AppColors.placeholder)),
                 const SizedBox(height: 20),
@@ -165,7 +167,7 @@ class ProfileBusinessInformationScreen extends StatelessWidget {
                   onPressed: () => _openInvitations(context),
                 ),
               ] else
-                const Text(
+                const LocalizedUiText(
                   'Business details are read-only here. Existing data is '
                   'preserved; an editing integration is not connected yet.',
                   style: TextStyle(fontFamily: 'Inter', fontSize: 12,
@@ -180,12 +182,12 @@ class ProfileBusinessInformationScreen extends StatelessWidget {
   static Widget _line(String label, String value) => Padding(
     padding: const EdgeInsets.only(bottom: 15),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(label, style: const TextStyle(
+      LocalizedUiText(label, style: const TextStyle(
         fontFamily: 'Inter', fontSize: 12, color: AppColors.placeholder)),
       const SizedBox(height: 5),
-      Text(value.isEmpty ? 'Not provided' : value, style: const TextStyle(
+      Builder(builder: (context) => Text(value.isEmpty ? AppStrings.of(context).tr('Not provided') : value, style: const TextStyle(
         fontFamily: 'Inter', fontSize: 14,
-        fontWeight: FontWeight.w500, color: AppColors.dark)),
+        fontWeight: FontWeight.w500, color: AppColors.dark))),
     ]),
   );
 }
@@ -203,7 +205,7 @@ class ProfileSectionUnavailableScreen extends StatelessWidget {
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: AppColors.white,
     body: SafeArea(child: Column(children: [
-      Sign2DigitalHeader(title: title),
+      Sign2DigitalHeader(translateTitle: true, title: title),
       Expanded(child: Center(child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth:
             MediaQuery.orientationOf(context) == Orientation.landscape

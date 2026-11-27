@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import 'package:flutter/services.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
@@ -60,16 +62,16 @@ class _EmailChangeState extends State<VerifiedEmailChangeScreen> {
   Widget build(BuildContext context) => Scaffold(
     backgroundColor:AppColors.white,
     body:SafeArea(child:Column(children:[
-      const Sign2DigitalHeader(title:'Verify New Email'),
+      const Sign2DigitalHeader(translateTitle: true, title:'Verify New Email'),
       Expanded(child:Center(child:ConstrainedBox(
         constraints:BoxConstraints(maxWidth:
           MediaQuery.orientationOf(context)==Orientation.landscape
               ? double.infinity : 720),
         child:ListView(padding:const EdgeInsets.all(20),children:[
-          Text('New email: ${widget.newEmail}',
+          Text(AppStrings.of(context).format('New email: {email}', {'email': widget.newEmail}),
             style:const TextStyle(fontFamily:'Inter',color:AppColors.dark)),
           const SizedBox(height:14),
-          Text(challenge==null
+          LocalizedUiText(challenge==null
             ? 'Confirm your account password to send a code to your new email.'
             : 'Enter the emailed 6-digit code. You must sign in again once verified.',
             style:const TextStyle(color:AppColors.placeholder)),
@@ -101,7 +103,7 @@ class _EmailChangeState extends State<VerifiedEmailChangeScreen> {
               maxLength:6,
             ),
           if(error!=null)...[const SizedBox(height:12),
-            Text(error!,style:const TextStyle(color:Colors.red))],
+            LocalizedUiText(error!,style:const TextStyle(color:Colors.red))],
           const SizedBox(height:18),
           Sign2DigitalPrimaryButton(
             key:const Key('m22-email-next'),

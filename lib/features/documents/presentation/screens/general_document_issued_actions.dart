@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import 'package:flutter/services.dart';
@@ -56,7 +57,7 @@ class _GeneralDocumentIssuedActionsState
     if(!mounted)return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content:Text(message)));
+      ..showSnackBar(SnackBar(content: LocalizedUiText(message)));
   }
 
   Future<void> _refresh() async{
@@ -80,14 +81,14 @@ class _GeneralDocumentIssuedActionsState
     if(_busy||_loading||_metadata!=null)return;
     final yes=await showDialog<bool>(
       context:context,builder:(dialog)=>Sign2DigitalApprovedConfirmation(
-        title:const Text('Issue Official Document'),
-        content:const Text('Freeze this exact approved revision into an '
+        title:const LocalizedUiText('Issue Official Document'),
+        content:const LocalizedUiText('Freeze this exact approved revision into an '
           'immutable server-generated PDF? Issuance cannot be undone.'),
         actions:[
           TextButton(onPressed:()=>Navigator.pop(dialog,false),
-            child:const Text('Cancel')),
+            child:const LocalizedUiText('Cancel')),
           TextButton(onPressed:()=>Navigator.pop(dialog,true),
-            child:const Text('Issue PDF')),
+            child:const LocalizedUiText('Issue PDF')),
         ]));
     if(yes!=true||!mounted)return;
     setState(()=>_busy=true);
@@ -186,11 +187,11 @@ class _GeneralDocumentIssuedActionsState
                   const SizedBox(height:14),
                   RadioListTile<String>(
                     value:'pdf',groupValue:mode,
-                    title:const Text('Send verified PDF attachment'),
+                    title:const LocalizedUiText('Send verified PDF attachment'),
                     onChanged:(value)=>setSheet(()=>mode=value??'pdf')),
                   RadioListTile<String>(
                     value:'link',groupValue:mode,
-                    title:const Text('Send private document link'),
+                    title:const LocalizedUiText('Send private document link'),
                     onChanged:(value)=>setSheet(()=>mode=value??'link')),
                 ],
                 const SizedBox(height:18),
@@ -251,14 +252,14 @@ class _GeneralDocumentIssuedActionsState
       if(!mounted)return;
       final email=await showDialog<bool>(context:context,
         builder:(dialog)=>Sign2DigitalApprovedConfirmation(
-          title:const Text('Email Signing Invitation?'),
+          title:const LocalizedUiText('Email Signing Invitation?'),
           content:Text('The private signing link was copied. '
             'Send a separate invitation email to '+(entry['email']??'')+'?'),
           actions:[
             TextButton(onPressed:()=>Navigator.pop(dialog,false),
-              child:const Text('Copy Only')),
+              child:const LocalizedUiText('Copy Only')),
             TextButton(onPressed:()=>Navigator.pop(dialog,true),
-              child:const Text('Send Email')),
+              child:const LocalizedUiText('Send Email')),
           ]));
       if(email==true){
         await widget.repository.send(widget.documentId,
@@ -286,12 +287,12 @@ class _GeneralDocumentIssuedActionsState
     final yes=await showDialog<bool>(context:context,
       builder:(dialog)=>Sign2DigitalApprovedConfirmation(
         title:Text(signature?'Revoke Signing Request?':'Revoke Customer Link?'),
-        content:const Text('This permanently disables the selected private link.'),
+        content:const LocalizedUiText('This permanently disables the selected private link.'),
         actions:[
           TextButton(onPressed:()=>Navigator.pop(dialog,false),
-            child:const Text('Cancel')),
+            child:const LocalizedUiText('Cancel')),
           TextButton(onPressed:()=>Navigator.pop(dialog,true),
-            child:const Text('Revoke')),
+            child:const LocalizedUiText('Revoke')),
         ]));
     if(yes!=true||!mounted)return;
     setState(()=>_busy=true);
@@ -375,7 +376,7 @@ class _GeneralDocumentIssuedActionsState
           style:const TextStyle(fontFamily:'Inter',
             fontSize:12,color:Color(0xFFB42318)))),
       if(!_loading&&meta==null)...[
-        const Text('Approved revision is ready for official PDF issuance.',
+        const LocalizedUiText('Approved revision is ready for official PDF issuance.',
           style:TextStyle(fontFamily:'Inter',fontSize:13,
             color:AppColors.placeholder)),
         const SizedBox(height:12),
@@ -422,11 +423,11 @@ class _GeneralDocumentIssuedActionsState
             trailing:raw['status']=='signed'
               ?TextButton(onPressed:_busy?null:()=>_pdf(
                     signature:(raw['id'] as num).toInt()),
-                  child:const Text('Signed PDF'))
+                  child:const LocalizedUiText('Signed PDF'))
               :const ['ready','viewed'].contains(raw['status'])
                 ?TextButton(onPressed:_busy?null:()=>_revoke(
                     (raw['id'] as num).toInt(),signature:true),
-                  child:const Text('Revoke'))
+                  child:const LocalizedUiText('Revoke'))
                 :const SizedBox.shrink(),
           ),
         _heading('Email Delivery History'),
@@ -449,7 +450,7 @@ class _GeneralDocumentIssuedActionsState
               ?TextButton(
                   onPressed:_busy?null:()=>_revoke(
                     (raw['id'] as num).toInt(),signature:false),
-                  child:const Text('Revoke'))
+                  child:const LocalizedUiText('Revoke'))
               :const SizedBox.shrink(),
           ),
       ],

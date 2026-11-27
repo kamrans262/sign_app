@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -77,7 +78,7 @@ class _JobPhotoGalleryDialogState extends State<JobPhotoGalleryDialog> {
                 if (widget.onDelete != null)
                   IconButton(
                     key: const Key('job-photo-delete'),
-                    tooltip: 'Delete photo',
+                    tooltip: AppStrings.of(context).tr('Delete photo'),
                     onPressed: () async {
                       if (await widget.onDelete!(current) && context.mounted) {
                         Navigator.of(context).pop();
@@ -88,7 +89,7 @@ class _JobPhotoGalleryDialogState extends State<JobPhotoGalleryDialog> {
                   ),
                 IconButton(
                   key: const Key('job-photo-close-preview'),
-                  tooltip: 'Close photo preview',
+                  tooltip: AppStrings.of(context).tr('Close photo preview'),
                   onPressed: () => Navigator.of(context).pop(),
                   icon: const Icon(Icons.close),
                 ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import 'sign2digital_approved_confirmation.dart';
 
 import '../navigation/sign2digital_navigation.dart';
@@ -17,9 +18,9 @@ abstract final class Sign2DigitalSubscriptionGate {
     final viewPlans = await showDialog<bool>(
       context: context,
       builder: (dialog) => Sign2DigitalApprovedConfirmation(
-        title: const Text('Subscription Required',
+        title: const LocalizedUiText('Subscription Required',
             style: TextStyle(color: AppColors.dark)),
-        content: const Text(
+        content: const LocalizedUiText(
           'Your current plan\'s document allowance has been reached. '
           'Existing documents remain available to view or edit. '
           'Choose a plan to create or issue more documents.',
@@ -29,12 +30,12 @@ abstract final class Sign2DigitalSubscriptionGate {
           TextButton(
             key: const Key('subscription-required-later'),
             onPressed: () => Navigator.of(dialog).pop(false),
-            child: const Text('Keep Editing'),
+            child: const LocalizedUiText('Keep Editing'),
           ),
           TextButton(
             key: const Key('subscription-required-view-plans'),
             onPressed: () => Navigator.of(dialog).pop(true),
-            child: const Text('View Plans'),
+            child: const LocalizedUiText('View Plans'),
           ),
         ],
       ),

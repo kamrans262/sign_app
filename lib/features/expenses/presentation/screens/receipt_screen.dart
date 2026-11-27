@@ -86,7 +86,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
     if (!mounted) return;
     final messenger = ScaffoldMessenger.of(context);
     messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(SnackBar(content: Text(value)));
+    messenger.showSnackBar(SnackBar(content: LocalizedUiText(value)));
   }
 
   Future<void> _savePhotos(List<LocalJobPhotoSelection> photos,
@@ -155,7 +155,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
             onTap: () => Navigator.of(sheet).pop('camera')),
           ListTile(key: const Key('receipt-pick-pdf'),
             leading: const Icon(Icons.picture_as_pdf_outlined),
-            title: const Text('Choose PDF receipt'),
+            title: const LocalizedUiText('Choose PDF receipt'),
             onTap: () => Navigator.of(sheet).pop('pdf')),
         ],
       )),
@@ -218,7 +218,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialog) => Sign2DigitalApprovedConfirmation(
-        title: const Text('Remove receipt?'),
+        title: const LocalizedUiText('Remove receipt?'),
         content: Text('Remove ${_fileName(_attachments[index])} from this expense?'),
         actions: [
           TextButton(onPressed: () => Navigator.of(dialog).pop(false),
@@ -304,7 +304,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
                     style: TextStyle(fontFamily: 'Inter',
                       fontSize: 14, color: AppColors.placeholder)),
                   if (_canEdit)
-                    TextButton(onPressed: _add, child: const Text('Add Photo')),
+                    TextButton(onPressed: _add, child: const LocalizedUiText('Add Photo')),
                 ]))
               : _pdf(file)
                   ? PdfPreview(
@@ -321,7 +321,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
                       fit: BoxFit.contain,
                       gaplessPlayback: true,
                       errorBuilder: (_, _, _) => const Center(
-                        child: Text('Receipt image could not be displayed.'))),
+                        child: LocalizedUiText('Receipt image could not be displayed.'))),
         ),
       ),
     ));

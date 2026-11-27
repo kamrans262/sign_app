@@ -155,7 +155,7 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
   }
 
   void _message(String text) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: LocalizedUiText(text)));
   }
 
   Future<void> _commitPendingPhotos() async {
@@ -280,7 +280,7 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
     if (visible.isEmpty) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 30),
-        child: Center(child: Text('No photos in this category yet.',
+        child: Center(child: LocalizedUiText('No photos in this category yet.',
           style: TextStyle(fontFamily: 'Inter', fontSize: 14,
             color: AppColors.placeholder))),
       );
@@ -332,7 +332,7 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text(
+          const LocalizedUiText(
             'Ready to add',
             style: TextStyle(
               fontFamily: 'Inter',
@@ -518,7 +518,7 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
                           ),
                         ),
                         const SizedBox(height: 10),
-                        const Text(
+                        const LocalizedUiText(
                           'Document your project with photos',
                           style: TextStyle(
                             fontFamily: 'Inter',

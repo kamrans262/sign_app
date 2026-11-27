@@ -130,7 +130,7 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
 
   void _notice(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: LocalizedUiText(message)));
   }
 
   Future<void> _open(EquipmentRecord record) async {
@@ -280,7 +280,7 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
                       onPressed: _load, child: Text('$_error. Tap to retry.'))))
                 else if (visible.isEmpty)
                   const SliverFillRemaining(hasScrollBody: false,
-                    child: Center(child: Text('No matching equipment',
+                    child: Center(child: LocalizedUiText('No matching equipment',
                       key: Key('equipment-empty'),
                       style: TextStyle(color: AppColors.placeholder))))
                 else

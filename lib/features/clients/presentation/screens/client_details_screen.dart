@@ -236,7 +236,7 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
       }
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('This repository does not support demo editing yet'),
+          content: LocalizedUiText('This repository does not support demo editing yet'),
         ),
       );
     }

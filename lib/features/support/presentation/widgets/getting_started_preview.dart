@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
@@ -47,7 +49,7 @@ class _GettingStartedPreviewState extends State<GettingStartedPreview> {
     }
     if (_progress != null && !_progress!.eligible) {
       return const Padding(padding: EdgeInsets.all(20),
-        child: Text('This guide is for company owners. '
+        child: LocalizedUiText('This guide is for company owners. '
           'Use AI Support to learn about your assigned modules.',
           style: TextStyle(fontFamily: 'Inter',
             color: AppColors.secondaryText)));
@@ -63,18 +65,18 @@ class _GettingStartedPreviewState extends State<GettingStartedPreview> {
       key: const Key('support-guide-preview'),
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
       children: [
-        const Text('Preview only · Automatic onboarding is disabled',
+        const LocalizedUiText('Preview only · Automatic onboarding is disabled',
           style: TextStyle(fontFamily: 'Inter', fontSize: 12,
             fontWeight: FontWeight.w600, color: AppColors.primary)),
         const SizedBox(height: 12),
-        const Text('Complete these steps using your existing Sign2Digital screens.',
+        const LocalizedUiText('Complete these steps using your existing Sign2Digital screens.',
           style: TextStyle(fontFamily: 'Inter', fontSize: 14,
             color: AppColors.secondaryText)),
         const SizedBox(height: 18),
         LinearProgressIndicator(value: count / 4, minHeight: 6,
           color: AppColors.primary, backgroundColor: const Color(0xFFE3ECF0)),
         const SizedBox(height: 8),
-        Text('$count of 4 completed',
+        Text(AppStrings.of(context).format('{count} of 4 completed', {'count': count}),
           style: const TextStyle(fontFamily: 'Inter', fontSize: 12,
             color: AppColors.secondaryText)),
         const SizedBox(height: 16),
@@ -95,7 +97,7 @@ class _GettingStartedPreviewState extends State<GettingStartedPreview> {
                       ? Icons.check_circle_rounded : icon,
                       color: AppColors.primary, size: 24),
                     const SizedBox(width: 12),
-                    Expanded(child: Text(title,
+                    Expanded(child: LocalizedUiText(title,
                       style: const TextStyle(fontFamily: 'Inter',
                         fontSize: 14, fontWeight: FontWeight.w600,
                         color: AppColors.dark))),
@@ -107,7 +109,7 @@ class _GettingStartedPreviewState extends State<GettingStartedPreview> {
             ),
           ),
         if (_error != null) Padding(padding: const EdgeInsets.only(bottom: 12),
-          child: Text(_error!, style: const TextStyle(fontFamily: 'Inter',
+          child: LocalizedUiText(_error!, style: const TextStyle(fontFamily: 'Inter',
             color: Color(0xFFB42318)))),
         Sign2DigitalPrimaryButton(
           label: 'Refresh Progress', onPressed: _load),

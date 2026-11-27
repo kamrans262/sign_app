@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 
 import '../../../../core/services/active_company_session.dart';
@@ -87,7 +88,7 @@ class _EquipmentLoanReminderActionsState
     if(!mounted)return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content:Text(message)));
+      ..showSnackBar(SnackBar(content: LocalizedUiText(message)));
   }
 
   Future<void> _send() async {
@@ -111,7 +112,7 @@ class _EquipmentLoanReminderActionsState
         context:context,
         builder:(dialog)=>StatefulBuilder(
           builder:(context,refresh)=>Sign2DigitalApprovedConfirmation(
-            title:const Text('Send Equipment Return Reminder?'),
+            title:const LocalizedUiText('Send Equipment Return Reminder?'),
             content:SizedBox(width:320,child:Column(
               mainAxisSize:MainAxisSize.min,
               crossAxisAlignment:CrossAxisAlignment.start,
@@ -124,24 +125,24 @@ class _EquipmentLoanReminderActionsState
                 const SizedBox(height:6),
                 Text('Return due: '+current.expectedReturnDate),
                 const SizedBox(height:10),
-                const Text('This sends an email to the configured transport. '
+                const LocalizedUiText('This sends an email to the configured transport. '
                   'Inbox delivery is not confirmed.'),
                 CheckboxListTile(
                   key:const Key('equipment-reminder-consent'),
                   value:confirmed,contentPadding:EdgeInsets.zero,
-                  title:const Text('I confirm this is the intended '
+                  title:const LocalizedUiText('I confirm this is the intended '
                     'borrower email address.'),
                   controlAffinity:ListTileControlAffinity.leading,
                   onChanged:(v)=>refresh(()=>confirmed=v??false)),
               ])),
             actions:[
               TextButton(onPressed:()=>Navigator.pop(dialog,false),
-                child:const Text('Cancel')),
+                child:const LocalizedUiText('Cancel')),
               TextButton(
                 key:const Key('equipment-reminder-confirm-send'),
                 onPressed:confirmed
                   ?()=>Navigator.pop(dialog,true):null,
-                child:const Text('Submit Email')),
+                child:const LocalizedUiText('Submit Email')),
             ],
           )));
       if(approved!=true||!mounted)return;
@@ -215,7 +216,7 @@ class _EquipmentLoanReminderActionsState
             ])),
           actions:[
             TextButton(onPressed:()=>Navigator.pop(dialog),
-              child:const Text('Cancel')),
+              child:const LocalizedUiText('Cancel')),
             TextButton(
               key:const Key('equipment-reminder-policy-save'),
               onPressed:approved?()=>Navigator.pop(dialog,frequency):null,
@@ -251,7 +252,7 @@ class _EquipmentLoanReminderActionsState
     if(_remote==null||widget.loan.id==null)return const SizedBox.shrink();
     if(widget.loan.companyId!=null &&
         ActiveCompanySession.companyId!=widget.loan.companyId){
-      return const Text('Company changed. Reopen this loan.',
+      return const LocalizedUiText('Company changed. Reopen this loan.',
         style:TextStyle(color:AppColors.placeholder));
     }
     return Column(
@@ -267,7 +268,7 @@ class _EquipmentLoanReminderActionsState
         if(p==null)TextButton(
           key:const Key('equipment-reminder-retry'),
           onPressed:_busy?null:_load,
-          child:const Text('Refresh Reminder Settings'))
+          child:const LocalizedUiText('Refresh Reminder Settings'))
         else ...[
           if(widget.loan.status!=EquipmentLoanStatus.returned)...[
             Sign2DigitalOutlinedButton(
@@ -289,16 +290,16 @@ class _EquipmentLoanReminderActionsState
                 ?'Overdue Reminders: On ('+p.frequencyDays.toString()+' days)'
                 :'Overdue Reminders: Off')),
             if(!p.automaticGlobalEnabled)
-              const Text('Automatic sending is disabled on the server.',
+              const LocalizedUiText('Automatic sending is disabled on the server.',
                 style:TextStyle(color:AppColors.placeholder,fontSize:12)),
           ],
           const SizedBox(height:20),
-          const Text('Reminder Delivery History',
+          const LocalizedUiText('Reminder Delivery History',
             style:TextStyle(fontFamily:'Inter',fontSize:17,
               fontWeight:FontWeight.w600,color:AppColors.dark)),
           const SizedBox(height:8),
           if(p.deliveryHistory.isEmpty)
-            const Text('No borrower emails have been submitted.',
+            const LocalizedUiText('No borrower emails have been submitted.',
               key:Key('equipment-reminder-history-empty'),
               style:TextStyle(color:AppColors.placeholder,fontSize:13))
           else for(final item in p.deliveryHistory)

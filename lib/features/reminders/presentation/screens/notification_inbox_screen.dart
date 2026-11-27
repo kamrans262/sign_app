@@ -69,7 +69,7 @@ class _NotificationInboxScreenState extends State<NotificationInboxScreen> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Unable to update notifications.')),
+          const SnackBar(content: LocalizedUiText('Unable to update notifications.')),
         );
       }
     } finally {
@@ -111,7 +111,7 @@ class _NotificationInboxScreenState extends State<NotificationInboxScreen> {
             TextButton(
               onPressed: _busy || rows.isEmpty ? null :
                 () => _change(_repository.markAllRead),
-              child: const Text('Mark all read'),
+              child: const LocalizedUiText('Mark all read'),
             ),
             IconButton(
               key: const Key('notifications-refresh'),

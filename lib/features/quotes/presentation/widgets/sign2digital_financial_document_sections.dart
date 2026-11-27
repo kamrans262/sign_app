@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -55,7 +57,7 @@ class Sign2DigitalFinancialDocumentSections {
   Widget _dateLine(String label, String value) => Row(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      SizedBox(width: 72, child: Text(label, textAlign: TextAlign.right,
+      SizedBox(width: 72, child: LocalizedUiText(label, textAlign: TextAlign.right,
         softWrap: false, maxLines: 1,
         style: _text(12, weight: FontWeight.w600))),
       const SizedBox(width: 6),
@@ -69,7 +71,7 @@ class Sign2DigitalFinancialDocumentSections {
       final billTo = Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Bill To:', style: _text(14, weight: FontWeight.w600)),
+          LocalizedUiText('Bill To:', style: _text(14, weight: FontWeight.w600)),
           const SizedBox(height: 9),
           for (final value in [
             document.clientName, document.billingAddress,
@@ -121,21 +123,21 @@ class Sign2DigitalFinancialDocumentSections {
                 'assets/header_logo.png', width: 132, height: 43,
                 key: const Key('quote-preview-logo'),
                 fit: BoxFit.contain,
-                errorBuilder: (_, _, _) => Text('Company logo unavailable',
+                errorBuilder: (_, _, _) => LocalizedUiText('Company logo unavailable',
                   style: _text(10, color: AppColors.placeholder)),
               )),
               const SizedBox(width: 8),
               Flexible(child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(documentTitle,
+                  LocalizedUiText(documentTitle,
                     key: const Key('quote-preview-document-title'),
                     style: _text(18, weight: FontWeight.bold)),
                   const SizedBox(height: 9),
-                  Text(document.quoteNumber.isEmpty
-                      ? 'Unnumbered draft' : document.quoteNumber,
+                  Builder(builder: (context) => Text(document.quoteNumber.isEmpty
+                      ? AppStrings.of(context).tr('Unnumbered draft') : document.quoteNumber,
                     textAlign: TextAlign.right,
-                    style: _text(12, color: AppColors.placeholder)),
+                    style: _text(12, color: AppColors.placeholder))),
                 ],
               )),
             ],
@@ -160,7 +162,7 @@ class Sign2DigitalFinancialDocumentSections {
         if (!document.allItemPricesValid)
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-            child: Text('Pricing incomplete — missing values are not zero.',
+            child: LocalizedUiText('Pricing incomplete — missing values are not zero.',
               style: _text(11, color: const Color(0xFFE6A23C))),
           ),
         const SizedBox(height: 10),
@@ -210,7 +212,7 @@ class Sign2DigitalFinancialDocumentSections {
                     children: [
                       Container(height: 2, color: AppColors.placeholder),
                       const SizedBox(height: 7),
-                      Text(i == 0 ? 'Customer Signature' : 'Date',
+                      LocalizedUiText(i == 0 ? 'Customer Signature' : 'Date',
                         style: _text(10, color: AppColors.placeholder)),
                     ],
                   )),
@@ -233,7 +235,7 @@ class Sign2DigitalFinancialDocumentSections {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: _text(10)),
+        LocalizedUiText(label, style: _text(10)),
         Text(value, softWrap: true,
           style: _text(10, color: AppColors.placeholder)),
       ],
@@ -251,14 +253,14 @@ class Sign2DigitalFinancialDocumentSections {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Payment Details',
+          LocalizedUiText('Payment Details',
             style: _text(14, weight: FontWeight.w600)),
           const SizedBox(height: 5),
-          Text(payload == null ? 'Payment QR unavailable' : 'Scan to Pay',
+          LocalizedUiText(payload == null ? 'Payment QR unavailable' : 'Scan to Pay',
             style: _text(12)),
           const SizedBox(height: 20),
           if (payload == null) ...[
-            Text('A valid Swiss payment account, payee address and payable '
+            LocalizedUiText('A valid Swiss payment account, payee address and payable '
               'amount are needed to display a payment QR.',
               style: _text(12, color: AppColors.placeholder)),
             const SizedBox(height: 12),
@@ -302,13 +304,13 @@ class Sign2DigitalFinancialDocumentSections {
   Widget terms() => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text('General Terms & Conditions',
+      LocalizedUiText('General Terms & Conditions',
         style: _text(15, weight: FontWeight.w600)),
       const SizedBox(height: 15),
-      Text(document.terms.trim().isEmpty
-            ? 'No terms and conditions have been provided.'
+      Builder(builder: (context) => Text(document.terms.trim().isEmpty
+            ? AppStrings.of(context).tr('No terms and conditions have been provided.')
             : document.terms,
-        style: _text(14, color: AppColors.placeholder)),
+        style: _text(14, color: AppColors.placeholder))),
     ],
   );
 }

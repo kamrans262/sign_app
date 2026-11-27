@@ -158,7 +158,7 @@ class _QuoteAiProcessingScreenState extends State<QuoteAiProcessingScreen> {
     final appended = previous.isEmpty ? work : '$previous\n$work';
     if (appended.length > 4000) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Please shorten the additional details to 4,000 characters.')));
+        content: LocalizedUiText('Please shorten the additional details to 4,000 characters.')));
       return;
     }
     _currentInput = QuoteDraftInput(
@@ -276,7 +276,7 @@ class _QuoteAiProcessingScreenState extends State<QuoteAiProcessingScreen> {
                     fit: BoxFit.contain,
                     errorBuilder: (context, error, stackTrace) =>
                         const SizedBox(width: 223, height: 168,
-                          child: Center(child: Text('Quote illustration unavailable'))),
+                          child: Center(child: LocalizedUiText('Quote illustration unavailable'))),
                   )),
                   const SizedBox(height: 25),
                   Text(_snapshot.stage == QuotePreparationStage.failed
@@ -351,7 +351,7 @@ class _QuoteAiProcessingScreenState extends State<QuoteAiProcessingScreen> {
                       OutlinedButton(
                         key: const Key('quote-preview-example'),
                         onPressed: _previewExample,
-                        child: const Text('Preview Figma example'),
+                        child: const LocalizedUiText('Preview Figma example'),
                       ),
                     const SizedBox(height: 25),
                   ],
@@ -403,7 +403,7 @@ class _QuoteAiProcessingScreenState extends State<QuoteAiProcessingScreen> {
                         Icon(Icons.check_circle_outline, size: 20,
                           color: AppColors.primary),
                         SizedBox(width: 8),
-                        Expanded(child: Text(
+                        Expanded(child: LocalizedUiText(
                           'Extraction complete · AI suggestions need review',
                           key: Key('quote-processing-complete-label'),
                           style: TextStyle(fontFamily: 'Inter', fontSize: 13,
@@ -440,7 +440,7 @@ class _QuoteAiProcessingScreenState extends State<QuoteAiProcessingScreen> {
                         backgroundColor: AppColors.primary,
                         minimumSize: const Size.fromHeight(48),
                       ),
-                      child: const Text('Preview Review Quote (demo)'),
+                      child: const LocalizedUiText('Preview Review Quote (demo)'),
                     ),
                     const SizedBox(height: 12),
                     TextButton(
@@ -450,7 +450,7 @@ class _QuoteAiProcessingScreenState extends State<QuoteAiProcessingScreen> {
                           _snapshot = QuotePreparationSnapshot.unavailable;
                         });
                       },
-                      child: const Text('Return to service status'),
+                      child: const LocalizedUiText('Return to service status'),
                     ),
                   ],
                 ],

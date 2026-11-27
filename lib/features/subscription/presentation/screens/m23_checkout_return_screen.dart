@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
@@ -59,8 +61,7 @@ class _M23CheckoutReturnScreenState
         _verified = verified.verified;
         _message = verified.verified
             ? 'Subscription verified. Your account now uses the provider-confirmed plan.'
-            : 'Payment is not confirmed yet (${verified.status}). '
-              'If you completed Checkout, try Verify Again.';
+            : AppStrings.of(context).format('Payment is not confirmed yet ({status}). If you completed Checkout, try Verify Again.', {'status': verified.status});
       });
     } catch (_) {
       if (!mounted) return;
@@ -110,11 +111,11 @@ class _M23CheckoutReturnScreenState
                   ),
                 ),
                 const SizedBox(height: 20),
-                Text(label, key: const Key('m23-return-title'),
+                LocalizedUiText(label, key: const Key('m23-return-title'),
                   style: const TextStyle(fontFamily: 'Inter',fontSize: 20,
                     fontWeight: FontWeight.w700,color: AppColors.dark)),
                 const SizedBox(height: 10),
-                Text(_message, key: const Key('m23-return-message'),
+                LocalizedUiText(_message, key: const Key('m23-return-message'),
                   textAlign: TextAlign.center,
                   style: const TextStyle(fontFamily: 'Inter',fontSize: 14,
                     fontWeight: FontWeight.w500,color: AppColors.placeholder)),
@@ -128,7 +129,7 @@ class _M23CheckoutReturnScreenState
                   TextButton(
                     key: const Key('m23-return-verify-again'),
                     onPressed: _verify,
-                    child: const Text('Verify Again'),
+                    child: const LocalizedUiText('Verify Again'),
                   ),
                 ],
               ]),

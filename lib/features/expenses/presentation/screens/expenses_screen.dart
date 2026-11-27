@@ -186,7 +186,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Unable to save the expense draft.')));
+          content: LocalizedUiText('Unable to save the expense draft.')));
       }
     }
   }

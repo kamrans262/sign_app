@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -51,14 +53,14 @@ class SiteReportReviewContent extends StatelessWidget {
           Expanded(child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: AppTextStyles.fieldLabel),
+              LocalizedUiText(label, style: AppTextStyles.fieldLabel),
               const SizedBox(height: 5),
-              Text(
-                value.isEmpty ? hint : value,
+              Builder(builder: (context) => Text(
+                value.isEmpty ? AppStrings.of(context).tr(hint) : value,
                 style: value.isEmpty
                     ? AppTextStyles.fieldHint : AppTextStyles.fieldInput,
                 softWrap: true,
-              ),
+              )),
             ],
           )),
           if (withArrow) ...[
@@ -132,7 +134,7 @@ class SiteReportReviewContent extends StatelessWidget {
                             Icon(Icons.image_outlined,
                               color: AppColors.placeholder, size: 26),
                             SizedBox(height: 5),
-                            Text('No report photo selected',
+                            LocalizedUiText('No report photo selected',
                               style: TextStyle(
                                 fontFamily: 'Inter', fontSize: 13,
                                 color: AppColors.placeholder)),
@@ -214,7 +216,7 @@ class SiteReportReviewContent extends StatelessWidget {
                 onChanged: (_) {},
               )),
               const SizedBox(width: 10),
-              Expanded(child: Text(
+              Expanded(child: LocalizedUiText(
                 section.label,
                 style: const TextStyle(
                   fontFamily: 'Inter', fontSize: 14,

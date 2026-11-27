@@ -57,7 +57,7 @@ class DocumentSignedSuccessScreen extends StatelessWidget {
     child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(width: 110, child: Text(label, style: _labelStyle)),
+        SizedBox(width: 110, child: LocalizedUiText(label, style: _labelStyle)),
         const SizedBox(width: 8),
         Expanded(child: Text(value, style: _valueStyle, softWrap: true)),
       ],
@@ -99,14 +99,14 @@ class DocumentSignedSuccessScreen extends StatelessWidget {
       } catch (_) {
         if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Unable to share the signed PDF.'),
+          content: LocalizedUiText('Unable to share the signed PDF.'),
         ));
       }
       return;
     }
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(data.demoOnly
+      content: LocalizedUiText(data.demoOnly
           ? 'UI demo only: no real signed PDF exists.'
           : 'The signing service did not provide a signed PDF.'),
     ));
@@ -132,13 +132,13 @@ class DocumentSignedSuccessScreen extends StatelessWidget {
                     children: [
                       const Center(child: Sign2DigitalAnimatedSuccess()),
                       const SizedBox(height: 20),
-                      Text(businessSignaturePending
+                      LocalizedUiText(businessSignaturePending
                           ? 'Business Signature Added!' : 'Document Signed!',
                         textAlign: TextAlign.center,
                         style: TextStyle(fontFamily: 'Inter', fontSize: 24,
                           fontWeight: FontWeight.w700, color: AppColors.dark)),
                       const SizedBox(height: 10),
-                      Text(
+                      LocalizedUiText(
                         businessSignaturePending
                           ? 'Your signature has been saved. '
                             'The customer signature is still pending.'
@@ -150,7 +150,7 @@ class DocumentSignedSuccessScreen extends StatelessWidget {
                       ),
                       if (data.demoOnly) ...[
                         const SizedBox(height: 12),
-                        const Text(
+                        const LocalizedUiText(
                           'UI DEMO ONLY — no document has actually been signed.',
                           key: Key('signed-success-demo-notice'),
                           textAlign: TextAlign.center,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 
 import '../../../../core/services/sign_api_client.dart';
 
@@ -65,7 +66,7 @@ class _PublicCustomerSigningScreenState
                 child: Center(
                   child: Padding(
                     padding: EdgeInsets.all(24),
-                    child: Text(
+                    child: LocalizedUiText(
                       'This secure signing link is unavailable or expired. '
                       'Please request a new link from the business.',
                       textAlign: TextAlign.center,

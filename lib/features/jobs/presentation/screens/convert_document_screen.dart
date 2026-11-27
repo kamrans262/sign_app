@@ -95,7 +95,7 @@ class _ConvertDocumentScreenState extends State<ConvertDocumentScreen> {
     if (!mounted) return;
     final messenger = ScaffoldMessenger.of(context);
     messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(SnackBar(content: Text(text)));
+    messenger.showSnackBar(SnackBar(content: LocalizedUiText(text)));
   }
 
   Future<void> _reviewGeneric() async {
@@ -114,7 +114,7 @@ class _ConvertDocumentScreenState extends State<ConvertDocumentScreen> {
             width: 620,
             child: SingleChildScrollView(
               child: Column(mainAxisSize: MainAxisSize.min, children: [
-                const Text('Review every detail. Nothing is sent or signed.'),
+                const LocalizedUiText('Review every detail. Nothing is sent or signed.'),
                 const SizedBox(height: 14),
                 Sign2DigitalInputField(
                   key: const Key('note-document-title'),
@@ -142,7 +142,7 @@ class _ConvertDocumentScreenState extends State<ConvertDocumentScreen> {
                 FocusManager.instance.primaryFocus?.unfocus();
                 Navigator.pop(dialog);
               },
-              child: const Text('Keep editing later'),
+              child: const LocalizedUiText('Keep editing later'),
             ),
             TextButton(
               key: const Key('note-document-save-draft'),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -105,7 +106,7 @@ class _ImportClientsScreenState extends State<ImportClientsScreen> {
     if (_savingContacts) return;
     if (chosen.length > 100) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Select at most 100 contacts at a time.')),
+        const SnackBar(content: LocalizedUiText('Select at most 100 contacts at a time.')),
       );
       return;
     }

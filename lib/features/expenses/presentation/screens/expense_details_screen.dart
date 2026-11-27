@@ -250,7 +250,7 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
               LocalizedUiText('Add Photo', style: TextStyle(
                 fontFamily: 'Inter', fontSize: 16, color: AppColors.dark)),
               SizedBox(height: 5),
-              Text('Add receipt photos by editing this expense',
+              LocalizedUiText('Add receipt photos by editing this expense',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontFamily: 'Inter', fontSize: 12,
                   color: AppColors.placeholder)),
@@ -295,7 +295,7 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
     if (events.isEmpty) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 20),
-        child: Text('No recorded expense history is available.',
+        child: LocalizedUiText('No recorded expense history is available.',
           key: Key('expense-history-empty'),
           style: TextStyle(fontFamily: 'Inter',
             fontSize: 14, color: AppColors.placeholder)),
@@ -401,14 +401,14 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialog) => Sign2DigitalApprovedConfirmation(
-        title: const Text('Request reimbursement?'),
+        title: const LocalizedUiText('Request reimbursement?'),
         content: Text('Submit ${_record.formattedAmount} for reimbursement?'),
         actions: [
           TextButton(onPressed: () => Navigator.of(dialog).pop(false),
             child: const LocalizedUiText('Cancel')),
           TextButton(key: const Key('expense-confirm-reimburse'),
             onPressed: () => Navigator.of(dialog).pop(true),
-            child: const Text('Request')),
+            child: const LocalizedUiText('Request')),
         ],
       ),
     );
@@ -513,7 +513,7 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
                         else _history(),
                         if (_record.demoOnly) ...[
                           const SizedBox(height: 12),
-                          const Text('UI demo/local expense — not a verified approval or reimbursement.',
+                          const LocalizedUiText('UI demo/local expense — not a verified approval or reimbursement.',
                             style: TextStyle(fontFamily: 'Inter',
                               fontSize: 12, color: AppColors.primary)),
                         ],
