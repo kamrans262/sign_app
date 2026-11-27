@@ -1,3 +1,4 @@
+import 'package:sign2digital/core/localization/app_strings.dart';
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
@@ -112,7 +113,7 @@ class _SubscriptionOverviewScreenState
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(
-        content: Text('$action is not connected yet.'),
+        content: Text(AppStrings.of(context).format('{action} is not connected yet.', {'action': AppStrings.of(context).tr(action)})),
       ));
   }
 
@@ -173,7 +174,7 @@ class _SubscriptionOverviewScreenState
                     child: TextButton(
                       key: const Key('subscription-retry'),
                       onPressed: _load,
-                      child: Text('$_error Tap to retry.'),
+                      child: Text('${AppStrings.of(context).tr(_error!)} ${AppStrings.of(context).tr('Tap to retry.')}'),
                     ),
                   ))
                 else if (_overview != null) ...[

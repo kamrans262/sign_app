@@ -12,3 +12,6 @@ The catalog is not proof of every UI string being connected. Additional strings 
 The dedicated localisation workflow passed at d40d9c5 after removing a duplicate named argument in Settings. Later translations extend document preview, signing confirmation, subscription, security setup, addenda, expenses, equipment reminder and job photo workflows. They require a fresh CI run; the earlier pass does not establish verification of the later commit. No device release builds were performed.
 
 The dedicated localisation workflow also passed at f444103, including full Flutter analysis, focused language/profile tests and iOS language declarations. Shared client, job, signature, quote and profile cards were subsequently connected to existing translations; verify the new revision before release.
+
+## Follow-up mobile coverage
+Localized dynamic invoice, expense and labour confirmations, retry suffixes, selected dashboard and expense/labour financial display, detail timestamps and VAT percentage labels. Added placeholder regression tests. This changes Dart and documentation only, with no Apple project/configuration or dependency changes. Full remaining screen audit, native device builds and backend-provided text are not certified by this change.

@@ -109,7 +109,7 @@ class _HelpSupportState extends State<HelpSupportScreen> {
                   child:CircularProgressIndicator()))
               else if(error!=null)
                 TextButton(key:const Key('m22-support-retry'),
-                  onPressed:refresh,child:Text('${error!} Tap to retry.'))
+                  onPressed:refresh,child:Text('${error!} ${AppStrings.of(context).tr('Tap to retry.')}'))
               else ...[
                 if(faqs.isEmpty)
                   const Padding(padding:EdgeInsets.all(12),
@@ -382,7 +382,7 @@ class _TicketDetailState extends State<SupportTicketDetailsScreen> {
           padding:const EdgeInsets.all(20),children:[
             if(loading)const Center(child:CircularProgressIndicator())
             else if(error!=null && data==null)
-              TextButton(onPressed:refresh,child:Text('${error!} Retry'))
+              TextButton(onPressed:refresh,child:Text('${error!} ${AppStrings.of(context).tr('Retry')}'))
             else if(data!=null)...[
               Text('${data!.ticket.reference} · ${data!.ticket.status}',
                 style:const TextStyle(color:AppColors.primary)),

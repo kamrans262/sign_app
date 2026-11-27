@@ -1,3 +1,4 @@
+import 'package:sign2digital/core/localization/app_display_formats.dart';
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:sign2digital/core/localization/app_strings.dart';
@@ -123,22 +124,24 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
     messenger.showSnackBar(SnackBar(content: Text(AppStrings.of(context).tr(message))));
   }
 
-  static String _shortDate(DateTime date) {
+  String _amountText(ExpenseRecord record) => AppDisplayFormats.money(context, (record.amount * 100).round(), 'CHF', english: record.formattedAmount);
+
+  String _shortDate(DateTime date) {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return '${months[date.month - 1]} ${date.day}, ${date.year}';
+    return AppDisplayFormats.date(context, date, short: true, english: '${months[date.month - 1]} ${date.day}, ${date.year}');
   }
 
-  static String _dateTime(DateTime date) {
+  String _dateTime(DateTime date) {
     final local = date.toLocal();
     const months = ['January', 'February', 'March', 'April', 'May', 'June',
       'July', 'August', 'September', 'October', 'November', 'December'];
-    final datePart = '${local.day} ${months[local.month - 1]} ${local.year}';
+    final datePart = AppDisplayFormats.date(context, local, english: '${local.day} ${months[local.month - 1]} ${local.year}');
     // Date-only expense records do not imply an actual midnight purchase.
     if (local.hour == 0 && local.minute == 0) return datePart;
     final hour = local.hour % 12 == 0 ? 12 : local.hour % 12;
-    return '$datePart  $hour:${local.minute.toString().padLeft(2, '0')} '
-      '${local.hour >= 12 ? 'PM' : 'AM'}';
+    final time = AppDisplayFormats.time(context, TimeOfDay.fromDateTime(local), english: '$hour:${local.minute.toString().padLeft(2, '0')} ${local.hour >= 12 ? 'PM' : 'AM'}');
+    return '$datePart  $time';
   }
 
   Widget _summary() => Row(
@@ -178,7 +181,7 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
     key: const Key('expense-detail-amount-section'),
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(_record.formattedAmount,
+      Text(_amountText(_record),
         style: const TextStyle(fontFamily: 'Inter',
           fontSize: 22, fontWeight: FontWeight.w700, color: AppColors.dark)),
       const SizedBox(height: 5),
@@ -192,7 +195,7 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
     final r = _record;
     final rows = <Sign2DigitalInformationRow>[
       Sign2DigitalInformationRow('Expense Type', r.displayCategory),
-      Sign2DigitalInformationRow('Amount', r.formattedAmount),
+      Sign2DigitalInformationRow('Amount', _amountText(r)),
       Sign2DigitalInformationRow('Job', r.job),
       if (r.clientName?.trim().isNotEmpty == true)
         Sign2DigitalInformationRow('Client:', r.clientName!),
@@ -363,7 +366,7 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
     try {
       final choice = await Sign2DigitalSelectionSheet.show(
         context, title: 'Approve Expense',
-        subtitle: 'Approve ${_record.formattedAmount}? This will lock the expense.',
+        subtitle: AppStrings.of(context).format('Approve {amount}? This will lock the expense.', {'amount': _amountText(_record)}),
         icon: Icons.check_circle_outline,
         options: const ['Cancel', 'Approve'],
       );
@@ -402,7 +405,7 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
       context: context,
       builder: (dialog) => Sign2DigitalApprovedConfirmation(
         title: const LocalizedUiText('Request reimbursement?'),
-        content: Text('Submit ${_record.formattedAmount} for reimbursement?'),
+        content: Text(AppStrings.of(context).format('Submit {amount} for reimbursement?', {'amount': _amountText(_record)})),
         actions: [
           TextButton(onPressed: () => Navigator.of(dialog).pop(false),
             child: const LocalizedUiText('Cancel')),
@@ -482,7 +485,7 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
                 ? Center(child: TextButton(
                     key: const Key('expense-details-retry'),
                     onPressed: _reload,
-                    child: Text('$_error Retry')))
+                    child: Text('${AppStrings.of(context).tr(_error!)} ${AppStrings.of(context).tr('Retry')}')))
                 : SingleChildScrollView(
                     key: const Key('expense-details-scroll'),
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 25),

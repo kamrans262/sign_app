@@ -1,3 +1,4 @@
+import 'package:sign2digital/core/localization/app_display_formats.dart';
 import 'package:flutter/material.dart';
 import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
@@ -340,7 +341,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
 
   String _expensesText(double? value) =>
       _loading ? '…' :
-      value == null ? '—' : 'CHF ${value.toStringAsFixed(2)}';
+      value == null ? '—' : AppDisplayFormats.money(context, (value * 100).round(), 'CHF', english: 'CHF ${value.toStringAsFixed(2)}');
 
   @override
   Widget build(BuildContext context) {

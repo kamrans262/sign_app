@@ -85,9 +85,8 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
   String _timestamp(DateTime value) {
     final local = value.toLocal();
     final hour = local.hour % 12 == 0 ? 12 : local.hour % 12;
-    return '${_date(local)}, $hour:'
-        '${local.minute.toString().padLeft(2, '0')} '
-        '${local.hour < 12 ? 'AM' : 'PM'}';
+    final time = AppDisplayFormats.time(context, TimeOfDay.fromDateTime(local), english: '$hour:${local.minute.toString().padLeft(2, '0')} ${local.hour < 12 ? 'AM' : 'PM'}');
+    return '${_date(local)}, $time';
   }
 
   String _money(int? minor) => AppDisplayFormats.money(context, minor,
@@ -171,7 +170,7 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
       Sign2DigitalInformationRow('Invoice Number', invoice.number),
       Sign2DigitalInformationRow('Subtotal', _money(invoice.subtotalMinor)),
       Sign2DigitalInformationRow(
-        'VAT ${(invoice.vatBasisPoints / 100).toStringAsFixed(2)}%',
+        AppStrings.of(context).format('VAT {rate}%', {'rate': AppDisplayFormats.decimal(context, invoice.vatBasisPoints / 100)}),
         _money(invoice.vatMinor)),
       Sign2DigitalInformationRow('Total', AppDisplayFormats.money(context, (invoice.amount * 100).round(), invoice.currency, english: invoice.formattedAmount)),
       Sign2DigitalInformationRow('Amount Received',
@@ -230,7 +229,7 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
               Sign2DigitalDocumentAmountRow(
                 label: 'Subtotal', value: _money(_record.subtotalMinor)),
               Sign2DigitalDocumentAmountRow(
-                label: 'VAT ${(_record.vatBasisPoints / 100).toStringAsFixed(2)}%',
+                label: AppStrings.of(context).format('VAT {rate}%', {'rate': AppDisplayFormats.decimal(context, _record.vatBasisPoints / 100)}),
                 value: _money(_record.vatMinor)),
               Sign2DigitalDocumentAmountRow(
                 label: 'Total', value: AppDisplayFormats.money(context, (_record.amount * 100).round(), _record.currency, english: _record.formattedAmount),
@@ -320,8 +319,7 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
     final confirmed = await Sign2DigitalConfirmationDialog.show(
       context,
       title: 'Approve Invoice?',
-      message: 'Approve and lock invoice ${_record.number}? '
-        'No payment will be charged and no customer email will be sent.',
+      message: AppStrings.of(context).format('Approve and lock invoice {number}? No payment will be charged and no customer email will be sent.', {'number': _record.number}),
       confirmLabel: 'Approve Invoice',
       confirmKey: const Key('invoice-approve-confirm'),
       icon: Icons.fact_check_outlined,
@@ -379,7 +377,7 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
             fontFamily:'Inter',fontSize:20,fontWeight:FontWeight.w600,
             color:AppColors.dark)),
           const SizedBox(height:12),
-          Text('Send the verified issued invoice PDF to ${_record.clientEmail}?',
+          Text(AppStrings.of(context).format('Send the verified issued invoice PDF to {email}?', {'email': _record.clientEmail}),
             style:const TextStyle(fontFamily:'Inter',fontSize:14,
               color:AppColors.dark)),
           const SizedBox(height:20),

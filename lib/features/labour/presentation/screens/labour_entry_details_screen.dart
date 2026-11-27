@@ -1,3 +1,4 @@
+import 'package:sign2digital/core/localization/app_display_formats.dart';
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:sign2digital/core/localization/app_strings.dart';
@@ -94,15 +95,13 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
     'July', 'August', 'September', 'October', 'November', 'December',
   ];
 
-  static String _date(DateTime value) =>
-      '${value.day} ${_months[value.month - 1]} ${value.year}';
+  String _date(DateTime value) => AppDisplayFormats.date(context, value, english: '${value.day} ${_months[value.month - 1]} ${value.year}');
 
-  static String _timestamp(DateTime value) {
+  String _timestamp(DateTime value) {
     final local = value.toLocal();
     final hour = local.hour % 12 == 0 ? 12 : local.hour % 12;
-    return '${_date(local)}, ${hour.toString()}:'
-        '${local.minute.toString().padLeft(2, '0')} '
-        '${local.hour < 12 ? 'AM' : 'PM'}';
+    final time = AppDisplayFormats.time(context, TimeOfDay.fromDateTime(local), english: '$hour:${local.minute.toString().padLeft(2, '0')} ${local.hour < 12 ? 'AM' : 'PM'}');
+    return '${_date(local)}, $time';
   }
 
   static String _clock(int? value) {
@@ -112,8 +111,7 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
     return '$hours:$minutes';
   }
 
-  static String _cost(double? number) =>
-      number == null ? 'Not recorded' : 'CHF ${number.toStringAsFixed(2)}';
+  String _cost(double? number) => number == null ? AppStrings.of(context).tr('Not recorded') : AppDisplayFormats.money(context, (number * 100).round(), 'CHF', english: 'CHF ${number.toStringAsFixed(2)}');
 
   void _notice(String message) {
     if (!mounted) { return; }
@@ -172,7 +170,7 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
       Expanded(child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('${_record.hours.toStringAsFixed(2)} hours',
+          Text(AppStrings.of(context).format('{hours} hours', {'hours': AppDisplayFormats.decimal(context, _record.hours)}),
             key: const Key('labour-detail-hours'),
             style: const TextStyle(
               fontFamily: 'Inter', fontSize: 20,
@@ -189,8 +187,8 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Text(_record.hourlyRate == null
-              ? 'Rate not recorded'
-              : 'CHF ${_record.hourlyRate!.toStringAsFixed(2)} / hours',
+              ? AppStrings.of(context).tr('Rate not recorded')
+              : AppStrings.of(context).format('{amount} / hours', {'amount': _cost(_record.hourlyRate)}),
             textAlign: TextAlign.end, softWrap: true,
             style: const TextStyle(
               fontFamily: 'Inter', fontSize: 12,
@@ -198,8 +196,8 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
               color: AppColors.dark)),
           const SizedBox(height: 5),
           Text(_record.totalLabourCost == null
-              ? 'Total not available'
-              : 'Total: ${_cost(_record.totalLabourCost)}',
+              ? AppStrings.of(context).tr('Total not available')
+              : AppStrings.of(context).format('Total: {amount}', {'amount': _cost(_record.totalLabourCost)}),
             key: const Key('labour-detail-total-cost'),
             textAlign: TextAlign.end, softWrap: true,
             style: const TextStyle(
@@ -487,7 +485,7 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
     try {
       final choice = await Sign2DigitalSelectionSheet.show(
         context, title: 'Approve Time Entry',
-        subtitle: 'Confirm approval for ${_record.workerName}. This locks the entry.',
+        subtitle: AppStrings.of(context).format('Confirm approval for {worker}. This locks the entry.', {'worker': _record.workerName}),
         icon: Icons.check_circle_outline,
         options: const ['Cancel', 'Approve'],
       );

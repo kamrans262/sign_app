@@ -30,6 +30,12 @@ abstract final class AppDisplayFormats {
     );
   }
 
+  static String decimal(BuildContext context, num value) {
+    final code = AppStrings.of(context).locale.languageCode;
+    if (code == 'en') return value.toStringAsFixed(2);
+    return NumberFormat('0.00', code).format(value);
+  }
+
   static String money(BuildContext context, int? minorUnits, String currency,
       {required String english}) {
     final code = AppStrings.of(context).locale.languageCode;

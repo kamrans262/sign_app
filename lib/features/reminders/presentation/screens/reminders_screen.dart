@@ -246,7 +246,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
                   SliverFillRemaining(hasScrollBody: false,
                     child: Center(child: TextButton(
                       key: const Key('reminders-retry'), onPressed: _load,
-                      child: Text('$_error. Tap to retry.'))))
+                      child: Text('${AppStrings.of(context).tr(_error!)}. ${AppStrings.of(context).tr('Tap to retry.')}'))))
                 else if (visible.isEmpty)
                   const SliverFillRemaining(hasScrollBody: false,
                     child: Center(child: LocalizedUiText('No reminders found',
