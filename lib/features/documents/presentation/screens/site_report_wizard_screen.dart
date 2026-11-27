@@ -362,13 +362,13 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
           ListTile(
             key: const Key('site-report-gallery'),
             leading: const Icon(Icons.photo_library_outlined),
-            title: const LocalizedUiLocalizedUiText('Choose from gallery'),
+            title: const LocalizedUiText('Choose from gallery'),
             onTap: () => Navigator.of(sheet).pop(false),
           ),
           ListTile(
             key: const Key('site-report-camera'),
             leading: const Icon(Icons.photo_camera_outlined),
-            title: const LocalizedUiLocalizedUiText('Take a photo'),
+            title: const LocalizedUiText('Take a photo'),
             onTap: () => Navigator.of(sheet).pop(true),
           ),
         ],
@@ -575,19 +575,19 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
       final saveDraft = await showDialog<bool>(
         context: context,
         builder: (dialog) => Sign2DigitalApprovedConfirmation(
-          title: const LocalizedUiLocalizedUiText('Report generation unavailable'),
+          title: const LocalizedUiText('Report generation unavailable'),
           content: const Text(
             'Report generation is not connected yet. '
             'You can save this report as a local draft instead.'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialog).pop(false),
-              child: const LocalizedUiLocalizedUiText('Keep editing'),
+              child: const LocalizedUiText('Keep editing'),
             ),
             TextButton(
               key: const Key('review-report-save-local-draft'),
               onPressed: () => Navigator.of(dialog).pop(true),
-              child: const LocalizedUiLocalizedUiText('Save local draft'),
+              child: const LocalizedUiText('Save local draft'),
             ),
           ],
         ),
@@ -713,7 +713,7 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
         ),
       ],
       const SizedBox(height: 20),
-      const LocalizedUiLocalizedUiText('Report Sections', style: AppTextStyles.fieldLabel),
+      const LocalizedUiText('Report Sections', style: AppTextStyles.fieldLabel),
       const SizedBox(height: 10),
       for (var i = 0; i < SiteReportSection.values.length; i++) ...[
         Row(children: [
@@ -761,7 +761,7 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
       if (_selectedSections.contains(SiteReportSection.siteProgress)) ...[
-        const LocalizedUiLocalizedUiText('Site Programs', style: AppTextStyles.fieldLabel),
+        const LocalizedUiText('Site Programs', style: AppTextStyles.fieldLabel),
         const SizedBox(height: 10),
         Sign2DigitalOutlinedContainer(
           constraints: const BoxConstraints(minHeight: 80),
@@ -787,7 +787,7 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
       // The upload control is always available, even when Photos wasn't
       // selected in Details. Uploading automatically selects that section.
       ...[
-        const LocalizedUiLocalizedUiText('Photos', style: AppTextStyles.fieldLabel),
+        const LocalizedUiText('Photos', style: AppTextStyles.fieldLabel),
         const SizedBox(height: 10),
         GridView.builder(
           key: const Key('site-report-photo-grid'),
@@ -820,7 +820,7 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
                           width: 24, height: 24,
                         ),
                         const SizedBox(height: 8),
-                        const LocalizedUiLocalizedUiText('Add Photo', style: AppTextStyles.outlinedButton),
+                        const LocalizedUiText('Add Photo', style: AppTextStyles.outlinedButton),
                       ],
                     ),
                   ),
