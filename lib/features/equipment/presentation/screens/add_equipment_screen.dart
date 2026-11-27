@@ -2,6 +2,7 @@ import '../../../support/presentation/widgets/support_ai_prompt_hint.dart';
 import '../../../../core/widgets/sign2digital_form_dialog.dart';
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 
@@ -115,7 +116,7 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
             autofocus: true),
           actions: [
             TextButton(onPressed: () => Navigator.pop(dialog),
-              child: const Text('Cancel')),
+              child: const LocalizedUiText('Cancel')),
             TextButton(onPressed: () =>
               Navigator.pop(dialog, input.text.trim()),
               child: const Text('Use')),
@@ -240,12 +241,12 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
           ListTile(
             key: const Key('equipment-photo-gallery'),
             leading: const Icon(Icons.photo_library_outlined),
-            title: const Text('Choose from gallery'),
+            title: const LocalizedUiText('Choose from gallery'),
             onTap: () => Navigator.pop(sheet, false)),
           ListTile(
             key: const Key('equipment-photo-camera'),
             leading: const Icon(Icons.camera_alt_outlined),
-            title: const Text('Take a photo'),
+            title: const LocalizedUiText('Take a photo'),
             onTap: () => Navigator.pop(sheet, true)),
         ])),
     );
@@ -314,7 +315,7 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
           ]),
           actions: [
             TextButton(onPressed: () => Navigator.pop(dialog),
-              child: const Text('Cancel')),
+              child: const LocalizedUiText('Cancel')),
             TextButton(
               key: const Key('equipment-ai-extract'),
               onPressed: () => Navigator.pop(dialog, controller.text.trim()),
@@ -439,7 +440,7 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
     backgroundColor: AppColors.white,
     resizeToAvoidBottomInset: true,
     body: SafeArea(child: Column(children: [
-      Sign2DigitalHeader(title: 'Equipment',
+      Sign2DigitalHeader(translateTitle: true, title: 'Equipment',
         onBack: () => Navigator.of(context).maybePop(),
         trailing: widget.initialEquipment == null ?
             const SupportAiPromptHint(module: 'equipment') : null),

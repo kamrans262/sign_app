@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/services/sign2digital_request_key.dart';
@@ -232,7 +233,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
                                     validator: _validateEmail,
                                   ),
                                   const SizedBox(height: 20),
-                                  const Text(
+                                  const LocalizedUiText(
                                     'Additional Information',
                                     style: AppTextStyles.fieldLabel,
                                   ),

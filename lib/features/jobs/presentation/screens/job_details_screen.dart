@@ -2,6 +2,7 @@ import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:printing/printing.dart';
@@ -322,7 +323,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
           builder: (_) => Scaffold(
             backgroundColor: AppColors.white,
             body: SafeArea(child: Column(children: [
-              Sign2DigitalHeader(title: 'Job Documents',
+              Sign2DigitalHeader(translateTitle: true, title: 'Job Documents',
                 onBack: () => Navigator.of(context).maybePop()),
               Expanded(child: DocumentsScreen(jobId: job.id)),
             ])),
@@ -346,7 +347,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Signed Job Documents',
+                    const LocalizedUiText('Signed Job Documents',
                       style: TextStyle(fontSize: 18,
                           fontWeight: FontWeight.w700)),
                     const SizedBox(height: 12),
@@ -524,7 +525,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
                     children: [
                       _JobSummary(job: job),
                       const SizedBox(height: 15),
-                      const Text(
+                      const LocalizedUiText(
                         'Job Progress',
                         style: TextStyle(
                           fontFamily: 'Inter',

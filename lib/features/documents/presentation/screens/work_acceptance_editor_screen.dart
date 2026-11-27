@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
@@ -152,13 +153,13 @@ class _WorkAcceptanceEditorScreenState extends State<WorkAcceptanceEditorScreen>
         ListTile(
           key:const Key('acceptance-choose-camera'),
           leading:const Icon(Icons.photo_camera_outlined),
-          title:const Text('Camera'),
+          title:const LocalizedUiText('Camera'),
           onTap:()=>Navigator.of(sheet).pop(true),
         ),
         ListTile(
           key:const Key('acceptance-choose-gallery'),
           leading:const Icon(Icons.photo_library_outlined),
-          title:const Text('Gallery'),
+          title:const LocalizedUiText('Gallery'),
           onTap:()=>Navigator.of(sheet).pop(false),
         ),
       ]),

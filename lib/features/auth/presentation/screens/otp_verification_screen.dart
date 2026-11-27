@@ -2,6 +2,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -76,7 +77,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     FocusManager.instance.primaryFocus?.unfocus();
     if (_code.length != 6) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter the complete six-digit code.')),
+        const SnackBar(content: LocalizedUiText('Enter the complete six-digit code.')),
       );
       return;
     }
@@ -114,7 +115,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       _startCountdown();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Unable to request a new code.')),
+        const SnackBar(content: LocalizedUiText('Unable to request a new code.')),
       );
     }
   }
@@ -156,7 +157,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              const Text(
+                              const LocalizedUiText(
                                 'Verify Your Account',
                                 textAlign: TextAlign.center,
                                 style: AppTextStyles.heading,
@@ -165,7 +166,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                               Center(
                                 child: ConstrainedBox(
                                   constraints: BoxConstraints(maxWidth: 288),
-                                  child: Text(
+                                  child: LocalizedUiText(
                                     'Enter the 6- digit code sent to your email',
                                     style: AppTextStyles.subtitle,
                                     textAlign: TextAlign.center,
@@ -191,7 +192,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                                 onCodeCompleted: widget.onCodeCompleted,
                               ),
                               const SizedBox(height: 25),
-                              const Text(
+                              const LocalizedUiText(
                                 'Didn’t receive the code? Check your spam folder',
                                 textAlign: TextAlign.center,
                                 style: AppTextStyles.subtitle,

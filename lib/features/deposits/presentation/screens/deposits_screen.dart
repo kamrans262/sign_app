@@ -1,5 +1,6 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -143,7 +144,7 @@ class _DepositsScreenState extends State<DepositsScreen> {
       builder: (sheet) => SafeArea(child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const ListTile(title: Text('Sort By')),
+          const ListTile(title: LocalizedUiText('Sort By')),
           for (final sort in DepositSort.values)
             ListTile(
               key: Key('deposit-sort-${sort.name}'),

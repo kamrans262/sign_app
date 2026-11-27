@@ -1,6 +1,7 @@
 import '../../../support/presentation/widgets/support_ai_prompt_hint.dart';
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import '../../../../core/widgets/sign2digital_modal_guard.dart';
@@ -134,10 +135,10 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       content: const Text('Your unsaved expense information will be lost.'),
       actions: [
         TextButton(onPressed: () => Navigator.of(dialog).pop(false),
-          child: const Text('Keep editing')),
+          child: const LocalizedUiText('Keep editing')),
         TextButton(key: const Key('expense-discard-confirm'),
           onPressed: () => Navigator.of(dialog).pop(true),
-          child: const Text('Discard')),
+          child: const LocalizedUiText('Discard')),
       ],
     )) ?? false;
   }
@@ -217,11 +218,11 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         children: [
           ListTile(key: const Key('expense-choose-gallery'),
             leading: const Icon(Icons.photo_library_outlined),
-            title: const Text('Choose from gallery'),
+            title: const LocalizedUiText('Choose from gallery'),
             onTap: () => Navigator.of(sheet).pop(false)),
           ListTile(key: const Key('expense-choose-camera'),
             leading: const Icon(Icons.photo_camera_outlined),
-            title: const Text('Take a photo'),
+            title: const LocalizedUiText('Take a photo'),
             onTap: () => Navigator.of(sheet).pop(true)),
         ])));
     if (camera == null || !mounted) return;
@@ -487,7 +488,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       backgroundColor: AppColors.white,
       resizeToAvoidBottomInset: true,
       body: SafeArea(bottom: false,child: Column(children: [
-        Sign2DigitalHeader(title: 'Expenses', onBack: _cancel,
+        Sign2DigitalHeader(translateTitle: true, title: 'Expenses', onBack: _cancel,
           trailing: widget.initialExpense == null ?
               const SupportAiPromptHint(module: 'expenses') : null),
         Expanded(child: SingleChildScrollView(

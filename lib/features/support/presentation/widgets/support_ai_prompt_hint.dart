@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -92,7 +93,7 @@ class _SupportAiPromptHintState extends State<SupportAiPromptHint>
               ),
               child: const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-                child: Text(
+                child: LocalizedUiText(
                   'See a sample AI prompt',
                   maxLines: 1,
                   style: TextStyle(

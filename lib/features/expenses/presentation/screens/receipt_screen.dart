@@ -1,5 +1,6 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import 'package:pdf/pdf.dart';
@@ -146,11 +147,11 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
         mainAxisSize: MainAxisSize.min, children: [
           ListTile(key: const Key('receipt-pick-gallery'),
             leading: const Icon(Icons.photo_library_outlined),
-            title: const Text('Choose from gallery'),
+            title: const LocalizedUiText('Choose from gallery'),
             onTap: () => Navigator.of(sheet).pop('gallery')),
           ListTile(key: const Key('receipt-pick-camera'),
             leading: const Icon(Icons.photo_camera_outlined),
-            title: const Text('Take a photo'),
+            title: const LocalizedUiText('Take a photo'),
             onTap: () => Navigator.of(sheet).pop('camera')),
           ListTile(key: const Key('receipt-pick-pdf'),
             leading: const Icon(Icons.picture_as_pdf_outlined),
@@ -221,10 +222,10 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
         content: Text('Remove ${_fileName(_attachments[index])} from this expense?'),
         actions: [
           TextButton(onPressed: () => Navigator.of(dialog).pop(false),
-            child: const Text('Cancel')),
+            child: const LocalizedUiText('Cancel')),
           TextButton(key: const Key('receipt-confirm-remove'),
             onPressed: () => Navigator.of(dialog).pop(true),
-            child: const Text('Remove')),
+            child: const LocalizedUiText('Remove')),
         ],
       ),
     );
@@ -298,7 +299,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
                   const Icon(Icons.receipt_long_outlined, size: 38,
                     color: AppColors.placeholder),
                   const SizedBox(height: 10),
-                  const Text('No receipt attached',
+                  const LocalizedUiText('No receipt attached',
                     key: Key('receipt-preview-empty'),
                     style: TextStyle(fontFamily: 'Inter',
                       fontSize: 14, color: AppColors.placeholder)),
@@ -389,7 +390,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: AppColors.white,
     body: SafeArea(bottom: false, child: Column(children: [
-      Sign2DigitalHeader(title: 'Receipt',
+      Sign2DigitalHeader(translateTitle: true, title: 'Receipt',
         onBack: () => Navigator.of(context).maybePop()),
       Expanded(child: SingleChildScrollView(
           key: const Key('receipt-scroll'),

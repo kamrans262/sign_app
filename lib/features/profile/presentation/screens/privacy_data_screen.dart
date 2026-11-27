@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 import 'package:flutter/services.dart';
 
@@ -174,7 +175,7 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
               key: const Key('m22-delete-confirm'),
               onPressed: confirmation == 'DELETE' && password.isNotEmpty
                 ? () => Navigator.of(dialog).pop(password) : null,
-              child: const Text('Delete Account')),
+              child: const LocalizedUiText('Delete Account')),
           ],
         ),
       ),
@@ -214,7 +215,7 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: AppColors.white,
     body: SafeArea(child: Column(children: [
-      const Sign2DigitalHeader(title: 'Privacy & Data'),
+      const Sign2DigitalHeader(translateTitle: true, title: 'Privacy & Data'),
       Expanded(child: Center(child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth:
           MediaQuery.orientationOf(context) == Orientation.landscape

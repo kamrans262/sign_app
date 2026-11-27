@@ -50,7 +50,7 @@ class ProfileBusinessInformationScreen extends StatelessWidget {
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: AppColors.white,
     body: SafeArea(child: Column(children: [
-      const Sign2DigitalHeader(title: 'Business Information'),
+      const Sign2DigitalHeader(translateTitle: true, title: 'Business Information'),
       Expanded(child: Center(child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth:
             MediaQuery.orientationOf(context) == Orientation.landscape

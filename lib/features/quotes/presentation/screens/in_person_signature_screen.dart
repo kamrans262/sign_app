@@ -234,7 +234,7 @@ class _InPersonSignatureScreenState extends State<InPersonSignatureScreen> {
       child: Column(
         children: [
           Sign2DigitalHeader(
-            title: 'In-Person Signature',
+            translateTitle: true, title: 'In-Person Signature',
             onBack: () => Navigator.of(context).maybePop(),
           ),
           Expanded(

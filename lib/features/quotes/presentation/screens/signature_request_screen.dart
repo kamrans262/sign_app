@@ -1,5 +1,6 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -487,7 +488,7 @@ class _SignatureRequestScreenState extends State<SignatureRequestScreen> with Wi
           const SizedBox(width: 10),
           Expanded(child: Column(
             crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('Send Automatic Reminders',
+              LocalizedUiText('Send Automatic Reminders',
                 style: _type(14, weight: FontWeight.w600)),
               const SizedBox(height: 5),
               Text('Remind me every 3 days until signed',
@@ -540,7 +541,7 @@ class _SignatureRequestScreenState extends State<SignatureRequestScreen> with Wi
           decoration: BoxDecoration(
             border: Border.all(color: _border),
             borderRadius: BorderRadius.circular(10)),
-          child: Text('No confirmed document activity yet.',
+          child: LocalizedUiText('No confirmed document activity yet.',
             style: _type(12, color: AppColors.placeholder))),
       for (final event in events) ...[
         Container(
@@ -573,7 +574,7 @@ class _SignatureRequestScreenState extends State<SignatureRequestScreen> with Wi
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: Colors.white,
     body: SafeArea(bottom: false, child: Column(children: [
-      Sign2DigitalHeader(title: 'Signature Request',
+      Sign2DigitalHeader(translateTitle: true, title: 'Signature Request',
         onBack: () {
           if (widget.onNavigationSelected != null) {
             widget.onNavigationSelected!(2);

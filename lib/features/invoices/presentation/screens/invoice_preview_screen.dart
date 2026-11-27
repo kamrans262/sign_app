@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import 'package:printing/printing.dart';
 
@@ -117,16 +118,16 @@ class _InvoicePreviewScreenState extends State<InvoicePreviewScreen> {
       context: context,
       builder: (sheet) => SafeArea(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          const ListTile(title: Text('Add Invoice Photo')),
+          const ListTile(title: LocalizedUiText('Add Invoice Photo')),
           ListTile(
             key: const Key('invoice-preview-gallery'),
             leading: const Icon(Icons.photo_library_outlined),
-            title: const Text('Choose from gallery'),
+            title: const LocalizedUiText('Choose from gallery'),
             onTap: () => Navigator.pop(sheet, 'gallery')),
           ListTile(
             key: const Key('invoice-preview-camera'),
             leading: const Icon(Icons.camera_alt_outlined),
-            title: const Text('Take a photo'),
+            title: const LocalizedUiText('Take a photo'),
             onTap: () => Navigator.pop(sheet, 'camera')),
         ]),
       ),
@@ -271,7 +272,7 @@ class _InvoicePreviewScreenState extends State<InvoicePreviewScreen> {
       backgroundColor: Colors.white,
       body: SafeArea(bottom: false, child: Column(children: [
         Sign2DigitalHeader(
-          title: 'Invoice Preview',
+          translateTitle: true, title: 'Invoice Preview',
           onBack: () => Navigator.of(context).maybePop()),
         Expanded(child: SingleChildScrollView(
           key: const Key('invoice-preview-scroll'),

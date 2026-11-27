@@ -98,7 +98,7 @@ class _CompanyEntryGateState extends State<CompanyEntryGate> {
   Widget _invitationEntry() => Scaffold(
     backgroundColor: AppColors.white,
     body: SafeArea(child: Column(children: [
-      const Sign2DigitalHeader(title: 'Company Invitations'),
+      const Sign2DigitalHeader(translateTitle: true, title: 'Company Invitations'),
       Expanded(child: LayoutBuilder(builder: (context, viewport) =>
         ListView(
           key: const Key('pending-invitation-scroll'),

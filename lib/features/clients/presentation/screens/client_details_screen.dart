@@ -2,6 +2,7 @@ import '../../../../core/widgets/sign2digital_form_dialog.dart';
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:sign2digital/features/quotes/presentation/screens/create_quote_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 
 import '../../../jobs/presentation/screens/create_job_screen.dart';
 import '../../../jobs/domain/create_job_draft.dart';
@@ -196,7 +197,7 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
                 content: SingleChildScrollView(child: Text(record.description)),
                 actions: [TextButton(
                   onPressed: () => Navigator.of(dialog).pop(),
-                  child: const Text('Close'))]));
+                  child: const LocalizedUiText('Close'))]));
       }
       if (mounted) await _loadDetails();
     } catch (error) {
@@ -268,7 +269,7 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Unable to create the job.'),
+        content: LocalizedUiText('Unable to create the job.'),
       ));
     }
   }
@@ -297,7 +298,7 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
         child: Column(
           children: [
             Sign2DigitalHeader(
-              title: 'Client Details',
+              translateTitle: true, title: 'Client Details',
               onBack: () => Navigator.of(context).maybePop(),
             ),
             Expanded(
@@ -312,7 +313,7 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
                       children: [Text(_detailsError!,
                         style: AppTextStyles.subtitle),
                         TextButton(onPressed: _loadDetails,
-                          child: const Text('Retry'))],
+                          child: const LocalizedUiText('Retry'))],
                     ))
                   : Center(
                 child: ConstrainedBox(

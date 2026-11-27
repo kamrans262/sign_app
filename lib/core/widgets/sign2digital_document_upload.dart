@@ -1,6 +1,7 @@
 // Sign2Digital — reusable local-only PDF upload control.
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../services/local_file_selection.dart';
@@ -80,16 +81,16 @@ class _Sign2DigitalDocumentUploadState
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          _file?.name ?? 'Upload your general terms',
+                          _file?.name ?? AppStrings.of(context).tr('Upload your general terms'),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppTextStyles.fieldInput,
                         ),
                         const SizedBox(height: 5),
                         Text(
-                          _file == null
+                          AppStrings.of(context).tr(_file == null
                               ? 'PDF (max 2MB)'
-                              : 'Tap to replace PDF',
+                              : 'Tap to replace PDF'),
                           style: AppTextStyles.small,
                         ),
                       ],
@@ -116,14 +117,14 @@ class _Sign2DigitalDocumentUploadState
             alignment: Alignment.centerRight,
             child: TextButton(
               onPressed: _remove,
-              child: const Text('Remove PDF'),
+              child: Text(AppStrings.of(context).tr('Remove PDF')),
             ),
           ),
         if (_error != null)
           Padding(
             padding: const EdgeInsets.only(top: 4),
             child: Text(
-              _error!,
+              AppStrings.of(context).tr(_error!),
               style: const TextStyle(color: Colors.red, fontSize: 12),
             ),
           ),

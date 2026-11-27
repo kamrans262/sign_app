@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../localization/app_strings.dart';
 
 import '../theme/app_colors.dart';
 
@@ -19,10 +20,10 @@ class Sign2DigitalListSortControl extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
-          const Text('Sort By: ', style: TextStyle(
+          Text(AppStrings.of(context).tr('Sort By: '), style: const TextStyle(
             fontFamily: 'Inter', fontSize: 16, letterSpacing: -0.3,
             fontWeight: FontWeight.w500, color: AppColors.dark)),
-          Flexible(child: Text(value,
+          Flexible(child: Text(AppStrings.of(context).tr(value),
             key: valueKey, overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               fontFamily: 'Inter', fontSize: 16, letterSpacing: -0.3,

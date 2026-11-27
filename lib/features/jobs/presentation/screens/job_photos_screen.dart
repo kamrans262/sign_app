@@ -2,6 +2,7 @@ import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import '../../../../core/services/active_company_session.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
@@ -486,7 +487,7 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
         child: Column(
           children: [
             Sign2DigitalHeader(
-              title: 'Job Photos',
+              translateTitle: true, title: 'Job Photos',
               onBack: () => Navigator.of(context).maybePop(),
             ),
             Expanded(
@@ -507,7 +508,7 @@ class _JobPhotosScreenState extends State<JobPhotosScreen> {
                           ),
                           const SizedBox(height: 20),
                         ],
-                        const Text(
+                        const LocalizedUiText(
                           'Job Photos',
                           style: TextStyle(
                             fontFamily: 'Inter',

@@ -1,0 +1,6 @@
+# Stage 2 — mobile UI localisation (implementation pass 1)
+
+Extends Stage 1 English/French/German/Italian support. Adds 688 source-label catalog entries in each non-English language (including Stage 1). Translates common buttons, form labels/hints, search, known validation strings, static headers, selected literal UI labels, status badges, tabs, statistics, file-upload prompts and AI support chrome. Explicit static text conversion across feature screens; shared styles, sizes, colours, navigation and permission/business logic unchanged. No translation of stored user records or signed PDFs. Dynamic selection values are preserved, including user names and identifiers.
+
+## Remaining
+This is not a complete localisation closure: uncatalogued module-specific strings, dynamic/interpolated text, status/filter choices, rich text, native permission strings, date/currency formatting and all screen-level coverage need further review. Backend-provided messages, AI output, emails, customer webpages and generated PDFs remain separate Stage 3 work. Do not advertise fully translated app yet. No native build or device test performed. Run flutter pub get, flutter analyze and flutter test on the actual Flutter SDK; verify all four languages on Android/iOS before upload.

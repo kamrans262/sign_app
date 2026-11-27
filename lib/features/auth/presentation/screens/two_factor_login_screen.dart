@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 
 import '../../../../core/services/sign_api_client.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -52,7 +53,7 @@ class _TwoFactorLoginScreenState extends State<TwoFactorLoginScreen> {
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: AppColors.white,
     body: SafeArea(child: Column(children: [
-      const Sign2DigitalHeader(title: 'Two-Factor Authentication'),
+      const Sign2DigitalHeader(translateTitle: true, title: 'Two-Factor Authentication'),
       Expanded(child: Center(child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 520),
         child: ListView(
@@ -61,7 +62,7 @@ class _TwoFactorLoginScreenState extends State<TwoFactorLoginScreen> {
             const Icon(Icons.verified_user_outlined,
                 color: AppColors.primary, size: 42),
             const SizedBox(height: 20),
-            const Text('Verify Your Sign-In',
+            const LocalizedUiText('Verify Your Sign-In',
                 textAlign: TextAlign.center, style: AppTextStyles.heading),
             const SizedBox(height: 10),
             const Text(

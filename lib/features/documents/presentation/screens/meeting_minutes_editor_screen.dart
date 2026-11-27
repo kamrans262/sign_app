@@ -333,7 +333,7 @@ class _MeetingMinutesEditorScreenState extends State<MeetingMinutesEditorScreen>
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: AppColors.white,
     body: SafeArea(bottom: false, child: Column(children: [
-      const Sign2DigitalHeader(title: 'Meeting Minutes'),
+      const Sign2DigitalHeader(translateTitle: true, title: 'Meeting Minutes'),
       Expanded(child: Center(child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 720),
         child: ListView(

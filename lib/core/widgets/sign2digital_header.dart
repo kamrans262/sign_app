@@ -1,5 +1,6 @@
 // Sign2Digital Login UI Package — geometrically centered header.
 import 'package:flutter/material.dart';
+import '../localization/app_strings.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
@@ -8,6 +9,7 @@ import '../theme/app_text_styles.dart';
 class Sign2DigitalHeader extends StatelessWidget {
   const Sign2DigitalHeader({
     this.title,
+    this.translateTitle = false,
     this.logoAsset,
     this.showBackButton = true,
     this.onBack,
@@ -17,6 +19,7 @@ class Sign2DigitalHeader extends StatelessWidget {
   });
 
   final String? title;
+  final bool translateTitle;
   final String? logoAsset;
   final bool showBackButton;
   final VoidCallback? onBack;
@@ -54,7 +57,7 @@ class Sign2DigitalHeader extends StatelessWidget {
                           .toDouble(),
                     ),
                     child: Text(
-                      title!,
+                      translateTitle ? AppStrings.of(context).tr(title!) : title!,
                       maxLines: 2,
                       textAlign: TextAlign.center,
                       overflow: TextOverflow.ellipsis,

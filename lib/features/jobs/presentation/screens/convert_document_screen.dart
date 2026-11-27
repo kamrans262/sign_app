@@ -4,6 +4,7 @@ import '../../../../core/navigation/sign2digital_navigation.dart';
 import '../../../../core/widgets/sign2digital_subscription_gate.dart';
 import '../../../auth/data/mobile_auth_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_bottom_navigation_bar.dart';
@@ -108,7 +109,7 @@ class _ConvertDocumentScreenState extends State<ConvertDocumentScreen> {
     await showDialog<void>(
         context: context,
         builder: (dialog) => Sign2DigitalFormDialog(
-          title: const Text('Review document draft'),
+          title: const LocalizedUiText('Review document draft'),
           content: SizedBox(
             width: 620,
             child: SingleChildScrollView(
@@ -167,7 +168,7 @@ class _ConvertDocumentScreenState extends State<ConvertDocumentScreen> {
                   _notify('Unable to save document draft: $error');
                 }
               },
-              child: const Text('Save Draft'),
+              child: const LocalizedUiText('Save Draft'),
             ),
             FilledButton(
               key: const Key('note-document-approve'),
@@ -417,7 +418,7 @@ class _ConvertDocumentScreenState extends State<ConvertDocumentScreen> {
       bottom: false,
       child: Column(children: [
         Sign2DigitalHeader(
-          title: 'Convert Document',
+          translateTitle: true, title: 'Convert Document',
           onBack: () => Navigator.of(context).maybePop(),
         ),
         Expanded(child: SingleChildScrollView(

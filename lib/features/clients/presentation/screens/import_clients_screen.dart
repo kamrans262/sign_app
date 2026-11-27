@@ -238,7 +238,7 @@ class _ImportClientsScreenState extends State<ImportClientsScreen> {
         child: Column(
           children: [
             Sign2DigitalHeader(
-              title: 'Import Clients',
+              translateTitle: true, title: 'Import Clients',
               onBack: () => Navigator.of(context).maybePop(),
             ),
             if (_liveImport) Padding(

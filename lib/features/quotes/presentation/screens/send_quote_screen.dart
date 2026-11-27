@@ -2,6 +2,7 @@ import '../../../../core/widgets/sign2digital_input_field.dart';
 import '../../../../core/widgets/sign2digital_form_dialog.dart';
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
@@ -312,7 +313,7 @@ class _SendQuoteScreenState extends State<SendQuoteScreen> {
     final result = await showDialog<QuoteSendDraft>(
       context: context,
       builder: (dialogContext) => Sign2DigitalFormDialog(
-        title: const Text('Edit Recipient'),
+        title: const LocalizedUiText('Edit Recipient'),
         content: SingleChildScrollView(
           child: Form(
             key: formKey,
@@ -360,7 +361,7 @@ class _SendQuoteScreenState extends State<SendQuoteScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
+            child: const LocalizedUiText('Cancel'),
           ),
           TextButton(
             onPressed: () {
@@ -368,7 +369,7 @@ class _SendQuoteScreenState extends State<SendQuoteScreen> {
                 Navigator.pop(dialogContext, editing.copy());
               }
             },
-            child: const Text('Save'),
+            child: const LocalizedUiText('Save'),
           ),
         ],
       ),
@@ -388,12 +389,12 @@ class _SendQuoteScreenState extends State<SendQuoteScreen> {
       showDragHandle: true,
       builder: (ctx) => SafeArea(child: Column(mainAxisSize: MainAxisSize.min,
         children: [
-          const ListTile(title: Text('Message Template')),
-          ListTile(title: const Text('Professional quote email'),
+          const ListTile(title: LocalizedUiText('Message Template')),
+          ListTile(title: const LocalizedUiText('Professional quote email'),
               onTap: () => Navigator.pop(ctx, 'professional')),
-          ListTile(title: const Text('Short quote message'),
+          ListTile(title: const LocalizedUiText('Short quote message'),
               onTap: () => Navigator.pop(ctx, 'short')),
-          ListTile(title: const Text('Follow-up message'),
+          ListTile(title: const LocalizedUiText('Follow-up message'),
               onTap: () => Navigator.pop(ctx, 'followup')),
         ])));
     if (!mounted || choice == null) { return; }
@@ -401,8 +402,8 @@ class _SendQuoteScreenState extends State<SendQuoteScreen> {
       final replace = await showDialog<bool>(context: context, builder: (ctx) =>
         Sign2DigitalApprovedConfirmation(title: const Text('Replace your message?'),
           content: const Text('Your current message has been edited. Replacing it will discard those changes.'),
-          actions: [TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Keep')),
-            TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Replace'))]));
+          actions: [TextButton(onPressed: () => Navigator.pop(ctx, false), child: const LocalizedUiText('Keep')),
+            TextButton(onPressed: () => Navigator.pop(ctx, true), child: const LocalizedUiText('Replace'))]));
       if (!mounted || replace != true) { return; }
     }
     setState(() {
@@ -977,7 +978,7 @@ class _SendQuoteScreenState extends State<SendQuoteScreen> {
       child: Column(
         children: [
           Sign2DigitalHeader(
-            title: 'Send Quote',
+            translateTitle: true, title: 'Send Quote',
             onBack: () {
               _saveSession();
               Navigator.of(context).maybePop();

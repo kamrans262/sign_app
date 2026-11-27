@@ -1,5 +1,6 @@
 // Sign2Digital Login UI Package — reusable icon/label/editable auth field.
 import 'package:flutter/material.dart';
+import '../localization/app_strings.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -90,7 +91,7 @@ class Sign2DigitalInputField extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: AppTextStyles.fieldLabel),
+                Text(AppStrings.of(context).tr(label), style: AppTextStyles.fieldLabel),
                 const SizedBox(height: 5),
                 Row(
                   children: [
@@ -121,7 +122,10 @@ class Sign2DigitalInputField extends StatelessWidget {
                         textCapitalization: textCapitalization,
                         obscureText: obscureText,
                         readOnly: readOnly,
-                        validator: validator,
+                        validator: validator == null ? null : (value) {
+                          final error = validator!(value);
+                          return error == null ? null : AppStrings.of(context).tr(error);
+                        },
                         textInputAction: textInputAction,
                         onFieldSubmitted: onFieldSubmitted,
                         onChanged: onChanged,
@@ -134,7 +138,7 @@ class Sign2DigitalInputField extends StatelessWidget {
                         textAlignVertical: TextAlignVertical.center,
                         scrollPadding: const EdgeInsets.all(80),
                         decoration: InputDecoration(
-                          hintText: hintText,
+                          hintText: AppStrings.of(context).tr(hintText),
                           hintStyle: AppTextStyles.fieldHint,
                           border: InputBorder.none,
                           enabledBorder: InputBorder.none,

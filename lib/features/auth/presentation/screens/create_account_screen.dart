@@ -1,6 +1,7 @@
 // Sign2Digital Create Account — presentation-only, no backend authentication.
 import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -179,13 +180,13 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                const Text(
+                                const LocalizedUiText(
                                   'Create Your Account',
                                   style: AppTextStyles.heading,
                                   textAlign: TextAlign.center,
                                 ),
                                 const SizedBox(height: 10),
-                                const Text(
+                                const LocalizedUiText(
                                   'Get started with Sign2Digital',
                                   style: AppTextStyles.subtitle,
                                   textAlign: TextAlign.center,
@@ -351,7 +352,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                             crossAxisAlignment: WrapCrossAlignment.center,
                             spacing: 6,
                             children: [
-                              const Text(
+                              const LocalizedUiText(
                                 'Already have an account?',
                                 style: AppTextStyles.footer,
                               ),
@@ -365,7 +366,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                                   tapTargetSize:
                                       MaterialTapTargetSize.shrinkWrap,
                                 ),
-                                child: const Text(
+                                child: const LocalizedUiText(
                                   'Sign In',
                                   style: AppTextStyles.footerLink,
                                 ),

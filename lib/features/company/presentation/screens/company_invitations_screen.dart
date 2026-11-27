@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 
 import '../../../../core/services/sign_api_client.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -35,7 +36,7 @@ class _CompanyInvitationsScreenState extends State<CompanyInvitationsScreen> {
     final code = _code.text.trim();
     if (code.length != 64) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter the invitation code from your email.')));
+        const SnackBar(content: LocalizedUiText('Enter the invitation code from your email.')));
       return;
     }
     setState(() => _saving = true);
@@ -43,7 +44,7 @@ class _CompanyInvitationsScreenState extends State<CompanyInvitationsScreen> {
       await _repo.acceptInvite(code);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Company invitation accepted.')));
+        const SnackBar(content: LocalizedUiText('Company invitation accepted.')));
       Navigator.of(context).pop(true);
     } catch (error) {
       if (!mounted) return;
@@ -60,7 +61,7 @@ class _CompanyInvitationsScreenState extends State<CompanyInvitationsScreen> {
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: AppColors.white,
     body: SafeArea(child: Column(children: [
-      const Sign2DigitalHeader(title: 'Company Invitations'),
+      const Sign2DigitalHeader(translateTitle: true, title: 'Company Invitations'),
       Expanded(child: LayoutBuilder(builder: (context, viewport) =>
         ListView(
           key: const Key('company-invitation-code-scroll'),
@@ -79,7 +80,7 @@ class _CompanyInvitationsScreenState extends State<CompanyInvitationsScreen> {
                   child: Sign2DigitalQuoteShadowPanel(
               padding: const EdgeInsets.all(20),
               child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                const Text('Accept Company Invitation', style: TextStyle(
+                const LocalizedUiText('Accept Company Invitation', style: TextStyle(
                   fontFamily: 'Inter', fontSize: 16, fontWeight: FontWeight.w600,
                   color: AppColors.dark)),
                 const SizedBox(height: 10),

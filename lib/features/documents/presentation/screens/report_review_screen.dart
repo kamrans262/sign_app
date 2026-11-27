@@ -2,6 +2,7 @@ import '../../../../core/navigation/sign2digital_navigation.dart';
 import '../../../../core/services/active_company_session.dart';
 import '../../../../core/widgets/sign2digital_subscription_gate.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -85,11 +86,11 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialog).pop(false),
-            child: const Text('Cancel'),
+            child: const LocalizedUiText('Cancel'),
           ),
           TextButton(
             onPressed: () => Navigator.of(dialog).pop(true),
-            child: const Text('Confirm'),
+            child: const LocalizedUiText('Confirm'),
           ),
         ],
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../theme/app_colors.dart';
@@ -62,14 +63,14 @@ class Sign2DigitalInfoBanner extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (title != null) ...[
-                    Text(title!, style: TextStyle(
+                    Text(AppStrings.of(context).tr(title!), style: TextStyle(
                       fontFamily: 'Inter', fontSize: 14,
                       fontWeight: FontWeight.w600, color: titleColor,
                     )),
                     const SizedBox(height: 5),
                   ],
                   Text(
-                    message,
+                    AppStrings.of(context).tr(message),
                     style: TextStyle(
                       fontFamily: 'Inter',
                       fontSize: fontSize,

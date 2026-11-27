@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../localization/app_strings.dart';
 
 import '../theme/app_colors.dart';
 
@@ -71,7 +72,7 @@ class Sign2DigitalWizardStepper extends StatelessWidget {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      labels[index],
+                      AppStrings.of(context).tr(labels[index]),
                       maxLines: 2,
                       textAlign: TextAlign.center,
                       style: TextStyle(

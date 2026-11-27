@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:printing/printing.dart';
 
@@ -195,7 +196,7 @@ class DocumentSignedSuccessScreen extends StatelessWidget {
                               borderRadius: BorderRadius.circular(10),
                             ),
                           ),
-                          child: const Text('Close', style: TextStyle(
+                          child: const LocalizedUiText('Close', style: TextStyle(
                             fontFamily: 'Inter', fontSize: 16,
                             fontWeight: FontWeight.w500,
                           )),

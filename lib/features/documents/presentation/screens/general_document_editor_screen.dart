@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -170,7 +171,7 @@ class _GeneralDocumentEditorScreenState extends State<GeneralDocumentEditorScree
       builder:(sheet)=>SafeArea(child:SizedBox(
         height:MediaQuery.sizeOf(sheet).height*.56,
         child:ListView(children:[
-          ListTile(title:const Text('No client'),onTap:()=>Navigator.pop(sheet)),
+          ListTile(title:const LocalizedUiText('No client'),onTap:()=>Navigator.pop(sheet)),
           for(final c in _clients)ListTile(
             title:Text(c.fullName.isEmpty?c.companyName:c.fullName),
             onTap:()=>Navigator.pop(sheet,c)),
@@ -190,7 +191,7 @@ class _GeneralDocumentEditorScreenState extends State<GeneralDocumentEditorScree
       builder:(sheet)=>SafeArea(child:SizedBox(
         height:MediaQuery.sizeOf(sheet).height*.56,
         child:ListView(children:[
-          ListTile(title:const Text('No job'),onTap:()=>Navigator.pop(sheet)),
+          ListTile(title:const LocalizedUiText('No job'),onTap:()=>Navigator.pop(sheet)),
           for(final j in _jobs)ListTile(
             title:Text(j.title),subtitle:Text(j.clientName),
             onTap:()=>Navigator.pop(sheet,j)),
@@ -610,7 +611,7 @@ class _GeneralDocumentEditorScreenState extends State<GeneralDocumentEditorScree
                 _paragraphs.add(TextEditingController());
                 _kinds.add('paragraph');_bold.add(false);_italic.add(false);
               }),
-              icon:const Icon(Icons.add),label:const Text('Add Paragraph'),
+              icon:const Icon(Icons.add),label:const LocalizedUiText('Add Paragraph'),
               style:TextButton.styleFrom(foregroundColor:AppColors.primary)),
             const SizedBox(height:20),
             _field('AI Instructions (optional)',_instructions,lines:3,

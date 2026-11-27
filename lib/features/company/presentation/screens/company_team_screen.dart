@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 
 import '../../../../core/services/sign_api_client.dart';
 import '../../../../core/navigation/sign2digital_navigation.dart';
@@ -398,7 +399,7 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: AppColors.white,
     body: SafeArea(child: Column(children: [
-      Sign2DigitalHeader(title: 'Team Members'),
+      Sign2DigitalHeader(translateTitle: true, title: 'Team Members'),
       Expanded(child: Center(child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth:
             MediaQuery.orientationOf(context) == Orientation.landscape
@@ -412,7 +413,7 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
                 padding: const EdgeInsets.all(20),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text('Roles & Permissions', style: TextStyle(
+                    const LocalizedUiText('Roles & Permissions', style: TextStyle(
                       fontFamily: 'Inter', fontSize: 16,
                       fontWeight: FontWeight.w600, color: AppColors.dark)),
                     const SizedBox(height: 10),
@@ -433,7 +434,7 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
               Sign2DigitalQuoteShadowPanel(
                 padding: const EdgeInsets.all(20),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                  const Text('Invite Team Member', style: TextStyle(
+                  const LocalizedUiText('Invite Team Member', style: TextStyle(
                     fontFamily: 'Inter', fontWeight: FontWeight.w600,
                     fontSize: 16, color: AppColors.dark)),
                   const SizedBox(height: 15),
@@ -490,12 +491,12 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
             Sign2DigitalQuoteShadowPanel(
               padding: const EdgeInsets.all(20),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const Text('Team Members', style: TextStyle(
+                const LocalizedUiText('Team Members', style: TextStyle(
                   fontFamily: 'Inter', fontWeight: FontWeight.w600,
                   fontSize: 16, color: AppColors.dark)),
                 const SizedBox(height: 12),
                 if (_loading) const Center(child: CircularProgressIndicator())
-                else if (_members.isEmpty) const Text('No company members yet.')
+                else if (_members.isEmpty) const LocalizedUiText('No company members yet.')
                 else for (final member in _members) ...[
                   ListTile(
                     contentPadding: EdgeInsets.zero,
@@ -520,11 +521,11 @@ class _CompanyTeamScreenState extends State<CompanyTeamScreen> {
               Sign2DigitalQuoteShadowPanel(
                 padding: const EdgeInsets.all(20),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  const Text('Invitations', style: TextStyle(
+                  const LocalizedUiText('Invitations', style: TextStyle(
                     fontFamily: 'Inter', fontWeight: FontWeight.w600,
                     fontSize: 16, color: AppColors.dark)),
                   const SizedBox(height: 12),
-                  if (_invitations.isEmpty) const Text('No invitations yet.')
+                  if (_invitations.isEmpty) const LocalizedUiText('No invitations yet.')
                   else for (final invitation in _invitations)
                     ListTile(
                       contentPadding: EdgeInsets.zero,

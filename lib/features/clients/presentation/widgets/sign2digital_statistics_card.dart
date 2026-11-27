@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -72,7 +73,7 @@ class Sign2DigitalStatisticsCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 5),
                     Text(
-                      label,
+                      AppStrings.of(context).tr(label),
                       softWrap: false,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

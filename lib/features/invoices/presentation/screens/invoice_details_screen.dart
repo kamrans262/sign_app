@@ -2,6 +2,7 @@ import '../../../../core/navigation/sign2digital_navigation.dart';
 import '../../../../core/services/active_company_session.dart';
 import '../../../../core/widgets/sign2digital_subscription_gate.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import 'package:flutter/services.dart';
 import 'package:printing/printing.dart';
@@ -197,7 +198,7 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
     if (rows.isEmpty) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 20),
-        child: Text('No invoice items recorded.',
+        child: LocalizedUiText('No invoice items recorded.',
           key: Key('invoice-details-items-empty'),
           style: TextStyle(fontFamily: 'Inter', fontSize: 14,
             color: AppColors.placeholder)),
@@ -243,7 +244,7 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
     if (payments.isEmpty) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 20),
-        child: Text('No payment is recorded yet.',
+        child: LocalizedUiText('No payment is recorded yet.',
           key: Key('invoice-details-payments-empty'),
           style: TextStyle(fontFamily: 'Inter', fontSize: 14,
             color: AppColors.placeholder)),
@@ -287,7 +288,7 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
     if (events.isEmpty) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 20),
-        child: Text('No recorded invoice history is available.',
+        child: LocalizedUiText('No recorded invoice history is available.',
           key: Key('invoice-details-history-empty'),
           style: TextStyle(fontFamily: 'Inter', fontSize: 14,
             color: AppColors.placeholder)),
@@ -371,7 +372,7 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
         padding:const EdgeInsets.all(20),
         child:Column(mainAxisSize:MainAxisSize.min,
           crossAxisAlignment:CrossAxisAlignment.stretch,children:[
-          const Text('Send Invoice',style:TextStyle(
+          const LocalizedUiText('Send Invoice',style:TextStyle(
             fontFamily:'Inter',fontSize:20,fontWeight:FontWeight.w600,
             color:AppColors.dark)),
           const SizedBox(height:12),
@@ -588,7 +589,7 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
     backgroundColor: AppColors.white,
     body: SafeArea(child: Column(children: [
       Sign2DigitalHeader(
-        title: 'Invoices',
+        translateTitle: true, title: 'Invoices',
         onBack: () => Navigator.of(context).maybePop(),
       ),
       Expanded(child: Center(child: ConstrainedBox(

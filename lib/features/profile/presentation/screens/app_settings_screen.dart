@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -189,7 +190,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
           TextButton(
             key: const Key('app-settings-cache-cancel'),
             onPressed: () => Navigator.of(dialog).pop(false),
-            child: const Text('Cancel'),
+            child: const LocalizedUiText('Cancel'),
           ),
           TextButton(
             key: const Key('app-settings-cache-confirm'),

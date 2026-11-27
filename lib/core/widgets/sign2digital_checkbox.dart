@@ -1,5 +1,6 @@
 // Sign2Digital Login UI Package — checked-state control with semantics.
 import 'package:flutter/material.dart';
+import '../localization/app_strings.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
@@ -23,7 +24,7 @@ class Sign2DigitalCheckbox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: label,
+      label: AppStrings.of(context).tr(label),
       checked: value,
       child: InkWell(
         onTap: () => onChanged(!value),
@@ -52,7 +53,7 @@ class Sign2DigitalCheckbox extends StatelessWidget {
             ),
             if (showLabel) ...[
               const SizedBox(width: 8),
-              Flexible(child: Text(label, style: AppTextStyles.small)),
+              Flexible(child: Text(AppStrings.of(context).tr(label), style: AppTextStyles.small)),
             ],
           ],
         ),

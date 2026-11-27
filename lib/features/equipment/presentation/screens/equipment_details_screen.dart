@@ -3,6 +3,7 @@ import '../../../../core/widgets/sign2digital_form_dialog.dart';
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import '../../../../core/services/active_company_session.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -262,7 +263,7 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
             )),
             actions: [
               TextButton(onPressed: () => Navigator.pop(dialog),
-                child: const Text('Cancel')),
+                child: const LocalizedUiText('Cancel')),
               TextButton(
                 key: const Key('equipment-confirm-usage'),
                 onPressed: () {
@@ -332,7 +333,7 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
             ])),
           actions: [
             TextButton(onPressed: () => Navigator.pop(dialog),
-              child: const Text('Cancel')),
+              child: const LocalizedUiText('Cancel')),
             TextButton(
               key: const Key('equipment-confirm-maintenance'),
               onPressed: () {
@@ -447,7 +448,7 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
     backgroundColor: AppColors.white,
     body: SafeArea(child: Column(children: [
       Sign2DigitalHeader(
-        title: 'Equipment', onBack: () => Navigator.of(context).maybePop()),
+        translateTitle: true, title: 'Equipment', onBack: () => Navigator.of(context).maybePop()),
       Expanded(child: Center(child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 720),
         child: ListView(

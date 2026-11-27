@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_header.dart';
@@ -152,7 +153,7 @@ class _AddJobNoteScreenState extends State<AddJobNoteScreen> {
     backgroundColor: AppColors.white,
     resizeToAvoidBottomInset: true,
     body: SafeArea(child: Column(children: [
-      Sign2DigitalHeader(title: 'Job Notes',
+      Sign2DigitalHeader(translateTitle: true, title: 'Job Notes',
           onBack: () => Navigator.of(context).maybePop()),
       Expanded(child: SingleChildScrollView(
         key: const Key('add-job-note-scroll'),
@@ -201,7 +202,7 @@ class _AddJobNoteScreenState extends State<AddJobNoteScreen> {
                     style: TextStyle(color: AppColors.primary)),
               ],
               const SizedBox(height: 20),
-              const Text('Visibility', style: TextStyle(
+              const LocalizedUiText('Visibility', style: TextStyle(
                 fontFamily: 'Inter', fontSize: 18,
                 fontWeight: FontWeight.w600, color: AppColors.dark)),
               const SizedBox(height: 10),

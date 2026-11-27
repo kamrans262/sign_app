@@ -3,6 +3,7 @@ import 'otp_verification_screen.dart';
 
 // Sign2Digital Forgot Password UI Package — refined screen (2026-10).
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -98,7 +99,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              const Text(
+                              const LocalizedUiText(
                                 'Forgot Password?',
                                 textAlign: TextAlign.center,
                                 style: AppTextStyles.heading,

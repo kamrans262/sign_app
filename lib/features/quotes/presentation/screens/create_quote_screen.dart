@@ -3,6 +3,7 @@ import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
@@ -148,7 +149,7 @@ class _CreateQuoteScreenState extends State<CreateQuoteScreen> {
                 Icons.photo_camera_outlined,
                 color: AppColors.primary,
               ),
-              title: const Text('Take a Photo'),
+              title: const LocalizedUiText('Take a Photo'),
               onTap: () => Navigator.of(sheetContext).pop(ImageSource.camera),
             ),
             ListTile(
@@ -156,7 +157,7 @@ class _CreateQuoteScreenState extends State<CreateQuoteScreen> {
                 Icons.photo_library_outlined,
                 color: AppColors.primary,
               ),
-              title: const Text('Choose from Gallery'),
+              title: const LocalizedUiText('Choose from Gallery'),
               onTap: () => Navigator.of(sheetContext).pop(ImageSource.gallery),
             ),
           ],
@@ -309,7 +310,7 @@ class _CreateQuoteScreenState extends State<CreateQuoteScreen> {
                               ),
                         ),
                         const SizedBox(width: 10),
-                        const Text(
+                        const LocalizedUiText(
                           'Generate Draft',
                           style: AppTextStyles.primaryButton,
                         ),
@@ -327,7 +328,7 @@ class _CreateQuoteScreenState extends State<CreateQuoteScreen> {
         child: Column(
           children: [
             Sign2DigitalHeader(
-              title: 'Create Quote',
+              translateTitle: true, title: 'Create Quote',
               onBack: () => Navigator.of(context).maybePop(),
               trailing: const SupportAiPromptHint(module: 'quotes'),
             ),
@@ -378,7 +379,7 @@ class _CreateQuoteScreenState extends State<CreateQuoteScreen> {
                         ),
                         const SizedBox(height: 20),
                         if (_method == QuoteInputMethod.text) ...[
-                          const Text(
+                          const LocalizedUiText(
                             'Example Prompt',
                             style: TextStyle(
                               fontFamily: 'Inter',

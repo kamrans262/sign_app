@@ -1,6 +1,7 @@
 import '../../../../core/widgets/sign2digital_form_dialog.dart';
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:printing/printing.dart';
 
@@ -82,7 +83,7 @@ class _HelpSupportState extends State<HelpSupportScreen> {
   Widget build(BuildContext context)=>Scaffold(
     backgroundColor:AppColors.white,
     body:SafeArea(child:Column(children:[
-      const Sign2DigitalHeader(title:'Help & Support'),
+      const Sign2DigitalHeader(translateTitle: true, title:'Help & Support'),
       Expanded(child:Center(child:ConstrainedBox(
         constraints:BoxConstraints(maxWidth:
           MediaQuery.orientationOf(context)==Orientation.landscape
@@ -234,7 +235,7 @@ class _NewTicketState extends State<NewSupportTicketScreen> {
   Widget build(BuildContext context)=>Scaffold(
     backgroundColor:AppColors.white,
     body:SafeArea(child:Column(children:[
-      const Sign2DigitalHeader(title:'Contact Support'),
+      const Sign2DigitalHeader(translateTitle: true, title:'Contact Support'),
       Expanded(child:Center(child:ConstrainedBox(
         constraints:BoxConstraints(maxWidth:
           MediaQuery.orientationOf(context)==Orientation.landscape
@@ -354,7 +355,7 @@ class _TicketDetailState extends State<SupportTicketDetailsScreen> {
                 const Text('Could not display this attachment.')),
             actions: [TextButton(
               onPressed: () => Navigator.of(dialog).pop(),
-              child: const Text('Close'))],
+              child: const LocalizedUiText('Close'))],
           ));
       }
     } catch (_) {
@@ -399,7 +400,7 @@ class _TicketDetailState extends State<SupportTicketDetailsScreen> {
                   subtitle:Text(entry.createdAt))),
               if(data!.attachments.isNotEmpty)...[
                 const SizedBox(height:16),
-                const Text('Attachments',style:TextStyle(
+                const LocalizedUiText('Attachments',style:TextStyle(
                   fontFamily:'Inter',fontWeight:FontWeight.w600)),
                 const SizedBox(height:8),
                 for(final attachment in data!.attachments)

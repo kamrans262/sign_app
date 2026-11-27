@@ -1,6 +1,7 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import '../../../../core/services/active_company_session.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -116,13 +117,13 @@ class _AiDocumentsScreenState extends State<AiDocumentsScreen> {
           children: [
             ListTile(
               key: const Key('ai-documents-create-general'),
-              title: const Text('General Document'),
+              title: const LocalizedUiText('General Document'),
               subtitle: const Text('Business letter, statement, acceptance or custom draft'),
               onTap: () => Navigator.pop(sheet, 'general'),
             ),
             ListTile(
               key: const Key('ai-documents-create-project'),
-              title: const Text('Project Document'),
+              title: const LocalizedUiText('Project Document'),
               subtitle: const Text('Use the existing job and sections workflow'),
               onTap: () => Navigator.pop(sheet, 'project'),
             ),
@@ -229,7 +230,7 @@ class _AiDocumentsScreenState extends State<AiDocumentsScreen> {
       TextButton(
         key: const Key('ai-documents-see-all'),
         onPressed: _seeAll,
-        child: const Text('See all',
+        child: const LocalizedUiText('See all',
           style: TextStyle(fontFamily: 'Inter', fontSize: 12,
             fontWeight: FontWeight.w500, color: AppColors.primary)),
       ),
@@ -252,7 +253,7 @@ class _AiDocumentsScreenState extends State<AiDocumentsScreen> {
     if (_documents.isEmpty) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 32),
-        child: Center(child: Text('No AI documents yet.',
+        child: Center(child: LocalizedUiText('No AI documents yet.',
           key: Key('ai-documents-empty'),
           style: TextStyle(fontFamily: 'Inter',
             color: AppColors.placeholder, fontSize: 14))),

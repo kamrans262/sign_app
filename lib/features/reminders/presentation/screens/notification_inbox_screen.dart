@@ -96,7 +96,7 @@ class _NotificationInboxScreenState extends State<NotificationInboxScreen> {
       backgroundColor: AppColors.white,
       body: SafeArea(child: Column(children: [
         Sign2DigitalHeader(
-          title: 'Notifications',
+          translateTitle: true, title: 'Notifications',
           onBack: () => Navigator.of(context).maybePop(),
         ),
         Padding(

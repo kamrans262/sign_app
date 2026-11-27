@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/dashboard_colors.dart';
@@ -51,7 +52,7 @@ class Sign2DigitalStatusBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
       ),
       child: Text(
-        displayLabel(status),
+        AppStrings.of(context).tr(displayLabel(status)),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(

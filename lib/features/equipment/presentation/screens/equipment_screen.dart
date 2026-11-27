@@ -1,5 +1,6 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 
 import '../../../../core/services/active_company_session.dart';
@@ -112,7 +113,7 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
       context: context,
       builder: (sheet) => SafeArea(child: Column(
         mainAxisSize: MainAxisSize.min, children: [
-          const ListTile(title: Text('Sort By')),
+          const ListTile(title: LocalizedUiText('Sort By')),
           for (final option in EquipmentSort.values)
             ListTile(
               key: Key('equipment-sort-${option.name}'),

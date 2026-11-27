@@ -1,5 +1,6 @@
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -348,7 +349,7 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
     resizeToAvoidBottomInset: true,
     body: SafeArea(child: Column(children: [
       Sign2DigitalHeader(
-        title: 'Reminders', onBack: () => Navigator.of(context).maybePop()),
+        translateTitle: true, title: 'Reminders', onBack: () => Navigator.of(context).maybePop()),
       Expanded(child: Center(child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 720),
         child: ListView(
@@ -421,7 +422,7 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
               const SizedBox(height: 15),
               CheckboxListTile(
                 key: const Key('reminder-completed'),
-                title: const Text('Completed'),
+                title: const LocalizedUiText('Completed'),
                 subtitle: const Text('Move this reminder into Completed'),
                 controlAffinity: ListTileControlAffinity.leading,
                 contentPadding: EdgeInsets.zero,

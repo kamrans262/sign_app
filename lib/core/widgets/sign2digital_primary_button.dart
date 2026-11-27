@@ -1,5 +1,6 @@
 // Sign2Digital Login UI Package — shared brand-primary button.
 import 'package:flutter/material.dart';
+import '../localization/app_strings.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
@@ -56,16 +57,16 @@ class Sign2DigitalPrimaryButton extends StatelessWidget {
                 ? compactLabel
                     ? FittedBox(
                         fit: BoxFit.scaleDown,
-                        child: Text(label,
+                        child: Text(AppStrings.of(context).tr(label),
                           maxLines: 1, softWrap: false,
                           style: AppTextStyles.primaryButton.copyWith(
                             fontSize: 14)),
                       )
-                    : Text(label, style: AppTextStyles.primaryButton)
+                    : Text(AppStrings.of(context).tr(label), style: AppTextStyles.primaryButton)
                 : Row(mainAxisSize: MainAxisSize.min, children: [
                     leading!,
                     const SizedBox(width: 10),
-                    Flexible(child: Text(label,
+                    Flexible(child: Text(AppStrings.of(context).tr(label),
                       maxLines: 2, textAlign: TextAlign.center,
                       style: AppTextStyles.primaryButton)),
                   ]),

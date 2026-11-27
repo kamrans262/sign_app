@@ -1,6 +1,7 @@
 // Sign2Digital — reusable, local-only image upload control.
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../services/local_file_selection.dart';
@@ -123,7 +124,7 @@ class _Sign2DigitalImageUploadState extends State<Sign2DigitalImageUpload> {
                           : _preview(),
                       const SizedBox(height: 10),
                       Text(
-                        _file == null ? 'Upload your logo' : _file!.name,
+                        _file == null ? AppStrings.of(context).tr('Upload your logo') : _file!.name,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.center,
@@ -131,9 +132,9 @@ class _Sign2DigitalImageUploadState extends State<Sign2DigitalImageUpload> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        _file == null
+                        AppStrings.of(context).tr(_file == null
                             ? 'PNG, JPG or SVG (max 2MB)'
-                            : 'Tap to replace logo',
+                            : 'Tap to replace logo'),
                         textAlign: TextAlign.center,
                         style: AppTextStyles.footer,
                       ),
@@ -149,14 +150,14 @@ class _Sign2DigitalImageUploadState extends State<Sign2DigitalImageUpload> {
             alignment: Alignment.centerRight,
             child: TextButton(
               onPressed: _remove,
-              child: const Text('Remove logo'),
+              child: Text(AppStrings.of(context).tr('Remove logo')),
             ),
           ),
         if (_error != null)
           Padding(
             padding: const EdgeInsets.only(top: 4),
             child: Text(
-              _error!,
+              AppStrings.of(context).tr(_error!),
               style: const TextStyle(color: Colors.red, fontSize: 12),
             ),
           ),

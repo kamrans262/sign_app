@@ -1,5 +1,6 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 
@@ -116,7 +117,7 @@ class _SecurityAccessScreenState extends State<SecurityAccessScreen> {
           TextButton(
             key: const Key('security-dialog-cancel'),
             onPressed: () => Navigator.of(dialog).pop(false),
-            child: const Text('Cancel'),
+            child: const LocalizedUiText('Cancel'),
           ),
           TextButton(
             key: const Key('security-dialog-confirm'),
@@ -499,7 +500,7 @@ class _SecurityAccessScreenState extends State<SecurityAccessScreen> {
                 ],
                 const SizedBox(height: 20),
                 Row(children: [
-                  const Expanded(child: Text(
+                  const Expanded(child: LocalizedUiText(
                     'Active Sessions', style: _heading)),
                   TextButton(
                     key: const Key('security-view-all'),
@@ -581,7 +582,7 @@ class _SecuritySessionsScreen extends StatelessWidget {
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: AppColors.white,
     body: SafeArea(bottom: false, child: Column(children: [
-      const Sign2DigitalHeader(title: 'Active Sessions'),
+      const Sign2DigitalHeader(translateTitle: true, title: 'Active Sessions'),
       Expanded(child: Center(child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth:
             MediaQuery.orientationOf(context) == Orientation.landscape

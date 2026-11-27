@@ -1,5 +1,6 @@
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -362,13 +363,13 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
           ListTile(
             key: const Key('site-report-gallery'),
             leading: const Icon(Icons.photo_library_outlined),
-            title: const Text('Choose from gallery'),
+            title: const LocalizedUiText('Choose from gallery'),
             onTap: () => Navigator.of(sheet).pop(false),
           ),
           ListTile(
             key: const Key('site-report-camera'),
             leading: const Icon(Icons.photo_camera_outlined),
-            title: const Text('Take a photo'),
+            title: const LocalizedUiText('Take a photo'),
             onTap: () => Navigator.of(sheet).pop(true),
           ),
         ],
@@ -582,7 +583,7 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialog).pop(false),
-              child: const Text('Keep editing'),
+              child: const LocalizedUiText('Keep editing'),
             ),
             TextButton(
               key: const Key('review-report-save-local-draft'),
@@ -787,7 +788,7 @@ class _SiteReportWizardScreenState extends State<SiteReportWizardScreen> {
       // The upload control is always available, even when Photos wasn't
       // selected in Details. Uploading automatically selects that section.
       ...[
-        const Text('Photos', style: AppTextStyles.fieldLabel),
+        const LocalizedUiText('Photos', style: AppTextStyles.fieldLabel),
         const SizedBox(height: 10),
         GridView.builder(
           key: const Key('site-report-photo-grid'),

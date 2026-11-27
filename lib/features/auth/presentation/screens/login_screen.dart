@@ -4,6 +4,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -251,9 +252,9 @@ class _LoginPanel extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text('Welcome Back', style: AppTextStyles.heading),
+                  const LocalizedUiText('Welcome Back', style: AppTextStyles.heading),
                   const SizedBox(height: 10),
-                  const Text(
+                  const LocalizedUiText(
                     'Sign in to your account',
                     style: AppTextStyles.subtitle,
                   ),
@@ -360,7 +361,7 @@ class _KeepSignedInRow extends StatelessWidget {
             minimumSize: const Size(0, 25),
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
-          child: const Text('Forgot Password?', style: AppTextStyles.smallLink),
+          child: const LocalizedUiText('Forgot Password?', style: AppTextStyles.smallLink),
         ),
       ],
     );
@@ -377,7 +378,7 @@ class _OrDivider extends StatelessWidget {
         const Expanded(child: Divider(color: AppColors.divider, height: 1)),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
+          child: LocalizedUiText(
             'Or',
             style: AppTextStyles.subtitle.copyWith(
               color: AppColors.placeholder,
@@ -402,7 +403,7 @@ class _CreateAccountFooter extends StatelessWidget {
       crossAxisAlignment: WrapCrossAlignment.center,
       spacing: 8,
       children: [
-        const Text('Don’t have an account?', style: AppTextStyles.footer),
+        const LocalizedUiText('Don’t have an account?', style: AppTextStyles.footer),
         TextButton(
           onPressed: onCreateAccount,
           style: TextButton.styleFrom(
@@ -411,7 +412,7 @@ class _CreateAccountFooter extends StatelessWidget {
             minimumSize: const Size(0, 24),
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
-          child: const Text(
+          child: const LocalizedUiText(
             'Create an account',
             style: AppTextStyles.footerLink,
           ),

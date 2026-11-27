@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -149,11 +150,11 @@ class _AddPhotosScreenState extends State<AddPhotosScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('Keep editing'),
+              child: const LocalizedUiText('Keep editing'),
             ),
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text('Discard'),
+              child: const LocalizedUiText('Discard'),
             ),
           ],
         ),
@@ -239,7 +240,7 @@ class _AddPhotosScreenState extends State<AddPhotosScreen> {
         bottom: false,
         child: Column(
           children: [
-            Sign2DigitalHeader(title: 'Job Photos', onBack: _goBack),
+            Sign2DigitalHeader(translateTitle: true, title: 'Job Photos', onBack: _goBack),
             Expanded(
               child: SingleChildScrollView(
                 key: const Key('add-photos-scroll'),
@@ -247,7 +248,7 @@ class _AddPhotosScreenState extends State<AddPhotosScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text(
+                    const LocalizedUiText(
                       'Add Photos',
                       style: TextStyle(
                         fontFamily: 'Inter',
@@ -257,7 +258,7 @@ class _AddPhotosScreenState extends State<AddPhotosScreen> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    const Text(
+                    const LocalizedUiText(
                       'Take a photo or choose from your gallery',
                       style: TextStyle(
                         fontFamily: 'Inter',
@@ -305,7 +306,7 @@ class _AddPhotosScreenState extends State<AddPhotosScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    const Text(
+                    const LocalizedUiText(
                       'Photo Preview',
                       style: TextStyle(
                         fontFamily: 'Inter',

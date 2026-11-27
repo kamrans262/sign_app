@@ -2,6 +2,7 @@ import '../../../../core/navigation/sign2digital_navigation.dart';
 import '../../../../core/services/active_company_session.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -266,7 +267,7 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
                 Icon(Icons.cloud_upload_outlined,
                   color: AppColors.primary, size: 28),
                 SizedBox(height: 10),
-                Text('No receipt attached',
+                LocalizedUiText('No receipt attached',
                   style: TextStyle(fontFamily: 'Inter',
                     fontSize: 14, color: AppColors.placeholder)),
                 Text('Edit the deposit to add a receipt',
@@ -587,7 +588,7 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
     backgroundColor: AppColors.white,
     body: SafeArea(child: Column(children: [
       Sign2DigitalHeader(
-        title: 'Deposits',
+        translateTitle: true, title: 'Deposits',
         onBack: () => Navigator.of(context).maybePop(),
       ),
       Expanded(child: Center(child: ConstrainedBox(

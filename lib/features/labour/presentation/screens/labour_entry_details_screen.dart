@@ -1,5 +1,6 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 import 'package:flutter/services.dart';
 import 'package:printing/printing.dart';
@@ -409,7 +410,7 @@ class _LabourEntryDetailsScreenState extends State<LabourEntryDetailsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialog).pop(false),
-            child: const Text('Cancel')),
+            child: const LocalizedUiText('Cancel')),
           TextButton(
             key: const Key('labour-confirm-delete'),
             onPressed: () => Navigator.of(dialog).pop(true),

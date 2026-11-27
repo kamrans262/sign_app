@@ -3,6 +3,7 @@ import '../../../../core/navigation/sign2digital_navigation.dart';
 import '../../../../core/services/active_company_session.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -421,7 +422,7 @@ class _JobNotesScreenState extends State<JobNotesScreen> {
         child: Column(
           children: [
             Sign2DigitalHeader(
-              title: 'Job Notes',
+              translateTitle: true, title: 'Job Notes',
               onBack: () => Navigator.of(context).maybePop(),
             ),
             Expanded(
@@ -442,7 +443,7 @@ class _JobNotesScreenState extends State<JobNotesScreen> {
                           ),
                           const SizedBox(height: 20),
                         ],
-                        const Text(
+                        const LocalizedUiText(
                           'Job Notes',
                           style: TextStyle(
                             fontFamily: 'Inter',
@@ -452,7 +453,7 @@ class _JobNotesScreenState extends State<JobNotesScreen> {
                           ),
                         ),
                         const SizedBox(height: 10),
-                        const Text(
+                        const LocalizedUiText(
                           'Keep track of important information',
                           style: TextStyle(
                             fontFamily: 'Inter',

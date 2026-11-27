@@ -1,5 +1,6 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../auth/data/mobile_auth_repository.dart';
 import '../../../../core/services/active_company_session.dart';
 import '../../../../core/services/sign_api_client.dart';
@@ -244,7 +245,7 @@ class _JobsScreenState extends State<JobsScreen> {
                                   color: AppColors.white,
                                 ),
                                 SizedBox(width: 10),
-                                Text(
+                                LocalizedUiText(
                                   'Create Job',
                                   style: AppTextStyles.primaryButton,
                                 ),
@@ -282,7 +283,7 @@ class _JobsScreenState extends State<JobsScreen> {
                         TextButton(
                           onPressed: widget.onRetry ??
                               (_liveStandalone ? _loadStandalone : null),
-                          child: const Text('Try Again'),
+                          child: const LocalizedUiText('Try Again'),
                         ),
                       ],
                     ),
@@ -295,7 +296,7 @@ class _JobsScreenState extends State<JobsScreen> {
                 child: Center(
                   child: Padding(
                     padding: const EdgeInsets.all(24),
-                    child: Text(
+                    child: LocalizedUiText(
                       'No jobs found',
                       style: AppTextStyles.subtitle,
                       textAlign: TextAlign.center,

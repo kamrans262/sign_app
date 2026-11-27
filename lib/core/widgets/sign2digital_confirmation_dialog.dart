@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../localization/app_strings.dart';
 
 import '../theme/app_colors.dart';
 import 'sign2digital_modal_surface.dart';
@@ -32,14 +33,14 @@ abstract final class Sign2DigitalConfirmationDialog {
               child: Icon(icon, size: 26, color: AppColors.primary),
             ),
             const SizedBox(height: 15),
-            Text(title,
+            Text(AppStrings.of(dialog).tr(title),
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontFamily: 'Inter', fontSize: 18,
                 fontWeight: FontWeight.w600, color: AppColors.dark,
                 decoration: TextDecoration.none)),
             const SizedBox(height: 5),
-            Text(message,
+            Text(AppStrings.of(dialog).tr(message),
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontFamily: 'Inter', fontSize: 14,

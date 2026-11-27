@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import 'package:flutter/rendering.dart';
 
 import '../../../../core/services/local_file_selection.dart';
@@ -237,11 +238,11 @@ class _AddSignatureScreenState extends State<AddSignatureScreen> {
               else const Icon(Icons.upload_file_outlined, size: 34,
                 color: AppColors.primary),
               const SizedBox(height: 10),
-              const Text('Upload Signature', style: TextStyle(
+              const LocalizedUiText('Upload Signature', style: TextStyle(
                 fontFamily: 'Inter', fontSize: 16, fontWeight: FontWeight.w600,
                 color: AppColors.primary)),
               const SizedBox(height: 6),
-              const Text('Choose an image of your signature',
+              const LocalizedUiText('Choose an image of your signature',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontFamily: 'Inter', fontSize: 13,
                   color: _grey)),
@@ -381,7 +382,7 @@ class _AddSignatureScreenState extends State<AddSignatureScreen> {
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: Colors.white,
     body: SafeArea(child: Column(children: [
-      Sign2DigitalHeader(title: 'Add Signature',
+      Sign2DigitalHeader(translateTitle: true, title: 'Add Signature',
         onBack: () => Navigator.of(context).maybePop()),
       Expanded(child: LayoutBuilder(builder: (context, viewport) =>
         SingleChildScrollView(

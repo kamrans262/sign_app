@@ -4,6 +4,7 @@ import '../../../company/data/remote_company_repository.dart';
 import '../../../../core/widgets/sign2digital_subscription_gate.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import 'package:flutter/services.dart';
 import 'package:printing/printing.dart';
@@ -104,7 +105,7 @@ class _AddendumApprovalConfirmationState
     mainAxisSize: MainAxisSize.min,
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      const Text('Review Addendum',
+      const LocalizedUiText('Review Addendum',
         style: TextStyle(fontFamily: 'Inter', fontSize: 18,
           fontWeight: FontWeight.w600, color: AppColors.dark)),
       const SizedBox(height: 14),
@@ -527,7 +528,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
         padding: const EdgeInsets.all(20),
         child: Column(mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          const Text('Addendum Signature Request',
+          const LocalizedUiText('Addendum Signature Request',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600,
               color: AppColors.dark)),
           const SizedBox(height: 10),
@@ -560,7 +561,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
                 );
               },
               icon: const Icon(Icons.copy_outlined),
-              label: const Text('Copy secure link'),
+              label: const LocalizedUiText('Copy secure link'),
             ),
             if (draft.serverId != null &&
                 MobileAuthRepository.shared.isSignedIn &&
@@ -869,7 +870,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
             children: [
               const Padding(
                 padding: EdgeInsets.fromLTRB(20, 16, 20, 8),
-                child: Text('Attachments', style: TextStyle(
+                child: LocalizedUiText('Attachments', style: TextStyle(
                   fontFamily: 'Inter', fontWeight: FontWeight.w600,
                   fontSize: 18, color: AppColors.dark,
                 )),
@@ -949,7 +950,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
               key: const Key('document-more-request-signature'),
               leading: const Icon(Icons.draw_outlined,
                   color: AppColors.primary),
-              title: const Text('Request Signature'),
+              title: const LocalizedUiText('Request Signature'),
               onTap: () {
                 Navigator.pop(sheet);
                 _requestQuoteSignature(record);
@@ -959,7 +960,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
             ListTile(
               key: const Key('document-view-document-status'),
               leading: const Icon(Icons.track_changes_outlined),
-              title: const Text('View Document Status'),
+              title: const LocalizedUiText('View Document Status'),
               onTap: () {
                 Navigator.pop(sheet);
                 _viewQuoteStatus(record);
@@ -969,7 +970,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
             ListTile(
               key: const Key('document-view-signed-quote'),
               leading: const Icon(Icons.verified_outlined),
-              title: const Text('View Signed Document'),
+              title: const LocalizedUiText('View Signed Document'),
               onTap: () {
                 Navigator.pop(sheet);
                 _openLinkedSignedQuote(record);
@@ -980,7 +981,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
             ListTile(
               key: const Key('document-send-quote'),
               leading: const Icon(Icons.send_outlined),
-              title: const Text('Send Quote'),
+              title: const LocalizedUiText('Send Quote'),
               onTap: () {
                 Navigator.pop(sheet);
                 Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
@@ -996,7 +997,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
             ListTile(
               key: const Key('addendum-edit-server-draft'),
               leading: const Icon(Icons.edit_outlined),
-              title: const Text('Edit Addendum Draft'),
+              title: const LocalizedUiText('Edit Addendum Draft'),
               onTap: () async {
                 Navigator.pop(sheet);
                 await Sign2DigitalNavigation.push<void>(context,
@@ -1021,7 +1022,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
             ListTile(
               key: const Key('addendum-approve'),
               leading: const Icon(Icons.verified_outlined),
-              title: const Text('Review and Approve Addendum'),
+              title: const LocalizedUiText('Review and Approve Addendum'),
               onTap: () {
                 Navigator.pop(sheet);
                 // Do not open a second modal while the More sheet is still
@@ -1041,7 +1042,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
             ListTile(
               key: const Key('addendum-send-for-signature'),
               leading: const Icon(Icons.draw_outlined),
-              title: const Text('Send for Signature'),
+              title: const LocalizedUiText('Send for Signature'),
               onTap: () {
                 Navigator.pop(sheet);
                 // A second modal cannot open until More begins closing.
@@ -1056,7 +1057,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
             ListTile(
               key: const Key('document-download-attachment'),
               leading: const Icon(Icons.download_outlined),
-              title: const Text('Download Attachment'),
+              title: const LocalizedUiText('Download Attachment'),
               onTap: () {
                 Navigator.pop(sheet);
                 _chooseAttachment();
@@ -1068,7 +1069,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
             ListTile(
               key: const Key('document-add-attachment'),
               leading: const Icon(Icons.attach_file_outlined),
-              title: const Text('Add Attachment'),
+              title: const LocalizedUiText('Add Attachment'),
               onTap: () {
                 Navigator.pop(sheet);
                 _addDocumentFile(newVersion: false);
@@ -1080,7 +1081,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
             ListTile(
               key: const Key('document-add-version'),
               leading: const Icon(Icons.upload_file_outlined),
-              title: const Text('Add PDF Version'),
+              title: const LocalizedUiText('Add PDF Version'),
               onTap: () {
                 Navigator.pop(sheet);
                 _addDocumentFile(newVersion: true);
@@ -1094,7 +1095,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
             ListTile(
               key: const Key('document-create-addendum'),
               leading: const Icon(Icons.note_add_outlined),
-              title: const Text('Create Addendum'),
+              title: const LocalizedUiText('Create Addendum'),
               onTap: () {
                 Navigator.of(sheet).pop();
                 Sign2DigitalNavigation.push<void>(context,MaterialPageRoute<void>(
@@ -1534,20 +1535,20 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
         !record.verifiedSignedPdfAvailable &&
         _linkedSignedQuote(record) == null &&
         !hasWorkAcceptancePdf && !addendumReady) {
-      return const Text('No document preview is available.', style: _label);
+      return const LocalizedUiText('No document preview is available.', style: _label);
     }
     return FutureBuilder<Uint8List?>(
       future: _pdf(record),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return const Text('Unable to load the PDF preview.', style: _label);
+          return const LocalizedUiText('Unable to load the PDF preview.', style: _label);
         }
         if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
         }
         final bytes = snapshot.data;
         if (bytes == null) {
-          return const Text('No document preview is available.', style: _label);
+          return const LocalizedUiText('No document preview is available.', style: _label);
         }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1582,7 +1583,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
   Widget _related(DocumentRecord record) {
     final linked = record.related.where((item) => item.id != record.id).toList();
     if (linked.isEmpty) {
-      return const Text('No related documents are available.',
+      return const LocalizedUiText('No related documents are available.',
         key: Key('document-related-empty'), style: _label);
     }
     return Column(children: [
@@ -1671,7 +1672,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
     backgroundColor: Colors.white,
     body: SafeArea(child: Column(
       children: [
-        Sign2DigitalHeader(title: 'Documents',
+        Sign2DigitalHeader(translateTitle: true, title: 'Documents',
           onBack: () => Navigator.of(context).maybePop()),
         Expanded(
           child: _loading
@@ -1684,7 +1685,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
                           key: const Key('document-details-retry'),
                           onPressed: _load, child: Text('$_loadError Retry')))
                       : _record == null
-                          ? const Center(child: Text('Document not found.',
+                          ? const Center(child: LocalizedUiText('Document not found.',
                               key: Key('document-details-missing')))
                           : _body(_record!),
         ),

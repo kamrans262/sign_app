@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 
 import '../../../../core/theme/app_colors.dart';
 
@@ -37,7 +38,7 @@ class Sign2DigitalDetailsTabs extends StatelessWidget {
                 ),
               ),
               child: Text(
-                labels[index],
+                AppStrings.of(context).tr(labels[index]),
                 style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 14,

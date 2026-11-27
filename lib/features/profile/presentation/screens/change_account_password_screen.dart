@@ -46,7 +46,7 @@ class _PasswordChangeState extends State<ChangeAccountPasswordScreen> {
   Widget build(BuildContext context)=>Scaffold(
     backgroundColor:AppColors.white,
     body:SafeArea(child:Column(children:[
-      const Sign2DigitalHeader(title:'Change Password'),
+      const Sign2DigitalHeader(translateTitle: true, title:'Change Password'),
       Expanded(child:Center(child:ConstrainedBox(
         constraints:BoxConstraints(maxWidth:
           MediaQuery.orientationOf(context)==Orientation.landscape

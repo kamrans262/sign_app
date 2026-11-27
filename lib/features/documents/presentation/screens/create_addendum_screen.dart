@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -204,7 +205,7 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
         padding: const EdgeInsets.all(20),
         child: Column(mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          const Text('Review Addendum', style: TextStyle(
+          const LocalizedUiText('Review Addendum', style: TextStyle(
             fontSize: 18, fontWeight: FontWeight.w600,
             fontFamily: 'Inter', color: AppColors.dark)),
           const SizedBox(height: 12),
@@ -285,7 +286,7 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
             child: ListView(
               shrinkWrap: true,
               children: [
-                const ListTile(title: Text('Select an existing document')),
+                const ListTile(title: LocalizedUiText('Select an existing document')),
                 if (reference != null)
                   ListTile(subtitle: Text(matching.length == 1
                       ? 'AI mentioned $reference. Select the matching record to confirm.'
@@ -581,7 +582,7 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: Colors.white,
     body: SafeArea(child: Column(children: [
-      Sign2DigitalHeader(title: 'Addendum',
+      Sign2DigitalHeader(translateTitle: true, title: 'Addendum',
         onBack: () => Navigator.of(context).maybePop()),
       Expanded(child: SingleChildScrollView(
         key: const Key('create-addendum-scroll'),
@@ -593,7 +594,7 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
             children: [
               Sign2DigitalAiVoiceButton(onPressed: _voice),
               const SizedBox(height: 20),
-              const Text('Link to Existing Documents', style: TextStyle(
+              const LocalizedUiText('Link to Existing Documents', style: TextStyle(
                 fontFamily: 'Inter', fontSize: 18,
                 fontWeight: FontWeight.w600, color: AppColors.dark,
                 letterSpacing: -0.3,
@@ -613,7 +614,7 @@ class _CreateAddendumScreenState extends State<CreateAddendumScreen> {
                   key: const Key('addendum-select-document'),
                   onPressed: _chooseDocument,
                   icon: const Icon(Icons.add),
-                  label: const Text('Select an existing document'),
+                  label: const LocalizedUiText('Select an existing document'),
                 ),
               const SizedBox(height: 22),
               Text(_number.text.trim().isEmpty

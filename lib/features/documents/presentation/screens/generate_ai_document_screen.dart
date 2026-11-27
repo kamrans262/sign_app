@@ -3,6 +3,7 @@ import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'dart:io';
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -356,9 +357,9 @@ class _GenerateAiDocumentScreenState extends State<GenerateAiDocumentScreen> {
             suggestion.blocks.map((b)=>b.text).join('\n\n')))),
         actions:[
           TextButton(onPressed:()=>Navigator.pop(dialog,false),
-            child:const Text('Keep Editing')),
+            child:const LocalizedUiText('Keep Editing')),
           TextButton(onPressed:()=>Navigator.pop(dialog,true),
-            child:const Text('Save Draft')),
+            child:const LocalizedUiText('Save Draft')),
         ]));
     if(approved!=true)throw StateError('Suggestion was not accepted.');
     final saved=await repo.save(suggestion,createRequestKey:_creationKey);
@@ -385,12 +386,12 @@ class _GenerateAiDocumentScreenState extends State<GenerateAiDocumentScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialog).pop(false),
-              child: const Text('Keep editing'),
+              child: const LocalizedUiText('Keep editing'),
             ),
             TextButton(
               key: const Key('generate-ai-open-existing'),
               onPressed: () => Navigator.of(dialog).pop(true),
-              child: const Text('Open Job Notes'),
+              child: const LocalizedUiText('Open Job Notes'),
             ),
           ],
         ),
@@ -471,7 +472,7 @@ class _GenerateAiDocumentScreenState extends State<GenerateAiDocumentScreen> {
     resizeToAvoidBottomInset: true,
     body: SafeArea(child: Column(children: [
       Sign2DigitalHeader(
-        title: 'AI Document',
+        translateTitle: true, title: 'AI Document',
         onBack: () => Navigator.of(context).maybePop(),
         trailing: const SupportAiPromptHint(module: 'ai_documents'),
       ),
@@ -506,7 +507,7 @@ class _GenerateAiDocumentScreenState extends State<GenerateAiDocumentScreen> {
               onTap: _chooseJob,
             ),
             const SizedBox(height: 20),
-            const Text('Include Sections', style: TextStyle(
+            const LocalizedUiText('Include Sections', style: TextStyle(
               fontFamily: 'Inter', fontSize: 16,
               fontWeight: FontWeight.w600, color: AppColors.dark)),
             const SizedBox(height: 15),
@@ -516,7 +517,7 @@ class _GenerateAiDocumentScreenState extends State<GenerateAiDocumentScreen> {
                 const SizedBox(height: 15),
             ],
             const SizedBox(height: 20),
-            const Text('Additional Instruction (optional)',
+            const LocalizedUiText('Additional Instruction (optional)',
               style: TextStyle(fontFamily: 'Inter', fontSize: 16,
                 fontWeight: FontWeight.w600, color: AppColors.dark)),
             const SizedBox(height: 10),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -77,7 +78,7 @@ class Sign2DigitalQuoteInputMethodCard extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          label,
+                          AppStrings.of(context).tr(label),
                           style: const TextStyle(
                             fontFamily: 'Inter',
                             fontSize: 16,
@@ -88,7 +89,7 @@ class Sign2DigitalQuoteInputMethodCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 5),
                         Text(
-                          description,
+                          AppStrings.of(context).tr(description),
                           style: const TextStyle(
                             fontFamily: 'Inter',
                             fontSize: 14,

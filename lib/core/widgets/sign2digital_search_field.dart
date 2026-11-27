@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../localization/app_strings.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -53,7 +54,7 @@ class Sign2DigitalSearchField extends StatelessWidget {
                 color: AppColors.dark,
               ),
               decoration: InputDecoration(
-                hintText: hintText,
+                hintText: AppStrings.of(context).tr(hintText),
                 hintMaxLines: 1,
                 hintStyle: const TextStyle(
                   fontFamily: 'Inter',
@@ -69,7 +70,7 @@ class Sign2DigitalSearchField extends StatelessWidget {
           ),
           if (controller.text.isNotEmpty)
             IconButton(
-              tooltip: 'Clear search',
+              tooltip: AppStrings.of(context).tr('Clear search'),
               icon: const Icon(
                 Icons.close,
                 color: AppColors.secondaryText,
@@ -81,13 +82,13 @@ class Sign2DigitalSearchField extends StatelessWidget {
               },
             ),
           IconButton(
-            tooltip: 'Search action',
+            tooltip: AppStrings.of(context).tr('Search action'),
             onPressed: onTrailingTap,
             icon: SvgPicture.asset(
               DashboardAssets.searchActionIcon,
               width: 24,
               height: 24,
-              semanticsLabel: 'Search action',
+              semanticsLabel: AppStrings.of(context).tr('Search action'),
             ),
           ),
           const SizedBox(width: 7),

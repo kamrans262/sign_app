@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -40,7 +41,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Unable to reset password. Please try again.')),
+        const SnackBar(content: LocalizedUiText('Unable to reset password. Please try again.')),
       );
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -76,9 +77,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                const Text('Reset Password', textAlign: TextAlign.center, style: AppTextStyles.heading),
+                                const LocalizedUiText('Reset Password', textAlign: TextAlign.center, style: AppTextStyles.heading),
                                 const SizedBox(height: 10),
-                                const Text('Enter a new password to secure your account.', textAlign: TextAlign.center, style: AppTextStyles.subtitle),
+                                const LocalizedUiText('Enter a new password to secure your account.', textAlign: TextAlign.center, style: AppTextStyles.subtitle),
                                 const SizedBox(height: 30),
                                 Sign2DigitalInputField(
                                   label: 'New Password',

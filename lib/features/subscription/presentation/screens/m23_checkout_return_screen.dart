@@ -93,7 +93,7 @@ class _M23CheckoutReturnScreenState
       body: SafeArea(
         bottom: false,
         child: Column(children: [
-          const Sign2DigitalHeader(title: 'Subscription'),
+          const Sign2DigitalHeader(translateTitle: true, title: 'Subscription'),
           Expanded(child: Center(child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 520),
             child: Padding(

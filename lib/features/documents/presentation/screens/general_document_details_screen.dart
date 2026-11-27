@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import 'package:printing/printing.dart';
 
 import '../../../../core/navigation/sign2digital_navigation.dart';
@@ -597,7 +598,7 @@ class _GeneralDocumentDetailsScreenState
         key:const Key('general-document-related-retry'),
         onPressed:_loadRelated,child:Text(_relatedError!+' Retry')),
       if (!_relatedLoading && _relatedError==null && linked.isEmpty)
-        const Text('No related documents are available.',
+        const LocalizedUiText('No related documents are available.',
           key:Key('general-document-related-empty'),
           style:TextStyle(fontFamily:'Inter',fontSize:14,
             color:AppColors.secondaryText)),
@@ -689,7 +690,7 @@ class _GeneralDocumentDetailsScreenState
     final document = _document;
     final raw = _events ?? const <Map<String,dynamic>>[];
     if (document == null || raw.isEmpty) {
-      return const Text('No document history available.',
+      return const LocalizedUiText('No document history available.',
         style: TextStyle(fontFamily: 'Inter',
           color: AppColors.secondaryText));
     }
@@ -711,7 +712,7 @@ class _GeneralDocumentDetailsScreenState
       codes[eventId] = kind;
     }
     if (verified.isEmpty) {
-      return const Text('No document history available.',
+      return const LocalizedUiText('No document history available.',
         style: TextStyle(fontFamily: 'Inter',
           color: AppColors.secondaryText));
     }
@@ -770,7 +771,7 @@ class _GeneralDocumentDetailsScreenState
     child: Scaffold(
       backgroundColor: AppColors.white,
       body: SafeArea(child: Column(children: [
-        Sign2DigitalHeader(title: 'Documents',
+        Sign2DigitalHeader(translateTitle: true, title: 'Documents',
           onBack: () => Navigator.of(context).maybePop()),
         Expanded(child: _loading
           ? const Center(child: CircularProgressIndicator())
@@ -779,7 +780,7 @@ class _GeneralDocumentDetailsScreenState
                 key: const Key('general-document-details-retry'),
                 child: Text(_error! + ' Retry')))
             : _document == null
-              ? const Center(child: Text('Document not found.'))
+              ? const Center(child: LocalizedUiText('Document not found.'))
               : _body(_document!)),
       ])),
     ),

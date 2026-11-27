@@ -1,6 +1,7 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import '../../../../core/services/active_company_session.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import 'package:printing/printing.dart';
 
@@ -314,13 +315,13 @@ class _ReportsScreenState extends State<ReportsScreen> {
           ListTile(
             key: const Key('create-site-report'),
             leading: const Icon(Icons.description_outlined),
-            title: const Text('Site Report'),
+            title: const LocalizedUiText('Site Report'),
             onTap: () => Navigator.of(sheet).pop(ReportKind.siteReport),
           ),
           ListTile(
             key: const Key('create-meeting-minutes'),
             leading: const Icon(Icons.groups_outlined),
-            title: const Text('Meeting Minutes'),
+            title: const LocalizedUiText('Meeting Minutes'),
             onTap: () => Navigator.of(sheet).pop(ReportKind.meetingMinutes),
           ),
           ListTile(

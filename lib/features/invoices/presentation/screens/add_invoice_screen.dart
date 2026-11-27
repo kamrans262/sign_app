@@ -1,6 +1,7 @@
 import '../../../support/presentation/widgets/support_ai_prompt_hint.dart';
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import '../../../../core/widgets/sign2digital_confirmation_dialog.dart';
 
@@ -203,12 +204,12 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
         children:[
           ListTile(
             key:const Key('invoice-item-action-manual'),
-            title:const Text('Add Invoice Item'),
+            title:const LocalizedUiText('Add Invoice Item'),
             onTap:()=>Navigator.of(sheet).pop('manual'),
           ),
           ListTile(
             key:const Key('invoice-item-action-import'),
-            title:const Text('Import Approved Work'),
+            title:const LocalizedUiText('Import Approved Work'),
             onTap:()=>Navigator.of(sheet).pop('import'),
           ),
           ListTile(
@@ -557,7 +558,7 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
                         onPressed: () {
                           setState(() => _items.removeAt(index));
                           Navigator.of(sheet).pop();
-                        }, child: const Text('Remove')),
+                        }, child: const LocalizedUiText('Remove')),
                       const Spacer(),
                     ],
                     Expanded(child: Sign2DigitalPrimaryButton(
@@ -853,7 +854,7 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
         ],
       ),
       if (_items.isEmpty)
-        const Text('No invoice items added yet.',
+        const LocalizedUiText('No invoice items added yet.',
           key: Key('invoice-no-items'),
           style: TextStyle(fontFamily: 'Inter', fontSize: 12,
             color: AppColors.secondaryText)),
@@ -900,7 +901,7 @@ class _AddInvoiceScreenState extends State<AddInvoiceScreen> {
     child: Scaffold(
     backgroundColor: AppColors.white,
     body: SafeArea(bottom: false, child: Column(children: [
-      Sign2DigitalHeader(title: 'Invoices', onBack: _cancel,
+      Sign2DigitalHeader(translateTitle: true, title: 'Invoices', onBack: _cancel,
         trailing: widget.initialInvoice == null ?
             const SupportAiPromptHint(module: 'invoices') : null),
       Expanded(child: Center(child: ConstrainedBox(

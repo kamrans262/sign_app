@@ -2,6 +2,7 @@ import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../documents/data/document_activity_session.dart';
 import '../../data/remote_signature_request_repository.dart';
 
@@ -166,7 +167,7 @@ class _QuotePreviewScreenState extends State<QuotePreviewScreen> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10)),
       ),
-      child: Text('Review and Sign', style: _text(16, color: Colors.white)),
+      child: LocalizedUiText('Review and Sign', style: _text(16, color: Colors.white)),
     ),
   );
 
@@ -272,7 +273,7 @@ class _QuotePreviewScreenState extends State<QuotePreviewScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Business Signature', style: _text(14, weight: FontWeight.w600)),
+        LocalizedUiText('Business Signature', style: _text(14, weight: FontWeight.w600)),
         const SizedBox(height: 10),
         Image.memory(verified.pngBytes,
           key: const Key('quote-preview-verified-business-signature'),
@@ -282,7 +283,7 @@ class _QuotePreviewScreenState extends State<QuotePreviewScreen> {
         Text('${verified.signerName}  ·  $date',
           style: _text(12, color: AppColors.secondaryText)),
         const SizedBox(height: 8),
-        Text('Customer signature pending',
+        LocalizedUiText('Customer signature pending',
           key: const Key('quote-preview-customer-signature-pending'),
           style: _text(12, color: AppColors.primary)),
       ],
@@ -299,7 +300,7 @@ class _QuotePreviewScreenState extends State<QuotePreviewScreen> {
       style: OutlinedButton.styleFrom(
         side: const BorderSide(color: AppColors.primary),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-      child: Text('Download PDF', textAlign: TextAlign.center,
+      child: LocalizedUiText('Download PDF', textAlign: TextAlign.center,
         style: _text(16, color: AppColors.primary)),
     ));
     final send = SizedBox(height: 48, child: FilledButton(
@@ -307,7 +308,7 @@ class _QuotePreviewScreenState extends State<QuotePreviewScreen> {
       onPressed: _busy ? null : _sendToCustomer,
       style: FilledButton.styleFrom(backgroundColor: AppColors.primary,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-      child: Text('Send to Customer', textAlign: TextAlign.center,
+      child: LocalizedUiText('Send to Customer', textAlign: TextAlign.center,
         style: _text(16, color: Colors.white)),
     ));
     if (widget.verifiedSignedPdf != null) {

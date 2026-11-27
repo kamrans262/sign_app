@@ -3,6 +3,7 @@ import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/assets/dashboard_assets.dart';
@@ -159,7 +160,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final entered = await showDialog<String>(
       context: context,
       builder: (dialog) => Sign2DigitalFormDialog(
-        title: const Text('Job Title'),
+        title: const LocalizedUiText('Job Title'),
         content: Sign2DigitalInputField(
           key: const Key('profile-title-custom-input'),
           label: 'Job Title',
@@ -174,7 +175,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialog).pop(),
-            child: const Text('Cancel'),
+            child: const LocalizedUiText('Cancel'),
           ),
           TextButton(
             key: const Key('profile-title-custom-save'),
@@ -247,7 +248,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final callback = widget.onNavigationSelected;
     if (callback == null) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Navigation is not connected yet.')));
+        content: LocalizedUiText('Navigation is not connected yet.')));
       return;
     }
     // Leaving this unsaved form discards its edits.

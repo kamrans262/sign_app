@@ -3,6 +3,8 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -263,7 +265,7 @@ class _SupportAssistantSheetState extends State<SupportAssistantSheet>
     await Clipboard.setData(ClipboardData(text: prompt));
     if (mounted) {
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        const SnackBar(content: Text('Sample AI prompt copied.')),
+        const SnackBar(content: LocalizedUiText('Sample AI prompt copied.')),
       );
     }
   }
@@ -300,7 +302,7 @@ class _SupportAssistantSheetState extends State<SupportAssistantSheet>
         Row(children: [
           const Icon(Icons.mic_none_outlined, color: AppColors.primary, size: 20),
           const SizedBox(width: 8),
-          Expanded(child: Text(title ?? 'Sample AI Voice prompt',
+          Expanded(child: Text(title ?? AppStrings.of(context).tr('Sample AI Voice prompt'),
             style: const TextStyle(fontFamily: 'Inter', fontSize: 14,
               fontWeight: FontWeight.w600, color: AppColors.dark))),
         ]),
@@ -311,10 +313,10 @@ class _SupportAssistantSheetState extends State<SupportAssistantSheet>
         TextButton.icon(
           onPressed: () => _copyPrompt(prompt),
           icon: const Icon(Icons.copy_rounded, size: 16),
-          label: const Text('Copy sample prompt'),
+          label: const LocalizedUiText('Copy sample prompt'),
           style: TextButton.styleFrom(foregroundColor: AppColors.primary),
         ),
-        const Text('Open the creation screen and speak this example using its '
+        const LocalizedUiText('Open the creation screen and speak this example using its '
           'AI Voice button. Review all suggestions before saving.',
           style: TextStyle(fontFamily: 'Inter', fontSize: 12,
             color: AppColors.secondaryText)),
@@ -356,7 +358,7 @@ class _SupportAssistantSheetState extends State<SupportAssistantSheet>
           if (sample != null) _promptCard(sample.prompt,
               title: 'AI Voice example: ${sample.title}'),
           if (_turns.isEmpty) ...[
-            const Text('POPULAR QUESTIONS', style: TextStyle(
+            const LocalizedUiText('POPULAR QUESTIONS', style: TextStyle(
               fontFamily: 'Inter', fontSize: 12,
               color: AppColors.secondaryText,
               fontWeight: FontWeight.w600)),
@@ -405,9 +407,9 @@ class _SupportAssistantSheetState extends State<SupportAssistantSheet>
                 child: CircularProgressIndicator(
                   strokeWidth: 2, color: AppColors.primary)),
               const SizedBox(width: 10),
-              Text(_transcribing && !_sending
+              Text(AppStrings.of(context).tr(_transcribing && !_sending
                   ? 'Transcribing your question...'
-                  : 'Preparing guidance...',
+                  : 'Preparing guidance...'),
                 style: const TextStyle(fontFamily: 'Inter',
                   color: AppColors.secondaryText, fontSize: 12)),
             ]),
@@ -423,7 +425,7 @@ class _SupportAssistantSheetState extends State<SupportAssistantSheet>
         child: Column(children: [
           if (_recording) const Padding(
             padding: EdgeInsets.only(bottom: 6),
-            child: Text('Recording... tap the microphone to send your question',
+            child: LocalizedUiText('Recording... tap the microphone to send your question',
               style: TextStyle(fontFamily: 'Inter',
                 fontSize: 12, color: AppColors.primary))),
           Row(children: [
@@ -437,9 +439,9 @@ class _SupportAssistantSheetState extends State<SupportAssistantSheet>
                 fontSize: 14, color: AppColors.dark),
               decoration: InputDecoration(
                 counterText: '',
-                hintText: widget.authenticated
+                hintText: AppStrings.of(context).tr(widget.authenticated
                   ? 'Ask about Sign2Digital...'
-                  : 'Sign in to ask AI Support',
+                  : 'Sign in to ask AI Support'),
                 prefixIcon: const Icon(Icons.help_outline_rounded,
                   color: AppColors.primary),
                 filled: true, fillColor: AppColors.white,
@@ -454,7 +456,7 @@ class _SupportAssistantSheetState extends State<SupportAssistantSheet>
             const SizedBox(width: 8),
             IconButton(
               key: const Key('support-voice'),
-              tooltip: _recording ? 'Stop and ask' : 'Ask with voice',
+              tooltip: AppStrings.of(context).tr(_recording ? 'Stop and ask' : 'Ask with voice'),
               onPressed: widget.authenticated && !_sending && !_transcribing
                   && !_microphoneBusy ? _toggleVoice : null,
               style: IconButton.styleFrom(
@@ -468,7 +470,7 @@ class _SupportAssistantSheetState extends State<SupportAssistantSheet>
             const SizedBox(width: 8),
             IconButton.filled(
               key: const Key('support-send'),
-              tooltip: 'Send question',
+              tooltip: AppStrings.of(context).tr('Send question'),
               onPressed: widget.authenticated && !_sending &&
                   !_transcribing && !_recording ? _ask : null,
               style: IconButton.styleFrom(
@@ -525,13 +527,13 @@ class _SupportAssistantSheetState extends State<SupportAssistantSheet>
                 const Icon(Icons.support_agent_outlined,
                   size: 24, color: AppColors.primary),
                 const SizedBox(width: 10),
-                const Expanded(child: Text(
+                const Expanded(child: LocalizedUiText(
                   'AI Support',
                   style: TextStyle(fontFamily: 'Inter', fontSize: 20,
                     fontWeight: FontWeight.w700, color: AppColors.dark))),
                 IconButton(
                   key: const Key('support-close'),
-                  tooltip: 'Close',
+                  tooltip: AppStrings.of(context).tr('Close'),
                   onPressed: () => Navigator.of(context).pop(),
                   icon: const Icon(Icons.close,
                     color: AppColors.secondaryText)),

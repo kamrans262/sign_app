@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../localization/app_strings.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../theme/app_colors.dart';
@@ -42,8 +43,8 @@ class Sign2DigitalSelectionField extends StatelessWidget {
       children: [
         Semantics(
           button: true,
-          label: label,
-          value: selected ? value : hintText,
+          label: AppStrings.of(context).tr(label),
+          value: selected ? value : AppStrings.of(context).tr(hintText),
           child: Material(
             color: Colors.transparent,
             child: InkWell(
@@ -74,10 +75,10 @@ class Sign2DigitalSelectionField extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(label, style: AppTextStyles.fieldLabel),
+                          Text(AppStrings.of(context).tr(label), style: AppTextStyles.fieldLabel),
                           const SizedBox(height: 5),
                           Text(
-                            selected ? value! : hintText,
+                            selected ? value! : AppStrings.of(context).tr(hintText),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: selected
@@ -101,7 +102,7 @@ class Sign2DigitalSelectionField extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(left: 15, top: 5),
             child: Text(
-              errorText!,
+              AppStrings.of(context).tr(errorText!),
               style: TextStyle(
                 color: Theme.of(context).colorScheme.error,
                 fontSize: 12,

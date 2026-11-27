@@ -332,7 +332,7 @@ class _WorkAcceptanceScreenState extends State<WorkAcceptanceScreen> {
       bottom: false,
       child: Column(children: [
         Sign2DigitalHeader(
-          title: 'Work Acceptance',
+          translateTitle: true, title: 'Work Acceptance',
           onBack: () => Navigator.of(context).maybePop(),
         ),
         Expanded(child: SingleChildScrollView(

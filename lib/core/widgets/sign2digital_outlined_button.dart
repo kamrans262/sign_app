@@ -1,5 +1,6 @@
 // Sign2Digital Login UI Package — shared social/secondary button.
 import 'package:flutter/material.dart';
+import '../localization/app_strings.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../theme/app_spacing.dart';
@@ -73,7 +74,7 @@ class Sign2DigitalOutlinedButton extends StatelessWidget {
                     child: compactLabel
                         ? FittedBox(
                             fit: BoxFit.scaleDown,
-                            child: Text(label,
+                            child: Text(AppStrings.of(context).tr(label),
                               maxLines: 1, softWrap: false,
                               style: AppTextStyles.outlinedButton.copyWith(
                                 fontSize: 14,
@@ -81,7 +82,7 @@ class Sign2DigitalOutlinedButton extends StatelessWidget {
                                     : primaryOutline ? AppColors.primary : AppColors.dark,
                               )))
                         : Text(
-                            label,
+                            AppStrings.of(context).tr(label),
                             maxLines: 2,
                             textAlign: TextAlign.center,
                             style: AppTextStyles.outlinedButton.copyWith(

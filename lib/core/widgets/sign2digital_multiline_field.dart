@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../localization/app_strings.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../theme/app_text_styles.dart';
@@ -45,13 +46,16 @@ class Sign2DigitalMultilineField extends StatelessWidget {
               textInputAction: TextInputAction.newline,
               minLines: 2,
               maxLines: null,
-              validator: validator,
+              validator: validator == null ? null : (value) {
+                final error = validator!(value);
+                return error == null ? null : AppStrings.of(context).tr(error);
+              },
               style: AppTextStyles.fieldInput,
               onTapOutside: (_) =>
                   FocusManager.instance.primaryFocus?.unfocus(),
               scrollPadding: const EdgeInsets.all(90),
               decoration: InputDecoration(
-                hintText: hintText,
+                hintText: AppStrings.of(context).tr(hintText),
                 hintStyle: AppTextStyles.fieldHint,
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,

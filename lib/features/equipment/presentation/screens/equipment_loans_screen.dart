@@ -1,5 +1,6 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 
 import '../../../../core/services/active_company_session.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -167,7 +168,7 @@ class _EquipmentLoansScreenState extends State<EquipmentLoansScreen> {
                   padding:const EdgeInsets.fromLTRB(20,0,20,12),
                   sliver:SliverToBoxAdapter(child:Column(
                     crossAxisAlignment:CrossAxisAlignment.stretch,children:[
-                      const Text('Equipment Loans',
+                      const LocalizedUiText('Equipment Loans',
                         style: TextStyle(fontFamily:'Inter',fontSize:22,
                           fontWeight:FontWeight.w600,color:AppColors.dark)),
                       const SizedBox(height:18),

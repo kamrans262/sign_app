@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/theme/sign2digital_motion.dart';
 
 import '../../../jobs/presentation/screens/jobs_screen.dart';
@@ -856,7 +857,7 @@ class _ClientsContentState extends State<_ClientsContent> {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Unable to save the client.')),
+        const SnackBar(content: LocalizedUiText('Unable to save the client.')),
       );
     }
   }

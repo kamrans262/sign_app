@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import '../../../company/presentation/screens/create_company_screen.dart';
 
@@ -435,7 +436,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                         Expanded(child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('CURRENT COMPANY',
+                            const LocalizedUiText('CURRENT COMPANY',
                               style: TextStyle(
                                 fontFamily: 'Inter', fontSize: 10,
                                 fontWeight: FontWeight.w600,
@@ -462,7 +463,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
               const SizedBox(height: 20),
               Row(children: [
                 const Expanded(
-                  child: Text('Overview', style: _sectionHeadingStyle),
+                  child: LocalizedUiText('Overview', style: _sectionHeadingStyle),
                 ),
                 IconButton(
                   key: const Key('home-refresh'),
@@ -499,7 +500,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
               }),
               // Overview cards → next section: 20px.
               const SizedBox(height: 20),
-              const Text('Quick Actions', style: _sectionHeadingStyle),
+              const LocalizedUiText('Quick Actions', style: _sectionHeadingStyle),
               // Heading → quick-action cards: 10px.
               const SizedBox(height: 10),
               LayoutBuilder(builder: (context, constraints) {
@@ -528,7 +529,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                       !widget.selectedQuote!.isDemo)) ...[
                 // Continue the same rhythm for any following sections.
                 const SizedBox(height: 20),
-                const Text('Signature Tracking',
+                const LocalizedUiText('Signature Tracking',
                   style: _sectionHeadingStyle),
                 const SizedBox(height: 10),
                 _HomePanel(
@@ -549,7 +550,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                         onPressed: () => widget.onAction(
                           HomeAction.signatureTracking),
                         icon: const Icon(Icons.arrow_forward_rounded),
-                        label: const Text('View tracking'),
+                        label: const LocalizedUiText('View tracking'),
                       ),
                     ],
                   ),

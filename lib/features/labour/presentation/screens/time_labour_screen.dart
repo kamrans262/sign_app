@@ -1,6 +1,7 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -212,7 +213,7 @@ class _TimeLabourScreenState extends State<TimeLabourScreen> {
       context: context,
       builder: (sheet) => SafeArea(child: Column(
         mainAxisSize: MainAxisSize.min, children: [
-          const ListTile(title: Text('Sort By')),
+          const ListTile(title: LocalizedUiText('Sort By')),
           for (final option in LabourSort.values)
             ListTile(
               key: Key('labour-sort-${option.name}'),

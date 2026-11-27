@@ -1,5 +1,6 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -345,7 +346,7 @@ class _SubscriptionManagementScreenState
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: AppColors.white,
     body: SafeArea(bottom: false, child: Column(children: [
-      const Sign2DigitalHeader(title: 'Subscription'),
+      const Sign2DigitalHeader(translateTitle: true, title: 'Subscription'),
       Expanded(child: Center(child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth:
           MediaQuery.orientationOf(context) == Orientation.landscape
@@ -369,7 +370,7 @@ class _SubscriptionManagementScreenState
                     onPressed: _load,
                     child: Text('$_error Tap to retry.'))))
               else if (_data != null) ...[
-                const Text('Current Plan', style: _sectionStyle),
+                const LocalizedUiText('Current Plan', style: _sectionStyle),
                 const SizedBox(height: 10),
                 SubscriptionCurrentPlanCard(
                   key: const Key('subscription-management-plan-card'),

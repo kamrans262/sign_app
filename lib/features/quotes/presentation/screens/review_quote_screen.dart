@@ -6,6 +6,7 @@ import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 import '../../../documents/data/remote_document_repository.dart';
 import '../../../documents/presentation/screens/document_details_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../documents/data/document_activity_session.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -90,7 +91,7 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, updateDialog) => Sign2DigitalFormDialog(
-          title: const Text('Edit Quote Details'),
+          title: const LocalizedUiText('Edit Quote Details'),
           content: SingleChildScrollView(child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -265,10 +266,10 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
           )),
           actions: [
             TextButton(onPressed: () => Navigator.pop(dialogContext, false),
-                child: const Text('Cancel')),
+                child: const LocalizedUiText('Cancel')),
             TextButton(key: const Key('quote-details-apply'),
                 onPressed: () => Navigator.pop(dialogContext, true),
-                child: const Text('Apply')),
+                child: const LocalizedUiText('Apply')),
           ],
         ),
       ),
@@ -336,7 +337,7 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
           TextButton(
             key: const Key('quote-document-confirm-close'),
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Close'),
+            child: const LocalizedUiText('Close'),
           ),
           TextButton(
             key: const Key('quote-take-me-to-document'),
@@ -538,7 +539,7 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
                 icon: Icons.add, onTap: _addItem)),
               const SizedBox(height: 20),
               if (_draft.items.isEmpty)
-                const Text('No work items yet. Add an item to continue.',
+                const LocalizedUiText('No work items yet. Add an item to continue.',
                   style: TextStyle(color: AppColors.placeholder))
               else
                 for (var i = 0; i < _draft.items.length; i++) ...[
@@ -564,7 +565,7 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
             color: const Color(0xFFEAF4FF),
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
             child: Row(children: [
-              const Expanded(child: Text('Total', style: TextStyle(
+              const Expanded(child: LocalizedUiText('Total', style: TextStyle(
                 fontFamily: 'Inter', fontSize: 18, fontWeight: FontWeight.w600,
                 color: AppColors.dark))),
               const SizedBox(width: 16),
@@ -592,7 +593,7 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
                 key: const Key('quote-terms-toggle'),
                 onTap: () => setState(() => _termsExpanded = !_termsExpanded),
                 child: Padding(padding: const EdgeInsets.all(16), child: Row(children: [
-                  const Expanded(child: Text('Terms & Conditions', style: TextStyle(
+                  const Expanded(child: LocalizedUiText('Terms & Conditions', style: TextStyle(
                       fontFamily: 'Inter', fontSize: 14,
                       fontWeight: FontWeight.w500, color: AppColors.dark))),
                   Icon(_termsExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
@@ -633,7 +634,7 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
             style: OutlinedButton.styleFrom(
               side: const BorderSide(color: AppColors.primary),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-            child: const Text('Save Draft', textAlign: TextAlign.center,
+            child: const LocalizedUiText('Save Draft', textAlign: TextAlign.center,
                 style: TextStyle(fontFamily: 'Inter', fontSize: 16,
                 fontWeight: FontWeight.w500, color: AppColors.primary)),
           ),
@@ -660,7 +661,7 @@ class _ReviewQuoteScreenState extends State<ReviewQuoteScreen> {
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: AppColors.white,
     body: SafeArea(child: Column(children: [
-      Sign2DigitalHeader(title: 'Review Quote',
+      Sign2DigitalHeader(translateTitle: true, title: 'Review Quote',
         onBack: () => Navigator.of(context).maybePop()),
       Expanded(child: SingleChildScrollView(
         key: const Key('review-quote-scroll'),

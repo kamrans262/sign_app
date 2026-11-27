@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 
 import '../../../../core/services/sign_api_client.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -245,7 +246,7 @@ class _CompanyRolesScreenState extends State<CompanyRolesScreen> {
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: AppColors.white,
     body: SafeArea(child: Column(children: [
-      const Sign2DigitalHeader(title: 'Roles & Permissions'),
+      const Sign2DigitalHeader(translateTitle: true, title: 'Roles & Permissions'),
       Expanded(child: Center(child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth:
             MediaQuery.orientationOf(context) == Orientation.landscape
@@ -258,7 +259,7 @@ class _CompanyRolesScreenState extends State<CompanyRolesScreen> {
               padding: const EdgeInsets.all(20),
               child: Column(crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text('Company Roles', style: TextStyle(
+                  const LocalizedUiText('Company Roles', style: TextStyle(
                     fontFamily: 'Inter', fontSize: 18,
                     fontWeight: FontWeight.w600, color: AppColors.dark)),
                   const SizedBox(height: 10),
@@ -279,14 +280,14 @@ class _CompanyRolesScreenState extends State<CompanyRolesScreen> {
               padding: const EdgeInsets.all(20),
               child: Column(crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text('Saved Roles', style: TextStyle(
+                  const LocalizedUiText('Saved Roles', style: TextStyle(
                     fontFamily: 'Inter', fontSize: 16,
                     fontWeight: FontWeight.w600, color: AppColors.dark)),
                   const SizedBox(height: 12),
                   if (_loading)
                     const Center(child: CircularProgressIndicator())
                   else if (_roles.isEmpty)
-                    const Text('No custom roles yet.')
+                    const LocalizedUiText('No custom roles yet.')
                   else for (final role in _roles) ...[
                     ListTile(
                       contentPadding: EdgeInsets.zero,

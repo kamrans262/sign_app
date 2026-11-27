@@ -2,6 +2,7 @@ import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../profile/data/app_settings_repository.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -202,7 +203,7 @@ class _QuoteAiProcessingScreenState extends State<QuoteAiProcessingScreen> {
     }
     if (!_showingDemo && _snapshot.items.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('No work items were extracted. Please try again.'),
+        content: LocalizedUiText('No work items were extracted. Please try again.'),
       ));
       return;
     }
@@ -257,7 +258,7 @@ class _QuoteAiProcessingScreenState extends State<QuoteAiProcessingScreen> {
     return Scaffold(
       backgroundColor: AppColors.white,
       body: SafeArea(child: Column(children: [
-        Sign2DigitalHeader(title: 'Create Quote', onBack: _back),
+        Sign2DigitalHeader(translateTitle: true, title: 'Create Quote', onBack: _back),
         Expanded(child: SingleChildScrollView(
           key: const Key('quote-preparation-scroll'),
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 36),
@@ -344,7 +345,7 @@ class _QuoteAiProcessingScreenState extends State<QuoteAiProcessingScreen> {
                         key: const Key('quote-processing-retry'),
                         onPressed: _runService,
                         icon: const Icon(Icons.refresh),
-                        label: const Text('Retry'),
+                        label: const LocalizedUiText('Retry'),
                       )
                     else
                       OutlinedButton(
@@ -392,7 +393,7 @@ class _QuoteAiProcessingScreenState extends State<QuoteAiProcessingScreen> {
                         minimumSize: const Size.fromHeight(48),
                       ),
                       onPressed: _submitClarification,
-                      child: const Text('Continue Quote'),
+                      child: const LocalizedUiText('Continue Quote'),
                     ),
                   ],
                   if (completed) ...[
@@ -427,7 +428,7 @@ class _QuoteAiProcessingScreenState extends State<QuoteAiProcessingScreen> {
                         minimumSize: const Size.fromHeight(48),
                       ),
                       onPressed: _openReview,
-                      child: const Text('Review Quote Draft'),
+                      child: const LocalizedUiText('Review Quote Draft'),
                     ),
                   ],
                   if (_showingDemo) ...[

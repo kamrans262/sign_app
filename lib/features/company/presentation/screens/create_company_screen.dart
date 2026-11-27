@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -392,7 +393,7 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
         (MobileAuthRepository.shared.isSignedIn && widget.companyRepository == null);
     if (requiresCompany && draft.companyName.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Enter a company name to continue.'),
+        content: LocalizedUiText('Enter a company name to continue.'),
       ));
       return;
     }
@@ -467,13 +468,13 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                const Text(
+                                const LocalizedUiText(
                                   'Create Your Company',
                                   style: AppTextStyles.heading,
                                   textAlign: TextAlign.center,
                                 ),
                                 const SizedBox(height: 10),
-                                const Text(
+                                const LocalizedUiText(
                                   'Set up your first company profile',
                                   style: AppTextStyles.subtitle,
                                   textAlign: TextAlign.center,
@@ -586,7 +587,7 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
                                   hint: 'e.g. INV-2026-001',
                                 ),
                                 const SizedBox(height: 20),
-                                Text(
+                                LocalizedUiText(
                                   'Terms & Conditions',
                                   style: AppTextStyles.fieldLabel.copyWith(
                                     fontSize: 14,
@@ -618,7 +619,7 @@ class _CreateCompanyScreenState extends State<CreateCompanyScreen> {
                                   child: TextButton(
                                     key: const Key('skip-company-optional'),
                                     onPressed: _skip,
-                                    child: const Text(
+                                    child: const LocalizedUiText(
                                       'Skip optional fields',
                                       style: AppTextStyles.footerLink,
                                     ),

@@ -1,5 +1,6 @@
 import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -403,7 +404,7 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
         content: Text('Submit ${_record.formattedAmount} for reimbursement?'),
         actions: [
           TextButton(onPressed: () => Navigator.of(dialog).pop(false),
-            child: const Text('Cancel')),
+            child: const LocalizedUiText('Cancel')),
           TextButton(key: const Key('expense-confirm-reimburse'),
             onPressed: () => Navigator.of(dialog).pop(true),
             child: const Text('Request')),
@@ -471,7 +472,7 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: AppColors.white,
     body: SafeArea(bottom: false, child: Column(children: [
-      Sign2DigitalHeader(title: 'Expenses',
+      Sign2DigitalHeader(translateTitle: true, title: 'Expenses',
         onBack: () => Navigator.of(context).maybePop()),
       Expanded(child: _loading
             ? const Center(child: CircularProgressIndicator(

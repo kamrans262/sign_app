@@ -146,7 +146,7 @@ class _SubscriptionPaymentDetailsScreenState
     return Scaffold(
       backgroundColor: AppColors.white,
       body: SafeArea(bottom:false,child:Column(children:[
-        const Sign2DigitalHeader(title:'Payment Details'),
+        const Sign2DigitalHeader(translateTitle: true, title:'Payment Details'),
         Expanded(child:Center(child:ConstrainedBox(
           constraints:BoxConstraints(maxWidth:
             MediaQuery.orientationOf(context)==Orientation.landscape

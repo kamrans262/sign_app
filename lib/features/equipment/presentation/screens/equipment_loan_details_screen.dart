@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/services/active_company_session.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 
@@ -90,7 +91,7 @@ class _EquipmentLoanDetailsScreenState
           _date(_record.expectedReturnDate)+' to '+_date(date)+'?'),
         actions:[
           TextButton(onPressed:()=>Navigator.pop(dialog,false),
-            child:const Text('Cancel')),
+            child:const LocalizedUiText('Cancel')),
           TextButton(onPressed:()=>Navigator.pop(dialog,true),
             child:const Text('Confirm Extension')),
         ]));
@@ -127,7 +128,7 @@ class _EquipmentLoanDetailsScreenState
           ' on '+_date(day)+'? This creates a permanent history event.'),
         actions:[
           TextButton(onPressed:()=>Navigator.pop(dialog,false),
-            child:const Text('Cancel')),
+            child:const LocalizedUiText('Cancel')),
           TextButton(onPressed:()=>Navigator.pop(dialog,true),
             child:const Text('Mark Returned')),
         ]));

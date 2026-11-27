@@ -1,6 +1,7 @@
 import '../../../support/presentation/widgets/support_ai_prompt_hint.dart';
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -198,7 +199,7 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
             children: [
               Flexible(
                 child: clients.isEmpty
-                    ? const Center(child: Text('No clients available'))
+                    ? const Center(child: LocalizedUiText('No clients available'))
                     : ListView.builder(
                         shrinkWrap: true,
                         itemCount: clients.length,
@@ -488,7 +489,7 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Description', style: AppTextStyles.fieldLabel),
+                const LocalizedUiText('Description', style: AppTextStyles.fieldLabel),
                 const SizedBox(height: 5),
                 TextFormField(
                   key: const Key('job-description-input'),

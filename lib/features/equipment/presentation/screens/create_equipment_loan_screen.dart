@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_approved_confirmation.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -159,7 +160,7 @@ class _CreateEquipmentLoanScreenState extends State<CreateEquipmentLoanScreen> {
                 subtitle:Text(c.email),
                 onTap:()=>Navigator.pop(sheet,c)),
             if(clients.isEmpty)
-              const ListTile(title:Text('No clients available')),
+              const ListTile(title:LocalizedUiText('No clients available')),
           ]))));
       if(selected!=null&&mounted)setState((){
         _selectedClient=selected;
