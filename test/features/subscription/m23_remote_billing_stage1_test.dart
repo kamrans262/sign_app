@@ -144,7 +144,9 @@ void main() {
       repository: RemoteSubscriptionRepository(api:_api()))));
     await tester.pumpAndSettle();
     expect(find.text('Free allowance'), findsOneWidget);
-    expect(find.text('Free'), findsOneWidget);
+    // The existing UI deliberately displays Free as both price and status.
+    expect(find.text('Free'), findsNWidgets(2));
+    expect(find.byKey(const Key('subscription-plan-price')), findsOneWidget);
     expect(find.text('Upgrade Plan'), findsOneWidget);
     expect(find.text('Active'), findsNothing);
     expect(find.byKey(const Key('m23-free-document-allowance')), findsOneWidget);
