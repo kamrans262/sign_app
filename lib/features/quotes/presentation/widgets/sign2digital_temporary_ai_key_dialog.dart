@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/localization/app_strings.dart';
+import '../../../../core/localization/localized_ui_text.dart';
 
 /// Reusable temporary-key prompt for development-time direct OpenAI calls.
 /// A key never leaves this dialog except as the caller's in-memory return value.
@@ -62,7 +63,7 @@ abstract final class Sign2DigitalTemporaryAiKeyDialog {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Cancel'),
+              child: const LocalizedUiText('Cancel'),
             ),
             FilledButton(
               key: const Key('quote-connect-ai'),
@@ -75,7 +76,7 @@ abstract final class Sign2DigitalTemporaryAiKeyDialog {
                 }
                 Navigator.of(dialogContext).pop(key);
               },
-              child: const Text('Generate with AI'),
+              child: const LocalizedUiText('Generate with AI'),
             ),
           ],
         ),

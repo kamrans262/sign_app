@@ -2,6 +2,8 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
+import '../../../../core/localization/app_strings.dart';
+import '../../../../core/localization/localized_ui_text.dart';
 import '../../../../core/theme/app_colors.dart';
 
 /// Shows a selected local image or a clearly non-saveable Figma demo image.
@@ -53,10 +55,10 @@ class Sign2DigitalPhotoPreview extends StatelessWidget {
                   ColoredBox(
                     color: const Color(0x1A8A9AA8),
                     child: Center(
-                      child: Text(
+                      child: const LocalizedUiText(
                         'Take a photo or choose one from your gallery',
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: 'Inter',
                           fontSize: 14,
                           color: AppColors.placeholder,
@@ -70,7 +72,7 @@ class Sign2DigitalPhotoPreview extends StatelessWidget {
                     right: compactTile ? 0 : 8,
                     child: IconButton(
                       key: compactTile ? null : const Key('add-photo-remove'),
-                      tooltip: 'Remove photo preview',
+                      tooltip: AppStrings.of(context).tr('Remove photo preview'),
                       onPressed: onRemove,
                       padding: EdgeInsets.zero,
                       constraints: BoxConstraints.tightFor(

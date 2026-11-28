@@ -1,8 +1,11 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'dart:ui' show PlatformDispatcher;
 import 'package:crypto/crypto.dart';
 
 import 'package:http/http.dart' as http;
+
+import '../../../core/localization/app_language_controller.dart';
 
 import '../domain/quote_document_tracking.dart';
 import '../domain/quote_review_models.dart';
@@ -83,11 +86,23 @@ class HttpPublicQuoteSigningGateway implements PublicQuoteSigningGateway {
   static DateTime _date(Map<String, dynamic> data, String key) =>
       DateTime.parse(_string(data, key));
 
+  static Map<String, String> _headers({bool jsonBody = false}) {
+    final language = AppLanguageController.shared
+        .effectiveLocale(PlatformDispatcher.instance.locales).languageCode;
+    return {
+      'Accept': 'application/json',
+      'Cache-Control': 'no-store',
+      'Accept-Language': language,
+      'X-App-Language': language,
+      if (jsonBody) 'Content-Type': 'application/json',
+    };
+  }
+
   @override
   Future<PublicQuoteSigningSession> open(String token) async {
     final response = await _client.get(
       _endpoint(token),
-      headers: const {'Accept': 'application/json', 'Cache-Control': 'no-store'},
+      headers: _headers(),
     );
     if (response.statusCode != 200) {
       throw StateError('This document cannot be accessed or the link has expired.');
@@ -184,11 +199,7 @@ class HttpPublicQuoteSigningGateway implements PublicQuoteSigningGateway {
     }
     final response = await _client.post(
       _endpoint(token, 'submit'),
-      headers: const {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'Cache-Control': 'no-store',
-      },
+      headers: _headers(jsonBody: true),
       body: jsonEncode({
         'quoteId': signature.quoteId,
         'documentId': signature.documentId,

@@ -166,7 +166,7 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
       Sign2DigitalInformationRow('Client', invoice.clientName),
       Sign2DigitalInformationRow('Issue Date', _date(invoice.date)),
       Sign2DigitalInformationRow('Due Date',
-        invoice.dueDate == null ? 'Not recorded' : _date(invoice.dueDate!)),
+        invoice.dueDate == null ? AppStrings.of(context).tr('Not recorded') : _date(invoice.dueDate!)),
       Sign2DigitalInformationRow('Invoice Number', invoice.number),
       Sign2DigitalInformationRow('Subtotal', _money(invoice.subtotalMinor)),
       Sign2DigitalInformationRow(
@@ -174,7 +174,7 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
         _money(invoice.vatMinor)),
       Sign2DigitalInformationRow('Total', AppDisplayFormats.money(context, (invoice.amount * 100).round(), invoice.currency, english: invoice.formattedAmount)),
       Sign2DigitalInformationRow('Amount Received',
-        payments.isEmpty ? 'Not recorded' : _money(invoice.receivedMinor)),
+        payments.isEmpty ? AppStrings.of(context).tr('Not recorded') : _money(invoice.receivedMinor)),
       Sign2DigitalInformationRow('Amount Due',
         _money(invoice.amountDueMinor)),
       Sign2DigitalInformationRow('Status', invoice.status.label,

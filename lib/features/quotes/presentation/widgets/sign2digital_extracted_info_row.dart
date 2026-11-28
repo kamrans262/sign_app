@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -53,21 +54,21 @@ class Sign2DigitalExtractedInfoRow extends StatelessWidget {
                 fontWeight: FontWeight.w500, height: 1.3,
                 color: AppColors.placeholder));
           final stateIcon = _isWarning
-              ? const Tooltip(
-                  message: 'Missing or unclear detail',
+              ? Tooltip(
+                  message: AppStrings.of(context).tr('Missing or unclear detail'),
                   child: Icon(Icons.account_circle_outlined,
                     key: Key('quote-field-missing'), color: warning, size: 24),
                 )
               : _isSuggested
-                  ? const Tooltip(
-                      message: 'AI extracted - not yet approved; confirm in Review Quote',
+                  ? Tooltip(
+                      message: AppStrings.of(context).tr('AI extracted - not yet approved; confirm in Review Quote'),
                       child: CircleAvatar(
                         key: Key('quote-field-ai-extracted'), radius: 12,
                         backgroundColor: AppColors.primary,
                         child: Icon(Icons.check, size: 17, color: Colors.white)),
                     )
-                  : const Tooltip(
-                      message: 'Verified by the supplying service',
+                  : Tooltip(
+                      message: AppStrings.of(context).tr('Verified by the supplying service'),
                       child: CircleAvatar(radius: 12,
                         backgroundColor: AppColors.primary,
                         child: Icon(Icons.check, size: 17,

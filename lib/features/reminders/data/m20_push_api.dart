@@ -1,3 +1,6 @@
+import 'dart:ui' show PlatformDispatcher;
+
+import '../../../core/localization/app_language_controller.dart';
 import '../../../core/services/active_company_session.dart';
 import '../../../core/services/sign_api_client.dart';
 import '../../auth/data/mobile_auth_repository.dart';
@@ -15,7 +18,10 @@ class M20NotificationPreferences {
       inAppEnabled: data['in_app_enabled'] == true || data['in_app_enabled'] == 1,
       pushEnabled: data['push_enabled'] == true || data['push_enabled'] == 1,
       pushAvailable: data['push_available'] == true || data['push_available'] == 1,
-      locale: (data['locale'] ?? 'en').toString(),
+      locale: data['locale'] is String && (data['locale'] as String).trim().isNotEmpty
+          ? (data['locale'] as String).trim()
+          : AppLanguageController.shared
+              .effectiveLocale(PlatformDispatcher.instance.locales).languageCode,
       timezone: (data['timezone'] ?? 'UTC').toString(),
     );
   }

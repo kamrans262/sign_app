@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import 'app_language_controller.dart';
+import 'release_ui_gap_strings.dart';
 import 'stage2_workflow_strings.dart';
 import 'modal_ui_strings.dart';
 
@@ -20,7 +21,8 @@ class AppStrings {
   String tr(String english) =>
       modalUiStrings[locale.languageCode]?[english] ??
       stage2WorkflowStrings[locale.languageCode]?[english] ??
-      _translations[locale.languageCode]?[english] ?? english;
+      _translations[locale.languageCode]?[english] ??
+      releaseUiGapStrings[locale.languageCode]?[english] ?? english;
 
   /// Replace placeholders once, without interpreting any user-supplied text.
   String format(String english, Map<String, Object?> values) =>

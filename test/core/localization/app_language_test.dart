@@ -32,6 +32,21 @@ void main() {
         const Locale('de'));
     expect(AppLanguages.resolve([const Locale('it', 'CH')]), const Locale('it'));
     expect(AppLanguages.resolve([const Locale('ur')]), const Locale('en'));
+    expect(AppLanguages.modeDefault(release: false), const Locale('en'));
+    expect(AppLanguages.modeDefault(release: true), const Locale('fr'));
+    expect(AppLanguages.resolve(const [Locale('ur')], release: true),
+        const Locale('fr'));
+    expect(AppLanguages.resolve(const [Locale('de')], release: true),
+        const Locale('de'));
+  });
+
+  test('An unsaved choice stays English in debug even on a French device', () async {
+    final language = AppLanguageController(
+      readCode: () async => null, writeCode: (_) async {},
+    );
+    await language.restore();
+    expect(language.effectiveLocale([const Locale('fr', 'CH')]), const Locale('en'));
+    language.dispose();
   });
 
   test('Explicit choice persists and invalid storage safely falls back', () async {

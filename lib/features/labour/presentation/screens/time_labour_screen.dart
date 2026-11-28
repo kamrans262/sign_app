@@ -256,7 +256,7 @@ class _TimeLabourScreenState extends State<TimeLabourScreen> {
   Future<void> _openLiveTimer() async {
     if (_repository is! RemoteLabourRepository) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Live time tracking requires a connected company.'),
+        content: LocalizedUiText('Live time tracking requires a connected company.'),
       ));
       return;
     }
@@ -268,7 +268,7 @@ class _TimeLabourScreenState extends State<TimeLabourScreen> {
     }
     if (_selectedJob == null) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Select a job before starting live tracking.'),
+        content: const LocalizedUiText('Select a job before starting live tracking.'),
       ));
       return;
     }

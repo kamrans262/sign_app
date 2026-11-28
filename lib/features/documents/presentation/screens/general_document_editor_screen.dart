@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_language_controller.dart';
 import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import '../../../../core/widgets/sign2digital_styled_bottom_sheet.dart';
@@ -71,6 +72,9 @@ class _GeneralDocumentEditorScreenState extends State<GeneralDocumentEditorScree
   void initState(){
     super.initState();
     _repository=widget.repository??RemoteGeneralDocumentRepository.shared;
+    final language = AppLanguageController.shared.effectiveLocale(
+      WidgetsBinding.instance.platformDispatcher.locales).languageCode;
+    if (_languages.containsKey(language)) _locale = language;
     if(widget.documentId!=null)_load();
     _loadChoices();
   }

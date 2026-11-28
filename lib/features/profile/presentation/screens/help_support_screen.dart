@@ -1,5 +1,6 @@
 import '../../../../core/widgets/sign2digital_form_dialog.dart';
 import '../../../../core/navigation/sign2digital_navigation.dart';
+import 'package:sign2digital/core/localization/app_language_controller.dart';
 import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
@@ -14,7 +15,6 @@ import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
 import '../../../../core/widgets/sign2digital_outlined_button.dart';
 import '../../data/remote_support_repository.dart';
-import '../../data/profile_preferences_repository.dart';
 
 /// Original screen 74 — connected FAQ and ticket UI in Sign2Digital styling.
 class HelpSupportScreen extends StatefulWidget {
@@ -43,10 +43,9 @@ class _HelpSupportState extends State<HelpSupportScreen> {
     if(!mounted)return;
     setState(() {loading=true;error=null;});
     try {
-      final lang = ProfilePreferencesSession.current.value.language;
-      final locale = switch(lang) {
-        'French'=>'fr','German'=>'de','Italian'=>'it',_=>'en',
-      };
+      final locale = AppLanguageController.shared.effectiveLocale(
+        WidgetsBinding.instance.platformDispatcher.locales,
+      ).languageCode;
       final results=await Future.wait<Object>([
         repo.faqs(locale:locale), repo.tickets(),
       ]);

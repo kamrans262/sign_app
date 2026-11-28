@@ -112,15 +112,16 @@ class Sign2DigitalApp extends StatelessWidget {
       valueListenable: AppSettingsSession.current,
       builder: (context, settings, child) => ValueListenableBuilder<Locale?>(
         valueListenable: AppLanguageController.shared,
-        builder: (context, locale, child) => MaterialApp(
-        locale: locale,
+        builder: (context, locale, child) {
+        final active = locale ?? AppLanguages.modeDefault();
+        return MaterialApp(
+        locale: active,
         supportedLocales: AppLanguages.supportedLocales,
         localizationsDelegates: const [
           AppStrings.delegate,
           ...GlobalMaterialLocalizations.delegates,
         ],
-        localeListResolutionCallback: (preferred, supported) =>
-            AppLanguages.resolve(preferred ?? const []),
+        localeListResolutionCallback: (preferred, supported) => active,
         navigatorKey: M20PushCoordinator.navigatorKey,
       title: 'Sign2Digital',
       debugShowCheckedModeBanner: false,
@@ -143,7 +144,10 @@ class Sign2DigitalApp extends StatelessWidget {
               : initiallySignedIn!
                   ? const CompanyEntryGate()
                   : const MobileAuthGateway(),
-    )));
+    );
+        },
+      ),
+    );
   }
 }
 

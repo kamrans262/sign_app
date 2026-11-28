@@ -3,6 +3,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../../../../core/localization/localized_ui_text.dart';
 import '../../../../core/theme/app_colors.dart';
 
 typedef SignatureStrokePointCallback = void Function(Offset position, Size size);
@@ -135,7 +136,7 @@ class Sign2DigitalSignatureClearButton extends StatelessWidget {
             BlendMode.srcIn,
           ),
         ),
-        label: const Text(
+        label: const LocalizedUiText(
           'Clear',
           style: TextStyle(
             fontFamily: 'Inter',

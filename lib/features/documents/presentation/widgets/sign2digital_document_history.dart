@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/localization/localized_ui_text.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/document_record.dart';
 
@@ -260,7 +261,7 @@ class _Sign2DigitalDocumentHistoryState
     if (events.isEmpty) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 20),
-        child: Text('No recorded document history is available.',
+        child: LocalizedUiText('No recorded document history is available.',
           key: Key('document-history-empty'),
           style: TextStyle(fontFamily: 'Inter',
             color: AppColors.placeholder, fontSize: 14)),

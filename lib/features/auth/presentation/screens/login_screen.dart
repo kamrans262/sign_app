@@ -149,8 +149,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                             ScaffoldMessenger.of(forgotContext)
                                                 .showSnackBar(
                                                   const SnackBar(
-                                                    content: Text(
-                                                      'UI preview only â€” no verification code was sent.',
+                                                    content: LocalizedUiText(
+                                                      'UI preview only — no verification code was sent.',
                                                     ),
                                                   ),
                                                 );

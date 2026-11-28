@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
+import 'core/localization/app_language_controller.dart';
+import 'core/localization/app_strings.dart';
+import 'core/localization/localized_ui_text.dart';
 import 'core/theme/app_theme.dart';
 import 'features/quotes/presentation/screens/public_customer_signing_screen.dart';
 
@@ -11,8 +15,12 @@ import 'features/quotes/presentation/screens/public_customer_signing_screen.dart
 ///
 /// Configure the host to rewrite /sign/<opaqueToken> to index.html.
 /// The API still authorizes every token and signature server-side.
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await AppLanguageController.shared.restore();
+  final active = AppLanguageController.shared.effectiveLocale(
+    WidgetsBinding.instance.platformDispatcher.locales,
+  );
   final parts = Uri.base.pathSegments
       .where((segment) => segment.isNotEmpty)
       .toList();
@@ -20,12 +28,18 @@ void main() {
       ? parts.last
       : '';
   runApp(MaterialApp(
+    locale: active,
+    supportedLocales: AppLanguages.supportedLocales,
+    localizationsDelegates: const [
+      AppStrings.delegate,
+      ...GlobalMaterialLocalizations.delegates,
+    ],
     title: 'Sign2Digital Customer Signing',
     debugShowCheckedModeBanner: false,
     theme: AppTheme.light,
     home: token.isEmpty
         ? const Scaffold(
-            body: Center(child: Text('This signing link is unavailable.')),
+            body: Center(child: LocalizedUiText('This signing link is unavailable.')),
           )
         : PublicCustomerSigningScreen(token: token),
   ));

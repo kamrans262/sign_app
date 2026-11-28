@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../../../core/localization/localized_ui_text.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/services/active_company_session.dart';
 import '../../../jobs/domain/job_model.dart';
@@ -179,7 +180,7 @@ class _M15LiveTimerPanelState extends State<M15LiveTimerPanel>
       child:Column(
         crossAxisAlignment:CrossAxisAlignment.start,
         children:[
-          const Text('Work Timer',style:TextStyle(fontFamily:'Inter',
+          const LocalizedUiText('Work Timer',style:TextStyle(fontFamily:'Inter',
             fontSize:16,fontWeight:FontWeight.w600,color:AppColors.dark)),
           const SizedBox(height:8),
           Text(timer==null?'Checking saved timer...'
@@ -218,7 +219,7 @@ class _M15LiveTimerPanelState extends State<M15LiveTimerPanel>
             if(timer?.status=='paused')_actionButton('Resume','resume',primary:true),
             if(timer?.isActive==true)_actionButton('Stop & Save','stop',primary:true),
             TextButton(key:const Key('m15-timer-refresh'),
-              onPressed:_busy?null:_refresh,child:const Text('Refresh')),
+              onPressed:_busy?null:_refresh,child:const LocalizedUiText('Refresh')),
           ]),
           if(_error!=null)...[
             const SizedBox(height:8),
@@ -226,7 +227,7 @@ class _M15LiveTimerPanelState extends State<M15LiveTimerPanel>
               fontFamily:'Inter',fontSize:12,color:Colors.red)),
           ],
           const SizedBox(height:4),
-          const Text('Running time is estimated onscreen; the server confirms saved minutes.',
+          const LocalizedUiText('Running time is estimated onscreen; the server confirms saved minutes.',
             style:TextStyle(fontFamily:'Inter',fontSize:11,color:AppColors.secondaryText)),
         ],
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/localization/localized_ui_text.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_outlined_button.dart';
 import '../../../../core/widgets/sign2digital_primary_button.dart';
@@ -45,7 +46,7 @@ class SubscriptionCurrentPlanCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (!management) ...[
-                  const Text('Current Plan', style: TextStyle(
+                  const LocalizedUiText('Current Plan', style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 12,
                     fontWeight: FontWeight.w500,

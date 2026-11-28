@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sign2digital_outlined_container.dart';
 import '../../../clients/presentation/widgets/sign2digital_status_badge.dart';
@@ -180,7 +181,7 @@ class Sign2DigitalQuoteSummaryCard extends StatelessWidget {
     ],
   );
 
-  Widget _detailsSummary() => Row(
+  Widget _detailsSummary(BuildContext context) => Row(
     key: const Key('document-details-summary'),
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -225,7 +226,7 @@ class Sign2DigitalQuoteSummaryCard extends StatelessWidget {
         IconButton(
           key: const Key('addendum-remove-linked-document'),
           onPressed: onRemoveLink,
-          tooltip: 'Remove linked document',
+          tooltip: AppStrings.of(context).tr('Remove linked document'),
           icon: const Icon(Icons.close, color: AppColors.dark),
         ),
       ],
@@ -236,9 +237,9 @@ class Sign2DigitalQuoteSummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     if (linkedStyle) {
       return Sign2DigitalOutlinedContainer(
-        padding: const EdgeInsets.all(20), child: _detailsSummary());
+        padding: const EdgeInsets.all(20), child: _detailsSummary(context));
     }
-    if (detailsStyle) { return _detailsSummary(); }
+    if (detailsStyle) { return _detailsSummary(context); }
     final content = Sign2DigitalOutlinedContainer(
       padding: EdgeInsets.symmetric(
         horizontal: 20, vertical: listStyle ? 15 : 20,

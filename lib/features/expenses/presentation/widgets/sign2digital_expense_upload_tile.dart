@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../../../../core/localization/localized_ui_text.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/sign2digital_outlined_container.dart';
 
@@ -24,7 +25,7 @@ class Sign2DigitalExpenseUploadTile extends StatelessWidget {
         SvgPicture.asset('assets/icons/cloud-upload-outlined.svg',
           width: 24, height: 24),
         const SizedBox(height: 8),
-        const Text('Add Photo', style: AppTextStyles.outlinedButton),
+        const LocalizedUiText('Add Photo', style: AppTextStyles.outlinedButton),
       ]),
     ),
   );

@@ -3,6 +3,7 @@ import '../../../../core/navigation/sign2digital_navigation.dart';
 import 'dart:io';
 import '../../../../core/widgets/sign2digital_selection_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:sign2digital/core/localization/app_language_controller.dart';
 import 'package:sign2digital/core/localization/app_display_formats.dart';
 import 'package:sign2digital/core/localization/app_strings.dart';
 import 'package:sign2digital/core/localization/localized_ui_text.dart';
@@ -344,7 +345,9 @@ class _GenerateAiDocumentScreenState extends State<GenerateAiDocumentScreen> {
       '. User notes: '+request.instructions+
       '. Where no evidence is present, mark the section [Needs review].';
     final suggestion=await repo.suggest(
-      type:'custom',locale:'en',instructions:instructions,
+      type:'custom',locale:AppLanguageController.shared.effectiveLocale(
+        WidgetsBinding.instance.platformDispatcher.locales).languageCode,
+      instructions:instructions,
       clientId:client,jobId:job);
     if(!mounted)throw StateError('Editor is closed.');
     final approved=await showDialog<bool>(context:context,

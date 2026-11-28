@@ -158,10 +158,12 @@ class _DepositDetailsScreenState extends State<DepositDetailsScreen> {
       Sign2DigitalInformationRow('Client', _record.clientName),
       Sign2DigitalInformationRow('Amount', AppDisplayFormats.money(context, (_record.amount * 100).round(), 'CHF', english: _record.formattedAmount)),
       Sign2DigitalInformationRow('Payment Method',
-        _paymentMethodLabel(_record.paymentMethod)),
+        _paymentMethodLabel(_record.paymentMethod) == 'Not recorded'
+            ? AppStrings.of(context).tr('Not recorded')
+            : _paymentMethodLabel(_record.paymentMethod)),
       Sign2DigitalInformationRow('Reference Number',
         _record.referenceNumber.trim().isEmpty
-            ? 'Not recorded' : _record.referenceNumber),
+            ? AppStrings.of(context).tr('Not recorded') : _record.referenceNumber),
       Sign2DigitalInformationRow('Status', _record.status.label,
         isStatus: true),
       if (_record.receivedBy?.trim().isNotEmpty == true)

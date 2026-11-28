@@ -23,12 +23,17 @@ abstract final class AppLanguages {
     return null;
   }
 
-  static Locale resolve(Iterable<Locale> preferred) {
+  /// Debug and profile builds stay English. Release builds, including the
+  /// App Store archive, start in French until the user saves a language.
+  static Locale modeDefault({bool? release}) =>
+      (release ?? kReleaseMode) ? const Locale('fr') : const Locale('en');
+
+  static Locale resolve(Iterable<Locale> preferred, {bool? release}) {
     for (final locale in preferred) {
       final supported = fromCode(locale.languageCode);
       if (supported != null) return supported;
     }
-    return supportedLocales.first;
+    return modeDefault(release: release);
   }
 
   static String nameFor(Locale locale) =>
@@ -36,7 +41,8 @@ abstract final class AppLanguages {
 }
 
 /// Device-local interface language only; never stores account or company data.
-/// A null choice follows the device's supported language, with English fallback.
+/// A null choice uses English in debug and French in release. A saved choice
+/// wins in both modes.
 class AppLanguageController extends ValueNotifier<Locale?> {
   AppLanguageController({
     required Future<String?> Function() readCode,
@@ -81,8 +87,9 @@ class AppLanguageController extends ValueNotifier<Locale?> {
     }
   }
 
-  Locale effectiveLocale(Iterable<Locale> deviceLocales) =>
-      value ?? AppLanguages.resolve(deviceLocales);
+  /// An unsaved choice follows [AppLanguages.modeDefault]. A saved choice wins.
+  Locale effectiveLocale(Iterable<Locale> _) =>
+      value ?? AppLanguages.modeDefault();
 
   Future<void> select(String name) async {
     final locale = AppLanguages.fromName(name);

@@ -119,7 +119,7 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
           TextButton(onPressed: () => Navigator.pop(dialog),
             child: const LocalizedUiText('Cancel')),
           TextButton(onPressed: () => Navigator.pop(dialog, entered.trim()),
-            child: const Text('Use')),
+            child: const LocalizedUiText('Use')),
         ]),
     );
     return value == null || value.isEmpty ? null : value;

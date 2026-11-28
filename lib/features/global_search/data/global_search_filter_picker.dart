@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:sign2digital/core/localization/app_strings.dart';
+import 'package:sign2digital/core/localization/localized_ui_text.dart';
 import 'package:sign2digital/features/clients/presentation/widgets/sign2digital_status_badge.dart';
 
 import '../../../core/services/active_company_session.dart';
@@ -292,7 +293,7 @@ abstract final class GlobalSearchFilterPicker {
               const SizedBox(height: 8),
               if (companyId != selectedId)
                 const Padding(padding: EdgeInsets.symmetric(vertical: 8),
-                  child: Text('Apply the company switch, then reopen filters '
+                  child: LocalizedUiText('Apply the company switch, then reopen filters '
                     'to choose its clients or jobs.',
                     style: TextStyle(fontFamily: 'Inter', fontSize: 12,
                       color: AppColors.placeholder))),

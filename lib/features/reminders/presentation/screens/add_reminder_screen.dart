@@ -229,7 +229,7 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
       context: context,
       builder: (dialog) => Sign2DigitalApprovedConfirmation(
         title: const LocalizedUiText('Use extracted reminder details?'),
-        content: const Text('Fill only empty fields or missing selections. '
+        content: const LocalizedUiText('Fill only empty fields or missing selections. '
           'Existing entries stay unchanged. Please review before saving.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(dialog, false),

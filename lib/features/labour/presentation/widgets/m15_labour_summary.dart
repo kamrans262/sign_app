@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/localization/localized_ui_text.dart';
 import '../../../../core/services/active_company_session.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../jobs/presentation/widgets/sign2digital_job_financial_card.dart';
@@ -105,7 +106,7 @@ class _M15LabourSummaryState extends State<M15LabourSummary> {
           return TextButton(
             key:const Key('m15-summary-retry'),
             onPressed:()=>setState(_load),
-            child:const Text('Unable to load job cost summary. Retry.'));
+            child:const LocalizedUiText('Unable to load job cost summary. Retry.'));
         }
         if(d==null) {
           return const Center(child:CircularProgressIndicator());
@@ -123,7 +124,7 @@ class _M15LabourSummaryState extends State<M15LabourSummary> {
           ),
           child:Column(crossAxisAlignment:CrossAxisAlignment.start,
             children:[
-              const Text('Job Labour Summary',style:TextStyle(
+              const LocalizedUiText('Job Labour Summary',style:TextStyle(
                 fontFamily:'Inter',fontSize:16,fontWeight:FontWeight.w600,
                 color:AppColors.dark)),
               const SizedBox(height:12),
@@ -143,7 +144,7 @@ class _M15LabourSummaryState extends State<M15LabourSummary> {
                 style:const TextStyle(fontWeight:FontWeight.w600,
                   color:AppColors.primary,fontFamily:'Inter')),
               if((_integer(d['approved_missing_rate_count'])??0)>0)
-                const Text('Some approved time has no rate; actual cost is not available.',
+                const LocalizedUiText('Some approved time has no rate; actual cost is not available.',
                   style:TextStyle(fontFamily:'Inter',fontSize:12,color:AppColors.secondaryText)),
               if((_integer(d['unreconciled_external_labour_expense_minor'])??0)>0)
                 Text('External labour invoices ${_money(
